@@ -1,0 +1,191 @@
+# Harnessmith
+
+> Harnessmith installs a portable personal coding-agent harness for Codex, Cursor, and Claude Code.
+> This file is an operational guide for an LLM helping a user install or initialize it.
+
+Project: https://www.npmjs.com/package/harnessmith
+Release status: unreleased (`0.1.0` is not yet available from the npm registry)
+Runtime: Node.js 24.12 or newer
+Repository package manager: pnpm 10.13.0 (locked by `packageManager` and `pnpm-lock.yaml`)
+Distribution command after publication: npm / npx
+Installed Harness runtime dependencies: none (the npm initializer dependencies are bundled; the
+embedded Harness bundle is self-contained)
+
+For a verified source checkout, install and build locally before invoking the CLI:
+
+```bash
+pnpm install --frozen-lockfile --ignore-scripts
+pnpm run build
+node bin/harnessmith.mjs --help
+```
+
+Until the release status changes, do not attempt registry installation or diagnose its expected 404 as a
+local npm failure. In the protocols below, use `node bin/harnessmith.mjs` from a verified source checkout;
+the shown `npx --yes harnessmith` form becomes valid only after publication.
+
+Generic Harness environment overrides:
+
+- `HARNESS_HOME`: resolved by the selected installation adapter.
+- `HARNESS_MEMORY_HOME`: shared memory root, default `~/.agent-docs`.
+- `HARNESS_PERSONAL_HOME`: user-owned personal rules and repository map, default `~/.agent-harness`.
+- `HARNESS_REPOSITORY_ROOT`: repository collection root, default `~/git-repo`.
+- `HARNESS_OWNER`: owner written into memory metadata.
+
+Host-specific paths belong only to installation adapters. They must not be copied into the distributed Harness
+template, its runtime field names, or its progressive documentation.
+
+## Supported agents and destinations
+
+- `codex`
+  - Instructions: `$CODEX_HOME/AGENTS.md`, default `~/.codex/AGENTS.md`
+  - Harness: `$CODEX_HOME/agent-harness`
+- `claude`
+  - Active instructions: `$CLAUDE_CONFIG_DIR/CLAUDE.md`, default `~/.claude/CLAUDE.md`
+  - Canonical copy: `$CLAUDE_CONFIG_DIR/AGENTS.md`
+  - Harness: `$CLAUDE_CONFIG_DIR/agent-harness`
+- `cursor`
+  - Active project rule: `<project>/.cursor/rules/agent-harness.mdc`
+  - Canonical copy: `<project>/.cursor/AGENTS.md`
+  - Harness: `<project>/.cursor/agent-harness`
+  - Cursor installation is project-scoped. Resolve `--project` to the intended repository; Harnessmith
+    automatically uses its Git root when possible.
+
+## LLM installation protocol
+
+1. Verify the runtime with `node --version`. Stop and explain the requirement if Node.js is older than 24.12.
+2. Determine the exact agent selection from the user's request. Accepted values are `codex`, `cursor`,
+   `claude`, `claude-code`, and `all`. Never infer `all` from an ambiguous request.
+3. If Cursor is selected, determine the intended project path. Ask the user if more than one repository is
+   plausible. Prefer an absolute path.
+4. Preview resolved destinations before writing. The post-publication form is:
+
+   ```bash
+   npx --yes harnessmith --agent <agents> --project <project-path> --dry-run --json
+   ```
+
+   Omit `--project` when Cursor is not selected. Read every JSON line, check that each destination is inside
+   the selected Agent home or Cursor project, and inspect every output action:
+   - `create`: no existing destination.
+   - `replace-managed`: checksum matches the current installation record.
+   - `conflict`: existing content is unmanaged or was modified after installation.
+   Inspect each plan's `capabilities`: instruction following is advisory and permissions remain host-owned.
+5. If the user explicitly requested installation and the preview matches the requested scope, install. The
+   post-publication form is:
+
+   ```bash
+   npx --yes harnessmith --agent <agents> --project <project-path>
+   ```
+
+   Do not use `sudo`, do not delete existing files, and do not move unrelated files. A `conflict` is a
+   blocker unless the user explicitly reviewed it and authorized `--force`; `--force` backs up the current
+   destination before taking ownership. If the environment requires filesystem or network approval, request
+   the minimum required permission.
+6. Report every installed instruction path, Harness path, and backup path printed by the command.
+
+## Initialization after installation
+
+Harnessmith always initializes the user-owned personal overlay after a successful install and initializes
+shared global memory unless `--no-init-global` was explicitly supplied. Existing personal files are never
+overwritten. Verify them with:
+
+```bash
+node <harness-path>/bin/harness.mjs memory check global
+node <harness-path>/bin/harness.mjs doctor
+```
+
+If the user intentionally installed with `--no-init-global` and later requests initialization, run:
+
+```bash
+node <harness-path>/bin/harness.mjs init global
+```
+
+The personal overlay can also be initialized independently and safely:
+
+```bash
+node <harness-path>/bin/harness.mjs init personal
+```
+
+Initialize project memory only when the task needs cross-session handoff, important user input, evidence,
+unfinished work, or expensive discoveries:
+
+```bash
+node <harness-path>/bin/harness.mjs init project <absolute-project-path>
+node <harness-path>/bin/harness.mjs memory check <absolute-project-path>
+node <harness-path>/bin/harness.mjs validate --project <absolute-project-path>
+```
+
+If project-memory need is uncertain, ask the user. Do not initialize `.agent-docs` merely because the command
+exists. Initialization adds `/.agent-docs/` to both the project-root `.gitignore` and `.ignore`.
+
+## Backup and transaction guarantees
+
+- Lexical and canonical containment is checked for outputs, backups, records, and ignore files. Existing
+  symlink, junction, or reparse segments below an authorized root are rejected; do not bypass this check by
+  moving files manually.
+- Mutating lifecycle commands and status use a cross-process lock per Adapter. A lock failure means another
+  operation may be active; report it and retry later instead of deleting the lock directory.
+- Unmanaged or modified files are rejected by default and require explicit `--force` authorization.
+- Existing instruction files are renamed in place to `<filename>.backup-<timestamp>`.
+- Existing `agent-harness/` is renamed to `agent-harness.backup-<timestamp>`.
+- Existing Harness `state/` is copied into the new installation and excluded from managed-runtime checksums.
+- The personal overlay is user-owned; upgrade, restore, and uninstall do not remove or overwrite it.
+- Install stages and JavaScript syntax-checks all selected rendered targets before replacement. Restore and
+  uninstall instead preflight the exact recorded paths and backup relationships.
+- If a selected target fails, Harnessmith rolls back destinations changed by that run.
+- Each Adapter stores an installation record with checksums and backup relationships.
+- `status` reports managed, modified, and missing outputs.
+- `restore` restores one installation layer; `uninstall` restores every recorded layer to the pre-install
+  state. Multi-Agent lifecycle actions preflight all targets and roll back the whole operation on failure.
+  Both preserve `.agent-docs` memory and the personal overlay.
+- Managed Cursor files are added to the repository-local Git exclude file and `.cursor/.ignore`; do not
+  ignore or overwrite unrelated team rules in `.cursor/`.
+- Never remove backup files unless the user explicitly asks after verifying the new installation.
+
+## Non-interactive examples
+
+The following registry examples apply after publication. In the current source checkout, replace
+`npx --yes harnessmith` with `node bin/harnessmith.mjs` after completing the local build above.
+
+```bash
+# Codex global setup
+npx --yes harnessmith --agent codex
+
+# Claude Code global setup
+npx --yes harnessmith --agent claude
+
+# Cursor setup for one repository
+npx --yes harnessmith --agent cursor --project /absolute/path/to/repository
+
+# Install all supported agents; Cursor uses the specified repository
+npx --yes harnessmith --agent all --project /absolute/path/to/repository
+
+# Inspect ownership and file integrity
+npx --yes harnessmith status --agent all --project /absolute/path/to/repository --json
+
+# Recover one layer or fully uninstall
+npx --yes harnessmith restore --agent codex
+npx --yes harnessmith uninstall --agent codex
+```
+
+## Failure handling
+
+- With `--json`, failures are one stderr JSON object. Exit 2 is a CLI usage error, 3 is a safety or integrity
+  refusal, 4 is operation-lock contention, 5 is missing actionable installation state, and 1 is an
+  unclassified internal failure. Preserve both code and message.
+- A failed dry-run or an unexpected destination is a blocker; do not continue with installation.
+- A `conflict`, `modified`, or missing backup is a blocker. Never add `--force` merely to make the command
+  pass; obtain explicit user authorization after explaining what will be replaced.
+- Preserve command stderr and report the failed phase without claiming success.
+- Do not repair Node/npm/pnpm with `sudo`, change package-manager ownership, publish the package, configure a remote, or create
+  a Git commit unless the user separately authorizes that action.
+- Upgrade Cursor or Claude Code installations by rerunning `npx harnessmith`; do not invoke their embedded
+  `harness install` command.
+
+## Success criteria
+
+- The requested Agent instruction files exist at the resolved destinations.
+- `<agent-home>/agent-harness/manifest.json` exists.
+- `<agent-home>/.harnessmith/install.json` exists and `status` reports every output as `managed`.
+- `node <harness-path>/bin/harness.mjs --version` exits successfully.
+- If initialization was requested, global memory check and `doctor` pass.
+- If project memory was initialized, both ignore files contain `/.agent-docs/` and project validation passes.

@@ -1,0 +1,12 @@
+node_modules/
+/dist/
+/template/agent-harness/dist/
+*.tgz
+.DS_Store
+coverage/
+.vitest/
+.ua/
+.pnpm-store/
+
+# Local Agent working documents
+/.agent-docs/

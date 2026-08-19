@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "progressive-disclosure",
+  "adapter": "codex",
+  "hostVersion": "record-the-actual-host-version",
+  "harnessVersion": "2.1.0",
+  "packageVersion": "0.1.0",
+  "startedAt": "2026-08-19T00:00:00Z",
+  "finishedAt": "2026-08-19T00:05:00Z",
+  "outcome": "inconclusive",
+  "redacted": true,
+  "transcriptRef": "local:relative/path/to/redacted-transcript.md",
+  "actions": [
+    "Record only task-relevant file and tool access after redaction"
+  ],
+  "evidence": [
+    {
+      "kind": "observation",
+      "ref": "local:relative/path/to/evidence.md",
+      "description": "Replace this placeholder with observable pass or failure evidence"
+    }
+  ],
+  "notes": "This example is a contract fixture, not evidence that a real host evaluation ran."
+}

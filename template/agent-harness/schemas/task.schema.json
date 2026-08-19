@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-harness:schema:task:v1",
+  "title": "Agent Harness Task",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "id",
+    "objective",
+    "status",
+    "created",
+    "updated",
+    "projectRoot",
+    "nextAction",
+    "baseline",
+    "acceptance",
+    "checkpoints"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" },
+    "objective": { "type": "string", "minLength": 1 },
+    "status": {
+      "enum": ["pending", "in_progress", "blocked", "complete", "superseded"]
+    },
+    "created": { "type": "string", "format": "date-time" },
+    "updated": { "type": "string", "format": "date-time" },
+    "projectRoot": { "type": "string", "minLength": 1 },
+    "nextAction": { "type": "string" },
+    "baseline": {
+      "type": "object",
+      "required": ["branch", "head", "dirty"],
+      "properties": {
+        "branch": { "type": ["string", "null"] },
+        "head": { "type": ["string", "null"] },
+        "dirty": { "type": ["boolean", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "acceptance": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "description", "status", "evidence"],
+        "properties": {
+          "id": { "type": "string" },
+          "description": { "type": "string", "minLength": 1 },
+          "status": { "enum": ["pending", "passed", "failed", "inconclusive"] },
+          "evidence": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "checkpoints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["time", "summary", "evidence"],
+        "properties": {
+          "time": { "type": "string", "format": "date-time" },
+          "summary": { "type": "string", "minLength": 1 },
+          "evidence": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "nextAction": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "status": { "const": "complete" } },
+        "required": ["status"]
+      },
+      "then": {
+        "properties": {
+          "acceptance": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": { "status": { "const": "passed" } },
+              "required": ["status"]
+            }
+          }
+        }
+      }
+    }
+  ],
+  "additionalProperties": false
+}

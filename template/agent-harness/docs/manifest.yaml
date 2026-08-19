@@ -1,0 +1,47 @@
+version: 1
+updated: 2026-08-18
+root: "{{HARNESS_HOME}}/agent-harness/docs"
+principle: progressive-disclosure
+entries:
+  operating-model:
+    path: core/operating-model.md
+    triggers: [workflow, ambiguity, evidence, handoff]
+  tool-routing:
+    path: core/tool-routing.md
+    triggers: [mcp, browser, figma, documentation, connector]
+  safety-and-verification:
+    path: core/safety-and-verification.md
+    triggers: [permissions, destructive, verification, secrets]
+  git-conventions:
+    path: core/git-conventions.md
+    triggers: [git, branch, commit, commitlint, conventional-commits]
+  harness-cli-architecture:
+    path: core/harness-cli-architecture.md
+    triggers: [harness-cli, install, init, memory-command, doctor]
+  long-running-tasks:
+    path: core/long-running-tasks.md
+    triggers: [long-running, checkpoint, acceptance, resume, task-ledger]
+  change:
+    path: playbooks/change.md
+    triggers: [implement, modify, refactor, build]
+  diagnose:
+    path: playbooks/diagnose.md
+    triggers: [debug, bug, incident, ci-failure]
+  review:
+    path: playbooks/review.md
+    triggers: [review, audit, risk]
+  research-and-design:
+    path: playbooks/research-and-design.md
+    triggers: [research, plan, design, compare]
+  release-and-external:
+    path: playbooks/release-and-external.md
+    triggers: [release, migration, publish, remote-write]
+  repository-map:
+    path: projects/repository-map.md
+    triggers: [cross-repository, repository-owner, release-order, contract]
+  project-agents:
+    path: standards/project-agents.md
+    triggers: [AGENTS.md, project-rules]
+  project-agent-docs:
+    path: standards/project-agent-docs.md
+    triggers: [.agent-docs, session, evidence, handoff]

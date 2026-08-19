@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "types": ["node"]
+  },
+  "include": [
+    "src/**/*.ts",
+    "scripts/**/*.ts",
+    "template/agent-harness/src/**/*.ts",
+    "evals/**/*.ts",
+    "tsup.config.ts",
+    "vitest.config.ts"
+  ],
+  "exclude": ["dist", "template/agent-harness/dist", "node_modules"]
+}

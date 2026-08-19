@@ -1,0 +1,92 @@
+import { execFileSync } from 'node:child_process';
+import { readdirSync, readFileSync } from 'node:fs';
+import { homedir, userInfo } from 'node:os';
+import { basename, dirname, join, resolve, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import type { Adapter } from './types.js';
+
+const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+export const templateRoot = join(packageRoot, 'template');
+export const packageVersion = JSON.parse(
+  readFileSync(join(packageRoot, 'package.json'), 'utf8'),
+).version;
+const harnessDistributionEntries = new Set([
+  'bin',
+  'dist',
+  'docs',
+  'manifest.json',
+  'schemas',
+  'templates',
+]);
+
+export function isHarnessDistributionPath(path: string): boolean {
+  return harnessDistributionEntries.has(path.split(sep)[0]);
+}
+
+function owner(env: NodeJS.ProcessEnv): string {
+  if (env.HARNESS_OWNER) return env.HARNESS_OWNER;
+  try {
+    return userInfo().username;
+  } catch {
+    return basename(env.HOME || homedir());
+  }
+}
+
+export function installationRenderer(
+  adapter: Adapter,
+  env: NodeJS.ProcessEnv,
+): (content: string, path?: string) => string {
+  const values: Record<string, string> = {
+    HOME: resolve(env.HOME || homedir()),
+    HARNESS_HOME: adapter.home,
+    HARNESS_MEMORY_HOME: resolve(
+      env.HARNESS_MEMORY_HOME || join(env.HOME || homedir(), '.agent-docs'),
+    ),
+    HARNESS_PERSONAL_HOME: resolve(
+      env.HARNESS_PERSONAL_HOME || join(env.HOME || homedir(), '.agent-harness'),
+    ),
+    HARNESS_REPOSITORY_ROOT: resolve(
+      env.HARNESS_REPOSITORY_ROOT || join(env.HOME || homedir(), 'git-repo'),
+    ),
+    HARNESS_OWNER: owner(env),
+  };
+  return (content: string, path = '') => {
+    if (path.split(sep).includes('templates')) return content;
+    return content.replace(/\{\{([A-Z0-9_]+)\}\}/g, (match, key) => values[key] ?? match);
+  };
+}
+
+export function installationValues(adapter: Adapter, env: NodeJS.ProcessEnv) {
+  const home = resolve(env.HOME || homedir());
+  return {
+    version: 1,
+    adapter: adapter.name,
+    harnessHome: adapter.home,
+    instructionFiles: adapter.instructions.map(({ path }) => path),
+    memoryHome: resolve(env.HARNESS_MEMORY_HOME || join(home, '.agent-docs')),
+    personalHome: resolve(env.HARNESS_PERSONAL_HOME || join(home, '.agent-harness')),
+    repositoryRoot: resolve(env.HARNESS_REPOSITORY_ROOT || join(home, 'git-repo')),
+    owner: owner(env),
+  };
+}
+
+export function listModules(root: string): string[] {
+  const modules: string[] = [];
+  const pending: string[] = [root];
+  while (pending.length > 0) {
+    const directory = pending.pop();
+    if (!directory) continue;
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const path = join(directory, entry.name);
+      if (entry.isDirectory()) pending.push(path);
+      else if (entry.isFile() && path.endsWith('.mjs')) modules.push(path);
+    }
+  }
+  return modules;
+}
+
+export function checkModules(root: string): void {
+  for (const path of listModules(root)) {
+    execFileSync(process.execPath, ['--check', path], { stdio: 'pipe' });
+  }
+}
