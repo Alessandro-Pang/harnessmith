@@ -4,10 +4,10 @@
 > This file is an operational guide for an LLM helping a user install or initialize it.
 
 Project: https://www.npmjs.com/package/harnessmith
-Release status: unreleased (`0.1.0` is not yet available from the npm registry)
+Release status: published (`0.1.0` is available from the npm registry)
 Runtime: Node.js 24.12 or newer
 Repository package manager: pnpm 10.13.0 (locked by `packageManager` and `pnpm-lock.yaml`)
-Distribution command after publication: npm / npx
+Distribution command: npm / npx
 Installed Harness runtime dependencies: none (the npm initializer dependencies are bundled; the
 embedded Harness bundle is self-contained)
 
@@ -19,9 +19,8 @@ pnpm run build
 node bin/harnessmith.mjs --help
 ```
 
-Until the release status changes, do not attempt registry installation or diagnose its expected 404 as a
-local npm failure. In the protocols below, use `node bin/harnessmith.mjs` from a verified source checkout;
-the shown `npx --yes harnessmith` form becomes valid only after publication.
+For a source checkout, use `node bin/harnessmith.mjs` after the local build above. For normal installation,
+use the published `npx --yes harnessmith` commands below.
 
 Generic Harness environment overrides:
 
@@ -57,7 +56,7 @@ template, its runtime field names, or its progressive documentation.
    `claude`, `claude-code`, and `all`. Never infer `all` from an ambiguous request.
 3. If Cursor is selected, determine the intended project path. Ask the user if more than one repository is
    plausible. Prefer an absolute path.
-4. Preview resolved destinations before writing. The post-publication form is:
+4. Preview resolved destinations before writing:
 
    ```bash
    npx --yes harnessmith --agent <agents> --project <project-path> --dry-run --json
@@ -69,8 +68,7 @@ template, its runtime field names, or its progressive documentation.
    - `replace-managed`: checksum matches the current installation record.
    - `conflict`: existing content is unmanaged or was modified after installation.
    Inspect each plan's `capabilities`: instruction following is advisory and permissions remain host-owned.
-5. If the user explicitly requested installation and the preview matches the requested scope, install. The
-   post-publication form is:
+5. If the user explicitly requested installation and the preview matches the requested scope, install:
 
    ```bash
    npx --yes harnessmith --agent <agents> --project <project-path>
@@ -143,8 +141,8 @@ exists. Initialization adds `/.agent-docs/` to both the project-root `.gitignore
 
 ## Non-interactive examples
 
-The following registry examples apply after publication. In the current source checkout, replace
-`npx --yes harnessmith` with `node bin/harnessmith.mjs` after completing the local build above.
+The following examples use the published npm package. In a source checkout, replace `npx --yes harnessmith`
+with `node bin/harnessmith.mjs` after completing the local build above.
 
 ```bash
 # Codex global setup

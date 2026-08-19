@@ -3,7 +3,7 @@
 All notable changes are documented here. The project follows Semantic Versioning for the npm package.
 The embedded Harness schema has its own explicitly recorded version.
 
-## 0.1.0 - Unreleased
+## 0.1.0 - 2026-08-20
 
 ### Added
 
@@ -52,7 +52,7 @@ The embedded Harness schema has its own explicitly recorded version.
   Commitlint and Markdownlint dependency trees.
 - Standardize repository installs, script orchestration, hooks, and CI on pnpm 10.13.0 while retaining npm
   commands only for distribution dry-runs and publication.
-- Clarify the unreleased registry state, source-checkout workflow, lifecycle-specific safety phases, and
+- Clarify the registry state, source-checkout workflow, lifecycle-specific safety phases, and
   English/Chinese operational contracts across README, `llms.txt`, architecture, and release documentation.
 
 ### Fixed

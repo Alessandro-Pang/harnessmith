@@ -2,8 +2,8 @@
 
 ## Supported versions
 
-No versions have been published yet. After the first release, only the latest published `0.x` version receives
-security fixes during the Alpha/Beta period.
+The latest published `0.x` version receives security fixes during the Alpha/Beta period. The currently
+supported version is `0.1.0`.
 
 ## Reporting a vulnerability
 

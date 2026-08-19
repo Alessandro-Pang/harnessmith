@@ -101,21 +101,22 @@ function checkPackage(): void {
   check(!workflow.includes('npm ci'), 'CI must not install dependencies with npm');
 
   const llms = read(join(root, 'llms.txt'));
+  const version = manifest.version || '';
   check(
-    llms.includes('Release status: unreleased'),
-    'llms.txt must identify the unreleased registry state',
+    llms.includes(`Release status: published (\`${version}\` is available from the npm registry)`),
+    'llms.txt must identify the published registry state',
   );
   check(
-    read(join(root, 'README.md')).includes('尚未发布到 npm'),
-    'README.md must identify the unreleased registry state',
+    read(join(root, 'README.md')).includes(`当前 npm 版本：\`${version}\``),
+    'README.md must identify the published npm version',
   );
   check(
-    read(join(root, 'README.en.md')).includes('not yet published to npm'),
-    'README.en.md must identify the unreleased registry state',
+    read(join(root, 'README.en.md')).includes(`Current npm release: \`${version}\``),
+    'README.en.md must identify the published npm version',
   );
   check(
-    read(join(root, 'SECURITY.md')).includes('No versions have been published yet'),
-    'SECURITY.md must not imply a published version exists',
+    read(join(root, 'SECURITY.md')).includes(`currently\nsupported version is \`${version}\``),
+    'SECURITY.md must identify the supported published version',
   );
 }
 

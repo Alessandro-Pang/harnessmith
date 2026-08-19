@@ -29,17 +29,19 @@ test('llms.txt exposes a complete non-interactive install protocol', () => {
   assert.doesNotMatch(content, /create-coding-agent-harness/);
 });
 
-test('public docs distinguish the unreleased source workflow from post-publication npx usage', () => {
+test('public docs distinguish source development from the published npm workflow', () => {
+  const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
+  const version = manifest.version as string;
   const llms = readFileSync(join(root, 'llms.txt'), 'utf8');
   const readme = readFileSync(join(root, 'README.md'), 'utf8');
   const english = readFileSync(join(root, 'README.en.md'), 'utf8');
   const security = readFileSync(join(root, 'SECURITY.md'), 'utf8');
 
-  assert.match(llms, /Release status: unreleased/);
+  assert.ok(llms.includes(`Release status: published (\`${version}\` is available`));
   assert.match(llms, /node bin\/harnessmith\.mjs/);
-  assert.match(readme, /尚未发布到 npm/);
-  assert.match(english, /not yet published to npm/i);
-  assert.match(security, /No versions have been published yet/);
+  assert.ok(readme.includes(`当前 npm 版本：\`${version}\``));
+  assert.ok(english.includes(`Current npm release: \`${version}\``));
+  assert.ok(security.includes(`supported version is \`${version}\``));
 });
 
 test('npm package includes llms.txt', () => {

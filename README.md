@@ -4,7 +4,7 @@
 
 [English](./README.en.md) | 简体中文
 
-> 发布状态：尚未发布到 npm。下文的 `npx` 命令仅适用于首次正式发布后。
+> 当前 npm 版本：`0.1.0`（公开 Alpha）。
 
 通过一个轻量的 npm initializer，把 Personal Coding Agent Harness 安装到 Codex、
 Cursor 或 Claude Code：
@@ -41,8 +41,7 @@ Harnesssmith 会把自己管理的 Cursor 文件写入仓库本地 Git exclude �
 
 ## 使用方式
 
-以下是 npm 首次发布后的安装命令。当前从源码核验时，请使用后文“开发”中的本地入口，不要把
-registry 404 误判为本机 npm 故障。
+直接通过 npm registry 运行 Harnesssmith：
 
 ```bash
 # 交互选择
@@ -133,7 +132,7 @@ format、native activation，以及 file ownership、instruction guidance 和权
 
 ## 当前稳定性
 
-当前源码版本是尚未发布的 `0.1.0`。未来的 `0.x` 版本用于公开 Alpha/Beta 验证。Harness 核心版本与
+当前公开版本是 `0.1.0`，`0.x` 版本用于公开 Alpha/Beta 验证。Harness 核心版本与
 npm 包版本独立：前者描述安装后文档、
 记忆与任务 schema 契约，后者描述安装器发布版本。升级前建议先运行 `--dry-run` 和 `status`。
 

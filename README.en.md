@@ -8,7 +8,7 @@ Harnessmith is a lightweight npm initializer for an opinionated personal coding-
 It installs compact persistent instructions, progressively disclosed operating documents, Markdown memory,
 and a durable task ledger for Codex, Cursor, and Claude Code.
 
-> Release status: not yet published to npm. The `npx` commands below apply after the first public release.
+> Current npm release: `0.1.0` (public alpha).
 
 ```bash
 npx harnessmith
@@ -24,8 +24,7 @@ See the [architecture and enforcement model](./docs/architecture.md).
 
 ## Install and inspect
 
-These registry installation commands are post-publication examples. For the current source checkout, use the
-local validation path under Development.
+Run Harnesssmith directly from the npm registry:
 
 ```bash
 npx harnessmith install --agent codex
@@ -88,7 +87,7 @@ authorizes `--force`.
 - Machine-readable Adapter capabilities that distinguish scope, format, activation, advisory guidance, and
   host-owned permissions.
 
-The current source version is the unreleased `0.1.0`; future `0.x` releases are intended for public Alpha/Beta
+The current public version is `0.1.0`; `0.x` releases are intended for public Alpha/Beta
 validation. See [CONTRIBUTING.md](./CONTRIBUTING.md),
 [SECURITY.md](./SECURITY.md), and [CHANGELOG.md](./CHANGELOG.md).
 

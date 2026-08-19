@@ -2,7 +2,11 @@
   "name": "harnessmith",
   "version": "0.1.0",
   "description": "Forge and safely manage an opinionated, portable personal agent harness.",
-  "repository": "https://github.com/Alessandro-Pang/harnessmith",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Alessandro-Pang/harnessmith.git"
+  },
+  "homepage": "https://github.com/Alessandro-Pang/harnessmith#readme",
   "bugs": "https://github.com/Alessandro-Pang/harnessmith/issues",
   "author": "zi.yang <pcy1314@163.com> (https://github.com/Alessandro-Pang)",
   "type": "module",
