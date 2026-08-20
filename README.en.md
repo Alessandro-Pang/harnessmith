@@ -75,6 +75,7 @@ authorizes `--force`.
 - Strict separation between rules, authoritative project facts, and non-authoritative memory.
 - A user-owned personal rule and repository-map overlay, preserved across upgrades and uninstall.
 - Idempotent global and project memory initialization.
+- A compact current-user profile with stable dimensions, bounded size, and in-place conflict resolution.
 - Memory list, search, strict metadata/reference validation, supersede, safe archive, and proposal-only
   promotion into authoritative project documentation.
 - Long-running task objectives, checkpoints, acceptance evidence, and completion gates.

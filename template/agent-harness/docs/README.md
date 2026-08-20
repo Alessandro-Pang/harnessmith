@@ -29,6 +29,7 @@ updated: 2026-08-19
 | 跨仓任务识别仓库关系 | `projects/repository-map.md` |
 | 新建或精简项目 `AGENTS.md` | `standards/project-agents.md` |
 | 创建或维护项目 `.agent-docs/` | `standards/project-agent-docs.md` |
+| 读取或更新紧凑用户画像、处理偏好变化与冲突 | `standards/user-profile-memory.md` |
 
 ## 目录职责
 

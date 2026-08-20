@@ -138,4 +138,12 @@ test('doctor and validate pass for an installed fixture and report missing prere
 
   const broken = harnessRuntime(join(root, 'broken'));
   assert.throws(() => doctor(broken, { quietSuccess: true }, capturedIo()), /failure/);
+
+  rmSync(join(runtime.memoryHome, 'profile.md'));
+  const missingProfile = capturedIo();
+  assert.throws(() => doctor(runtime, { quietSuccess: true }, missingProfile), /failure/);
+  assert.equal(
+    missingProfile.logs.some((line) => /FAIL global user profile/.test(line)),
+    true,
+  );
 });

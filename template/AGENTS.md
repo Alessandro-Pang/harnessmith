@@ -14,6 +14,8 @@
    `node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs init global`；该操作幂等且不得覆盖已有记忆。
    若 `{{HARNESS_PERSONAL_HOME}}/AGENTS.md` 或 `projects/repository-map.md` 缺失，立即运行
    `node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs init personal`；只补齐缺失文件。
+   读取紧凑的 `{{HARNESS_MEMORY_HOME}}/profile.md`。发现稳定且对未来协作有用的用户画像信号时，
+   按 `agent-harness/docs/standards/user-profile-memory.md` 原位更新；不得混入项目事实或任务流水。
 2. 读取 `{{HARNESS_PERSONAL_HOME}}/AGENTS.md` 中的个人补充规则；该文件由用户维护，Harnesssmith
    升级、restore 和 uninstall 均不得覆盖或删除。
 3. 确认当前目录、Git 根、工作树状态和更近的 `AGENTS.md`；不要假定当前目录就是仓库根。
@@ -48,8 +50,10 @@
 - 读取记忆时先看名称/元信息和 `.agent-docs/core.md`，再按引用读取正文；不自动注入整个记忆库。
 - 首次需要项目记忆时按 `agent-harness/docs/standards/project-agent-docs.md` 初始化，并同步让
   `.gitignore` 与 `.ignore` 忽略整个 `.agent-docs/`。
-- 跨项目个人记忆位于 `{{HARNESS_MEMORY_HOME}}/`；宿主提供的原生 memory 是补充召回层，不替代这里
-  的可审阅交接，也不得成为规则或项目事实的唯一来源。
+- 跨项目个人记忆位于 `{{HARNESS_MEMORY_HOME}}/`；宿主原生 memory 只作为待核对线索。当前用户
+  画像以 `profile.md` 为唯一投影，项目 input/episode 只作来源或历史，不另建当前偏好摘要。
+- 用户画像只描述用户本身的当前状态；同一维度只保留一条紧凑结论，偏好变化时修改旧条目而非
+  追加冲突记忆。用户明确说明优先于观察和推断，敏感属性不得推断。
 
 ## 工具与能力路由
 

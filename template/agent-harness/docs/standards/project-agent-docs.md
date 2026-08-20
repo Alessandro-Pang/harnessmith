@@ -62,6 +62,9 @@ node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs init project /absolute/proje
 - `distilled`：跨多次任务仍有价值、重新发现成本高的经验，只保留不变量、陷阱和来源指针。
 - `evidence`：支撑某段记忆的脱敏原始材料；证据不自动成为事实源。
 
+项目 `.agent-docs` 不得维护当前用户画像。用户在项目任务中表达的偏好可作为 input 或 episode 的
+来源或历史证据保留，但当前结论只能合并到全局 `profile.md`；项目 `distilled/` 不得另建偏好摘要。
+
 ## 渐进披露
 
 1. 启动时最多列出记忆名称、type、status、updated，不读取所有正文。

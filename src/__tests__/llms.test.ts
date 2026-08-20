@@ -95,3 +95,33 @@ test('distributed Harness template contains no host product identity', () => {
     }
   }
 });
+
+test('distributed rules define compact, user-only profile maintenance', () => {
+  const agents = readFileSync(join(root, 'template', 'AGENTS.md'), 'utf8');
+  const globalMemory = readFileSync(
+    join(root, 'template', 'agent-harness', 'templates', 'global-agent-docs', 'README.md'),
+    'utf8',
+  );
+  const projectMemory = readFileSync(
+    join(root, 'template', 'agent-harness', 'docs', 'standards', 'project-agent-docs.md'),
+    'utf8',
+  );
+  const standard = readFileSync(
+    join(root, 'template', 'agent-harness', 'docs', 'standards', 'user-profile-memory.md'),
+    'utf8',
+  );
+
+  assert.match(agents, /profile\.md/);
+  assert.match(agents, /用户画像/);
+  assert.match(standard, /只记录用户本身/);
+  assert.match(standard, /同一维度原位改写/);
+  assert.match(standard, /当前状态优先/);
+  assert.match(standard, /不得推断敏感属性/);
+  assert.match(standard, /最多 32 条/);
+  assert.match(standard, /唯一的当前用户画像/);
+  assert.match(standard, /来源或历史证据/);
+  assert.match(globalMemory, /用户偏好和身份只写入 `profile\.md`/);
+  assert.doesNotMatch(globalMemory, /跨多个仓库复用的偏好、经历/);
+  assert.match(projectMemory, /不得维护当前用户画像/);
+  assert.match(agents, /宿主原生 memory 只作为待核对线索/);
+});

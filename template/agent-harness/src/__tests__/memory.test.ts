@@ -72,6 +72,20 @@ test('global memory initialization is idempotent and preserves user content', ()
   assert.equal(resolveMemoryRoot(runtime, 'global'), runtime.memoryHome);
 });
 
+test('global memory initializes a compact user profile and routes to it from core', () => {
+  const root = temporaryRoot();
+  const runtime = harnessRuntime(root);
+
+  initGlobal(runtime, capturedIo());
+
+  const profile = join(runtime.memoryHome, 'profile.md');
+  assert.equal(existsSync(profile), true);
+  assert.match(readFileSync(profile, 'utf8'), /type: user-profile/);
+  assert.match(readFileSync(profile, 'utf8'), /memory-kind: distilled/);
+  assert.match(readFileSync(join(runtime.memoryHome, 'core.md'), 'utf8'), /memory:profile/);
+  memoryCheck(runtime, 'global', capturedIo());
+});
+
 test('personal overlay initialization is idempotent and preserves user rules', () => {
   const root = temporaryRoot();
   const runtime = harnessRuntime(root);
@@ -211,6 +225,71 @@ test('memory check enforces kind lifecycle links, unique sessions, and secret hy
   );
   assert.equal(
     output.errors.some((message) => /secret material/.test(message)),
+    true,
+  );
+});
+
+test('memory check rejects duplicate, malformed, and oversized user-profile entries', () => {
+  const root = temporaryRoot();
+  const runtime = harnessRuntime(root);
+  initGlobal(runtime, capturedIo());
+  const profile = join(runtime.memoryHome, 'profile.md');
+  const entries = Array.from(
+    { length: 33 },
+    (_, index) => `- interests.topic-${index} | Topic ${index} | observed | medium | 2026-08-20`,
+  );
+  entries[1] = '- interests.topic-0 | Conflicting topic | explicit | high | 2026-08-20';
+  entries[2] = '- malformed entry';
+  writeFileSync(
+    profile,
+    memoryDocument('User Profile', `# Current Profile\n\n${entries.join('\n')}`)
+      .replace('type: session-handoff', 'type: user-profile')
+      .replace('memory-kind: episode', 'memory-kind: distilled')
+      .replace('project: test', 'project: global'),
+  );
+  const output = capturedIo();
+
+  assert.throws(() => memoryCheck(runtime, 'global', output), /issue/);
+  assert.equal(
+    output.errors.some((message) => /at most 32 active entries/.test(message)),
+    true,
+  );
+  assert.equal(
+    output.errors.some((message) => /Duplicate user-profile key/.test(message)),
+    true,
+  );
+  assert.equal(
+    output.errors.some((message) => /Invalid user-profile entry/.test(message)),
+    true,
+  );
+});
+
+test('memory check enforces profile.md as the single canonical user profile', () => {
+  const root = temporaryRoot();
+  const runtime = harnessRuntime(root);
+  initGlobal(runtime, capturedIo());
+  const profile = join(runtime.memoryHome, 'profile.md');
+  const duplicate = join(runtime.memoryHome, 'other-profile.md');
+  writeFileSync(duplicate, readFileSync(profile, 'utf8'));
+  const duplicateOutput = capturedIo();
+
+  assert.throws(() => memoryCheck(runtime, 'global', duplicateOutput), /issue/);
+  assert.equal(
+    duplicateOutput.errors.some((message) => /must be stored at profile\.md/.test(message)),
+    true,
+  );
+
+  rmSync(duplicate);
+  writeFileSync(
+    profile,
+    readFileSync(profile, 'utf8').replace('type: user-profile', 'type: memory'),
+  );
+  const wrongTypeOutput = capturedIo();
+  assert.throws(() => memoryCheck(runtime, 'global', wrongTypeOutput), /issue/);
+  assert.equal(
+    wrongTypeOutput.errors.some((message) =>
+      /profile\.md must declare type user-profile/.test(message),
+    ),
     true,
   );
 });

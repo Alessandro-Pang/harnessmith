@@ -19,4 +19,8 @@ schema-version: 1
 
 # Global Memory Core
 
-当前没有需要主动路由的跨项目记忆。新增条目时只写“何时读取 + 能回答什么 + `memory:` 引用”。
+## User Profile
+
+- 需要理解用户身份、工作方式、技术背景或当前兴趣时读取 `memory:profile`。
+
+其余跨项目记忆只写“何时读取 + 能回答什么 + `memory:` 引用”。

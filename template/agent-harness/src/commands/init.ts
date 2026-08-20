@@ -8,7 +8,7 @@ import type { Io, Runtime } from '../types.js';
 export function initGlobal(runtime: Runtime, io: Io = console): void {
   mkdirSync(runtime.memoryHome, { recursive: true });
   const created: string[] = [];
-  for (const name of ['README.md', 'core.md']) {
+  for (const name of ['README.md', 'core.md', 'profile.md']) {
     const destination = join(runtime.memoryHome, name);
     const content = render(runtime, readTemplate(runtime, `global-agent-docs/${name}`));
     if (writeIfMissing(destination, content)) created.push(destination);

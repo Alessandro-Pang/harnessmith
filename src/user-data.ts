@@ -12,7 +12,7 @@ export function initializeUserData(
 ): string {
   const values = installationValues(prepared.adapter, env);
   const memoryFiles = global
-    ? ['README.md', 'core.md'].map((name) => join(values.memoryHome, name))
+    ? ['README.md', 'core.md', 'profile.md'].map((name) => join(values.memoryHome, name))
     : [];
   const personalFiles = [
     join(values.personalHome, 'README.md'),

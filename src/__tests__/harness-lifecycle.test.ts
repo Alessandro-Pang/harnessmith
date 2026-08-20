@@ -40,6 +40,7 @@ test('packaged Harness completes project memory and task lifecycle', () => {
   run(process.execPath, [installer, '--agent', 'codex'], { cwd: root, env });
   const harness = join(agentHome, 'agent-harness', 'bin', 'harness.mjs');
   assert.ok(existsSync(join(memoryHome, 'README.md')));
+  assert.ok(existsSync(join(memoryHome, 'profile.md')));
   assert.match(
     run(process.execPath, [harness, '--help'], { env }),
     /task\s+manage long-running task ledgers/,

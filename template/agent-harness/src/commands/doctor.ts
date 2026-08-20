@@ -28,6 +28,7 @@ export function doctor(
     [existsSync(join(runtime.installedHarness, 'bin', 'harness.mjs')), 'installed harness CLI'],
     [existsSync(join(runtime.memoryHome, 'README.md')), `global memory ${runtime.memoryHome}`],
     [existsSync(join(runtime.memoryHome, 'core.md')), 'global memory core'],
+    [existsSync(join(runtime.memoryHome, 'profile.md')), 'global user profile'],
     [existsSync(join(runtime.personalHome, 'AGENTS.md')), `personal rules ${runtime.personalHome}`],
   ];
 

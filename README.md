@@ -127,6 +127,8 @@ format、native activation，以及 file ownership、instruction guidance 和权
 安装器默认幂等初始化个人 overlay 和全局 `.agent-docs`；`--no-init-global` 只跳过全局记忆，
 不会跳过个人 overlay。项目
 `.agent-docs` 仍由 Agent 根据任务性质判断是否初始化，无法确定时询问用户。
+全局记忆包含最多 32 条的紧凑用户画像：只记录用户当前身份、工作方式、技术背景、偏好和研究方向；
+同一维度发生变化时原位更新，不保留相互冲突的并列结论。
 
 ## 开发
 

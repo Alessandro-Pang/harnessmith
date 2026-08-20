@@ -129,6 +129,54 @@ function validateLifecycle(path: string, metadata: Map<string, unknown>, io: Io)
   return failures;
 }
 
+function validateUserProfile(
+  root: string,
+  path: string,
+  content: string,
+  metadata: Map<string, unknown>,
+  io: Io,
+): number {
+  let failures = 0;
+  const canonicalProfile = resolve(root, 'profile.md');
+  if (path === canonicalProfile && metadata.get('type') !== 'user-profile') {
+    io.error(`profile.md must declare type user-profile: ${path}`);
+    failures += 1;
+  }
+  if (metadata.get('type') !== 'user-profile') return failures;
+  if (path !== canonicalProfile) {
+    io.error(`User profile must be stored at profile.md: ${path}`);
+    failures += 1;
+  }
+  if (metadata.get('memory-kind') !== 'distilled' || metadata.get('project') !== 'global') {
+    io.error(`User profile must be global distilled memory: ${path}`);
+    failures += 1;
+  }
+  const body = content.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, '');
+  const entries = body.split(/\r?\n/).filter((line) => line.startsWith('- '));
+  if (entries.length > 32) {
+    io.error(`User profile permits at most 32 active entries: ${path}`);
+    failures += 1;
+  }
+  const keys = new Set<string>();
+  const entryPattern =
+    /^- ([a-z0-9]+(?:[.-][a-z0-9]+)*) \| ([^|]{1,200}) \| (explicit|observed|inferred) \| (high|medium|low) \| (\d{4}-\d{2}-\d{2})$/;
+  for (const entry of entries) {
+    const match = entry.match(entryPattern);
+    if (!match || !validCalendarDate(match[5])) {
+      io.error(`Invalid user-profile entry: ${path}: ${entry}`);
+      failures += 1;
+      continue;
+    }
+    const key = match[1];
+    if (keys.has(key)) {
+      io.error(`Duplicate user-profile key ${key}: ${path}`);
+      failures += 1;
+    }
+    keys.add(key);
+  }
+  return failures;
+}
+
 export function validateMemoryRoot(root: string, io: Io): void {
   let failures = 0;
   const references = new Set<string>();
@@ -145,6 +193,7 @@ export function validateMemoryRoot(root: string, io: Io): void {
     }
     failures += validateMetadata(path, metadata, io);
     failures += validateLifecycle(path, metadata, io);
+    failures += validateUserProfile(root, path, content, metadata, io);
     const sessionId = metadata.get('session-id');
     if (typeof sessionId === 'string' && sessionId) {
       const existing = sessions.get(sessionId);

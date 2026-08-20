@@ -3,6 +3,13 @@
 All notable changes are documented here. The project follows Semantic Versioning for the npm package.
 The embedded Harness schema has its own explicitly recorded version.
 
+## Unreleased
+
+### Added
+
+- Initialize and validate a compact current-user profile with evidence levels, stable dimension keys,
+  bounded size, and in-place updates when identity, preferences, or technical interests change.
+
 ## 0.1.1 - 2026-08-20
 
 ### Fixed
