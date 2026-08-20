@@ -23,6 +23,7 @@ import {
   supersedeMemory,
 } from '../commands/memory.js';
 import { contextSearch } from '../commands/search.js';
+import { parseFrontmatter } from '../lib/frontmatter.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function temporaryRoot(): string {
@@ -97,7 +98,8 @@ test('project initialization targets the Git root and manages both ignore files 
     const content = readFileSync(join(project, name), 'utf8');
     assert.equal(content.match(/^\/\.agent-docs\/$/gm)?.length, 1);
   }
-  assert.match(readFileSync(join(project, '.agent-docs', 'core.md'), 'utf8'), /project: "project"/);
+  const metadata = parseFrontmatter(readFileSync(join(project, '.agent-docs', 'core.md'), 'utf8'));
+  assert.equal(metadata.get('project'), 'project');
   assert.throws(() => initProject(runtime, join(root, 'missing')), /does not exist/);
 });
 

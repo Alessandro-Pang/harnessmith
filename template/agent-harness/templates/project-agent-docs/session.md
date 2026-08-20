@@ -4,11 +4,14 @@ description: "<本记录帮助下一位 Agent 回答什么>"
 type: session-handoff
 memory-kind: episode
 status: active
-owners: ["{{HARNESS_OWNER}}"]
+owners:
+  - |-
+    {{HARNESS_OWNER}}
 created: "{{DATE}}"
 updated: "{{DATE}}"
 tags: ["handoff"]
-project: "{{PROJECT_KEY}}"
+project: |-
+  {{PROJECT_KEY}}
 scope: ["<repo/relative/path>"]
 source-refs: ["<docs/path-or-commit>"]
 source-of-truth: false

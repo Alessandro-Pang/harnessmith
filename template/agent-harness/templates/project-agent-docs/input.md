@@ -4,10 +4,13 @@ description: "<输入内容、来源和适用范围>"
 type: user-input
 memory-kind: input
 status: active
-owners: ["{{HARNESS_OWNER}}"]
+owners:
+  - |-
+    {{HARNESS_OWNER}}
 created: "{{DATE}}"
 updated: "{{DATE}}"
-project: "{{PROJECT_KEY}}"
+project: |-
+  {{PROJECT_KEY}}
 tags: ["user-input"]
 scope: []
 source-refs: []

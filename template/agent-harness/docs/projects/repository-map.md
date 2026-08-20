@@ -3,7 +3,8 @@ title: Repository Relationship Map
 type: harness-project-map
 status: template
 updated: 2026-08-18
-scope: "{{HARNESS_REPOSITORY_ROOT}}"
+scope: |-
+  {{HARNESS_REPOSITORY_ROOT}}
 ---
 
 # Repository Relationship Map

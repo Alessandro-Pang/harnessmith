@@ -4,10 +4,13 @@ description: 项目本地 Agent 记忆协议与渐进读取入口。
 type: agent-memory-index
 memory-kind: index
 status: active
-owners: ["{{HARNESS_OWNER}}"]
+owners:
+  - |-
+    {{HARNESS_OWNER}}
 created: "{{DATE}}"
 updated: "{{DATE}}"
-project: "{{PROJECT_KEY}}"
+project: |-
+  {{PROJECT_KEY}}
 tags: ["agent-memory"]
 scope: [".agent-docs"]
 source-refs: []

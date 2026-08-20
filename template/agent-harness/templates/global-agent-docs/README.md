@@ -4,12 +4,16 @@ description: 跨项目个人记忆协议与入口。
 type: agent-memory-index
 memory-kind: index
 status: active
-owners: ["{{HARNESS_OWNER}}"]
+owners:
+  - |-
+    {{HARNESS_OWNER}}
 created: "{{DATE}}"
 updated: "{{DATE}}"
 project: global
 tags: ["agent-memory", "cross-project"]
-scope: ["{{HARNESS_REPOSITORY_ROOT}}"]
+scope:
+  - |-
+    {{HARNESS_REPOSITORY_ROOT}}
 source-refs: []
 source-of-truth: false
 schema-version: 1

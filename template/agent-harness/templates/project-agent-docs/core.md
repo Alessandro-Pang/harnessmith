@@ -4,10 +4,13 @@ description: 当前活跃主题与高价值记忆的名称级入口。
 type: agent-memory-index
 memory-kind: index
 status: active
-owners: ["{{HARNESS_OWNER}}"]
+owners:
+  - |-
+    {{HARNESS_OWNER}}
 created: "{{DATE}}"
 updated: "{{DATE}}"
-project: "{{PROJECT_KEY}}"
+project: |-
+  {{PROJECT_KEY}}
 tags: ["memory-index"]
 scope: []
 source-refs: []

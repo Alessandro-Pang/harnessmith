@@ -4,10 +4,13 @@ description: "<可避免未来重新调查的发现及其适用边界>"
 type: distilled-memory
 memory-kind: distilled
 status: active
-owners: ["{{HARNESS_OWNER}}"]
+owners:
+  - |-
+    {{HARNESS_OWNER}}
 created: "{{DATE}}"
 updated: "{{DATE}}"
-project: "{{PROJECT_KEY}}"
+project: |-
+  {{PROJECT_KEY}}
 tags: ["distilled"]
 scope: ["<repo/relative/path>"]
 source-refs: ["session:<id>", "docs/path.md", "commit:<sha>"]

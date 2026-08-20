@@ -4,7 +4,9 @@ description: 当前跨项目活跃主题与高价值个人记忆入口。
 type: agent-memory-index
 memory-kind: index
 status: active
-owners: ["{{HARNESS_OWNER}}"]
+owners:
+  - |-
+    {{HARNESS_OWNER}}
 created: "{{DATE}}"
 updated: "{{DATE}}"
 project: global
