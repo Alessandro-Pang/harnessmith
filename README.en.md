@@ -8,8 +8,6 @@ Harnessmith is a lightweight npm initializer for an opinionated personal coding-
 It installs compact persistent instructions, progressively disclosed operating documents, Markdown memory,
 and a durable task ledger for Codex, Cursor, and Claude Code.
 
-> Current npm release: `0.1.0` (public alpha).
-
 ```bash
 npx harnessmith
 ```
@@ -86,10 +84,6 @@ authorizes `--force`.
 - Cross-process Adapter operation locks for install, status, restore, and uninstall.
 - Machine-readable Adapter capabilities that distinguish scope, format, activation, advisory guidance, and
   host-owned permissions.
-
-The current public version is `0.1.0`; `0.x` releases are intended for public Alpha/Beta
-validation. See [CONTRIBUTING.md](./CONTRIBUTING.md),
-[SECURITY.md](./SECURITY.md), and [CHANGELOG.md](./CHANGELOG.md).
 
 ## Development
 

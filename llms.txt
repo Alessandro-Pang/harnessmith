@@ -4,7 +4,7 @@
 > This file is an operational guide for an LLM helping a user install or initialize it.
 
 Project: https://www.npmjs.com/package/harnessmith
-Release status: published (`0.1.0` is available from the npm registry)
+Release channel: npm registry (`latest` dist-tag)
 Runtime: Node.js 24.12 or newer
 Repository package manager: pnpm 10.13.0 (locked by `packageManager` and `pnpm-lock.yaml`)
 Distribution command: npm / npx

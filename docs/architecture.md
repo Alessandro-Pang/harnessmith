@@ -54,9 +54,9 @@ Node.js 无法提供跨平台 `openat(O_NOFOLLOW)` 等同语义，因此 TOCTOU 
 
 ## 版本与迁移
 
-- npm package version 描述外层安装器发布；当前为 `0.1.0` unreleased。
-- `harnessVersion` 描述内嵌 Runtime 功能；当前为 `2.1.0`。
-- `schemaVersion` 与 `memorySchemaVersion` 当前都为 `1`。
+- npm package version 描述外层安装器发布版本，唯一事实来源是根 `package.json`。
+- `harnessVersion` 描述内嵌 Runtime 功能，各 schema version 描述持久化契约；唯一事实来源是
+  `template/agent-harness/manifest.json`。
 - `harness version --json` 输出全部兼容字段，`validate` 拒绝未知 schema。
 - 当前没有待迁移 schema，也没有 `migrate` 命令。将来任何 schema 变更必须先实现显式、可测试、
   可回滚的迁移，再提升对应 schema version。

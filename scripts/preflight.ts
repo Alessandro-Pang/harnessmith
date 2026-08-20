@@ -24,6 +24,29 @@ function read(path: string): string {
   return readFileSync(path, 'utf8');
 }
 
+function checkPublicGuidance(version: string): void {
+  const llms = read(join(root, 'llms.txt'));
+  const readme = read(join(root, 'README.md'));
+  const englishReadme = read(join(root, 'README.en.md'));
+  const security = read(join(root, 'SECURITY.md'));
+  check(
+    llms.includes('Release channel: npm registry (`latest` dist-tag)'),
+    'llms.txt must identify the registry release channel',
+  );
+  check(
+    security.includes('The latest published release receives security fixes'),
+    'SECURITY.md must identify the support policy',
+  );
+  for (const [path, content] of [
+    ['README.md', readme],
+    ['README.en.md', englishReadme],
+    ['SECURITY.md', security],
+    ['llms.txt', llms],
+  ]) {
+    check(!content.includes(version), `${path} must not duplicate the package version`);
+  }
+}
+
 function runNode(entry: string, args: string[], env: NodeJS.ProcessEnv = process.env): string {
   const result = spawnSync(process.execPath, [entry, ...args], {
     cwd: root,
@@ -100,24 +123,7 @@ function checkPackage(): void {
   );
   check(!workflow.includes('npm ci'), 'CI must not install dependencies with npm');
 
-  const llms = read(join(root, 'llms.txt'));
-  const version = manifest.version || '';
-  check(
-    llms.includes(`Release status: published (\`${version}\` is available from the npm registry)`),
-    'llms.txt must identify the published registry state',
-  );
-  check(
-    read(join(root, 'README.md')).includes(`当前 npm 版本：\`${version}\``),
-    'README.md must identify the published npm version',
-  );
-  check(
-    read(join(root, 'README.en.md')).includes(`Current npm release: \`${version}\``),
-    'README.en.md must identify the published npm version',
-  );
-  check(
-    read(join(root, 'SECURITY.md')).includes(`currently\nsupported version is \`${version}\``),
-    'SECURITY.md must identify the supported published version',
-  );
+  checkPublicGuidance(manifest.version || '');
 }
 
 function checkBranch(): void {

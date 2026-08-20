@@ -1,9 +1,8 @@
 # Security Policy
 
-## Supported versions
+## Support policy
 
-The latest published `0.x` version receives security fixes during the Alpha/Beta period. The currently
-supported version is `0.1.0`.
+The latest published release receives security fixes during the Alpha/Beta period.
 
 ## Reporting a vulnerability
 

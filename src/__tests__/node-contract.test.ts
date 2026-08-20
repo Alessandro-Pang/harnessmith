@@ -1,10 +1,32 @@
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'vitest';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
+
+function packageName(specifier: string): string {
+  return specifier.startsWith('@')
+    ? specifier.split('/').slice(0, 2).join('/')
+    : specifier.split('/')[0];
+}
+
+function runtimeImports(): string[] {
+  const sourceRoot = join(root, 'src');
+  const imports = readdirSync(sourceRoot, { withFileTypes: true }).flatMap((entry) => {
+    if (!entry.isFile() || !entry.name.endsWith('.ts')) return [];
+    const content = readFileSync(join(sourceRoot, entry.name), 'utf8');
+    return [...content.matchAll(/from ['"]([^'"]+)['"]/g)].map((match) => match[1]);
+  });
+  return [
+    ...new Set(
+      imports
+        .filter((specifier) => !specifier.startsWith('.') && !specifier.startsWith('node:'))
+        .map(packageName),
+    ),
+  ].sort();
+}
 
 test('project declares Node 24.12 consistently across runtime and CI contracts', () => {
   const packageManifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
@@ -28,20 +50,33 @@ test('Git normalizes text files to LF on every platform', () => {
   assert.match(attributes, /^\* text=auto eol=lf$/m);
 });
 
-test('release documentation matches the package version', () => {
+test('every production import is declared as a runtime dependency', () => {
+  const packageManifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as {
+    dependencies?: Record<string, string>;
+  };
+  const dependencies = new Set(Object.keys(packageManifest.dependencies ?? {}));
+
+  assert.deepEqual(
+    runtimeImports().filter((dependency) => !dependencies.has(dependency)),
+    [],
+  );
+});
+
+test('public guidance does not duplicate the package version', () => {
   const packageManifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
   const version = packageManifest.version as string;
-  const readme = readFileSync(join(root, 'README.md'), 'utf8');
-  const englishReadme = readFileSync(join(root, 'README.en.md'), 'utf8');
-  const changelog = readFileSync(join(root, 'CHANGELOG.md'), 'utf8');
-  const security = readFileSync(join(root, 'SECURITY.md'), 'utf8');
-  const llms = readFileSync(join(root, 'llms.txt'), 'utf8');
+  const guidancePaths = [
+    'README.md',
+    'README.en.md',
+    'SECURITY.md',
+    'llms.txt',
+    'docs/architecture.md',
+  ];
 
-  assert.match(readme, new RegExp(`当前 npm 版本：\\\`${version}\\\``));
-  assert.match(englishReadme, new RegExp(`Current npm release: \\\`${version}\\\``));
-  assert.match(changelog, new RegExp(`^## ${version} - \\d{4}-\\d{2}-\\d{2}$`, 'm'));
-  assert.match(security, new RegExp(`supported version is \\\`${version}\\\``));
-  assert.match(llms, new RegExp(`Release status: published \\(\\\`${version}\\\` is available`));
+  for (const path of guidancePaths) {
+    const content = readFileSync(join(root, path), 'utf8');
+    assert.ok(!content.includes(version), `${path} duplicates package version ${version}`);
+  }
 });
 
 test('project uses one pinned pnpm toolchain across manifests, CI, scripts, and hooks', () => {

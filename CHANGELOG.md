@@ -3,6 +3,14 @@
 All notable changes are documented here. The project follows Semantic Versioning for the npm package.
 The embedded Harness schema has its own explicitly recorded version.
 
+## 0.1.1 - 2026-08-20
+
+### Fixed
+
+- Declare `write-file-atomic` as a runtime dependency so production-only and `npx` installations can start.
+- Render Windows paths safely in distributed YAML and memory frontmatter templates.
+- Compare Windows paths semantically in cross-platform tests, including long and 8.3 path forms.
+
 ## 0.1.0 - 2026-08-20
 
 ### Added

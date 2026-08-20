@@ -20,6 +20,9 @@ importers:
       proper-lockfile:
         specifier: 4.1.2
         version: 4.1.2
+      write-file-atomic:
+        specifier: 7.0.1
+        version: 7.0.1
     devDependencies:
       '@biomejs/biome':
         specifier: 2.5.9
@@ -69,9 +72,6 @@ importers:
       vitest:
         specifier: 4.1.11
         version: 4.1.11(@types/node@24.13.3)(@vitest/coverage-v8@4.1.11)(vite@8.2.1(@types/node@24.13.3)(esbuild@0.27.7)(jiti@2.6.1)(tsx@4.23.12)(yaml@2.9.0))
-      write-file-atomic:
-        specifier: 7.0.1
-        version: 7.0.1
       yaml:
         specifier: 2.9.0
         version: 2.9.0

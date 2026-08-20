@@ -30,18 +30,17 @@ test('llms.txt exposes a complete non-interactive install protocol', () => {
 });
 
 test('public docs distinguish source development from the published npm workflow', () => {
-  const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
-  const version = manifest.version as string;
   const llms = readFileSync(join(root, 'llms.txt'), 'utf8');
   const readme = readFileSync(join(root, 'README.md'), 'utf8');
   const english = readFileSync(join(root, 'README.en.md'), 'utf8');
   const security = readFileSync(join(root, 'SECURITY.md'), 'utf8');
 
-  assert.ok(llms.includes(`Release status: published (\`${version}\` is available`));
+  assert.match(llms, /Release channel: npm registry/);
   assert.match(llms, /node bin\/harnessmith\.mjs/);
-  assert.ok(readme.includes(`当前 npm 版本：\`${version}\``));
-  assert.ok(english.includes(`Current npm release: \`${version}\``));
-  assert.ok(security.includes(`supported version is \`${version}\``));
+  assert.doesNotMatch(readme, /当前稳定性|latest.*dist-tag/);
+  assert.doesNotMatch(english, /current public version|latest.*dist-tag/i);
+  assert.match(security, /The latest published release receives security fixes/);
+  assert.doesNotMatch(security, /`\d+\.x`/);
 });
 
 test('npm package includes llms.txt', () => {

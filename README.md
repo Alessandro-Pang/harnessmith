@@ -1,10 +1,8 @@
 # Harnessmith
 
-> Forge once. Work consistently across coding agents.
+Forge once. Work consistently across coding agents.
 
 [English](./README.en.md) | 简体中文
-
-> 当前 npm 版本：`0.1.0`（公开 Alpha）。
 
 通过一个轻量的 npm initializer，把 Personal Coding Agent Harness 安装到 Codex、
 Cursor 或 Claude Code：
@@ -97,7 +95,7 @@ npx harnessmith uninstall --agent codex
 `CODEX_HOME` 和 `CLAUDE_CONFIG_DIR` 只属于对应安装 adapter；它们不会进入 Harness 模板、运行时
 字段或渐进式文档。
 
-内置 Harness 2.x 使用完全中性的运行时契约；新增宿主时只需扩展 adapter，不修改模板核心。
+内置 Harness 使用完全中性的运行时契约；新增宿主时只需扩展 adapter，不修改模板核心。
 dry-run、install result 和 status JSON 都包含 Adapter 的 `capabilities`，明确 scope、instruction
 format、native activation，以及 file ownership、instruction guidance 和权限的 enforcement owner。
 
@@ -129,12 +127,6 @@ format、native activation，以及 file ownership、instruction guidance 和权
 安装器默认幂等初始化个人 overlay 和全局 `.agent-docs`；`--no-init-global` 只跳过全局记忆，
 不会跳过个人 overlay。项目
 `.agent-docs` 仍由 Agent 根据任务性质判断是否初始化，无法确定时询问用户。
-
-## 当前稳定性
-
-当前公开版本是 `0.1.0`，`0.x` 版本用于公开 Alpha/Beta 验证。Harness 核心版本与
-npm 包版本独立：前者描述安装后文档、
-记忆与任务 schema 契约，后者描述安装器发布版本。升级前建议先运行 `--dry-run` 和 `status`。
 
 ## 开发
 

@@ -1,6 +1,6 @@
 {
   "name": "harnessmith",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Forge and safely manage an opinionated, portable personal agent harness.",
   "repository": {
     "type": "git",
@@ -85,7 +85,8 @@
     "@clack/prompts": "1.7.0",
     "commander": "15.0.0",
     "picocolors": "1.1.1",
-    "proper-lockfile": "4.1.2"
+    "proper-lockfile": "4.1.2",
+    "write-file-atomic": "7.0.1"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.9",
@@ -104,7 +105,6 @@
     "tsx": "4.23.12",
     "typescript": "7.0.2",
     "vitest": "4.1.11",
-    "write-file-atomic": "7.0.1",
     "yaml": "2.9.0"
   }
 }
