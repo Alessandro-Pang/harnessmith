@@ -125,3 +125,34 @@ test('distributed rules define compact, user-only profile maintenance', () => {
   assert.match(projectMemory, /不得维护当前用户画像/);
   assert.match(agents, /宿主原生 memory 只作为待核对线索/);
 });
+
+test('cross-repository research closes the relationship-map writeback loop', () => {
+  const agents = readFileSync(join(root, 'template', 'AGENTS.md'), 'utf8');
+  const playbook = readFileSync(
+    join(root, 'template', 'agent-harness', 'docs', 'projects', 'repository-map.md'),
+    'utf8',
+  );
+  const personalMap = readFileSync(
+    join(
+      root,
+      'template',
+      'agent-harness',
+      'templates',
+      'personal',
+      'projects',
+      'repository-map.md',
+    ),
+    'utf8',
+  );
+
+  assert.match(agents, /交付前评估本次发现/);
+  assert.match(agents, /updated、unchanged 或 blocked/);
+  assert.match(playbook, /写回闭环/);
+  assert.match(playbook, /更新 personal `repository-map\.md`/);
+  assert.match(playbook, /动态状态/);
+  assert.match(playbook, /updated/);
+  assert.match(playbook, /unchanged/);
+  assert.match(playbook, /blocked/);
+  assert.match(personalMap, /正式来源/);
+  assert.match(personalMap, /不要写入当前分支/);
+});

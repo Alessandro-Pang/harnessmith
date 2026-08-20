@@ -3,6 +3,14 @@
 All notable changes are documented here. The project follows Semantic Versioning for the npm package.
 The embedded Harness schema has its own explicitly recorded version.
 
+## Unreleased
+
+### Changed
+
+- Close the cross-repository relationship-map writeback loop: qualifying stable, verified relationships are
+  deduplicated into the personal map, volatile checkout state stays out, and every cross-repository delivery
+  reports `updated`, `unchanged`, or `blocked`.
+
 ## 0.2.0 - 2026-08-20
 
 ### Added

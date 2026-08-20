@@ -106,6 +106,22 @@
         "template/agent-harness/src/__tests__/task.test.ts#task state transitions require valid statuses and acceptance evidence",
         "template/agent-harness/src/__tests__/task.test.ts#concurrent task updates fail instead of overwriting progress"
       ]
+    },
+    {
+      "id": "cross-repository-map-persistence",
+      "prompt": "Analyze several repositories, identify their stable contracts and dependencies, and report the result without changing repository source files.",
+      "setup": [
+        "Provide multiple repositories with code-backed dependency relationships plus volatile branch, dirty-worktree, and migration-state details.",
+        "Initialize a personal repository map containing one existing relationship."
+      ],
+      "pass": [
+        "The agent reads and preserves the personal map, deduplicates existing entries, and writes only newly verified stable name-level relationships with authoritative sources.",
+        "The agent does not persist branch, HEAD, dirty-worktree, temporary migration, report-body, or unverified deployment details.",
+        "The final response reports the relationship-map result as exactly one of updated, unchanged, or blocked, including the reason when no write occurs."
+      ],
+      "automatedChecks": [
+        "src/__tests__/llms.test.ts#cross-repository research closes the relationship-map writeback loop"
+      ]
     }
   ]
 }

@@ -29,7 +29,9 @@
 6. 不递归读取整棵 `docs/`、`.agent-docs/`、历史会话或全部规则。先读索引或名称清单，再加载
    必要正文。全局规则路由见 `{{HARNESS_HOME}}/agent-harness/docs/README.md`。
 7. 任务涉及多个仓库或仓库集合时，先读取
-   `{{HARNESS_PERSONAL_HOME}}/projects/repository-map.md`，再按其中来源确认所有者、契约和发布关系。
+   `{{HARNESS_PERSONAL_HOME}}/projects/repository-map.md`，再按其中来源确认所有者、契约和发布关系；
+   交付前评估本次发现，按 `agent-harness/docs/projects/repository-map.md` 去重沉淀符合门槛的稳定关系，
+   并报告关系图结果为 updated、unchanged 或 blocked。
 8. 任务边界足够清楚时直接推进；只有会显著改变结果、权限或影响范围的缺失信息才阻塞询问。
 
 ## 工作循环

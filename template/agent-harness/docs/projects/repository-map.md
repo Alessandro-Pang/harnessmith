@@ -2,7 +2,7 @@
 title: Repository Relationship Map
 type: harness-project-map
 status: template
-updated: 2026-08-18
+updated: 2026-08-21
 scope: |-
   {{HARNESS_REPOSITORY_ROOT}}
 ---
@@ -22,13 +22,36 @@ scope: |-
 
 ## 可维护映射
 
-仅在关系稳定、跨任务重复使用且重新发现成本较高时补充：
+用户实际维护的关系入口是 personal `repository-map.md`。仅在一条关系同时满足以下条件时写入：
+
+- 稳定：不是当前分支、HEAD、dirty 状态、临时迁移阶段等动态状态或一次性排查结果；
+- 已验证：能指向项目正式文档、代码、manifest、schema、部署配置或可重复的验证命令；
+- 可复用：后续跨仓任务会用于判断 owner、契约、消费者、发布顺序或回滚边界；
+- 高成本：如果不保留入口，重新发现需要跨仓追踪或较高调查成本。
+
+只保存名称级关系和正式来源，不复制报告正文、逐文件摘要、用户输入、推断或未经核验的线上状态：
 
 ```text
 <producer repository>
   -> <contract or artifact>
   -> <consumer repository>
+  source: <authoritative path or repeatable verification command>
 ```
 
-每条映射应附正式来源路径或可验证命令。临时调查、用户输入和交接状态放项目 `.agent-docs/`，
-不要写入本文件。
+临时调查、用户输入和交接状态放项目 `.agent-docs/`，不要写入关系图。
+
+## 写回闭环
+
+跨仓分析、评审、设计或修改任务在交付前必须完成以下步骤：
+
+1. 读取 personal `repository-map.md`，保留用户内容，并按 producer、contract、consumer 和 source 去重。
+2. 从本次发现中筛选满足全部门槛的关系；多个消费者可拆成多条边，共享同一正式来源。
+3. 有合格关系时更新 personal `repository-map.md`；这属于 Harness 关系元数据维护，不修改目标仓库。
+4. 用户禁止写入、目标路径不可写或来源仍需确认时不猜测，结果记为 `blocked`；可把候选关系留在
+   当前报告或项目 `.agent-docs/working/`，但不得伪装成已沉淀。
+5. 交付中必须报告且只选一个结果：
+   - `updated`：列出新增或修正的名称级关系；
+   - `unchanged`：说明本次没有达到写入门槛的新关系，或已有映射已覆盖；
+   - `blocked`：说明阻塞原因、未写入的候选关系和所需确认。
+
+“分析默认只读”仍适用于目标仓库；除非用户明确禁止，否则它不阻止上述 personal 关系图维护。
