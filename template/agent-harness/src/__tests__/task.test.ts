@@ -51,7 +51,9 @@ test('task initialization validates required fields and creates a queryable ledg
     join(project, '.agent-docs', 'working', task.id, 'progress.md'),
     'utf8',
   );
+  const core = readFileSync(join(project, '.agent-docs', 'core.md'), 'utf8');
   assert.match(progress, /^expires: \d{4}-\d{2}-\d{2}$/m);
+  assert.match(core, /memory:working\/quality-gates\/progress/);
   assert.doesNotThrow(() => memoryCheck(runtime, project, capturedIo()));
   const current = taskStatus({ project, id: task.id }, capturedIo());
   assert.equal(Array.isArray(current), false);
@@ -132,6 +134,10 @@ test('task state transitions require valid statuses and acceptance evidence', ()
     capturedIo(),
   );
   assert.equal(closed.status, 'complete');
+  assert.doesNotMatch(
+    readFileSync(join(project, '.agent-docs', 'core.md'), 'utf8'),
+    /memory:working\/lifecycle\/progress/,
+  );
   assert.throws(
     () => checkpointTask({ project, id: 'lifecycle', summary: 'late write' }),
     /already closed/,

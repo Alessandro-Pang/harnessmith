@@ -142,12 +142,17 @@ The content is classified as `input`, `episode`, `working`, `distilled`, or `evi
 Long-task objectives, checkpoints, acceptance criteria, and next actions live in
 `working/<task-id>/task.json`, while stable facts still move to the authoritative layer. Memory supports
 `active`, `blocked`, `complete`, `superseded`, and `archived` lifecycle states, plus validation, search,
-supersede, archive, and proposal-only promotion.
+supersede, archive, and proposal-only promotion. `memory check --indexed` rejects active or blocked memory
+that cannot be reached from an index, while `memory maintain` reports unindexed, expired working, and
+archive-ready entries without changing them.
 
 Project memory is initialized only for cross-session handoff, important input/plans/context, unfinished state,
 redacted evidence, or expensive discoveries. Small questions, one-off changes, and facts cheaply recoverable
 from code do not trigger initialization. Agents read `core.md` and names/metadata first, then follow explicit
 references; they do not load the full tree or archive by default.
+Tasks that cross the write threshold report memory as `updated`, `unchanged`, or `blocked` at delivery. Task
+commands keep long-running work reachable from `core.md`, and promotion is complete only after the formal
+document is actually written and verified.
 
 ### Durable task ledgers
 

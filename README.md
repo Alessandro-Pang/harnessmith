@@ -135,11 +135,14 @@ Harnesssmith 将“如何工作”“用户是谁”“之前发生了什么”�
 这些内容对应 `input`、`episode`、`working`、`distilled`、`evidence` 五类记忆；`core.md` 是索引。
 长任务的目标、checkpoint、验收项和下一步保存在 `working/<task-id>/task.json`，稳定事实仍必须提升到
 正式事实层。记忆支持 `active`、`blocked`、`complete`、`superseded`、`archived` 生命周期，以及
-检查、检索、替代、归档和 proposal-only 提升。
+检查、检索、替代、归档和 proposal-only 提升。`memory check --indexed` 会拒绝无法从索引到达的
+active/blocked 记忆，`memory maintain` 只读报告未索引、过期 working 和可归档内容。
 
 项目记忆只在任务确实需要跨会话交接、保存重要输入/方案/上下文、未完成状态、脱敏证据或昂贵发现时
 初始化；简单问答、一次性小修改和能从代码快速恢复的事实不会触发初始化。读取时先看 `core.md` 和
 名称/元信息，再按引用加载正文，不默认读取整棵目录或 archive。
+达到沉淀阈值的任务在交付时明确报告记忆为 `updated`、`unchanged` 或 `blocked`；长任务入口由
+task 命令自动同步到 `core.md`，稳定经验只有实际写入并验证正式文档后才算完成提升。
 
 ### 长任务账本
 

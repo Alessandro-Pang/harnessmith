@@ -10,6 +10,13 @@ The embedded Harness schema has its own explicitly recorded version.
 - Close the cross-repository relationship-map writeback loop: qualifying stable, verified relationships are
   deduplicated into the personal map, volatile checkout state stays out, and every cross-repository delivery
   reports `updated`, `unchanged`, or `blocked`.
+- Close project-memory recall and experience loops with indexed reachability checks, read-only maintenance
+  reports, automatic task-to-core routing, explicit delivery outcomes, and verified formal-promotion steps.
+
+### Embedded Harness
+
+- Harness runtime advanced from 2.2.0 to 2.3.0. Task and memory schemas remain at version 1; existing memory
+  stays compatible, while `memory check --indexed` and `memory maintain` add stricter optional operations.
 
 ## 0.2.0 - 2026-08-20
 

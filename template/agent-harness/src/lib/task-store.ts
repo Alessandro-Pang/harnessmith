@@ -4,6 +4,7 @@ import lockfile from 'proper-lockfile';
 import type { TaskRecord } from '../types.js';
 import { errorMessage } from '../types.js';
 import { atomicWrite, atomicWriteMany } from './files.js';
+import { parseFrontmatter, updateFrontmatter } from './frontmatter.js';
 import { projectSnapshot } from './project.js';
 import { assertSafePath } from './safe-path.js';
 import { assertTaskId } from './task-model.js';
@@ -62,8 +63,45 @@ export function writeTaskWithProgress(
   progressFile: string,
   progress: string,
 ): void {
-  atomicWriteMany([
-    { path: taskFile, content: `${JSON.stringify(task, null, 2)}\n` },
-    { path: progressFile, content: progress },
-  ]);
+  const memoryRoot = join(task.projectRoot, '.agent-docs');
+  const corePath = join(memoryRoot, 'core.md');
+  let release: (() => void) | undefined;
+  try {
+    release = lockfile.lockSync(memoryRoot, { realpath: false, stale: 30_000, retries: 0 });
+  } catch (error) {
+    throw new Error(`Project memory is being updated: ${task.projectRoot}`, { cause: error });
+  }
+  try {
+    let core = readFileSync(corePath, 'utf8');
+    const reference = `memory:working/${task.id}/progress`;
+    core = core
+      .split(/\r?\n/)
+      .filter((line) => !line.includes(reference))
+      .join('\n');
+    if (!core.endsWith('\n')) core += '\n';
+    if (task.status !== 'complete' && task.status !== 'superseded') {
+      const objective = task.objective.replace(/\s+/g, ' ').trim();
+      const nextAction = task.nextAction.replace(/\s+/g, ' ').trim() || 'continue from task status';
+      const entry = `- ${task.status} task ${task.id}: ${objective}; next: ${nextAction}; ${reference}`;
+      core = core.includes('## Active Work\n')
+        ? core.replace('## Active Work\n', `## Active Work\n\n${entry}\n`)
+        : `${core}\n## Active Work\n\n${entry}\n`;
+    }
+    const coreMetadata = parseFrontmatter(core);
+    const updated = [
+      String(coreMetadata.get('created') || ''),
+      String(coreMetadata.get('updated') || ''),
+      task.updated.slice(0, 10),
+    ]
+      .sort()
+      .at(-1);
+    core = updateFrontmatter(core, { updated });
+    atomicWriteMany([
+      { path: taskFile, content: `${JSON.stringify(task, null, 2)}\n` },
+      { path: progressFile, content: progress },
+      { path: corePath, content: core },
+    ]);
+  } finally {
+    release();
+  }
 }

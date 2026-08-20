@@ -23,7 +23,8 @@
    `node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs project inspect . --json` 获取事实快照。
 4. 若位于项目且 `.agent-docs/` 缺失，按记忆写入阈值判断是否初始化：明确需要跨会话交接、保存
    重要用户输入/证据、记录未完成工作或昂贵发现时自动初始化；明显是一次性任务时不初始化；
-   无法确定时询问用户。命令见 `agent-harness/docs/standards/project-agent-docs.md`。
+   无法确定时询问用户。若目录已存在，做轻量发现：先列名称/元信息并读取 `core.md`，再检查活跃
+   task，只按任务命中引用读取正文。命令见 `agent-harness/docs/standards/project-agent-docs.md`。
 5. 先读与任务直接相关的源码、配置、测试和仓库脚本。README、manifest、lockfile 与可运行代码
    是当前实现事实；设计文档和计划不自动代表已经实现。
 6. 不递归读取整棵 `docs/`、`.agent-docs/`、历史会话或全部规则。先读索引或名称清单，再加载
@@ -40,7 +41,9 @@
 - 预计跨上下文或多阶段推进的任务使用 `harness task init/checkpoint/status/close` 保存目标、验收条件
   和下一步；简单任务不创建任务账本。细则见 `agent-harness/docs/core/long-running-tasks.md`。
 - 最小且完整地实施，保护用户改动；先做最窄验证，再按风险扩大。
-- 交付说明变更、证据、未验证项和风险；长期事实同步到正式文档。
+- 交付说明变更、证据、未验证项和风险；长期事实同步到正式文档。达到项目记忆写入阈值的任务，
+  交付前必须报告项目记忆结果为 updated、unchanged 或 blocked；updated 必须同步 `core.md` 并通过
+  `harness memory check . --indexed`，blocked 必须说明阻塞原因。
 - 修改、诊断、评审、调研设计和发布迁移细则按任务从 `agent-harness/docs/README.md` 路由。
 
 ## 事实与文档
@@ -50,6 +53,7 @@
 - 项目 `docs/` 是长期事实，`agent-harness/docs/` 是个人运行规则，`.agent-docs/` 只保存非权威项目
   记忆：用户输入、会话交接、工作状态、证据和提炼记忆。
 - 读取记忆时先看名称/元信息和 `.agent-docs/core.md`，再按引用读取正文；不自动注入整个记忆库。
+- 记忆与当前代码、测试、契约冲突时先核验当前事实，再更新、替代或归档旧记忆；不得静默沿用。
 - 首次需要项目记忆时按 `agent-harness/docs/standards/project-agent-docs.md` 初始化，并同步让
   `.gitignore` 与 `.ignore` 忽略整个 `.agent-docs/`。
 - 跨项目个人记忆位于 `{{HARNESS_MEMORY_HOME}}/`；宿主原生 memory 只作为待核对线索。当前用户

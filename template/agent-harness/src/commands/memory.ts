@@ -3,6 +3,10 @@ import { dirname, relative, resolve } from 'node:path';
 import { atomicWrite } from '../lib/files.js';
 import { parseFrontmatter, updateFrontmatter } from '../lib/frontmatter.js';
 import {
+  type MemoryMaintenanceReport,
+  memoryMaintenanceReport,
+} from '../lib/memory-maintenance.js';
+import {
   isInside,
   markdownFiles,
   memoryDocumentPath,
@@ -72,9 +76,43 @@ export function memorySearch(
     : 1;
 }
 
-export function memoryCheck(runtime: Runtime, input = '.', io: Io = console): void {
+export function memoryCheck(
+  runtime: Runtime,
+  input = '.',
+  io: Io = console,
+  { indexed = false }: { indexed?: boolean } = {},
+): void {
   const root = resolveMemoryRoot(runtime, input);
-  validateMemoryRoot(root, io);
+  validateMemoryRoot(root, io, { quietSuccess: indexed });
+  if (!indexed) return;
+  const report = memoryMaintenanceReport(root, calendarDate(runtime));
+  for (const path of report.unindexed) {
+    io.error(`Active memory is not reachable from an index: ${path}`);
+  }
+  if (report.unindexed.length > 0) {
+    throw new Error(`Memory check failed: ${report.unindexed.length} issue(s)`);
+  }
+  io.log(`Memory check passed: ${root}`);
+}
+
+export function memoryMaintenance(
+  runtime: Runtime,
+  input = '.',
+  { json = false }: { json?: boolean } = {},
+  io: Io = console,
+): MemoryMaintenanceReport {
+  const report = memoryMaintenanceReport(resolveMemoryRoot(runtime, input), calendarDate(runtime));
+  if (json) io.log(JSON.stringify(report, null, 2));
+  else {
+    io.log(`Memory maintenance: ${report.root}`);
+    io.log(`Unindexed active memory: ${report.unindexed.length}`);
+    for (const path of report.unindexed) io.log(`  ${path}`);
+    io.log(`Expired working memory: ${report.expiredWorking.length}`);
+    for (const path of report.expiredWorking) io.log(`  ${path}`);
+    io.log(`Closed archive candidates: ${report.closed.length}`);
+    for (const path of report.closed) io.log(`  ${path}`);
+  }
+  return report;
 }
 
 export function supersedeMemory(

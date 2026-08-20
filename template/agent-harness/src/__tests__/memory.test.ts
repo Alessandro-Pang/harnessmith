@@ -17,6 +17,7 @@ import {
   archiveMemory,
   memoryCheck,
   memoryList,
+  memoryMaintenance,
   memoryPromotionProposal,
   memorySearch,
   resolveMemoryRoot,
@@ -165,6 +166,46 @@ test('memory list, search, and reference validation handle archive and broken re
   const invalid = capturedIo();
   assert.throws(() => memoryCheck(runtime, 'global', invalid), /1 issue/);
   assert.match(invalid.errors[0], /Broken memory reference/);
+});
+
+test('indexed memory check rejects active documents that core cannot reach', () => {
+  const root = temporaryRoot();
+  const runtime = harnessRuntime(root);
+  initGlobal(runtime, capturedIo());
+  const note = join(runtime.memoryHome, 'episode.md');
+  writeFileSync(note, memoryDocument('Episode'));
+
+  const orphaned = capturedIo();
+  assert.throws(() => memoryCheck(runtime, 'global', orphaned, { indexed: true }), /issue/);
+  assert.equal(
+    orphaned.errors.some((message) => /not reachable from an index/.test(message)),
+    true,
+  );
+
+  const core = join(runtime.memoryHome, 'core.md');
+  writeFileSync(core, `${readFileSync(core, 'utf8')}\n- Episode memory:episode\n`);
+  assert.doesNotThrow(() => memoryCheck(runtime, 'global', capturedIo(), { indexed: true }));
+});
+
+test('memory maintenance reports unindexed, expired, and closed candidates', () => {
+  const root = temporaryRoot();
+  const runtime = harnessRuntime(root);
+  initGlobal(runtime, capturedIo());
+  writeFileSync(join(runtime.memoryHome, 'orphan.md'), memoryDocument('Orphan'));
+  writeFileSync(
+    join(runtime.memoryHome, 'expired.md'),
+    memoryDocument('Expired')
+      .replace('memory-kind: episode', 'memory-kind: working')
+      .replace('schema-version: 1', 'expires: 2000-01-01\nschema-version: 1'),
+  );
+  writeFileSync(
+    join(runtime.memoryHome, 'closed.md'),
+    memoryDocument('Closed').replace('status: active', 'status: complete'),
+  );
+  const report = memoryMaintenance(runtime, 'global', { json: true }, capturedIo());
+  assert.deepEqual(report.unindexed, ['expired.md', 'orphan.md']);
+  assert.deepEqual(report.expiredWorking, ['expired.md']);
+  assert.deepEqual(report.closed, ['closed.md']);
 });
 
 test('memory check enforces metadata types, schema version, and real calendar dates', () => {

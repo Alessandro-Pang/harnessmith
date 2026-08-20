@@ -156,3 +156,19 @@ test('cross-repository research closes the relationship-map writeback loop', () 
   assert.match(personalMap, /正式来源/);
   assert.match(personalMap, /不要写入当前分支/);
 });
+
+test('distributed rules close project-memory recall, writeback, and promotion loops', () => {
+  const agents = readFileSync(join(root, 'template', 'AGENTS.md'), 'utf8');
+  const standard = readFileSync(
+    join(root, 'template', 'agent-harness', 'docs', 'standards', 'project-agent-docs.md'),
+    'utf8',
+  );
+
+  assert.match(agents, /轻量发现/);
+  assert.match(agents, /项目记忆结果为 updated、unchanged 或 blocked/);
+  assert.match(standard, /启动发现闭环/);
+  assert.match(standard, /沉淀闭环/);
+  assert.match(standard, /正式提升闭环/);
+  assert.match(standard, /memory check .*--indexed/);
+  assert.match(standard, /memory maintain/);
+});

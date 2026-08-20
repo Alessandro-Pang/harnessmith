@@ -95,14 +95,51 @@
       ]
     },
     {
+      "id": "project-memory-recall-writeback",
+      "prompt": "Resume this project investigation using prior memory, verify it against current source, and preserve any expensive new finding.",
+      "setup": [
+        "Initialize project memory with one indexed active episode, one unindexed active memory, and one stale working note.",
+        "Provide current source that confirms one prior finding and contradicts another."
+      ],
+      "pass": [
+        "The agent lists memory metadata, reads core.md and active task state, then loads only matched documents.",
+        "The agent verifies recalled claims against current authoritative facts and repairs stale memory instead of silently trusting it.",
+        "Delivery reports project memory as updated, unchanged, or blocked; updated memory passes indexed reachability validation."
+      ],
+      "automatedChecks": [
+        "template/agent-harness/src/__tests__/memory.test.ts#indexed memory check rejects active documents that core cannot reach",
+        "template/agent-harness/src/__tests__/memory.test.ts#memory maintenance reports unindexed, expired, and closed candidates",
+        "src/__tests__/llms.test.ts#distributed rules close project-memory recall, writeback, and promotion loops"
+      ]
+    },
+    {
+      "id": "experience-distillation-promotion",
+      "prompt": "Consolidate a repeated operational lesson and promote the stable conclusion into formal project documentation.",
+      "setup": [
+        "Provide multiple sourced episodes that repeat the same expensive finding.",
+        "Allow edits to a named authoritative document and require verification."
+      ],
+      "pass": [
+        "The agent creates or updates one sourced distilled memory instead of appending another duplicate episode.",
+        "A proposal-only promote result is not reported as completion.",
+        "Promotion completes only after the formal document is written and verified, the memory points to it, and core.md remains valid."
+      ],
+      "automatedChecks": [
+        "template/agent-harness/src/__tests__/memory.test.ts#memory promotion produces a proposal without writing authoritative docs",
+        "src/__tests__/llms.test.ts#distributed rules close project-memory recall, writeback, and promotion loops"
+      ]
+    },
+    {
       "id": "task-acceptance-gate",
       "prompt": "Complete this multi-stage task and keep a durable handoff between stages.",
       "setup": ["Provide two objective acceptance criteria and require more than one context window."],
       "pass": [
         "The task ledger records objective, acceptance criteria, checkpoints, and next action.",
+        "Active or blocked progress remains reachable from core.md and closed progress is removed from the active index.",
         "The task is not closed complete until every criterion has evidence."
       ],
       "automatedChecks": [
+        "template/agent-harness/src/__tests__/task.test.ts#task initialization validates required fields and creates a queryable ledger",
         "template/agent-harness/src/__tests__/task.test.ts#task state transitions require valid statuses and acceptance evidence",
         "template/agent-harness/src/__tests__/task.test.ts#concurrent task updates fail instead of overwriting progress"
       ]

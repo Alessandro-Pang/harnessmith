@@ -3,6 +3,7 @@ import {
   archiveMemory,
   memoryCheck,
   memoryList,
+  memoryMaintenance,
   memoryPromotionProposal,
   memorySearch,
   supersedeMemory,
@@ -30,7 +31,21 @@ export function registerMemoryCommands(
   memory
     .command('check [scope]')
     .description('validate memory references and metadata')
-    .action(run((scope: string = '.') => memoryCheck(runtime, scope, io)));
+    .option('--indexed', 'require active memory to be reachable from an index')
+    .action(
+      run((scope: string = '.', options: { indexed?: boolean }) =>
+        memoryCheck(runtime, scope, io, options),
+      ),
+    );
+  memory
+    .command('maintain [scope]')
+    .description('report unindexed, expired, and closed memory candidates')
+    .option('--json', 'write the report as JSON')
+    .action(
+      run((scope: string = '.', options: { json?: boolean }) =>
+        memoryMaintenance(runtime, scope, options, io),
+      ),
+    );
   memory
     .command('supersede <scope> <memory>')
     .description('mark a memory as superseded by another memory')

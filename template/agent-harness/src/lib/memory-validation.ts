@@ -177,7 +177,11 @@ function validateUserProfile(
   return failures;
 }
 
-export function validateMemoryRoot(root: string, io: Io): void {
+export function validateMemoryRoot(
+  root: string,
+  io: Io,
+  { quietSuccess = false }: { quietSuccess?: boolean } = {},
+): void {
   let failures = 0;
   const references = new Set<string>();
   const sessions = new Map<string, string>();
@@ -221,5 +225,5 @@ export function validateMemoryRoot(root: string, io: Io): void {
     }
   }
   if (failures > 0) throw new Error(`Memory check failed: ${failures} issue(s)`);
-  io.log(`Memory check passed: ${root}`);
+  if (!quietSuccess) io.log(`Memory check passed: ${root}`);
 }

@@ -2,7 +2,7 @@
 title: Project Memory Standard
 type: harness-standard
 status: active
-updated: 2026-08-19
+updated: 2026-08-21
 ---
 
 # 项目 `.agent-docs`：纯记忆层
@@ -78,6 +78,15 @@ node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs init project /absolute/proje
 
 5. 不因“可能有用”读取 archive 或全部历史。
 
+## 启动发现闭环
+
+已有 `.agent-docs/` 时，启动不能只知道目录存在，也不能递归加载全部历史：
+
+1. 运行 `harness memory list .` 获取名称、类型、状态和更新时间。
+2. 读取 `core.md`，并用 `harness task status --project .` 检查活跃或 blocked task。
+3. 只读取与当前目标、路径或关键词匹配的引用正文；记忆结论须用当前代码、测试或正式文档复核。
+4. 若记忆已失效或互相冲突，在本次交付前更新、supersede 或标记 blocked，不能继续当作当前事实。
+
 ## 元信息
 
 所有记忆 Markdown 至少包含：
@@ -112,6 +121,28 @@ schema-version: 1
 不应写：框架常识；容易重新搜索的事实；逐行代码摘要；已在正式文档中完整表达的事实副本；
 没有来源的猜测；密码、Token、Cookie、验证码、私钥或未脱敏生产数据。
 
+## 沉淀闭环
+
+达到写入阈值的任务，交付前必须给出一种项目记忆结果：
+
+- `updated`：新增或更新 input、episode、working、distilled 或 evidence，并把仍活跃或高价值的文档
+  挂到 `core.md`；随后运行 `harness memory check . --indexed`。校验失败不算完成。
+- `unchanged`：已检查现有记忆，结论重复、可从权威事实低成本恢复，或任务明显一次性，因此无需写入。
+- `blocked`：应沉淀但因权限、缺失来源或写入失败未完成；说明阻塞项，不能以“已分析”代替写回。
+
+长任务通过 task 命令自动把 active/blocked `progress.md` 挂入 `core.md`；complete 或 superseded 后
+自动移除入口。普通记忆仍需写入者显式维护索引。
+
+当多个 episode 反复出现同一不变量、陷阱或昂贵发现时，必须提炼为 `distilled/`，保留
+`derived-from`/`source-refs`，并让 `core.md` 指向提炼结果；不要只追加新的会话流水。
+
+## 正式提升闭环
+
+`harness memory promote` 只生成 proposal，不代表经验已经成为正式事实。稳定且应由项目共同维护的
+结论，必须经过以下闭环：确认目标 `docs/`/ADR 所有者 → 实际写入并验证正式文档 → 将 distilled
+memory 更新为正式来源引用或 superseded → 更新 `core.md` → 再运行 `harness memory check . --indexed`。
+若当前任务只获准生成 proposal，结果必须标为 proposed 或 blocked，不能报告 promoted。
+
 ## 压缩、提升与维护
 
 - session 完成后标 `complete`；多个相关 episode 的共同经验提炼到 `distilled/`，保留来源引用。
@@ -132,11 +163,20 @@ harness memory archive . working/old
 
 # 输出 proposal-only manifest，绝不自动写正式文档
 harness memory promote . distilled/current --target docs/architecture.md --json
+
+# 只读报告未索引、过期 working 和可归档的 closed memory；不自动删除
+harness memory maintain .
+
+# 除基础 schema/断链外，要求所有 active/blocked memory 可从 index 到达
+harness memory check . --indexed
 ```
 
 `memory check` 同时校验必需字段和类型、真实日期、schema version、input 特有字段、替代链接、
 重复 `session-id`、memory 引用和高置信 secret pattern。`working` 缺少 `expires` 会告警；Harness
 生成的 task progress 默认 30 天到期，checkpoint 会续期。
+
+`memory maintain` 是维护候选报告，不会自动修改文件。发现 unindexed 时补索引或关闭无效记忆；
+发现 expired working 时续期、提炼、提升或归档；closed 项确认没有活跃索引引用后再归档。
 
 Task 有两套刻意分离的状态表示：`working/<topic>/task.json` 使用 `pending`、`in_progress`、
 `blocked`、`complete`、`superseded` 描述任务状态机；同目录 `progress.md` 是 working memory，

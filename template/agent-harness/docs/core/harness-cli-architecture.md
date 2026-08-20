@@ -64,8 +64,9 @@ frontmatter，Ajv 负责 JSON Schema，`write-file-atomic` 负责原子写。路
 `memorySchemaVersion` 和 Node 契约。`validate` 必须拒绝未知 schema，不能把未知版本当作兼容。
 
 Memory maintenance 遵循非权威边界：`supersede` 只建立可校验的替代链接，`archive` 默认只移动
-complete 或 superseded 文档并拒绝仍被 active index 引用的记忆，`promote` 只输出 proposal。
-Runtime 不得通过 promote 自动写项目 `docs/` 或 ADR。
+complete 或 superseded 文档并拒绝仍被 active index 引用的记忆，`promote` 只输出 proposal；
+`check --indexed` 要求 active/blocked 文档可从 index 到达，`maintain` 只读报告未索引、过期 working
+和 closed 候选。Runtime 不得通过 promote 或 maintain 自动写项目 `docs/`、ADR 或删除记忆。
 
 ## 调试路径
 

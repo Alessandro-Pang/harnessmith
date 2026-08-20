@@ -2,7 +2,7 @@
 title: Long-running Task Protocol
 type: harness-core
 status: active
-updated: 2026-08-18
+updated: 2026-08-21
 ---
 
 # Long-running Task Protocol
@@ -42,6 +42,10 @@ node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs task close --project /absolu
 
 ## 行为约束
 
+- `task init` 自动把 `working/<task-id>/progress.md` 挂入 `.agent-docs/core.md`；checkpoint 保持入口
+  与状态同步，complete/superseded 关闭后自动移除，blocked 保留以便下次启动发现。
+- 恢复任务时先运行 `task status` 并读取 `core.md` 中对应 progress 引用，再加载必要证据；不递归读取
+  整个 `.agent-docs/working`。
 - 每次只推进一个边界清晰的增量；开始前读取任务状态并验证必要基线。
 - `passed` 必须附可复核 evidence；环境受限使用 `inconclusive`，不能标为通过。
 - 只有所有验收项均为 `passed` 时才能以 `complete` 关闭；阻塞或被替代应使用对应状态。
