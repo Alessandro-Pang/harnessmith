@@ -58,8 +58,11 @@ npx harnessmith --agent all --project /absolute/path/to/repository --dry-run
 - 最多 32 条、按当前状态原位更新的紧凑用户画像。
 
 > [!NOTE]
-> **如果由 LLM 或 coding agent 代为安装，请让它先读取 [llms.txt](./llms.txt)。**
-> 该文件包含无交互安装、目标核对、权限边界和失败处理协议。
+> **使用 LLM 或 coding agent 安装**
+>
+> 将下面的指令直接发送给 AI。它会先读取 [llms.txt](https://raw.githubusercontent.com/Alessandro-Pang/harnessmith/refs/heads/main/llms.txt)，再按照其中的安装流程、目标核对、权限边界和失败处理规范完成安装。
+>
+> `请先阅读 https://raw.githubusercontent.com/Alessandro-Pang/harnessmith/refs/heads/main/llms.txt，并按照其中的协议为我安装 Harnesssmith。`
 
 ## 支持的 Agent
 
@@ -216,7 +219,7 @@ npm pack --dry-run
 - [安全策略](./SECURITY.md)
 - [发布流程](./RELEASING.md)
 - [版本记录](./CHANGELOG.md)
-- [LLM 安装协议](./llms.txt)
+- [LLM 安装协议](https://raw.githubusercontent.com/Alessandro-Pang/harnessmith/refs/heads/main/llms.txt)
 
 ---
 

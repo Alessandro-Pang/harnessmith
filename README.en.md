@@ -61,8 +61,11 @@ After installation, Harnesssmith initializes:
 - a compact current-user profile, limited to 32 in-place entries.
 
 > [!NOTE]
-> **If an LLM or coding agent is installing Harnessmith for you, have it read [llms.txt](./llms.txt) first.**
-> The file defines the non-interactive installation, target review, permission, and failure-handling protocol.
+> **Installing with an LLM or coding agent**
+>
+> Send the prompt below directly to your AI. It will read [llms.txt](https://raw.githubusercontent.com/Alessandro-Pang/harnessmith/refs/heads/main/llms.txt) first, then follow its installation flow, target checks, permission boundaries, and failure-handling rules.
+>
+> `Read https://raw.githubusercontent.com/Alessandro-Pang/harnessmith/refs/heads/main/llms.txt first, then install Harnessmith for me by following its protocol.`
 
 ## Supported agents
 
@@ -228,7 +231,7 @@ distribution manifest.
 - [Security policy](./SECURITY.md)
 - [Release process](./RELEASING.md)
 - [Changelog](./CHANGELOG.md)
-- [LLM installation protocol](./llms.txt)
+- [LLM installation protocol](https://raw.githubusercontent.com/Alessandro-Pang/harnessmith/refs/heads/main/llms.txt)
 
 ---
 
