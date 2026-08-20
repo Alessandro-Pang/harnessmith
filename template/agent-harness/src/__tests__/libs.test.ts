@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
@@ -116,7 +116,9 @@ test('project snapshot reports Git, package manager, manifests, and nearest inst
   writeFileSync(join(root, 'AGENTS.md'), '# Rules\n');
   mkdirSync(join(root, 'src'));
   const snapshot = projectSnapshot(join(root, 'src'));
-  assert.equal(gitRoot(root), realpathSync(root));
+  const repositoryRoot = gitRoot(root);
+  assert.ok(repositoryRoot);
+  assert.equal(snapshot.root, repositoryRoot);
   assert.match(gitVersion() ?? '', /^git version /);
   assert.equal(snapshot.isGitRepository, true);
   assert.equal(snapshot.branch, 'feature/20260819_test');
@@ -129,6 +131,6 @@ test('project snapshot reports Git, package manager, manifests, and nearest inst
 
   const output = capturedIo();
   const inspected = inspectProject(root, { json: true }, output);
-  assert.equal(inspected.root, realpathSync(root));
+  assert.equal(inspected.root, repositoryRoot);
   assert.equal((JSON.parse(output.logs[0]) as { packageManager: string }).packageManager, 'npm');
 });
