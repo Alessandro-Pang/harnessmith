@@ -3,12 +3,24 @@
 All notable changes are documented here. The project follows Semantic Versioning for the npm package.
 The embedded Harness schema has its own explicitly recorded version.
 
-## Unreleased
+## 0.2.0 - 2026-08-20
 
 ### Added
 
 - Initialize and validate a compact current-user profile with evidence levels, stable dimension keys,
   bounded size, and in-place updates when identity, preferences, or technical interests change.
+
+### Changed
+
+- Make `profile.md` the only current user profile inside the Harness; project and host-native memory remain
+  historical evidence or recall signals rather than competing current preference stores.
+- Restructure the English and Chinese READMEs around product value, quick start, layered capabilities, and
+  progressively disclosed automation details.
+
+### Embedded Harness
+
+- Harness runtime advanced from 2.1.0 to 2.2.0. Task and memory schemas remain at version 1; the new profile
+  is initialized idempotently and requires no destructive migration.
 
 ## 0.1.1 - 2026-08-20
 
