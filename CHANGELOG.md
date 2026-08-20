@@ -5,6 +5,8 @@ The embedded Harness schema has its own explicitly recorded version.
 
 ## Unreleased
 
+## 0.3.0 - 2026-08-21
+
 ### Changed
 
 - Close the cross-repository relationship-map writeback loop: qualifying stable, verified relationships are

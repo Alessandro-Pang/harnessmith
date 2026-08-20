@@ -4,7 +4,7 @@
   "adapter": "codex",
   "hostVersion": "record-the-actual-host-version",
   "harnessVersion": "2.2.0",
-  "packageVersion": "0.2.0",
+  "packageVersion": "0.3.0",
   "startedAt": "2026-08-19T00:00:00Z",
   "finishedAt": "2026-08-19T00:05:00Z",
   "outcome": "inconclusive",
