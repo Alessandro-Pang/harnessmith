@@ -300,7 +300,7 @@ test('project snapshot reports Git, package manager, manifests, and nearest inst
   assert.equal(snapshot.packageManager, 'npm');
   assert.deepEqual(snapshot.packageScripts, ['build', 'test']);
   assert.deepEqual(snapshot.manifests, ['package.json']);
-  assert.deepEqual(snapshot.agents, [join(root, 'AGENTS.md')]);
+  assert.deepEqual(snapshot.agents, [join(snapshot.root, 'AGENTS.md')]);
   assert.equal(snapshot.dirty, true);
   assert.match(snapshot.workspaceDigest || '', /^sha256:[0-9a-f]{64}$/);
   assert.equal(gitRoot(join(root, 'missing')), null);

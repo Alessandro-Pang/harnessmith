@@ -8,6 +8,7 @@ import {
   readFileSync,
   realpathSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -240,9 +241,20 @@ test('task project root discovery does not compute a full project snapshot', () 
 
   assert.equal(
     withGitPath(bin, () => projectRoot(project)),
-    realpathSync(project),
+    realpathSync.native(project),
   );
   assert.equal(readFileSync(log, 'utf8').trim().split('\n').length, 1);
+});
+
+test('task project root canonicalizes filesystem aliases', () => {
+  const root = mkdtempSync(join(tmpdir(), 'harness-project-root-alias-'));
+  onTestFinished(() => rmSync(root, { recursive: true, force: true }));
+  const project = join(root, 'project');
+  const alias = join(root, 'project-alias');
+  mkdirSync(project);
+  symlinkSync(project, alias, process.platform === 'win32' ? 'junction' : 'dir');
+
+  assert.equal(projectRoot(alias), realpathSync.native(project));
 });
 
 test('project Git probes disable repository-controlled fsmonitor hooks', () => {

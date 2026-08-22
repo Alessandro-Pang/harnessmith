@@ -1,4 +1,5 @@
 import type { ProjectSnapshot, TaskBaselineDrift, TaskEvidence, TaskRecord } from '../types.js';
+import { sameExistingPath } from './safe-path.js';
 import { assertNoHighConfidenceSecret } from './secret-hygiene.js';
 import { fileDigestIsFresh, scopeDigestsAreFresh } from './task-verification-scope.js';
 
@@ -113,7 +114,7 @@ export function evidenceSupportsPass(
     !Number.isFinite(recordedAt) ||
     recordedAt < Date.parse(task.created) ||
     recordedAt > Date.now() + 5 * 60_000 ||
-    evidence.cwd !== task.projectRoot ||
+    !sameExistingPath(evidence.cwd, task.projectRoot) ||
     evidence.head !== snapshot.head ||
     evidence.workspaceDigest === null ||
     evidence.workspaceDigest !== snapshot.workspaceDigest ||

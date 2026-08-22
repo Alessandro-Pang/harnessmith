@@ -7,7 +7,7 @@ import { atomicWrite, atomicWriteMany } from './files.js';
 import { parseFrontmatter, updateFrontmatter } from './frontmatter.js';
 import { withMemoryLock } from './memory-lock.js';
 import { projectSnapshot, resolveProjectRoot } from './project.js';
-import { assertSafePath } from './safe-path.js';
+import { assertSafePath, canonicalPath, sameExistingPath } from './safe-path.js';
 import { assertTaskId } from './task-model.js';
 import { normalizeTaskRecord } from './task-record.js';
 
@@ -48,12 +48,14 @@ export function readTask(
     throw new Error(`Invalid task JSON ${path}: ${errorMessage(error)}`);
   }
   const value = normalizeTaskRecord(parsed, path);
-  if (resolve(value.projectRoot) !== resolve(root)) {
+  const activeRoot = canonicalPath(root);
+  if (!sameExistingPath(value.projectRoot, activeRoot)) {
     throw new Error(
       `Invalid task schema ${path}: projectRoot ${value.projectRoot} does not match ${root}`,
     );
   }
-  return { path, value, snapshot: projectSnapshot(root) };
+  value.projectRoot = activeRoot;
+  return { path, value, snapshot: projectSnapshot(activeRoot) };
 }
 
 export function writeTask(path: string, task: TaskRecord): void {

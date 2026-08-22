@@ -19,6 +19,7 @@ import {
   projectGit,
   projectGitRaw,
 } from './project-git.js';
+import { canonicalPath } from './safe-path.js';
 
 export type { ProjectSnapshotOptions } from './project-git.js';
 
@@ -30,13 +31,17 @@ function projectLocation(
   repository: string | null;
   root: string;
 } {
-  const requested = resolve(input);
-  if (!existsSync(requested)) throw new Error(`Path does not exist: ${requested}`);
+  const inputPath = resolve(input);
+  if (!existsSync(inputPath)) throw new Error(`Path does not exist: ${inputPath}`);
+  const requested = canonicalPath(inputPath);
   const repository = projectGit(requested, ['rev-parse', '--show-toplevel'], budget);
+  const root = canonicalPath(
+    repository || (statSync(requested).isDirectory() ? requested : dirname(requested)),
+  );
   return {
     requested,
-    repository,
-    root: repository || (statSync(requested).isDirectory() ? requested : dirname(requested)),
+    repository: repository ? root : null,
+    root,
   };
 }
 

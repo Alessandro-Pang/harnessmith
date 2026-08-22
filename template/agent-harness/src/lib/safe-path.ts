@@ -6,7 +6,7 @@ export function isPathInside(root: string, target: string): boolean {
   return path === '' || (!path.startsWith(`..${sep}`) && path !== '..' && !isAbsolute(path));
 }
 
-function canonicalPath(input: string): string {
+export function canonicalPath(input: string): string {
   let current = resolve(input);
   const suffix: string[] = [];
   while (!existsSync(current)) {
@@ -17,6 +17,14 @@ function canonicalPath(input: string): string {
   }
   const canonical = existsSync(current) ? realpathSync.native(current) : current;
   return resolve(canonical, ...suffix);
+}
+
+export function sameExistingPath(left: string, right: string): boolean {
+  try {
+    return existsSync(left) && existsSync(right) && canonicalPath(left) === canonicalPath(right);
+  } catch {
+    return false;
+  }
 }
 
 export function assertSafePath(root: string, target: string): void {
