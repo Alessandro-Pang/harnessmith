@@ -327,20 +327,20 @@ test('npm tarball path policy preserves generated safe package-relative files', 
 
 test('npm tarball path policy rejects traversal, absolute, empty, and platform paths', () => {
   const artifact = join(temporaryDirectory(), 'property-unsafe-paths.tgz');
-  const unsafePath = fc.oneof(
-    safeRelativePath.map((path) => `/${path}`),
-    safeRelativePath.map((path) => `package/../${path}`),
-    safeRelativePath.map((path) => `package/./${path}`),
-    safeRelativePath.map((path) => `package//${path}`),
-    safeRelativePath.map((path) => `package\\${path}`),
-    safeRelativePath.map((path) => `package/\u0001${path}`),
-  );
 
   fc.assert(
-    fc.property(unsafePath, (path) => {
-      writeFileSync(artifact, tarGzip([{ path, content: 'unsafe\n' }]));
-
-      assert.throws(() => readNpmPackageTarball(artifact), /unsafe npm tarball path/i);
+    fc.property(safeRelativePath, (relativePath) => {
+      for (const path of [
+        `/${relativePath}`,
+        `package/../${relativePath}`,
+        `package/./${relativePath}`,
+        `package//${relativePath}`,
+        `package\\${relativePath}`,
+        `package/\u0001${relativePath}`,
+      ]) {
+        writeFileSync(artifact, tarGzip([{ path, content: 'unsafe\n' }]));
+        assert.throws(() => readNpmPackageTarball(artifact), /unsafe npm tarball path/i);
+      }
     }),
   );
 });

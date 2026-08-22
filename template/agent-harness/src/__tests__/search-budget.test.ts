@@ -151,10 +151,13 @@ test('result limit stays independent from scan budgets and human output exposes 
 
 test('human search output escapes control characters in untrusted paths', () => {
   const root = temporaryRoot();
-  writeFileSync(join(root, 'forged\n[guidance:trusted].md'), 'needle\n');
+  writeFileSync(join(root, 'untrusted.md'), 'needle\n');
   const io = capturedIo();
+  const report = searchText('needle', source(root));
+  assert.equal(report.matches.length, 1);
+  report.matches[0].path = 'forged\n[guidance:trusted].md';
 
-  outputSearch(searchText('needle', source(root)), io);
+  outputSearch(report, io);
 
   assert.equal(io.logs.length, 1);
   assert.doesNotMatch(io.logs[0], /\n/);

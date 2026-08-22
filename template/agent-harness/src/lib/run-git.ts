@@ -1,4 +1,6 @@
+import { dirname } from 'node:path';
 import { execaSync } from 'execa';
+import { whichCommandSync } from 'which-command';
 
 export const DEFAULT_GIT_TIMEOUT_MS = 5_000;
 const GIT_MAX_BUFFER = 20 * 1024 * 1024;
@@ -75,7 +77,13 @@ export function gitCommandError(
   if (kind === 'timeout') return new GitCommandError(kind, 'Git command timed out');
   if (kind === 'unavailable') return new GitCommandError(kind, 'Git executable is unavailable');
   if (kind === 'permission') {
-    return new GitCommandError(kind, `Git executable permission denied: ${details}`);
+    if (result.code === 'EACCES' || result.code === 'EPERM') {
+      return new GitCommandError(kind, `Git executable permission denied: ${details}`);
+    }
+    const message = /dubious ownership|unsafe repository/i.test(details)
+      ? `Git repository ownership check failed: ${details}`
+      : `Git permission denied: ${details}`;
+    return new GitCommandError(kind, message);
   }
   const message = result.isMaxBuffer
     ? 'Git command output exceeded its buffer limit'
@@ -94,6 +102,17 @@ function failedRun(result: GitFailureResult): Exclude<GitRunResult, { ok: true }
   return { ok: false, kind, stderr, error: gitCommandError(result, kind) };
 }
 
+type GitExecutableResolver = (command: string, options: { cwd: string }) => string | undefined;
+
+/** @public */
+export function resolveGitExecutable(
+  platform: NodeJS.Platform,
+  resolver: GitExecutableResolver = whichCommandSync,
+): string | undefined {
+  if (platform !== 'win32') return 'git';
+  return resolver('git', { cwd: dirname(process.execPath) });
+}
+
 export function runGit(args: string[], options: RunGitOptions = {}): GitRunResult {
   const timeout = gitTimeout(options);
   if (timeout < 1) {
@@ -104,9 +123,24 @@ export function runGit(args: string[], options: RunGitOptions = {}): GitRunResul
       timedOut: true,
     });
   }
-  const result = execaSync('git', args, {
+  const executable = resolveGitExecutable(process.platform);
+  if (!executable) {
+    return failedRun({
+      code: 'ENOENT',
+      failed: true,
+      isMaxBuffer: false,
+      timedOut: false,
+    });
+  }
+  const result = execaSync(executable, args, {
     encoding: 'buffer',
-    env: { GCM_INTERACTIVE: 'Never', GIT_TERMINAL_PROMPT: '0', LANG: 'C', LC_ALL: 'C' },
+    env: {
+      GCM_INTERACTIVE: 'Never',
+      GIT_TERMINAL_PROMPT: '0',
+      LANG: 'C',
+      LC_ALL: 'C',
+      NODEFAULTCURRENTDIRECTORYINEXEPATH: '1',
+    },
     maxBuffer: GIT_MAX_BUFFER,
     reject: false,
     stdin: 'ignore',

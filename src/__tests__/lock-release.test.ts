@@ -73,7 +73,7 @@ test('adapter locks sort, acquire, release, and return successful operations', (
 
   assert.equal(result, 'complete');
   assert.deepEqual(released, ['b', 'a']);
-  assert.match(String(locks.lockSync.mock.calls[0][0]), /\/a$/);
+  assert.equal(locks.lockSync.mock.calls[0][0], join(root, 'a'));
 });
 
 test('adapter locks can inspect an absent home without creating or locking it', () => {

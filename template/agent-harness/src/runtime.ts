@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { homedir, userInfo } from 'node:os';
 import { basename, dirname, isAbsolute, join, relative, resolve, sep, win32 } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -22,6 +22,14 @@ export type RuntimeIdentity =
   | { kind: 'standalone'; source: 'source-tree' }
   | { kind: 'invalid'; reason: string };
 
+function sameExistingPath(left: string, right: string): boolean {
+  try {
+    return realpathSync.native(left) === realpathSync.native(right);
+  } catch {
+    return false;
+  }
+}
+
 function validContext(value: unknown, harnessRoot: string): value is ManagedInstallationContext {
   if (!value || typeof value !== 'object') return false;
   const context = value as Record<string, unknown>;
@@ -37,7 +45,7 @@ function validContext(value: unknown, harnessRoot: string): value is ManagedInst
     return false;
   }
   const harnessHome = context.harnessHome as string;
-  if (resolve(harnessHome, 'agent-harness') !== resolve(harnessRoot)) return false;
+  if (!sameExistingPath(resolve(harnessHome, 'agent-harness'), resolve(harnessRoot))) return false;
   return context.instructionFiles.every((path) => isPathInside(harnessHome, path));
 }
 

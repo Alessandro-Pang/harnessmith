@@ -99,6 +99,7 @@
     "fdir": "6.5.0",
     "picocolors": "1.1.1",
     "proper-lockfile": "4.1.2",
+    "which-command": "0.1.0",
     "write-file-atomic": "7.0.1"
   },
   "devDependencies": {

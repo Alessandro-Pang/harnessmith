@@ -37,7 +37,7 @@ for (const command of ['restore', 'uninstall'] as const) {
     const record = join(root, 'codex-home', '.harnessmith', 'install.json');
     const rulesBefore = readFileSync(rules, 'utf8');
     const recordBefore = readFileSync(record, 'utf8');
-    const canonicalRules = realpathSync(rules);
+    const canonicalRules = realpathSync.native(rules);
 
     const output = execute(root, [command, '--agent', 'codex', '--dry-run', '--json']);
 
@@ -60,7 +60,9 @@ for (const command of ['restore', 'uninstall'] as const) {
     assert.equal(plan.layers.length, command === 'restore' ? 1 : 2);
     assert.ok(
       plan.layers.every((layer: { changes: Array<{ path: string }> }) =>
-        layer.changes.some(({ path }) => path === canonicalRules),
+        layer.changes.some(
+          ({ path }) => existsSync(path) && realpathSync.native(path) === canonicalRules,
+        ),
       ),
     );
   });

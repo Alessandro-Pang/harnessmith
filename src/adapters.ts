@@ -2,6 +2,7 @@ import { existsSync, statSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { execaSync } from 'execa';
+import { whichCommandSync } from 'which-command';
 import { canonicalPath } from './safe-path.js';
 import type { Adapter, AdapterCapabilities, AgentName } from './types.js';
 import { HarnessmithError } from './types.js';
@@ -32,15 +33,21 @@ function gitFailure(result: GitFailureResult): Exclude<GitInspection, { ok: true
   if (result.code === 'ENOENT') {
     return { ok: false, kind: 'unavailable', message: 'Git executable is unavailable' };
   }
-  if (
-    result.code === 'EACCES' ||
-    result.code === 'EPERM' ||
-    /permission denied|dubious ownership|unsafe repository/i.test(details)
-  ) {
+  if (result.code === 'EACCES' || result.code === 'EPERM') {
     return {
       ok: false,
       kind: 'permission',
       message: `Git executable permission denied: ${details}`,
+    };
+  }
+  if (/permission denied/i.test(details)) {
+    return { ok: false, kind: 'permission', message: `Git permission denied: ${details}` };
+  }
+  if (/dubious ownership|unsafe repository/i.test(details)) {
+    return {
+      ok: false,
+      kind: 'permission',
+      message: `Git repository ownership check failed: ${details}`,
     };
   }
   if (/not a git repository/i.test(details)) {
@@ -52,11 +59,31 @@ function gitFailure(result: GitFailureResult): Exclude<GitInspection, { ok: true
   return { ok: false, kind: 'failed', message: `Git command failed: ${details}` };
 }
 
+type GitExecutableResolver = (command: string, options: { cwd: string }) => string | undefined;
+
+export function resolveGitExecutable(
+  platform: NodeJS.Platform,
+  resolver: GitExecutableResolver = whichCommandSync,
+): string | undefined {
+  if (platform !== 'win32') return 'git';
+  return resolver('git', { cwd: dirname(process.execPath) });
+}
+
 export function inspectGit(root: string, args: string[], timeout = 5_000): GitInspection {
-  const result = execaSync('git', args, {
+  const executable = resolveGitExecutable(process.platform);
+  if (!executable) {
+    return { ok: false, kind: 'unavailable', message: 'Git executable is unavailable' };
+  }
+  const result = execaSync(executable, args, {
     cwd: root,
     encoding: 'utf8',
-    env: { GCM_INTERACTIVE: 'Never', GIT_TERMINAL_PROMPT: '0', LANG: 'C', LC_ALL: 'C' },
+    env: {
+      GCM_INTERACTIVE: 'Never',
+      GIT_TERMINAL_PROMPT: '0',
+      LANG: 'C',
+      LC_ALL: 'C',
+      NODEFAULTCURRENTDIRECTORYINEXEPATH: '1',
+    },
     maxBuffer: 20 * 1024 * 1024,
     reject: false,
     stdin: 'ignore',

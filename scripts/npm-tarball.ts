@@ -68,7 +68,7 @@ function parseTar(expanded: Buffer): ReadonlyMap<string, Buffer> {
 
   const validateEntry = (entry: ReadEntry): string => {
     countEntry();
-    const path = safePackagePath(entry.path);
+    const path = safePackagePath(entry.header.path ?? '');
     if (entries.has(path)) throw new Error(`Duplicate npm tarball entry: ${path}`);
     entries.add(path);
     if (!Number.isSafeInteger(entry.size) || entry.size < 0) {

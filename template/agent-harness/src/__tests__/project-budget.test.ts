@@ -11,23 +11,35 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { delimiter, join } from 'node:path';
+import { delimiter, dirname, join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { closeTask, initTask } from '../commands/task.js';
-import { gitRoot, gitVersion } from '../lib/git.js';
+import { classifyGitFailure, gitRoot, gitVersion } from '../lib/git.js';
 import { projectSnapshot } from '../lib/project.js';
 import { createProjectGitBudget, projectGitRaw } from '../lib/project-git.js';
+import { resolveGitExecutable } from '../lib/run-git.js';
 import { projectRoot } from '../lib/task-store.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
+
+function gitExecutable(bin: string, source: string, mode = 0o755): void {
+  const executable = join(bin, process.platform === 'win32' ? 'git.cmd' : 'git');
+  if (process.platform === 'win32') {
+    const script = join(bin, 'git.mjs');
+    writeFileSync(script, `${source}\n`);
+    writeFileSync(executable, `@echo off\r\n"${process.execPath}" "${script}" %*\r\n`);
+  } else {
+    writeFileSync(executable, `#!${process.execPath}\n${source}\n`);
+  }
+  chmodSync(executable, mode);
+}
 
 function fakeGit(project: string, delayMs = 0): { bin: string; log: string } {
   const bin = join(project, 'fake-bin');
   const log = join(project, 'fake-git.log');
   mkdirSync(bin);
-  const executable = join(bin, 'git');
-  writeFileSync(
-    executable,
-    `#!/usr/bin/env node
+  gitExecutable(
+    bin,
+    `
 import { appendFileSync } from 'node:fs';
 const args = process.argv.slice(2);
 appendFileSync(${JSON.stringify(log)}, JSON.stringify(args) + '\\n');
@@ -42,20 +54,35 @@ if (args.includes('rev-parse') && args.includes('--show-toplevel')) {
 }
 `,
   );
-  chmodSync(executable, 0o755);
   return { bin, log };
 }
 
 function withGitPath<T>(bin: string, operation: () => T, exact = false): T {
   const original = process.env.PATH;
+  const originalPathExt = process.env.PATHEXT;
   process.env.PATH = exact ? bin : `${bin}${delimiter}${original || ''}`;
+  if (process.platform === 'win32') {
+    process.env.PATHEXT = ['.COM', '.EXE', '.BAT', '.CMD', originalPathExt || ''].join(delimiter);
+  }
   try {
     return operation();
   } finally {
     if (original === undefined) delete process.env.PATH;
     else process.env.PATH = original;
+    if (originalPathExt === undefined) delete process.env.PATHEXT;
+    else process.env.PATHEXT = originalPathExt;
   }
 }
+
+test('Harness Git resolution uses a trusted resolver cwd instead of the project cwd', () => {
+  const resolved = resolveGitExecutable('win32', (command, options) => {
+    assert.equal(command, 'git');
+    assert.equal(options.cwd, dirname(process.execPath));
+    return String.raw`C:\Program Files\Git\cmd\git.exe`;
+  });
+
+  assert.equal(resolved, String.raw`C:\Program Files\Git\cmd\git.exe`);
+});
 
 test('project snapshot applies one finite deadline to Git probes and fails closed on timeout', () => {
   const project = mkdtempSync(join(tmpdir(), 'harness-project-git-budget-'));
@@ -80,13 +107,24 @@ test('project Git budgets reject invalid limits and fail closed once exhausted',
 });
 
 test('project Git distinguishes a non-repository from an unavailable executable', () => {
+  assert.equal(
+    classifyGitFailure({
+      exitCode: 1,
+      failed: true,
+      isMaxBuffer: false,
+      stderr: Buffer.from(
+        "'git' is not recognized as an internal or external command,\r\noperable program or batch file.",
+      ),
+      timedOut: false,
+    }),
+    'failed',
+  );
+
   const project = mkdtempSync(join(tmpdir(), 'harness-project-git-errors-'));
   onTestFinished(() => rmSync(project, { recursive: true, force: true }));
   const bin = join(project, 'bin');
   mkdirSync(bin);
-  const executable = join(bin, 'git');
-  writeFileSync(executable, "#!/bin/sh\necho 'fatal: not a git repository' >&2\nexit 128\n");
-  chmodSync(executable, 0o755);
+  gitExecutable(bin, "process.stderr.write('fatal: not a git repository\\n');\nprocess.exit(128);");
 
   const nonRepository = withGitPath(bin, () =>
     projectGitRaw(project, ['rev-parse', '--show-toplevel'], createProjectGitBudget({})),
@@ -114,14 +152,34 @@ test('project Git distinguishes a non-repository from an unavailable executable'
   );
 });
 
-test('project Git fails closed when the executable is not permitted', () => {
-  const project = mkdtempSync(join(tmpdir(), 'harness-project-git-permission-'));
+test.skipIf(process.platform === 'win32')(
+  'project Git fails closed when the executable is not permitted',
+  () => {
+    const project = mkdtempSync(join(tmpdir(), 'harness-project-git-permission-'));
+    onTestFinished(() => rmSync(project, { recursive: true, force: true }));
+    const bin = join(project, 'bin');
+    mkdirSync(bin);
+    gitExecutable(bin, 'process.exit(0);', 0o644);
+
+    assert.throws(
+      () =>
+        withGitPath(
+          bin,
+          () =>
+            projectGitRaw(project, ['rev-parse', '--show-toplevel'], createProjectGitBudget({})),
+          true,
+        ),
+      /Git executable permission denied/i,
+    );
+  },
+);
+
+test('project Git fails closed when Git reports permission denial', () => {
+  const project = mkdtempSync(join(tmpdir(), 'harness-project-git-permission-message-'));
   onTestFinished(() => rmSync(project, { recursive: true, force: true }));
   const bin = join(project, 'bin');
   mkdirSync(bin);
-  const executable = join(bin, 'git');
-  writeFileSync(executable, '#!/bin/sh\nexit 0\n');
-  chmodSync(executable, 0o644);
+  gitExecutable(bin, "process.stderr.write('fatal: permission denied\\n');\nprocess.exit(128);");
 
   assert.throws(
     () =>
@@ -130,18 +188,43 @@ test('project Git fails closed when the executable is not permitted', () => {
         () => projectGitRaw(project, ['rev-parse', '--show-toplevel'], createProjectGitBudget({})),
         true,
       ),
-    /Git executable permission denied/i,
+    /Git permission denied/i,
   );
 });
+
+test.runIf(process.platform === 'win32')(
+  'project Git does not execute a command shim from the process working directory',
+  () => {
+    const project = mkdtempSync(join(tmpdir(), 'harness-project-git-cwd-'));
+    onTestFinished(() => rmSync(project, { recursive: true, force: true }));
+    const marker = join(project, 'git-command-hijacked');
+    gitExecutable(
+      project,
+      `import { writeFileSync } from 'node:fs';
+writeFileSync(${JSON.stringify(marker)}, 'called\\n');
+process.stderr.write('fatal: not a git repository\\n');
+process.exit(128);`,
+    );
+    const original = process.cwd();
+    process.chdir(project);
+    try {
+      assert.equal(
+        projectGitRaw(project, ['rev-parse', '--show-toplevel'], createProjectGitBudget({})),
+        null,
+      );
+    } finally {
+      process.chdir(original);
+    }
+    assert.equal(existsSync(marker), false);
+  },
+);
 
 test('project Git preserves raw NUL-delimited output', () => {
   const project = mkdtempSync(join(tmpdir(), 'harness-project-git-raw-'));
   onTestFinished(() => rmSync(project, { recursive: true, force: true }));
   const bin = join(project, 'bin');
   mkdirSync(bin);
-  const executable = join(bin, 'git');
-  writeFileSync(executable, "#!/bin/sh\nprintf ' M tracked.txt\\000?? untracked.txt\\000'\n");
-  chmodSync(executable, 0o755);
+  gitExecutable(bin, "process.stdout.write(Buffer.from(' M tracked.txt\\0?? untracked.txt\\0'));");
 
   const output = withGitPath(bin, () =>
     projectGitRaw(project, ['status', '--porcelain=v1', '-z'], createProjectGitBudget({})),
