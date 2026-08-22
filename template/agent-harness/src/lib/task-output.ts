@@ -15,6 +15,14 @@ export function outputTask(value: TaskSummary | TaskSummary[], json: boolean, io
   io.log(`Status: ${value.status}`);
   io.log(`Objective: ${value.objective}`);
   io.log(`Next: ${value.nextAction || 'none'}`);
+  const drift = (['branch', 'head', 'dirty'] as const).filter(
+    (field) => value.baselineDrift[field],
+  );
+  if (drift.length > 0) {
+    io.log(
+      `Baseline drift: ${drift.join(', ')} (current branch=${value.baselineDrift.currentBranch || 'none'}, HEAD=${value.baselineDrift.currentHead || 'none'}, dirty=${String(value.baselineDrift.currentDirty)})`,
+    );
+  }
   for (const criterion of value.acceptance || []) {
     io.log(`  ${criterion.id} | ${criterion.status} | ${criterion.description}`);
   }

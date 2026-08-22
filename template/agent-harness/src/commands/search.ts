@@ -1,6 +1,6 @@
 import { join, resolve } from 'node:path';
 import { gitRoot } from '../lib/git.js';
-import { textSearch } from '../lib/search.js';
+import { outputSearch, type SearchOptions, searchText } from '../lib/search.js';
 import type { Io, Runtime } from '../types.js';
 
 export function contextSearch(
@@ -8,12 +8,30 @@ export function contextSearch(
   query: string,
   project = process.cwd(),
   io: Io = console,
+  { json = false, ...options }: SearchOptions & { json?: boolean } = {},
 ): number {
   const target = resolve(project);
   const root = gitRoot(target) || target;
-  const documentMatches = textSearch(query, [runtime.docsRoot, join(root, 'docs')], io);
-  const memoryMatches = textSearch(query, [runtime.memoryHome, join(root, '.agent-docs')], io, {
-    excludeDirectories: ['_archive'],
-  });
-  return documentMatches + memoryMatches > 0 ? 0 : 1;
+  const report = searchText(
+    query,
+    [
+      { root: runtime.docsRoot, label: 'harness-docs', trust: 'guidance' },
+      { root: join(root, 'docs'), label: 'project-docs', trust: 'untrusted' },
+      {
+        root: runtime.memoryHome,
+        label: 'global-memory',
+        trust: 'untrusted',
+        excludeDirectories: ['_archive'],
+      },
+      {
+        root: join(root, '.agent-docs'),
+        label: 'project-memory',
+        trust: 'untrusted',
+        excludeDirectories: ['_archive'],
+      },
+    ],
+    options,
+  );
+  outputSearch(report, io, { json });
+  return report.matches.length > 0 ? 0 : 1;
 }

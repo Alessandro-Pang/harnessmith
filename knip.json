@@ -1,0 +1,17 @@
+{
+  "$schema": "./node_modules/knip/schema.json",
+  "entry": [
+    "bin/harnessmith.mjs",
+    "scripts/eval-gate.ts",
+    "scripts/preflight.ts",
+    "scripts/release-publish.ts",
+    "template/agent-harness/bin/harness.mjs"
+  ],
+  "ignoreDependencies": ["@secretlint/secretlint-rule-preset-recommend"],
+  "project": [
+    "src/**/*.ts",
+    "scripts/**/*.ts",
+    "evals/__tests__/**/*.ts",
+    "template/agent-harness/src/**/*.ts"
+  ]
+}

@@ -1,6 +1,6 @@
 import { cpSync, existsSync, mkdirSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { removeExact } from './files.js';
 import type { RecordLayer } from './lifecycle-plan.js';
 import { assertSafePath, ignoreRoot } from './safe-path.js';
@@ -16,6 +16,26 @@ interface PathSnapshot {
 interface MutablePath {
   root: string;
   path: string;
+}
+
+export interface LifecycleTransactionContext {
+  registerRecoveryPath(root: string, path: string): () => void;
+}
+
+export class LifecycleRecoveryError extends Error {
+  readonly recoveryPaths: string[];
+
+  constructor(message: string, recoveryPaths: string[], cause?: unknown) {
+    const paths = [...new Set(recoveryPaths.map((path) => resolve(path)))];
+    super(
+      `${message}\nRecovery data retained at:\n${paths.map((path) => `  ${path}`).join('\n')}`,
+      {
+        cause,
+      },
+    );
+    this.name = 'LifecycleRecoveryError';
+    this.recoveryPaths = paths;
+  }
 }
 
 export function mutableLifecyclePaths(adapter: Adapter, layers: RecordLayer[]): MutablePath[] {
@@ -39,14 +59,31 @@ export function mutableLifecyclePaths(adapter: Adapter, layers: RecordLayer[]): 
 
 function snapshotPaths(paths: MutablePath[]): { root: string; snapshots: PathSnapshot[] } {
   const root = mkdtempSync(join(tmpdir(), 'harnesssmith-lifecycle-'));
-  const snapshots = paths.map(({ root: authorizedRoot, path }, index): PathSnapshot => {
-    assertSafePath(authorizedRoot, path);
-    if (!existsSync(path)) return { root: authorizedRoot, path, copy: null };
-    const copy = join(root, String(index));
-    cpSync(path, copy, { recursive: true, dereference: false, preserveTimestamps: true });
-    return { root: authorizedRoot, path, copy };
-  });
-  return { root, snapshots };
+  const snapshots: PathSnapshot[] = [];
+  try {
+    for (const [index, { root: authorizedRoot, path }] of paths.entries()) {
+      assertSafePath(authorizedRoot, path);
+      if (!existsSync(path)) {
+        snapshots.push({ root: authorizedRoot, path, copy: null });
+        continue;
+      }
+      const copy = join(root, String(index));
+      cpSync(path, copy, { recursive: true, dereference: false, preserveTimestamps: true });
+      snapshots.push({ root: authorizedRoot, path, copy });
+    }
+    return { root, snapshots };
+  } catch (error) {
+    try {
+      removeExact(root);
+    } catch (cleanupError) {
+      throw new LifecycleRecoveryError(
+        `Lifecycle snapshot creation failed and cleanup was incomplete: ${errorMessage(error)}; cleanup: ${errorMessage(cleanupError)}`,
+        [root],
+        error,
+      );
+    }
+    throw error;
+  }
 }
 
 function restorePathSnapshots(snapshots: PathSnapshot[]): void {
@@ -64,22 +101,99 @@ function restorePathSnapshots(snapshots: PathSnapshot[]): void {
   }
 }
 
-export function lifecycleTransaction<T>(paths: MutablePath[], operation: () => T): T {
+function recoveryContext(
+  paths: MutablePath[],
+  registered: Map<string, MutablePath>,
+): LifecycleTransactionContext {
+  const authorizedRoots = new Set(paths.map(({ root }) => resolve(root)));
+  return {
+    registerRecoveryPath(root: string, path: string): () => void {
+      const authorizedRoot = resolve(root);
+      const recoveryPath = resolve(path);
+      if (!authorizedRoots.has(authorizedRoot)) {
+        throw new Error(`Recovery path root is not part of the lifecycle transaction: ${root}`);
+      }
+      assertSafePath(authorizedRoot, recoveryPath);
+      registered.set(recoveryPath, { root: authorizedRoot, path: recoveryPath });
+      return () => {
+        registered.delete(recoveryPath);
+      };
+    },
+  };
+}
+
+function cleanupRecoveryPaths(registered: Map<string, MutablePath>): string[] {
+  const failures: string[] = [];
+  for (const [key, recovery] of registered) {
+    try {
+      assertSafePath(recovery.root, recovery.path);
+      removeExact(recovery.path);
+      registered.delete(key);
+    } catch (error) {
+      failures.push(`${recovery.path}: ${errorMessage(error)}`);
+    }
+  }
+  return failures;
+}
+
+function retainedPaths(transactionRoot: string, registered: Map<string, MutablePath>): string[] {
+  return [transactionRoot, ...registered.keys()];
+}
+
+export function lifecycleTransaction<T>(
+  paths: MutablePath[],
+  operation: (context: LifecycleTransactionContext) => T,
+): T {
   const transaction = snapshotPaths(paths);
+  const registered = new Map<string, MutablePath>();
+  const context = recoveryContext(paths, registered);
+  let result: T;
   try {
-    const result = operation();
-    removeExact(transaction.root);
-    return result;
+    result = operation(context);
   } catch (error) {
     try {
       restorePathSnapshots(transaction.snapshots);
     } catch (rollbackError) {
-      throw new Error(
+      throw new LifecycleRecoveryError(
         `Lifecycle operation failed and rollback was incomplete: ${errorMessage(error)}; rollback: ${errorMessage(rollbackError)}`,
+        retainedPaths(transaction.root, registered),
+        error,
       );
-    } finally {
+    }
+    const cleanupFailures = cleanupRecoveryPaths(registered);
+    if (cleanupFailures.length > 0) {
+      throw new LifecycleRecoveryError(
+        `Lifecycle operation failed; rollback completed but recovery cleanup was incomplete: ${errorMessage(error)}; cleanup: ${cleanupFailures.join('; ')}`,
+        retainedPaths(transaction.root, registered),
+        error,
+      );
+    }
+    try {
       removeExact(transaction.root);
+    } catch (cleanupError) {
+      throw new LifecycleRecoveryError(
+        `Lifecycle operation failed; rollback completed but transaction cleanup was incomplete: ${errorMessage(error)}; cleanup: ${errorMessage(cleanupError)}`,
+        [transaction.root],
+        error,
+      );
     }
     throw error;
   }
+  const cleanupFailures = cleanupRecoveryPaths(registered);
+  if (cleanupFailures.length > 0) {
+    throw new LifecycleRecoveryError(
+      `Lifecycle operation completed but recovery cleanup was incomplete: ${cleanupFailures.join('; ')}`,
+      retainedPaths(transaction.root, registered),
+    );
+  }
+  try {
+    removeExact(transaction.root);
+  } catch (cleanupError) {
+    throw new LifecycleRecoveryError(
+      `Lifecycle operation completed but transaction cleanup was incomplete: ${errorMessage(cleanupError)}`,
+      [transaction.root],
+      cleanupError,
+    );
+  }
+  return result;
 }

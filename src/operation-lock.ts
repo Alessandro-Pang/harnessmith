@@ -6,6 +6,7 @@ import type { Adapter } from './types.js';
 import { errorMessage, HarnessmithError } from './types.js';
 
 const operationLockName = '.harnessmith-operation.lock';
+const lockStaleMilliseconds = 15 * 60_000;
 
 export function operationLockPath(adapter: Adapter): string {
   return join(adapter.home, operationLockName);
@@ -20,6 +21,9 @@ export function withAdapterLocks<T>(
     operationLockPath(left).localeCompare(operationLockPath(right)),
   );
   const releases: Array<() => void> = [];
+  let result: T | undefined;
+  let operationFailed = false;
+  let operationError: unknown;
   try {
     for (const adapter of ordered) {
       assertSafeAdapterPaths(adapter);
@@ -33,7 +37,7 @@ export function withAdapterLocks<T>(
           lockfile.lockSync(adapter.home, {
             lockfilePath: lockPath,
             realpath: false,
-            stale: 30_000,
+            stale: lockStaleMilliseconds,
             retries: 0,
           }),
         );
@@ -46,8 +50,33 @@ export function withAdapterLocks<T>(
         );
       }
     }
-    return operation();
-  } finally {
-    for (const release of releases.reverse()) release();
+    result = operation();
+  } catch (error) {
+    operationFailed = true;
+    operationError = error;
   }
+  const releaseErrors: unknown[] = [];
+  for (const release of releases.reverse()) {
+    try {
+      release();
+    } catch (error) {
+      releaseErrors.push(error);
+    }
+  }
+  if (operationFailed) {
+    if (releaseErrors.length > 0) {
+      throw new Error(
+        `Adapter operation failed and lock release was incomplete: ${errorMessage(operationError)}; releases: ${releaseErrors.map(errorMessage).join('; ')}`,
+        { cause: operationError instanceof Error ? operationError : undefined },
+      );
+    }
+    throw operationError;
+  }
+  if (releaseErrors.length > 0) {
+    throw new Error(
+      `Adapter lock release was incomplete: ${releaseErrors.map(errorMessage).join('; ')}`,
+      { cause: releaseErrors[0] instanceof Error ? releaseErrors[0] : undefined },
+    );
+  }
+  return result as T;
 }

@@ -2,7 +2,7 @@
 title: Compact User Profile Memory
 type: harness-standard
 status: active
-updated: 2026-08-20
+updated: 2026-08-22
 ---
 
 # 紧凑用户画像记忆
@@ -77,6 +77,8 @@ updated: 2026-08-20
 
 ## Agent 维护时机
 
-每次任务启动可读取这份小型画像。任务中出现稳定的新信号或明确变化时，在不打断主要工作的前提
-下更新对应 key 和 `updated` 日期；没有新信息时不改写。更新后运行 `harness memory check global`，
-确保格式、唯一 key、容量和 secret hygiene 均通过。
+每次任务启动可按需读取这份小型画像，但读取不授权写入。只读任务发现稳定新信号或明确变化时，
+只报告画像更新提案，不得写入；没有新信息时也不改写。只有用户明确要求更新画像或沉淀记忆时，
+才读取现有 key、最小写入对应结论与 `updated` 日期，并运行
+`node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory check global`。用户只要求完成项目工作不等于
+授权维护用户画像。

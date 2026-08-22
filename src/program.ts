@@ -5,7 +5,7 @@ import { Command, Option } from 'commander';
 import { collectAgents } from './agents.js';
 import type { CliOptions } from './types.js';
 
-export type HarnessmithCommand = 'install' | 'status' | 'restore' | 'uninstall';
+export type HarnessmithCommand = 'install' | 'status' | 'restore' | 'uninstall' | 'capabilities';
 export type CommandExecutor = (
   command: HarnessmithCommand,
   options: CliOptions,
@@ -55,6 +55,11 @@ export function createProgram(
 
   const install = program.command('install').description('install or upgrade the harness');
   install.action(() => execute('install', install.optsWithGlobals<CliOptions>()));
+
+  const capabilities = program
+    .command('capabilities')
+    .description('report adapter scope, activation, ownership, and permission boundaries');
+  capabilities.action(() => execute('capabilities', capabilities.optsWithGlobals<CliOptions>()));
 
   for (const [name, description] of [
     ['status', 'inspect installation ownership and integrity'],

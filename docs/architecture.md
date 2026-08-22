@@ -15,10 +15,19 @@ Harnesssmith 是一个本地优先、opinionated、跨 Codex、Cursor 和 Claude
 | Distribution | 外层 `src/` | Adapter、SafePath、staging、进程锁、备份、安装记录、restore、uninstall |
 | Guidance & Context | `template/AGENTS.md` 与 `docs/` | 高损失常驻规则、渐进披露、工具与任务路由 |
 | Work State | 内嵌 Harness Runtime | 非权威 memory、长任务 ledger、checkpoint、acceptance gate |
-| Verification | tests、evals、preflight、CI | schema、行为回归、包边界、跨平台矩阵和手工宿主 Eval 证据契约 |
+| Verification | tests、evals、preflight、CI | schema、行为回归、包边界、跨平台矩阵、maintainer-attested record structure 校验和 executable release gate |
 
 宿主 Enforcement 是外部边界；Evolution 是后续能力。当前不实现 Policy Engine、Canonical IR、
 Pack/Registry、自动规则提升或多 Agent Runtime。
+
+Host Eval gate 会校验维护者提交记录的 package version、候选 tarball SHA-256、完整 scenario contract、
+behavior fingerprint、freshness、脱敏 artifact digest、工具行为、文件差异、逐项 pass 断言、禁止行为
+断言和 verdict，并要求 Codex、Cursor、Claude Code 覆盖完整场景矩阵。
+The gate does not launch or authenticate to any third-party host. 真实宿主执行、脱敏和证据采集仍由明确
+授权的维护者或 CI runner 完成。因此 gate
+通过只表示“maintainer-attested structure 内部一致且绑定当前候选包”；本地记录和摘要可由仓库写入者
+伪造，不能证明证据确由真实 Host 产生、内容完整或 verdict 为真。可信来源需要外部 CI/attestation
+和人工证据复核；Harnesssmith 仍未接管宿主 Runtime 或权限系统。
 
 ## Adapter 能力契约
 
@@ -58,8 +67,10 @@ Node.js 无法提供跨平台 `openat(O_NOFOLLOW)` 等同语义，因此 TOCTOU 
 - `harnessVersion` 描述内嵌 Runtime 功能，各 schema version 描述持久化契约；唯一事实来源是
   `template/agent-harness/manifest.json`。
 - `harness version --json` 输出全部兼容字段，`validate` 拒绝未知 schema。
-- 当前没有待迁移 schema，也没有 `migrate` 命令。将来任何 schema 变更必须先实现显式、可测试、
-  可回滚的迁移，再提升对应 schema version。
+- 当前 Task schema 为 3，Memory schema 为 1。读取旧 Task ledger 时执行确定性内存迁移：v1 字符串
+  evidence 标记为 `legacy`，v2 typed evidence 标记为 `external`；仍活跃 Task 的旧 `passed` 会降为
+  `inconclusive`，必须经 `task verify` 重新机械验证。Memory metadata 只允许通过 proposal-first 的
+  `memory migrate` 显式升级；不自动覆盖原记录。
 
 ## 发布就绪定义
 

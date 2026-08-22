@@ -1,14 +1,10 @@
 import type { Command } from 'commander';
-import {
-  archiveMemory,
-  memoryCheck,
-  memoryList,
-  memoryMaintenance,
-  memoryPromotionProposal,
-  memorySearch,
-  supersedeMemory,
-} from '../commands/memory.js';
+import { memoryCheck, memoryList, memorySearch } from '../commands/memory.js';
+import { archiveMemory, memoryMaintenance, supersedeMemory } from '../commands/memory-lifecycle.js';
+import { memoryMigrate } from '../commands/memory-migration.js';
+import { memoryPromotionProposal } from '../commands/memory-promotion.js';
 import type { Io, Runtime } from '../types.js';
+import { addSearchOptions, type SearchCommandOptions } from './search-options.js';
 import type { CommandRunner } from './types.js';
 
 export function registerMemoryCommands(
@@ -21,19 +17,26 @@ export function registerMemoryCommands(
   memory
     .command('list [scope]')
     .description('list memory documents')
-    .action(run((scope: string = '.') => memoryList(runtime, scope, io)));
-  memory
-    .command('search <scope> <query...>')
-    .description('search memory text')
+    .option('--json', 'write the document index as JSON')
     .action(
-      run((scope: string, query: string[]) => memorySearch(runtime, scope, query.join(' '), io)),
+      run((scope: string = '.', options: { json?: boolean }) =>
+        memoryList(runtime, scope, io, options),
+      ),
     );
+  addSearchOptions(
+    memory.command('search <scope> <query...>').description('search memory text'),
+  ).action(
+    run((scope: string, query: string[], options: SearchCommandOptions) =>
+      memorySearch(runtime, scope, query.join(' '), io, options),
+    ),
+  );
   memory
     .command('check [scope]')
     .description('validate memory references and metadata')
     .option('--indexed', 'require active memory to be reachable from an index')
+    .option('--json', 'write the validation result as JSON')
     .action(
-      run((scope: string = '.', options: { indexed?: boolean }) =>
+      run((scope: string = '.', options: { indexed?: boolean; json?: boolean }) =>
         memoryCheck(runtime, scope, io, options),
       ),
     );
@@ -44,6 +47,27 @@ export function registerMemoryCommands(
     .action(
       run((scope: string = '.', options: { json?: boolean }) =>
         memoryMaintenance(runtime, scope, options, io),
+      ),
+    );
+  registerMemoryMutationCommands(memory, runtime, io, run);
+}
+
+function registerMemoryMutationCommands(
+  memory: Command,
+  runtime: Runtime,
+  io: Io,
+  run: CommandRunner,
+): void {
+  memory
+    .command('migrate <scope> <memory>')
+    .description('propose or apply an explicit legacy metadata migration')
+    .option('--set <json>', 'metadata updates as a JSON object', '{}')
+    .option('--apply', 'apply a ready migration under the shared memory lock')
+    .option('--json', 'write the migration report as JSON')
+    .action(
+      run(
+        (scope: string, name: string, options: { set: string; apply?: boolean; json?: boolean }) =>
+          memoryMigrate(runtime, scope, name, options.set, options, io),
       ),
     );
   memory

@@ -5,6 +5,7 @@ import type { Runtime, ValidationReport } from '../types.js';
 import { errorMessage } from '../types.js';
 import { listFiles } from './files.js';
 import { parseFrontmatter } from './frontmatter.js';
+import { markdownLinkTargets } from './markdown-links.js';
 import { addCheck } from './validation-report.js';
 
 interface RouteEntry {
@@ -28,14 +29,29 @@ function validateDocument(path: string, report: ValidationReport): void {
         addCheck(report, 'docs-metadata', 'failed', `Missing ${field}`, path);
     }
     const updated = metadata.get('updated');
+    const configuredReviewInterval = metadata.get('review-interval-days');
+    const reviewInterval = configuredReviewInterval ?? 180;
+    if (
+      !Number.isInteger(reviewInterval) ||
+      typeof reviewInterval !== 'number' ||
+      reviewInterval <= 0
+    ) {
+      addCheck(
+        report,
+        'docs-metadata',
+        'failed',
+        'review-interval-days must be a positive integer',
+        path,
+      );
+    }
     if (typeof updated === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(updated)) {
       const age = (Date.now() - new Date(`${updated}T00:00:00Z`).getTime()) / 86_400_000;
-      if (age > 180) {
+      if (typeof reviewInterval === 'number' && reviewInterval > 0 && age > reviewInterval) {
         addCheck(
           report,
           'docs-freshness',
           'warning',
-          `Not reviewed for ${Math.floor(age)} days`,
+          `Not reviewed for ${Math.floor(age)} days (${reviewInterval}-day interval)`,
           path,
         );
       }
@@ -50,8 +66,7 @@ function validateDocument(path: string, report: ValidationReport): void {
     );
     return;
   }
-  for (const match of content.matchAll(/\[[^\]]+\]\(([^)]+)\)/g)) {
-    const target = match[1];
+  for (const target of markdownLinkTargets(content)) {
     if (/^(https?:|#|mailto:)/.test(target)) continue;
     const clean = target.split('#')[0];
     if (clean && !existsSync(resolve(dirname(path), clean))) {

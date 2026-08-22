@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, statSync } from 'node:fs';
-import { dirname, join, relative, resolve, sep } from 'node:path';
+import { join, sep } from 'node:path';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import addFormatsModule from 'ajv-formats';
 import { validateDocs } from '../lib/docs-validation.js';
@@ -33,29 +33,6 @@ function validateStructure(runtime: Runtime, report: ValidationReport): void {
       : 'CLI entry is executable',
     entry,
   );
-
-  const sourceRoot = join(runtime.installedHarness, 'src');
-  if (!existsSync(sourceRoot)) return;
-  for (const path of listFiles(sourceRoot).filter((file) => file.endsWith('.ts'))) {
-    const content = readFileSync(path, 'utf8');
-    const relativePath = relative(sourceRoot, path);
-    for (const match of content.matchAll(/from\s+['"]([^'"]+)['"]/g)) {
-      if (!match[1].startsWith('.')) continue;
-      const target = resolve(dirname(path), match[1]);
-      if (relativePath.startsWith(`lib${sep}`) && target.includes(`${sep}commands${sep}`)) {
-        check(report, 'architecture-import', 'failed', 'lib must not import commands', path);
-      }
-      if (relativePath.startsWith(`commands${sep}`) && target.includes(`${sep}commands${sep}`)) {
-        check(
-          report,
-          'architecture-import',
-          'failed',
-          'commands must not import sibling commands',
-          path,
-        );
-      }
-    }
-  }
 }
 
 function validateInstructions(runtime: Runtime, report: ValidationReport): void {
@@ -95,7 +72,7 @@ function validateVersion(runtime: Runtime, report: ValidationReport): void {
     const manifest = JSON.parse(readFileSync(path, 'utf8'));
     const compatible =
       typeof manifest.harnessVersion === 'string' &&
-      manifest.schemaVersion === 1 &&
+      manifest.schemaVersion === 3 &&
       manifest.memorySchemaVersion === 1 &&
       manifest.node === '>=24.12.0';
     check(

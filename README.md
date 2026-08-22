@@ -85,6 +85,9 @@ npx harnessmith --agent codex,cursor,claude --project /absolute/path/to/reposito
 # 为自动化输出稳定的 JSON Lines
 npx harnessmith --agent all --project . --dry-run --json
 
+# 只读查看各 Adapter 的作用域、激活和 enforcement owner
+npx harnessmith capabilities --agent all --json
+
 # 查看安装所有权与文件完整性
 npx harnessmith status --agent all --project .
 
@@ -93,7 +96,13 @@ npx harnessmith restore --agent codex
 
 # 逐层恢复到首次安装前
 npx harnessmith uninstall --agent codex
+
+# 安装后聚合检查 Runtime、安装与全局记忆健康度
+node <harness-path>/bin/harness.mjs health --json
 ```
+
+只有项目已经执行过 `init project` 时，才应再传 `health --project <absolute-path>` 检查项目记忆；
+未初始化项目记忆不等于安装不健康。
 
 `restore` 和 `uninstall` 不会删除共享/项目 `.agent-docs` 或用户维护的 personal overlay。`--yes` 只
 关闭交互，并在没有指定 Agent 时默认选择 Codex；它**不会**自动同意文件冲突。只有审阅目标并接受
@@ -104,7 +113,12 @@ npx harnessmith uninstall --agent codex
 ### 渐进式规则
 
 常驻 `AGENTS.md` 只保留高损失、不可推断的默认规则；诊断、评审、变更、发布、Git 和工具路由等
-详细流程按任务读取。项目内更具体的规则始终优先。
+详细流程按任务读取。宿主显式加载的项目规则可细化项目工作，但不能扩大权限或降低安全要求。
+
+内嵌 CLI 的 `route` / `explain` 根据 manifest trigger 只返回命中的文档名称、路径和 trigger，不加载
+正文。`search` 的 `--limit` 只限制结果数；扫描另有独立的条目、目录、深度、文件、单文件字节、
+总字节和时间预算，具体默认值以 JSON `scanLimits` 与 `--help` 为准。JSON 同时返回 provenance、
+`scanTruncated`、`scanStats` 和结构化跳过原因；普通输出也会提示扫描不完整。
 
 ### 分层记忆
 
@@ -114,7 +128,7 @@ Harnesssmith 将“如何工作”“用户是谁”“之前发生了什么”�
 | --- | --- | --- |
 | 宿主原生 memory | 宿主自动召回的历史线索 | 只作待核对输入，不是 Harness 当前画像 |
 | `~/.agent-harness` | 用户维护的个人规则和仓库关系 | 属于规则 overlay，不是记忆；升级和卸载不会覆盖 |
-| `~/.agent-docs/profile.md` | 当前身份、工作方式、技术背景、偏好和研究方向 | Harness 内唯一当前用户画像；变化时原位更新 |
+| `~/.agent-docs/profile.md` | 当前身份、工作方式、技术背景、偏好和研究方向 | Harness 内唯一当前用户画像；明确要求维护时原位更新 |
 | `~/.agent-docs/core.md` 与其他全局 memory | 跨项目活跃主题、经历及高价值提炼发现 | 只保留名称级入口、来源和上下文，不保存第二份当前画像 |
 | `<project>/.agent-docs` | 项目输入、会话、工作状态、证据、提炼发现和历史归档 | 可审阅但非权威；默认被 Git 与普通索引忽略 |
 | `docs/`、ADR、代码、测试、schema、lint、CI | 项目当前事实、正式决策与可执行约束 | 权威层；稳定结论最终应提升到这里 |
@@ -138,16 +152,25 @@ Harnesssmith 将“如何工作”“用户是谁”“之前发生了什么”�
 检查、检索、替代、归档和 proposal-only 提升。`memory check --indexed` 会拒绝无法从索引到达的
 active/blocked 记忆，`memory maintain` 只读报告未索引、过期 working 和可归档内容。
 
-项目记忆只在任务确实需要跨会话交接、保存重要输入/方案/上下文、未完成状态、脱敏证据或昂贵发现时
-初始化；简单问答、一次性小修改和能从代码快速恢复的事实不会触发初始化。读取时先看 `core.md` 和
-名称/元信息，再按引用加载正文，不默认读取整棵目录或 archive。
-达到沉淀阈值的任务在交付时明确报告记忆为 `updated`、`unchanged` 或 `blocked`；长任务入口由
-task 命令自动同步到 `core.md`，稳定经验只有实际写入并验证正式文档后才算完成提升。
+`memory list --json` 和 `memory check --json` 提供版本化机器契约。旧 metadata 只通过显式
+`memory migrate --set ...` 迁移：默认输出 proposal，审阅且 `ready` 后才使用 `--apply`；初始化、
+task progress 和 Memory 写命令通过共享 memory-root lock 串行化。
+
+项目记忆只在已获工作区写入授权且任务确实需要跨会话交接、未完成状态或脱敏证据时初始化；简单
+问答和一次性小修改不触发初始化，只读任务即使发现昂贵结论也只报告 proposal。读取时先看
+`core.md` 和名称/元信息，再按引用加载正文，不默认读取整棵目录或 archive。
+达到沉淀阈值的任务在交付时明确报告记忆为 `proposed`、`updated`、`unchanged` 或 `blocked`；长任务
+入口由 task 命令自动同步到 `core.md`，稳定经验只有实际写入并验证正式文档后才算完成提升。
 
 ### 长任务账本
 
 内嵌 Harness CLI 可以保存目标、下一步、checkpoint 和 acceptance evidence。任务只能通过
-acceptance gate 进入 `complete`，并发更新使用任务锁。
+acceptance gate 进入 `complete`，并发更新使用任务锁。`task verify` 只证明调用方选择的机械检查已
+执行、结果新鲜且 scope 在执行期间稳定；它不自动判断自由文本 criterion 与证据的语义相关性，也
+不是防篡改边界。证据绑定 task/criterion，可拒绝原样跨任务复制，但直接编辑 ledger 或替换 verifier
+仍在威胁模型之外。高风险验收应由用户审阅或 CI/Host-owned verifier 定义
+不可由当前任务随意替换的 predicate，再由 `task verify` 调用；外部 evidence 只能记为 `failed` 或
+`inconclusive`，不能直接通过 gate。
 
 ### 安全的安装生命周期
 
@@ -155,7 +178,8 @@ acceptance gate 进入 `complete`，并发更新使用任务锁。
 - 对 output、backup、record 和 ignore path 做 lexical 与 canonical containment 校验；
 - 默认拒绝授权根下的 symlink、junction 和 reparse path；
 - 遇到陌生文件或用户修改过的受管理文件时 fail closed；
-- 多 Agent 操作使用进程锁、完整预检和事务回滚；
+- 多 Agent 操作使用进程锁和完整预检；失败时按已登记路径尝试事务回滚，若回滚不完整则报错并
+  保留 recovery path，不能声称已原子恢复；
 - 升级保留可变 `state/`，personal overlay 永不被升级、restore 或 uninstall 覆盖。
 
 完整边界与 enforcement owner 见[架构说明](./docs/architecture.md)和[安全策略](./SECURITY.md)。
@@ -166,8 +190,9 @@ acceptance gate 进入 `complete`，并发更新使用任务锁。
 可重复传入 `--agent`；支持 `codex`、`cursor`、`claude`、`claude-code` 和 `all`。非交互调用应显式
 指定 Agent，并在需要稳定协议时使用 `--json`。
 
-`--no-init-global` 只跳过共享全局记忆初始化，不会跳过 personal overlay。dry-run、install result
-和 status JSON 都包含 Adapter `capabilities`，用于区分作用域、激活方式、文件所有权和权限 owner。
+`capabilities` 是不解析安装路径、不写文件的只读命令。dry-run、install result 和 status JSON 也
+包含同一 Adapter `capabilities`，用于区分作用域、激活方式、文件所有权和权限 owner。
+`--no-init-global` 只跳过共享全局记忆初始化，不会跳过 personal overlay。
 
 JSON 失败输出为单条 stderr 对象，包含 `version`、`error.code`、`message` 和 `exitCode`：
 

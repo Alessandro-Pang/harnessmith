@@ -3,7 +3,9 @@ import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import type { Runtime } from '../types.js';
 import { listFiles } from './files.js';
 import { gitRoot } from './git.js';
-import { assertSafePath } from './safe-path.js';
+import { assertSafePath, isPathInside } from './safe-path.js';
+
+export const isInside = isPathInside;
 
 export function resolveMemoryRoot(runtime: Runtime, input = '.'): string {
   if (input === 'global') return runtime.memoryHome;
@@ -20,11 +22,6 @@ export function markdownFiles(
     if (!path.endsWith('.md')) return false;
     return archive || !path.split(sep).includes('_archive');
   });
-}
-
-export function isInside(root: string, target: string): boolean {
-  const path = relative(root, target);
-  return path === '' || (!path.startsWith(`..${sep}`) && path !== '..' && !isAbsolute(path));
 }
 
 export function memoryDocumentPath(root: string, input: string): string {

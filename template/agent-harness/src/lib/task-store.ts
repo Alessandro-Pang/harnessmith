@@ -1,16 +1,18 @@
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { join, resolve, sep } from 'node:path';
-import lockfile from 'proper-lockfile';
-import type { TaskRecord } from '../types.js';
+import type { ProjectSnapshot, TaskRecord } from '../types.js';
 import { errorMessage } from '../types.js';
+import { withExclusiveDirectoryLock } from './exclusive-lock.js';
 import { atomicWrite, atomicWriteMany } from './files.js';
 import { parseFrontmatter, updateFrontmatter } from './frontmatter.js';
-import { projectSnapshot } from './project.js';
+import { withMemoryLock } from './memory-lock.js';
+import { projectSnapshot, resolveProjectRoot } from './project.js';
 import { assertSafePath } from './safe-path.js';
 import { assertTaskId } from './task-model.js';
+import { normalizeTaskRecord } from './task-record.js';
 
 export function projectRoot(input: string): string {
-  return projectSnapshot(input).root;
+  return resolveProjectRoot(input);
 }
 
 export function taskDirectory(root: string, id: string): string {
@@ -30,31 +32,35 @@ export function taskPath(root: string, id: string): string {
 export function withTaskLock<T>(root: string, id: string, operation: () => T): T {
   const directory = taskDirectory(root, id);
   mkdirSync(directory, { recursive: true });
-  let release: (() => void) | undefined;
-  try {
-    release = lockfile.lockSync(directory, { realpath: false, stale: 30_000, retries: 0 });
-  } catch (error) {
-    throw new Error(`Task is being updated by another process: ${id}`, { cause: error });
-  }
-  try {
-    return operation();
-  } finally {
-    release();
-  }
+  return withExclusiveDirectoryLock(directory, `Task ${id}`, operation);
 }
 
-export function readTask(root: string, id: string): { path: string; value: TaskRecord } {
+export function readTask(
+  root: string,
+  id: string,
+): { path: string; value: TaskRecord; snapshot: ProjectSnapshot } {
   const path = taskPath(root, id);
   if (!existsSync(path)) throw new Error(`Task does not exist: ${id}`);
+  let parsed: unknown;
   try {
-    return { path, value: JSON.parse(readFileSync(path, 'utf8')) as TaskRecord };
+    parsed = JSON.parse(readFileSync(path, 'utf8'));
   } catch (error) {
     throw new Error(`Invalid task JSON ${path}: ${errorMessage(error)}`);
   }
+  const value = normalizeTaskRecord(parsed, path);
+  if (resolve(value.projectRoot) !== resolve(root)) {
+    throw new Error(
+      `Invalid task schema ${path}: projectRoot ${value.projectRoot} does not match ${root}`,
+    );
+  }
+  return { path, value, snapshot: projectSnapshot(root) };
 }
 
 export function writeTask(path: string, task: TaskRecord): void {
-  atomicWrite(path, `${JSON.stringify(task, null, 2)}\n`);
+  normalizeTaskRecord(task, path);
+  withMemoryLock(join(task.projectRoot, '.agent-docs'), () => {
+    atomicWrite(path, `${JSON.stringify(task, null, 2)}\n`);
+  });
 }
 
 export function writeTaskWithProgress(
@@ -63,15 +69,10 @@ export function writeTaskWithProgress(
   progressFile: string,
   progress: string,
 ): void {
+  normalizeTaskRecord(task, taskFile);
   const memoryRoot = join(task.projectRoot, '.agent-docs');
   const corePath = join(memoryRoot, 'core.md');
-  let release: (() => void) | undefined;
-  try {
-    release = lockfile.lockSync(memoryRoot, { realpath: false, stale: 30_000, retries: 0 });
-  } catch (error) {
-    throw new Error(`Project memory is being updated: ${task.projectRoot}`, { cause: error });
-  }
-  try {
+  withMemoryLock(memoryRoot, () => {
     let core = readFileSync(corePath, 'utf8');
     const reference = `memory:working/${task.id}/progress`;
     core = core
@@ -101,7 +102,5 @@ export function writeTaskWithProgress(
       { path: progressFile, content: progress },
       { path: corePath, content: core },
     ]);
-  } finally {
-    release();
-  }
+  });
 }

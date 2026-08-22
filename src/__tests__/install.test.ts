@@ -96,7 +96,7 @@ test('installs all adapters, maps paths, and renames existing rules', () => {
     readFileSync(join(codex, 'agent-harness', 'install-context.json'), 'utf8'),
   ) as { harnessHome: string };
   assert.ok(codexRules.includes(`${codexContext.harnessHome}/agent-harness`));
-  assert.match(claudeRules, /宿主原生 memory 只作为待核对线索/);
+  assert.match(claudeRules, /宿主原生 memory 仅作待核对线索/);
   assert.match(cursorRules, /^---\ndescription: Personal coding agent harness/m);
   assert.match(cursorRules, /alwaysApply: true/);
   assert.match(cursorRules, /managed-by: harnessmith/);
@@ -144,7 +144,7 @@ test('installs all adapters, maps paths, and renames existing rules', () => {
       { encoding: 'utf8', env: { ...process.env, HOME: root } },
     );
     assert.equal(version.status, 0, version.stderr);
-    assert.equal(version.stdout.trim(), '2.3.0');
+    assert.equal(version.stdout.trim(), '2.4.0');
   }
 
   const claudeHarness = join(claude, 'agent-harness', 'bin', 'harness.mjs');

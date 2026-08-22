@@ -1,20 +1,42 @@
 import { parseDocument } from 'yaml';
 
-export function parseFrontmatter(content: string): Map<string, unknown> {
-  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
-  if (!match) return new Map();
+const frontmatterPattern = /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/;
+
+export type FrontmatterResult =
+  | {
+      found: false;
+      metadata: Map<string, unknown>;
+      body: string;
+      document: null;
+    }
+  | {
+      found: true;
+      metadata: Map<string, unknown>;
+      body: string;
+      document: ReturnType<typeof parseDocument>;
+    };
+
+export function parseFrontmatterDocument(content: string): FrontmatterResult {
+  const match = content.match(frontmatterPattern);
+  if (!match) return { found: false, metadata: new Map(), body: content, document: null };
   const document = parseDocument(match[1]);
   if (document.errors.length > 0) throw document.errors[0];
   const value = document.toJS();
-  return new Map(Object.entries(value && typeof value === 'object' ? value : {}));
+  return {
+    found: true,
+    metadata: new Map(Object.entries(value && typeof value === 'object' ? value : {})),
+    body: content.slice(match[0].length),
+    document,
+  };
+}
+
+export function parseFrontmatter(content: string): Map<string, unknown> {
+  return parseFrontmatterDocument(content).metadata;
 }
 
 export function updateFrontmatter(content: string, updates: Record<string, unknown>): string {
-  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
-  if (!match) throw new Error('Memory document is missing YAML frontmatter');
-  const document = parseDocument(match[1]);
-  if (document.errors.length > 0) throw document.errors[0];
-  for (const [key, value] of Object.entries(updates)) document.set(key, value);
-  const body = content.slice(match[0].length);
-  return `---\n${document.toString()}---\n${body}`;
+  const parsed = parseFrontmatterDocument(content);
+  if (!parsed.found) throw new Error('Memory document is missing YAML frontmatter');
+  for (const [key, value] of Object.entries(updates)) parsed.document.set(key, value);
+  return `---\n${parsed.document.toString()}---\n${parsed.body}`;
 }

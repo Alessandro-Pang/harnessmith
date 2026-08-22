@@ -1,8 +1,8 @@
 import { existsSync, lstatSync, realpathSync } from 'node:fs';
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 
-function isWithin(root: string, target: string): boolean {
-  const path = relative(root, target);
+export function isPathInside(root: string, target: string): boolean {
+  const path = relative(resolve(root), resolve(target));
   return path === '' || (!path.startsWith(`..${sep}`) && path !== '..' && !isAbsolute(path));
 }
 
@@ -22,7 +22,7 @@ function canonicalPath(input: string): string {
 export function assertSafePath(root: string, target: string): void {
   const authorizedRoot = resolve(root);
   const requested = resolve(target);
-  if (!isWithin(authorizedRoot, requested)) {
+  if (!isPathInside(authorizedRoot, requested)) {
     throw new Error(`Path escapes its authorized root: ${requested}`);
   }
 
@@ -34,7 +34,7 @@ export function assertSafePath(root: string, target: string): void {
     }
   }
 
-  if (!isWithin(canonicalPath(authorizedRoot), canonicalPath(requested))) {
+  if (!isPathInside(canonicalPath(authorizedRoot), canonicalPath(requested))) {
     throw new Error(`Path resolves outside its authorized root: ${requested}`);
   }
 }

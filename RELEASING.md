@@ -19,9 +19,10 @@ Publishing is a maintainer-authorized external write. Never publish only because
 
    ```bash
    pnpm install --frozen-lockfile --ignore-scripts
-   pnpm run release:check
+   pnpm run preflight
+   pnpm run test:coverage
    npm pack --dry-run
-   npm publish --dry-run
+   npm pack --pack-destination /absolute/path/to/release-candidate
    pnpm audit --prod --audit-level=high
    pnpm dlx @cyclonedx/cdxgen@12.8.2 -t js --no-install-deps --fail-on-error \
      -o harnessmith-sbom.cdx.json .
@@ -31,13 +32,39 @@ Publishing is a maintainer-authorized external write. Never publish only because
    auditing, and the CycloneDX SBOM run from the frozen pnpm checkout. Verify the generator recognized the
    committed `pnpm-lock.yaml`; keep the SBOM generator version pinned and record it with the release evidence.
 
-5. Install the produced tarball in a temporary home and exercise install, status, restore, uninstall, personal
-   overlay initialization, global and project memory, task completion, and multi-Agent rollback.
-6. Validate every manual host-evaluation record against `evals/run.schema.json`; an example fixture is not
-   release evidence. Preserve only redacted transcripts and evidence artifacts.
+5. Bind the release checks to that exact candidate, install the same file in a temporary home, and exercise
+   install, status, restore, uninstall, personal overlay initialization, global and project memory, task
+   completion, and multi-Agent rollback:
+
+   ```bash
+   export HARNESS_RELEASE_ARTIFACT=/absolute/path/to/release-candidate/harnessmith-x.y.z.tgz
+   ```
+
+6. Run every scenario in `evals/scenarios.json` against every supported real host. Preserve only redacted
+   transcripts and local evidence artifacts, set `recordType: host-evaluation`, and bind the records to the
+   candidate tarball and complete scenario fingerprints printed by `pnpm run eval:fingerprint`. Record one
+   evidence-backed `pass-N` and `forbidden-N` assertion for every corresponding ordered condition. Then run:
+
+   ```bash
+   export HARNESS_EVAL_RUNS_DIR="$PWD/.agent-docs/host-evals/runs"
+   pnpm run eval:validate
+   pnpm run eval:gate
+   pnpm run release:publish -- --dry-run
+   ```
+
+   `release:publish` copies `HARNESS_RELEASE_ARTIFACT` to a read-only private snapshot, runs `release:check`
+   against that snapshot, verifies its digest did not change, and checks and publishes that same snapshot.
+   Publishing an existing tarball does not reliably invoke that tarball's `prepublishOnly`, so the supported
+   release workflow performs this gate explicitly; `prepublishOnly` remains a secondary guard for worktree publication.
+   `release:check` invokes the same gate and fails when fresh, passing, maintainer-attested real-host records
+   are absent from any host-by-scenario cell. The result is a **maintainer-attested structure** check: local
+   artifacts and digests cannot authenticate their provenance or prove that a real Host behaved as claimed.
+   `run.example.json`, schema validation alone, and local unit tests cannot satisfy it; trusted proof requires
+   external CI/attestation and evidence review.
 7. Verify actual CI runs on every supported operating system and Node.js version. Workflow configuration
    alone is not evidence that the matrix passed.
-8. Commit with a Conventional Commit, create a signed version tag, and publish only after explicit maintainer
-   approval. Prefer npm provenance when the public repository and publishing workflow are configured.
+8. Commit with a Conventional Commit, create a signed version tag, and run `pnpm run release:publish` only
+   after explicit maintainer approval. It publishes the immutable snapshot created from the selected artifact.
+   Prefer npm provenance when the public repository and publishing workflow are configured.
 9. Verify the npm package page, executable, README links, tarball contents, SBOM, provenance statement, and
    clean-room installation.

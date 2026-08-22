@@ -13,6 +13,7 @@ import {
   taskStatus,
   updateAcceptance,
 } from '../commands/task.js';
+import { verifyAcceptance } from '../commands/task-verification.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function projectFixture(): { project: string; runtime: ReturnType<typeof harnessRuntime> } {
@@ -20,6 +21,10 @@ function projectFixture(): { project: string; runtime: ReturnType<typeof harness
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
   execFileSync('git', ['-C', root, 'init', '-q']);
   return { project: root, runtime: harnessRuntime(root) };
+}
+
+function testEvidence(command = 'pnpm run test:harness', exitCode = 0): string {
+  return JSON.stringify({ type: 'test', command, exitCode });
 }
 
 test('task initialization validates required fields and creates a queryable ledger', () => {
@@ -88,7 +93,7 @@ test('task state transitions require valid statuses and acceptance evidence', ()
       id: 'lifecycle',
       summary: 'Implementation complete',
       nextAction: 'Verify',
-      evidence: ['test:unit'],
+      evidence: [testEvidence('pnpm run test:unit')],
     },
     capturedIo(),
   );
@@ -118,17 +123,24 @@ test('task state transitions require valid statuses and acceptance evidence', ()
       }),
     /does not exist/,
   );
-  const accepted = updateAcceptance(
+  const accepted = verifyAcceptance(
     {
       project,
       id: 'lifecycle',
       criterion: 'criterion-1',
-      status: 'passed',
-      evidence: ['test:agent-harness-task'],
+      type: 'test',
+      command: process.execPath,
+      args: ['-e', 'process.exit(0)'],
+      scope: ['.gitignore'],
     },
     capturedIo(),
   );
   assert.equal(accepted.acceptance[0].status, 'passed');
+  const proof = accepted.acceptance[0].evidence[0];
+  assert.equal(proof.type, 'test');
+  assert.equal(proof.producer, 'harness');
+  assert.equal(proof.recordedAt, accepted.updated);
+  assert.equal(proof.cwd, accepted.projectRoot);
   const closed = closeTask(
     { project, id: 'lifecycle', summary: 'All criteria verified' },
     capturedIo(),
@@ -161,11 +173,22 @@ test('blocked and superseded closures do not pretend acceptance passed', () => {
     { project, id: 'blocked', objective: 'Blocked work', acceptance: ['External input'] },
     capturedIo(),
   );
+  assert.throws(
+    () => closeTask({ project, id: 'blocked', summary: 'Waiting for access', status: 'blocked' }),
+    /Blocked closure requires a next action/,
+  );
   const blocked = closeTask(
-    { project, id: 'blocked', summary: 'Waiting for access', status: 'blocked' },
+    {
+      project,
+      id: 'blocked',
+      summary: 'Waiting for access',
+      status: 'blocked',
+      nextAction: 'Obtain access and resume the task',
+    },
     capturedIo(),
   );
   assert.equal(blocked.status, 'blocked');
+  assert.equal(blocked.nextAction, 'Obtain access and resume the task');
   assert.equal(blocked.acceptance[0].status, 'pending');
   assert.throws(
     () => closeTask({ project, id: 'blocked', summary: 'Invalid', status: 'in_progress' }),

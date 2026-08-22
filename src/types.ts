@@ -116,6 +116,28 @@ export interface AdapterStatus {
   outputs: Array<{ path: string; status: ManagedStatus }>;
 }
 
+export type LifecycleCommand = 'restore' | 'uninstall';
+export type LifecycleChangeAction = 'remove' | 'restore-backup' | 'remove-managed-block';
+
+export interface LifecycleChange {
+  path: string;
+  action: LifecycleChangeAction;
+  source?: string;
+}
+
+export interface LifecycleLayerPlan {
+  sourceRecord: string;
+  changes: LifecycleChange[];
+}
+
+export interface LifecyclePlan {
+  command: LifecycleCommand;
+  adapter: AgentName;
+  capabilities: AdapterCapabilities;
+  home: string;
+  layers: LifecycleLayerPlan[];
+}
+
 export interface CliOptions {
   agent: string[];
   project: string;

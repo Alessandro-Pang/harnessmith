@@ -13,7 +13,14 @@ export default defineConfig({
     hookTimeout: 30_000,
     coverage: {
       provider: 'v8',
-      include: ['src/**/*.ts', 'template/agent-harness/src/**/*.ts'],
+      include: [
+        'src/**/*.ts',
+        'template/agent-harness/src/**/*.ts',
+        'scripts/npm-tarball.ts',
+        'scripts/preflight-docs.ts',
+        'scripts/preflight-git.ts',
+        'scripts/release-publish.ts',
+      ],
       exclude: ['**/__tests__/**'],
       reporter: ['text', 'json-summary'],
       thresholds: {
@@ -22,10 +29,34 @@ export default defineConfig({
         branches: 55,
         statements: 67,
         'src/**': {
-          lines: 55,
-          functions: 60,
-          branches: 42,
-          statements: 55,
+          lines: 64,
+          functions: 73,
+          branches: 50,
+          statements: 64,
+        },
+        'src/safe-path.ts': {
+          lines: 94,
+          functions: 100,
+          branches: 83,
+          statements: 92,
+        },
+        'src/install.ts': {
+          lines: 72,
+          functions: 91,
+          branches: 60,
+          statements: 72,
+        },
+        'src/lifecycle-transaction.ts': {
+          lines: 97,
+          functions: 100,
+          branches: 80,
+          statements: 92,
+        },
+        'src/operation-lock.ts': {
+          lines: 100,
+          functions: 100,
+          branches: 100,
+          statements: 100,
         },
         'template/agent-harness/src/**': {
           lines: 54,

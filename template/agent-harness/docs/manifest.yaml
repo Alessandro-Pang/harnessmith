@@ -1,51 +1,51 @@
 version: 1
-updated: 2026-08-20
+updated: 2026-08-22
 root: |-
   {{HARNESS_HOME}}/agent-harness/docs
 principle: progressive-disclosure
 entries:
   operating-model:
     path: core/operating-model.md
-    triggers: [workflow, ambiguity, evidence, handoff]
+    triggers: [workflow, ambiguity, evidence, handoff, trust, authorization, prompt-injection, 工作流, 歧义, 证据, 交接, 信任, 授权, 提示词注入]
   tool-routing:
     path: core/tool-routing.md
-    triggers: [mcp, browser, figma, documentation, connector]
+    triggers: [mcp, browser, figma, documentation, connector, search, provenance, 工具, 浏览器, 设计稿, 文档, 连接器, 搜索, 来源]
   safety-and-verification:
     path: core/safety-and-verification.md
-    triggers: [permissions, destructive, verification, secrets]
+    triggers: [permissions, destructive, verification, secrets, 权限, 破坏性操作, 验证, 密钥]
   git-conventions:
     path: core/git-conventions.md
-    triggers: [git, branch, commit, commitlint, conventional-commits]
+    triggers: [git, branch, commit, commitlint, conventional-commits, 分支, 提交, 提交规范]
   harness-cli-architecture:
     path: core/harness-cli-architecture.md
-    triggers: [harness-cli, install, init, memory-command, doctor]
+    triggers: [harness-cli, install, init, memory-command, doctor, health, route, explain, memory-migrate, 安装, 初始化, 记忆命令, 健康检查, 路由, 记忆迁移]
   long-running-tasks:
     path: core/long-running-tasks.md
-    triggers: [long-running, checkpoint, acceptance, resume, task-ledger]
+    triggers: [long-running, checkpoint, acceptance, resume, task-ledger, 长任务, 检查点, 验收, 恢复任务, 任务账本]
   change:
     path: playbooks/change.md
-    triggers: [implement, modify, refactor, build]
+    triggers: [implement, modify, refactor, build, 实现, 修改, 重构, 构建]
   diagnose:
     path: playbooks/diagnose.md
-    triggers: [debug, bug, incident, ci-failure]
+    triggers: [debug, bug, incident, ci-failure, 排障, 缺陷, 事故, ci失败]
   review:
     path: playbooks/review.md
-    triggers: [review, audit, risk]
+    triggers: [review, audit, risk, 评审, 审计, 风险]
   research-and-design:
     path: playbooks/research-and-design.md
-    triggers: [research, plan, design, compare]
+    triggers: [research, plan, design, compare, 调研, 计划, 设计, 对比]
   release-and-external:
     path: playbooks/release-and-external.md
-    triggers: [release, migration, publish, remote-write]
+    triggers: [release, migration, publish, remote-write, 发布, 迁移, 远端写入]
   repository-map:
     path: projects/repository-map.md
-    triggers: [cross-repository, repository-owner, release-order, contract]
+    triggers: [cross-repository, repository-owner, release-order, contract, 跨仓, 仓库所有者, 发布顺序, 契约]
   project-agents:
     path: standards/project-agents.md
-    triggers: [AGENTS.md, project-rules]
+    triggers: [AGENTS.md, project-rules, 项目规则]
   project-agent-docs:
     path: standards/project-agent-docs.md
-    triggers: [.agent-docs, session, evidence, handoff]
+    triggers: [.agent-docs, session, evidence, handoff, memory-list, memory-check, memory-migrate, secret-hygiene, 项目记忆, 会话, 记忆列表, 记忆检查, 记忆迁移, 凭据卫生]
   user-profile-memory:
     path: standards/user-profile-memory.md
-    triggers: [user-profile, preference, identity, coding-style, research-interest]
+    triggers: [user-profile, preference, identity, coding-style, research-interest, 用户画像, 偏好, 身份, 编码风格, 研究兴趣]

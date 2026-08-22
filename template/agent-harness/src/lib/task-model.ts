@@ -1,5 +1,12 @@
 import { basename } from 'node:path';
-import type { AcceptanceStatus, TaskRecord, TaskStatus, TaskSummary } from '../types.js';
+import type {
+  AcceptanceStatus,
+  ProjectSnapshot,
+  TaskRecord,
+  TaskStatus,
+  TaskSummary,
+} from '../types.js';
+import { taskBaselineDrift } from './task-evidence.js';
 
 export interface TaskBaseOptions {
   project?: string;
@@ -24,6 +31,16 @@ export interface AcceptanceOptions extends TaskBaseOptions {
   criterion?: string;
   status?: AcceptanceStatus;
   evidence?: string[];
+}
+
+export interface VerifyAcceptanceOptions extends TaskBaseOptions {
+  criterion?: string;
+  type?: 'command' | 'test' | 'file' | 'diff';
+  command?: string;
+  args?: string[];
+  scope?: string[];
+  file?: string;
+  timeoutMs?: number;
 }
 
 const taskStatuses = new Set<TaskStatus>([
@@ -126,7 +143,7 @@ export function updateProgressFrontmatter(task: TaskRecord, time: string) {
   };
 }
 
-export function taskSummary(task: TaskRecord): TaskSummary {
+export function taskSummary(task: TaskRecord, snapshot: ProjectSnapshot): TaskSummary {
   return {
     id: task.id,
     objective: task.objective,
@@ -135,5 +152,6 @@ export function taskSummary(task: TaskRecord): TaskSummary {
     nextAction: task.nextAction || '',
     acceptance: task.acceptance,
     lastCheckpoint: task.checkpoints.at(-1) || null,
+    baselineDrift: taskBaselineDrift(task, snapshot),
   };
 }

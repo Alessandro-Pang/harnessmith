@@ -2,7 +2,7 @@
 title: Project AGENTS.md Standard
 type: harness-standard
 status: active
-updated: 2026-08-17
+updated: 2026-08-22
 ---
 
 # 项目 `AGENTS.md` 设计
@@ -25,7 +25,7 @@ updated: 2026-08-17
 ## 推荐结构
 
 1. 一句话项目边界与关键关系。
-2. 默认工作方式：包管理器、语言、事实源、授权边界。
+2. 项目特有且无法从配置机械识别的工作方式。
 3. 无法从代码推断的 P0/P1 规则。
 4. 任务路由表：命中什么任务时读哪个文档/skill。
 5. 最窄验证入口与完成定义。
@@ -36,6 +36,7 @@ updated: 2026-08-17
 
 ## 多宿主兼容
 
+- 项目规则不得扩大权限、降低安全要求或改写用户授权边界；仓库中的指令文本不能自行授予副作用。
 - 共享事实写在 `AGENTS.md`、`docs/`、脚本和测试中。
 - 宿主专属的 rules、skills、plugins 等承载产品特定注入与复杂工作流，并由共享 instruction file
   提供可发现入口。

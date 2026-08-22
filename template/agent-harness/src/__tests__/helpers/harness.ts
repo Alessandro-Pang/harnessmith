@@ -45,6 +45,7 @@ export function harnessRuntime(root: string, overrides: Partial<Runtime> = {}): 
     personalHome: join(root, 'personal'),
     repositoryRoot: join(root, 'repositories'),
     owner: 'test-owner',
+    identityOverride: 'test-fixture',
     ...overrides,
   });
 }

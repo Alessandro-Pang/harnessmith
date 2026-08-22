@@ -1,12 +1,15 @@
-import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { Argument, Command } from 'commander';
+import { execaSync } from 'execa';
+import { checkArchitectureImports } from './preflight-architecture.js';
 import { checkDocs } from './preflight-docs.js';
+import { checkBranch } from './preflight-git.js';
+import { checkPackage } from './preflight-package.js';
 
 type Mode = 'all' | 'cli' | 'docs';
-
 const root = dirname(dirname(fileURLToPath(import.meta.url)));
 const harnessRoot = join(root, 'template', 'agent-harness');
 const errors: string[] = [];
@@ -20,143 +23,65 @@ function check(condition: unknown, message: string): void {
   errors.push(message);
 }
 
-function read(path: string): string {
-  return readFileSync(path, 'utf8');
-}
-
-function checkPublicGuidance(version: string): void {
-  const llms = read(join(root, 'llms.txt'));
-  const readme = read(join(root, 'README.md'));
-  const englishReadme = read(join(root, 'README.en.md'));
-  const security = read(join(root, 'SECURITY.md'));
-  check(
-    llms.includes('Release channel: npm registry (`latest` dist-tag)'),
-    'llms.txt must identify the registry release channel',
-  );
-  check(
-    security.includes('The latest published release receives security fixes'),
-    'SECURITY.md must identify the support policy',
-  );
-  for (const [path, content] of [
-    ['README.md', readme],
-    ['README.en.md', englishReadme],
-    ['SECURITY.md', security],
-    ['llms.txt', llms],
-  ]) {
-    check(!content.includes(version), `${path} must not duplicate the package version`);
-  }
-}
-
 function runNode(entry: string, args: string[], env: NodeJS.ProcessEnv = process.env): string {
-  const result = spawnSync(process.execPath, [entry, ...args], {
+  const result = execaSync(process.execPath, [entry, ...args], {
     cwd: root,
     encoding: 'utf8',
     env,
+    reject: false,
   });
   check(
-    result.status === 0,
+    result.exitCode === 0,
     `${relative(root, entry)} ${args.join(' ')} failed: ${(result.stderr || result.stdout).trim()}`,
   );
   return result.stdout;
 }
 
-function checkPackage(): void {
-  const manifest = JSON.parse(read(join(root, 'package.json'))) as {
-    name?: string;
-    version?: string;
-    bin?: Record<string, string>;
-    files?: string[];
-    packageManager?: string;
-    scripts?: Record<string, string>;
-  };
-  check(manifest.name === 'harnessmith', 'package name must remain harnessmith');
-  check(Boolean(manifest.version), 'package version is missing');
-  check(manifest.packageManager === 'pnpm@10.13.0', 'package manager must remain pnpm@10.13.0');
-  check(existsSync(join(root, 'pnpm-lock.yaml')), 'pnpm-lock.yaml is missing');
-  check(
-    !existsSync(join(root, 'package-lock.json')),
-    'package-lock.json conflicts with the pnpm lockfile',
-  );
-  for (const [name, command] of Object.entries(manifest.scripts ?? {})) {
-    check(
-      !/(^|[;&|]\s*)npm run\b/.test(command),
-      `package script ${name} must compose scripts with pnpm`,
-    );
-  }
-  check(manifest.bin?.harnessmith === 'bin/harnessmith.mjs', 'package bin mapping is invalid');
-  for (const required of [
-    'bin',
-    'dist',
-    'template/AGENTS.md',
-    'template/agent-harness/bin',
-    'template/agent-harness/dist',
-    'template/agent-harness/docs',
-    'template/agent-harness/manifest.json',
-    'template/agent-harness/schemas',
-    'template/agent-harness/templates',
-    'evals/run.schema.json',
-    'evals/run.example.json',
-    'docs/architecture.md',
-    'llms.txt',
-  ]) {
-    check(manifest.files?.includes(required), `npm package files is missing ${required}`);
-  }
-  check(
-    !manifest.files?.some(
-      (path) =>
-        path === 'template' || path.includes('agent-harness/src') || path.includes('__tests__'),
-    ),
-    'npm package files must not publish TypeScript sources or test directories',
-  );
-  check(existsSync(join(root, 'bin', 'harnessmith.mjs')), 'outer CLI launcher is missing');
-  check(existsSync(join(harnessRoot, 'bin', 'harness.mjs')), 'Harness CLI launcher is missing');
-  check(
-    existsSync(join(harnessRoot, 'dist', 'harness.mjs')),
-    'Harness bundle is missing; run pnpm run build',
-  );
-
-  const workflow = read(join(root, '.github', 'workflows', 'ci.yml'));
-  check(workflow.includes('pnpm/action-setup@v6'), 'CI must set up pnpm with the supported action');
-  check(
-    workflow.includes('pnpm install --frozen-lockfile --ignore-scripts'),
-    'CI must install the frozen pnpm lockfile without lifecycle scripts',
-  );
-  check(!workflow.includes('npm ci'), 'CI must not install dependencies with npm');
-
-  checkPublicGuidance(manifest.version || '');
+function checkHelp(output: string, subject: string, expected: string): void {
+  for (const value of expected.split(' '))
+    check(output.includes(value), `${subject} is missing ${value}`);
 }
 
-function checkBranch(): void {
-  const result = spawnSync('git', ['branch', '--show-current'], {
-    cwd: root,
-    encoding: 'utf8',
-  });
-  check(result.status === 0, `unable to inspect current Git branch: ${result.stderr.trim()}`);
-  const branch = result.stdout.trim();
-  if (!branch || ['main', 'master', 'develop'].includes(branch)) return;
-  check(
-    /^(?:feature|hotfix|refactor)\/\d{8}_[a-z0-9]+(?:-[a-z0-9]+)*$/.test(branch),
-    `branch name does not match (feature|hotfix|refactor)/YYYYMMDD_<feature-name>: ${branch}`,
+function checkCliHelp(outerCli: string, harnessCli: string): void {
+  const outerHelp = runNode(outerCli, ['--help']);
+  checkHelp(outerHelp, 'outer CLI help', 'install capabilities status restore uninstall');
+  const harnessHelp = runNode(harnessCli, ['--help']);
+  checkHelp(
+    harnessHelp,
+    'Harness CLI help',
+    'init memory project task validate doctor health route explain search',
+  );
+  const memoryHelp = runNode(harnessCli, ['memory', '--help']);
+  checkHelp(
+    memoryHelp,
+    'Harness memory help',
+    'list search check maintain migrate supersede archive promote',
+  );
+  const searchFlags =
+    '--limit --max-line-length --max-depth --max-files --max-file-bytes --max-total-bytes --json';
+  checkHelp(runNode(harnessCli, ['search', '--help']), 'Harness search help', searchFlags);
+  checkHelp(runNode(harnessCli, ['memory', 'search', '--help']), 'Memory search help', searchFlags);
+  const memoryListHelp = runNode(harnessCli, ['memory', 'list', '--help']);
+  checkHelp(memoryListHelp, 'Harness memory list help', '--json');
+  const memoryCheckHelp = runNode(harnessCli, ['memory', 'check', '--help']);
+  checkHelp(memoryCheckHelp, 'Harness memory check help', '--indexed --json');
+  const memoryMigrateHelp = runNode(harnessCli, ['memory', 'migrate', '--help']);
+  checkHelp(memoryMigrateHelp, 'Harness memory migrate help', '--set --apply --json');
+  const taskVerifyHelp = runNode(harnessCli, ['task', 'verify', '--help']);
+  checkHelp(
+    taskVerifyHelp,
+    'Harness task verify help',
+    '--id --criterion --type --command --arg --scope --file --timeout-ms --json',
   );
 }
 
 function checkCli(): void {
-  checkBranch();
-  checkPackage();
+  checkArchitectureImports(join(harnessRoot, 'src'), check);
+  checkBranch(root, check);
+  checkPackage(root, harnessRoot, check);
   const outerCli = join(root, 'bin', 'harnessmith.mjs');
   const harnessCli = join(harnessRoot, 'bin', 'harness.mjs');
-  const outerHelp = runNode(outerCli, ['--help']);
-  for (const command of ['install', 'status', 'restore', 'uninstall']) {
-    check(outerHelp.includes(command), `outer CLI help is missing ${command}`);
-  }
-  const harnessHelp = runNode(harnessCli, ['--help']);
-  for (const command of ['init', 'memory', 'project', 'task', 'validate', 'doctor']) {
-    check(harnessHelp.includes(command), `Harness CLI help is missing ${command}`);
-  }
-  const memoryHelp = runNode(harnessCli, ['memory', '--help']);
-  for (const command of ['list', 'search', 'check', 'supersede', 'archive', 'promote']) {
-    check(memoryHelp.includes(command), `Harness memory help is missing ${command}`);
-  }
+  checkCliHelp(outerCli, harnessCli);
   const versionContract = JSON.parse(runNode(harnessCli, ['version', '--json'])) as {
     version?: number;
     harnessVersion?: string;
@@ -165,7 +90,7 @@ function checkCli(): void {
   };
   check(versionContract.version === 1, 'Harness version contract must remain version 1');
   check(Boolean(versionContract.harnessVersion), 'Harness version contract is missing version');
-  check(versionContract.schemaVersion === 1, 'Harness task schema version is unsupported');
+  check(versionContract.schemaVersion === 3, 'Harness task schema version is unsupported');
   check(versionContract.memorySchemaVersion === 1, 'Harness memory schema version is unsupported');
 
   const temporary = mkdtempSync(join(tmpdir(), 'harnessmith-preflight-'));
@@ -213,10 +138,12 @@ function checkCli(): void {
 }
 
 function main(): void {
-  const mode = (process.argv[2] ?? 'all') as Mode;
-  if (!['all', 'cli', 'docs'].includes(mode)) {
-    throw new Error('Usage: tsx scripts/preflight.ts [all|cli|docs]');
-  }
+  const program = new Command()
+    .exitOverride()
+    .configureOutput({ writeOut: () => undefined, writeErr: () => undefined })
+    .addArgument(new Argument('[mode]').choices(['all', 'cli', 'docs']).default('all'));
+  program.parse(process.argv.slice(2), { from: 'user' });
+  const mode = program.processedArgs[0] as Mode;
   if (mode === 'all' || mode === 'docs') checkDocs({ root, harnessRoot, check });
   if (mode === 'all' || mode === 'cli') checkCli();
   if (errors.length > 0) throw new Error(`Preflight failed:\n- ${errors.join('\n- ')}`);

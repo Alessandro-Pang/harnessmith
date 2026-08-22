@@ -1,8 +1,9 @@
-import { execFileSync } from 'node:child_process';
-import { readdirSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { homedir, userInfo } from 'node:os';
 import { basename, dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execaSync } from 'execa';
+import { fdir } from 'fdir';
 import type { Adapter } from './types.js';
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -71,22 +72,17 @@ export function installationValues(adapter: Adapter, env: NodeJS.ProcessEnv) {
 }
 
 export function listModules(root: string): string[] {
-  const modules: string[] = [];
-  const pending: string[] = [root];
-  while (pending.length > 0) {
-    const directory = pending.pop();
-    if (!directory) continue;
-    for (const entry of readdirSync(directory, { withFileTypes: true })) {
-      const path = join(directory, entry.name);
-      if (entry.isDirectory()) pending.push(path);
-      else if (entry.isFile() && path.endsWith('.mjs')) modules.push(path);
-    }
-  }
-  return modules;
+  return new fdir({ excludeSymlinks: true })
+    .withFullPaths()
+    .withErrors()
+    .filter((path, isDirectory) => !isDirectory && path.endsWith('.mjs'))
+    .crawl(root)
+    .sync()
+    .sort();
 }
 
 export function checkModules(root: string): void {
   for (const path of listModules(root)) {
-    execFileSync(process.execPath, ['--check', path], { stdio: 'pipe' });
+    execaSync(process.execPath, ['--check', path], { stderr: 'pipe', stdout: 'pipe' });
   }
 }

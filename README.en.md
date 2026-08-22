@@ -89,6 +89,9 @@ npx harnessmith --agent codex,cursor,claude --project /absolute/path/to/reposito
 # Emit stable JSON Lines for automation
 npx harnessmith --agent all --project . --dry-run --json
 
+# Read adapter scope, activation, and enforcement owners without writing
+npx harnessmith capabilities --agent all --json
+
 # Inspect ownership and file integrity
 npx harnessmith status --agent all --project .
 
@@ -97,7 +100,13 @@ npx harnessmith restore --agent codex
 
 # Restore every layer to the pre-install state
 npx harnessmith uninstall --agent codex
+
+# Aggregate runtime, installation, and global-memory health after installation
+node <harness-path>/bin/harness.mjs health --json
 ```
+
+Pass `health --project <absolute-path>` only after that project's memory has been initialized with
+`init project`; an uninitialized project-memory root is not an unhealthy installation.
 
 `restore` and `uninstall` preserve shared/project `.agent-docs` and the user-owned personal overlay.
 `--yes` disables interaction and selects Codex when no agent was provided; it does **not** authorize file
@@ -108,8 +117,14 @@ conflicts. Use `--force` only after reviewing the target and accepting backup-ba
 ### Progressive instructions
 
 The always-loaded `AGENTS.md` keeps only high-cost, non-inferable defaults. Detailed procedures for diagnosis,
-review, changes, releases, Git, and tool routing are loaded by task type. More specific project instructions
-always take precedence.
+review, changes, releases, Git, and tool routing are loaded by task type. Host-loaded project rules may refine
+project work, but cannot expand permissions or weaken safety requirements.
+
+The embedded `route` / `explain` commands use manifest triggers to return only matching document names, paths,
+and triggers without loading bodies. Search `--limit` only caps returned matches; scanning has independent entry,
+directory, depth, file, per-file byte, aggregate byte, and time budgets. JSON `scanLimits` and `--help` are the
+authoritative defaults. JSON also includes provenance, `scanTruncated`, `scanStats`, and structured skip reasons,
+while human output reports incomplete scans.
 
 ### Layered memory
 
@@ -120,7 +135,7 @@ currently true about a project:
 | --- | --- | --- |
 | Host-native memory | Historical signals recalled by the host | Input to verify, never the current Harness profile |
 | `~/.agent-harness` | User-maintained personal rules and repository relationships | A rule overlay, not memory; preserved across upgrades and uninstall |
-| `~/.agent-docs/profile.md` | Current identity, working style, technical background, preferences, and interests | The only current user profile inside the Harness; updated in place |
+| `~/.agent-docs/profile.md` | Current identity, working style, technical background, preferences, and interests | The only current user profile inside the Harness; updated in place only when explicitly requested |
 | `~/.agent-docs/core.md` and other global memory | Cross-project active topics, experience, and distilled findings | Name-level routing, sources, and context; never a second current profile |
 | `<project>/.agent-docs` | Project input, sessions, work state, evidence, distilled findings, and archive | Reviewable but non-authoritative; ignored by Git and normal indexing |
 | `docs/`, ADRs, code, tests, schemas, lint, and CI | Current project facts, accepted decisions, and executable constraints | Authoritative; stable conclusions are promoted here |
@@ -146,18 +161,30 @@ supersede, archive, and proposal-only promotion. `memory check --indexed` reject
 that cannot be reached from an index, while `memory maintain` reports unindexed, expired working, and
 archive-ready entries without changing them.
 
-Project memory is initialized only for cross-session handoff, important input/plans/context, unfinished state,
-redacted evidence, or expensive discoveries. Small questions, one-off changes, and facts cheaply recoverable
-from code do not trigger initialization. Agents read `core.md` and names/metadata first, then follow explicit
-references; they do not load the full tree or archive by default.
-Tasks that cross the write threshold report memory as `updated`, `unchanged`, or `blocked` at delivery. Task
-commands keep long-running work reachable from `core.md`, and promotion is complete only after the formal
-document is actually written and verified.
+`memory list --json` and `memory check --json` expose versioned machine contracts. Legacy metadata changes only
+through explicit `memory migrate --set ...`: it emits a proposal by default and accepts `--apply` only after the
+reviewed result is `ready`. Initialization, task-progress updates, and Memory write commands serialize on a
+shared memory-root lock.
+
+Project memory is initialized only when workspace writes are authorized and a task needs cross-session handoff,
+unfinished state, or redacted evidence. Small questions and one-off changes do not trigger initialization;
+read-only tasks report expensive findings as proposals. Agents read `core.md` and names/metadata first, then
+follow explicit references without loading the full tree or archive by default.
+Tasks that cross the persistence threshold report memory as `proposed`, `updated`, `unchanged`, or `blocked` at
+delivery. Task commands keep long-running work reachable from `core.md`, and promotion is complete only after
+the formal document is actually written and verified.
 
 ### Durable task ledgers
 
 The embedded Harness CLI stores objectives, next actions, checkpoints, and acceptance evidence. A task can
 enter `complete` only through its acceptance gate, and concurrent updates are protected by task locks.
+`task verify` proves only that the caller-selected mechanical check ran, its evidence is fresh, and its scope
+stayed stable during execution. It does not infer whether that evidence is semantically relevant to a
+free-text criterion, and it is not a tamper boundary. Evidence is bound to its task and criterion, so an
+unchanged cross-task copy is rejected, but direct ledger edits or verifier replacement remain outside the
+threat model. For high-risk acceptance, use a user-reviewed or CI/Host-owned verifier whose predicate cannot
+be replaced by the current task, then invoke it through `task verify`. External evidence can be only `failed`
+or `inconclusive`; it cannot directly pass the gate.
 
 ### Safe installation lifecycle
 
@@ -165,7 +192,9 @@ enter `complete` only through its acceptance gate, and concurrent updates are pr
 - Lexical and canonical containment for output, backup, record, and ignore paths.
 - Fail-closed handling of symlinks, junctions, and reparse paths below authorized roots.
 - Refusal of unmanaged or user-modified targets by default.
-- Cross-process locks, complete preflight, and transactional rollback for multi-agent operations.
+- Cross-process locks and complete preflight for multi-agent operations. On failure, Harnessmith attempts
+  rollback along recorded paths; an incomplete rollback reports an error and retains recovery paths rather
+  than claiming atomic restoration.
 - Preservation of mutable `state/`; upgrades, restore, and uninstall never overwrite the personal overlay.
 
 See the [architecture and enforcement model](./docs/architecture.md) and [security policy](./SECURITY.md) for
@@ -177,9 +206,10 @@ the complete boundaries.
 `--agent` is repeatable and accepts `codex`, `cursor`, `claude`, `claude-code`, and `all`. Non-interactive
 calls should select agents explicitly and use `--json` when a stable machine protocol is required.
 
-`--no-init-global` skips shared global-memory initialization but never skips the personal overlay. Dry-run,
-install-result, and status JSON include Adapter `capabilities` describing scope, activation, file ownership,
-and the permission owner.
+`capabilities` is a read-only command that neither resolves installation paths nor writes files. Dry-run,
+install-result, and status JSON include the same Adapter `capabilities` describing scope, activation, file
+ownership, and the permission owner. `--no-init-global` skips shared global-memory initialization but never
+skips the personal overlay.
 
 JSON failures are emitted as one stderr object containing `version`, `error.code`, `message`, and `exitCode`:
 

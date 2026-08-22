@@ -2,7 +2,7 @@
 title: Personal Agent Harness Index
 type: harness-index
 status: active
-updated: 2026-08-19
+updated: 2026-08-22
 ---
 
 # Personal Agent Harness Docs
@@ -15,21 +15,21 @@ updated: 2026-08-19
 
 | 当前任务 | 读取文件 |
 | --- | --- |
-| 不确定 Agent 应如何推进、何时询问、事实如何判定 | `core/operating-model.md` |
-| 需要选择 MCP、浏览器、Figma、文档或 Shell 能力 | `core/tool-routing.md` |
-| 涉及权限、破坏性操作、验证范围或交付证据 | `core/safety-and-verification.md` |
-| 新建/检查分支，编写/校验提交信息，设计 Git 规范 | `core/git-conventions.md` |
-| 扩展、测试或调试 personal harness CLI | `core/harness-cli-architecture.md` |
-| 跨上下文推进、维护任务契约、验收账本或交接 | `core/long-running-tasks.md` |
-| 修改或实现代码、配置、脚本 | `playbooks/change.md` |
-| 排查故障、修复 bug、分析 CI 失败 | `playbooks/diagnose.md` |
-| 代码、架构、安全或性能评审 | `playbooks/review.md` |
-| 做方案、计划、调研、技术选型 | `playbooks/research-and-design.md` |
-| 发布、迁移、远端写操作或共享环境变更 | `playbooks/release-and-external.md` |
-| 跨仓任务识别仓库关系 | `projects/repository-map.md` |
-| 新建或精简项目 `AGENTS.md` | `standards/project-agents.md` |
-| 创建或维护项目 `.agent-docs/` | `standards/project-agent-docs.md` |
-| 读取或更新紧凑用户画像、处理偏好变化与冲突 | `standards/user-profile-memory.md` |
+| 涉及信任、授权、只读边界，或不确定 Agent 如何推进与判定事实 | [operating model](core/operating-model.md) |
+| 需要选择 MCP、浏览器、Figma、文档或 Shell 能力 | [tool routing](core/tool-routing.md) |
+| 涉及权限、破坏性操作、验证范围或交付证据 | [safety and verification](core/safety-and-verification.md) |
+| 新建/检查分支，编写/校验提交信息，设计 Git 规范 | [Git conventions](core/git-conventions.md) |
+| 扩展、测试或调试 personal Harness CLI | [Harness CLI architecture](core/harness-cli-architecture.md) |
+| 跨上下文推进、维护任务契约、验收账本或交接 | [long-running tasks](core/long-running-tasks.md) |
+| 修改或实现代码、配置、脚本 | [change playbook](playbooks/change.md) |
+| 排查故障、修复 bug、分析 CI 失败 | [diagnose playbook](playbooks/diagnose.md) |
+| 代码、架构、安全或性能评审 | [review playbook](playbooks/review.md) |
+| 做方案、计划、调研、技术选型 | [research and design](playbooks/research-and-design.md) |
+| 发布、迁移、远端写操作或共享环境变更 | [release and external](playbooks/release-and-external.md) |
+| 跨仓任务识别仓库关系 | [repository map](projects/repository-map.md) |
+| 新建或精简项目 `AGENTS.md` | [project AGENTS standard](standards/project-agents.md) |
+| 创建或维护项目 `.agent-docs/` | [project memory standard](standards/project-agent-docs.md) |
+| 读取或更新紧凑用户画像、处理偏好变化与冲突 | [user profile standard](standards/user-profile-memory.md) |
 
 ## 目录职责
 
@@ -50,41 +50,16 @@ updated: 2026-08-19
 4. 本目录保存跨仓、长期、个人级规则和事实导航；单次任务记忆与证据放项目 `.agent-docs/`。
 5. 规则改变时同步更新本索引和 `manifest.yaml`；不要新增没有路由入口的孤儿文档。
 
-## 常用命令
+## 最小发现入口
 
 ```bash
-# 检查规则、文档路由、架构边界与可选项目接入
-node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs validate --project /absolute/project/path
+# 使用 manifest 中英 aliases 返回命中文档，不加载正文
+node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs route 评审 permissions --json
 
-# 获取项目启动事实的结构化快照
-node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs project inspect /absolute/project/path --json
-
-# 全局和当前项目的显式检索（包含被 ignore 的 .agent-docs）
-node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs search "authentication"
-
-# 幂等初始化全局个人记忆
-node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs init global
-
-# 幂等初始化用户维护的个人规则与仓库关系
-node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs init personal
-
-# 为一个项目初始化本地 Agent 工作区
-node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs init project /absolute/project/path
-
-# 只列记忆名称和元信息；正文仍按需读取
-node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory list /absolute/project/path
-
-# 检查必要元信息和 memory: 引用完整性
-node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory check /absolute/project/path
-
-# 查询 Harness、task schema、memory schema 和 Node 兼容契约
-node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs version --json
-
-# 先建立替代关系，再把已关闭记忆移入日期 archive
-node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory supersede /absolute/project/path old --by current
-node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory archive /absolute/project/path old
-
-# 只输出正式化建议；不会创建或修改 docs/ 文件
-node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory promote /absolute/project/path \
-  distilled/finding --target docs/architecture.md --json
+# 在 Harness、项目 docs 与记忆中做有界检索
+node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs search --project /absolute/project/path \
+  --limit 20 --max-line-length 300 --json "authentication"
 ```
+
+命中后只读取所需文档。其他命令、参数与默认预算以
+`node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs --help` 和子命令 `--help` 为准。

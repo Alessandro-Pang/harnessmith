@@ -5,6 +5,32 @@ The embedded Harness schema has its own explicitly recorded version.
 
 ## Unreleased
 
+### Added
+
+- Add provenance-carrying Harness search with independent result, depth, file-count, per-file, and total-byte
+  budgets plus observable scan truncation; add read-only route/explain/capability discovery and a fail-closed
+  health report that verifies managed runtime identity and installed checksums.
+- Add proposal-first memory migration, lifecycle maintenance, canonical cross-process memory locks, and
+  indexed reachability plus secret-pattern validation.
+- Add `task verify` for Harness-produced command, test, file, and diff evidence with explicit freshness scopes.
+- Add a v4 maintainer-attested Host Eval contract and release gate covering every supported host and scenario,
+  bound to the exact candidate tarball and complete scenario contract, with required pass and forbidden
+  assertions and all-artifact secret scanning.
+
+### Changed
+
+- Make lifecycle dry-runs read-only plans, preflight every multi-Adapter change before mutation, and preserve
+  recovery snapshots when rollback itself is incomplete.
+- Reduce permanent prompt content to high-loss boundaries and route detailed procedures through compact docs.
+- Coordinate outer snapshots, embedded initialization, Memory mutations, and Task writes on canonical
+  per-user lock targets; release every acquired lock while preserving the primary operation failure.
+
+### Embedded Harness
+
+- Harness runtime advances from 2.3.0 to 2.4.0. Task schema advances from 1 to 3; legacy caller-reported
+  evidence cannot satisfy completion and active historical `passed` criteria require `task verify` again.
+  Memory schema remains at version 1.
+
 ## 0.3.0 - 2026-08-21
 
 ### Changed

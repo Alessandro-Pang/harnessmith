@@ -10,19 +10,11 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
+import lockfile from 'proper-lockfile';
 import { onTestFinished, test } from 'vitest';
 import { initGlobal, initPersonal, initProject } from '../commands/init.js';
-import {
-  archiveMemory,
-  memoryCheck,
-  memoryList,
-  memoryMaintenance,
-  memoryPromotionProposal,
-  memorySearch,
-  resolveMemoryRoot,
-  supersedeMemory,
-} from '../commands/memory.js';
+import { memoryCheck, memoryList, memorySearch, resolveMemoryRoot } from '../commands/memory.js';
 import { contextSearch } from '../commands/search.js';
 import { parseFrontmatter } from '../lib/frontmatter.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
@@ -73,6 +65,17 @@ test('global memory initialization is idempotent and preserves user content', ()
   assert.equal(resolveMemoryRoot(runtime, 'global'), runtime.memoryHome);
 });
 
+test('global memory initialization participates in the shared root lock', () => {
+  const root = temporaryRoot();
+  const runtime = harnessRuntime(root);
+  mkdirSync(runtime.memoryHome, { recursive: true });
+  const release = lockfile.lockSync(runtime.memoryHome, { realpath: false });
+  onTestFinished(() => release());
+
+  assert.throws(() => initGlobal(runtime, capturedIo()), /memory is being updated/i);
+  assert.equal(existsSync(join(runtime.memoryHome, 'core.md')), false);
+});
+
 test('global memory initializes a compact user profile and routes to it from core', () => {
   const root = temporaryRoot();
   const runtime = harnessRuntime(root);
@@ -96,6 +99,17 @@ test('personal overlay initialization is idempotent and preserves user rules', (
   initPersonal(runtime, capturedIo());
   assert.match(readFileSync(rules, 'utf8'), /user rule/);
   assert.ok(readFileSync(join(runtime.personalHome, 'projects', 'repository-map.md'), 'utf8'));
+});
+
+test('personal overlay initialization rejects concurrent writers', () => {
+  const root = temporaryRoot();
+  const runtime = harnessRuntime(root);
+  mkdirSync(runtime.personalHome, { recursive: true });
+  const release = lockfile.lockSync(runtime.personalHome, { realpath: false });
+  onTestFinished(() => release());
+
+  assert.throws(() => initPersonal(runtime, capturedIo()), /personal overlay is being updated/i);
+  assert.equal(existsSync(join(runtime.personalHome, 'AGENTS.md')), false);
 });
 
 test('project initialization targets the Git root and manages both ignore files once', () => {
@@ -132,6 +146,23 @@ test('project initialization rejects a symlinked memory root', () => {
   );
   assert.equal(existsSync(join(outside, 'README.md')), false);
   assert.equal(existsSync(join(outside, 'core.md')), false);
+});
+
+test('project initialization participates in the project memory root lock', () => {
+  const root = temporaryRoot();
+  const project = join(root, 'project');
+  const memoryRoot = join(project, '.agent-docs');
+  mkdirSync(memoryRoot, { recursive: true });
+  execFileSync('git', ['-C', project, 'init', '-q']);
+  const release = lockfile.lockSync(memoryRoot, { realpath: false });
+  onTestFinished(() => release());
+
+  assert.throws(
+    () => initProject(harnessRuntime(root), project, capturedIo()),
+    /memory is being updated/i,
+  );
+  assert.equal(existsSync(join(memoryRoot, 'core.md')), false);
+  assert.equal(existsSync(join(project, '.gitignore')), false);
 });
 
 test('memory list, search, and reference validation handle archive and broken references', () => {
@@ -187,25 +218,32 @@ test('indexed memory check rejects active documents that core cannot reach', () 
   assert.doesNotThrow(() => memoryCheck(runtime, 'global', capturedIo(), { indexed: true }));
 });
 
-test('memory maintenance reports unindexed, expired, and closed candidates', () => {
+test('indexed memory check requires initialized entry files and core-rooted reachability', () => {
   const root = temporaryRoot();
   const runtime = harnessRuntime(root);
+  mkdirSync(runtime.memoryHome);
+  const missing = capturedIo();
+  assert.throws(() => memoryCheck(runtime, 'global', missing, { indexed: true }), /issue/);
+  assert.match(missing.errors.join('\n'), /Required memory entry is missing: core\.md/);
+
+  rmSync(runtime.memoryHome, { recursive: true });
   initGlobal(runtime, capturedIo());
-  writeFileSync(join(runtime.memoryHome, 'orphan.md'), memoryDocument('Orphan'));
+  writeFileSync(join(runtime.memoryHome, 'episode.md'), memoryDocument('Episode'));
   writeFileSync(
-    join(runtime.memoryHome, 'expired.md'),
-    memoryDocument('Expired')
-      .replace('memory-kind: episode', 'memory-kind: working')
-      .replace('schema-version: 1', 'expires: 2000-01-01\nschema-version: 1'),
+    join(runtime.memoryHome, 'orphan-index.md'),
+    memoryDocument('Orphan index', 'memory:episode').replace(
+      'memory-kind: episode',
+      'memory-kind: index',
+    ),
   );
-  writeFileSync(
-    join(runtime.memoryHome, 'closed.md'),
-    memoryDocument('Closed').replace('status: active', 'status: complete'),
-  );
-  const report = memoryMaintenance(runtime, 'global', { json: true }, capturedIo());
-  assert.deepEqual(report.unindexed, ['expired.md', 'orphan.md']);
-  assert.deepEqual(report.expiredWorking, ['expired.md']);
-  assert.deepEqual(report.closed, ['closed.md']);
+  const orphaned = capturedIo();
+  assert.throws(() => memoryCheck(runtime, 'global', orphaned, { indexed: true }), /2 issue/);
+  assert.match(orphaned.errors.join('\n'), /orphan-index\.md/);
+  assert.match(orphaned.errors.join('\n'), /episode\.md/);
+
+  const core = join(runtime.memoryHome, 'core.md');
+  writeFileSync(core, `${readFileSync(core, 'utf8')}\n- Nested index memory:orphan-index\n`);
+  assert.doesNotThrow(() => memoryCheck(runtime, 'global', capturedIo(), { indexed: true }));
 });
 
 test('memory check enforces metadata types, schema version, and real calendar dates', () => {
@@ -332,67 +370,6 @@ test('memory check enforces profile.md as the single canonical user profile', ()
       /profile\.md must declare type user-profile/.test(message),
     ),
     true,
-  );
-});
-
-test('memory supersede and archive maintain links and move only closed documents', () => {
-  const root = temporaryRoot();
-  const runtime = harnessRuntime(root);
-  initGlobal(runtime, capturedIo());
-  const current = join(runtime.memoryHome, 'current.md');
-  const previous = join(runtime.memoryHome, 'previous.md');
-  writeFileSync(current, memoryDocument('Current'));
-  writeFileSync(previous, memoryDocument('Previous'));
-
-  supersedeMemory(runtime, 'global', 'previous', 'current', capturedIo());
-  assert.match(readFileSync(previous, 'utf8'), /status: superseded/);
-  assert.match(readFileSync(previous, 'utf8'), /superseded-by: memory:current/);
-  const archived = archiveMemory(runtime, 'global', 'previous', {}, capturedIo());
-  assert.equal(existsSync(previous), false);
-  assert.equal(existsSync(archived), true);
-  assert.match(readFileSync(archived, 'utf8'), /status: archived/);
-  assert.throws(
-    () => archiveMemory(runtime, 'global', 'current', {}, capturedIo()),
-    /active memory requires --force/,
-  );
-  memoryCheck(runtime, 'global', capturedIo());
-});
-
-test('memory promotion produces a proposal without writing authoritative docs', () => {
-  const root = temporaryRoot();
-  const project = join(root, 'project');
-  mkdirSync(join(project, '.agent-docs', 'distilled'), { recursive: true });
-  execFileSync('git', ['-C', project, 'init', '-q']);
-  const memory = join(project, '.agent-docs', 'distilled', 'finding.md');
-  writeFileSync(
-    memory,
-    memoryDocument('Finding').replace('memory-kind: episode', 'memory-kind: distilled'),
-  );
-  const runtime = harnessRuntime(root);
-  const target = join(dirname(resolveMemoryRoot(runtime, project)), 'docs', 'finding.md');
-
-  const proposal = memoryPromotionProposal(
-    runtime,
-    project,
-    'distilled/finding',
-    'docs/finding.md',
-    capturedIo(),
-  );
-
-  assert.equal(proposal.mode, 'proposal-only');
-  assert.equal(proposal.target, target);
-  assert.equal(proposal.sourceOfTruth, false);
-  assert.equal(existsSync(target), false);
-  assert.throws(
-    () =>
-      memoryPromotionProposal(
-        runtime,
-        project,
-        'distilled/finding',
-        '.agent-docs/promoted.md',
-        capturedIo(),
-      ),
-    /authoritative project path/,
   );
 });
 

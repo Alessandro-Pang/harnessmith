@@ -1,11 +1,21 @@
 import assert from 'node:assert/strict';
-import { readdirSync, readFileSync } from 'node:fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { test } from 'vitest';
+import { onTestFinished, test } from 'vitest';
 import { parse } from 'yaml';
+import { parseFrontmatterDocument } from '../../template/agent-harness/src/lib/frontmatter.js';
 import { render as renderHarnessTemplate } from '../../template/agent-harness/src/lib/templates.js';
 import type { Runtime } from '../../template/agent-harness/src/types.js';
-import { installationRenderer, templateRoot } from '../install-template.js';
+import { installationRenderer, listModules, templateRoot } from '../install-template.js';
 import type { Adapter } from '../types.js';
 
 function markdownFiles(root: string): string[] {
@@ -14,11 +24,6 @@ function markdownFiles(root: string): string[] {
     if (entry.isDirectory()) return markdownFiles(path);
     return entry.isFile() && path.endsWith('.md') ? [path] : [];
   });
-}
-
-function parseFrontmatter(content: string): unknown {
-  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
-  return match ? parse(match[1]) : null;
 }
 
 test('renders the docs manifest with a valid Windows path', () => {
@@ -78,7 +83,10 @@ test('renders all distributed frontmatter with valid Windows paths', () => {
   const docsRoot = join(templateRoot, 'agent-harness', 'docs');
 
   for (const path of markdownFiles(docsRoot)) {
-    assert.doesNotThrow(() => parseFrontmatter(render(readFileSync(path, 'utf8'), path)), path);
+    assert.doesNotThrow(
+      () => parseFrontmatterDocument(render(readFileSync(path, 'utf8'), path)),
+      path,
+    );
   }
 });
 
@@ -106,6 +114,18 @@ test('renders all memory template frontmatter with YAML-safe values', () => {
     const rendered = renderHarnessTemplate(runtime, readFileSync(path, 'utf8'), {
       PROJECT_KEY: 'project "quoted"',
     });
-    assert.doesNotThrow(() => parseFrontmatter(rendered), path);
+    assert.doesNotThrow(() => parseFrontmatterDocument(rendered), path);
   }
+});
+
+test('module discovery does not follow symbolic-link files outside the staged Harness', () => {
+  const root = mkdtempSync(join(tmpdir(), 'harnessmith-module-symlink-'));
+  onTestFinished(() => rmSync(root, { recursive: true, force: true }));
+  const outside = join(root, 'outside.mjs');
+  const staged = join(root, 'staged');
+  mkdirSync(staged);
+  writeFileSync(outside, 'export const outside = true;\n');
+  symlinkSync(outside, join(staged, 'linked.mjs'), 'file');
+
+  assert.deepEqual(listModules(staged), []);
 });

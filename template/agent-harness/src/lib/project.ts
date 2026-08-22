@@ -1,15 +1,156 @@
-import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, statSync } from 'node:fs';
-import { basename, dirname, join, parse, resolve } from 'node:path';
+import { createHash } from 'node:crypto';
+import {
+  closeSync,
+  existsSync,
+  lstatSync,
+  openSync,
+  readFileSync,
+  readlinkSync,
+  readSync,
+  statSync,
+} from 'node:fs';
+import { basename, dirname, isAbsolute, join, parse, relative, resolve, sep } from 'node:path';
 import type { ProjectSnapshot } from '../types.js';
-import { gitRoot } from './git.js';
+import { digestPath } from './files.js';
+import {
+  createProjectGitBudget,
+  type ProjectGitBudget,
+  type ProjectSnapshotOptions,
+  projectGit,
+  projectGitRaw,
+} from './project-git.js';
 
-function git(path: string, args: string[]): string | null {
+export type { ProjectSnapshotOptions } from './project-git.js';
+
+function projectLocation(
+  input: string,
+  budget: ProjectGitBudget,
+): {
+  requested: string;
+  repository: string | null;
+  root: string;
+} {
+  const requested = resolve(input);
+  if (!existsSync(requested)) throw new Error(`Path does not exist: ${requested}`);
+  const repository = projectGit(requested, ['rev-parse', '--show-toplevel'], budget);
+  return {
+    requested,
+    repository,
+    root: repository || (statSync(requested).isDirectory() ? requested : dirname(requested)),
+  };
+}
+
+export function resolveProjectRoot(
+  input = process.cwd(),
+  options: ProjectSnapshotOptions = {},
+): string {
+  return projectLocation(input, createProjectGitBudget(options)).root;
+}
+
+const workspaceBudget = {
+  maxFiles: 100_000,
+  maxBytes: 512 * 1024 * 1024,
+  maxFileBytes: 128 * 1024 * 1024,
+  maxDurationMs: 30_000,
+};
+
+function hashFile(path: string, hash: ReturnType<typeof createHash>, deadline: number): number {
+  const stat = lstatSync(path);
+  if (stat.size > workspaceBudget.maxFileBytes) throw new Error('Workspace file budget exceeded');
+  const descriptor = openSync(path, 'r');
+  const buffer = Buffer.allocUnsafe(64 * 1024);
+  let bytes = 0;
   try {
-    return execFileSync('git', ['-C', path, ...args], {
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'ignore'],
-    }).trim();
+    while (true) {
+      if (Date.now() > deadline) throw new Error('Workspace digest time budget exceeded');
+      const length = readSync(descriptor, buffer, 0, buffer.length, null);
+      if (length === 0) return bytes;
+      bytes += length;
+      if (bytes > workspaceBudget.maxFileBytes) throw new Error('Workspace file budget exceeded');
+      hash.update(buffer.subarray(0, length));
+    }
+  } finally {
+    closeSync(descriptor);
+  }
+}
+
+function changedPaths(status: Buffer): string[] {
+  const entries = status.toString('utf8').split('\0');
+  const paths = new Set<string>();
+  for (let index = 0; index < entries.length; index += 1) {
+    const entry = entries[index];
+    if (!entry) continue;
+    const state = entry.slice(0, 2);
+    paths.add(entry.slice(3));
+    if (/[RC]/.test(state) && entries[index + 1]) {
+      index += 1;
+      paths.add(entries[index]);
+    }
+  }
+  return [...paths].sort();
+}
+
+function workspaceDigest(root: string, budget: ProjectGitBudget): string | null {
+  const status = projectGitRaw(
+    root,
+    ['status', '--porcelain=v1', '-z', '--untracked-files=all'],
+    budget,
+  );
+  const indexState = projectGitRaw(
+    root,
+    ['diff', '--cached', '--raw', '--no-abbrev', '-z'],
+    budget,
+  );
+  if (!status || !indexState) return null;
+  try {
+    const hash = createHash('sha256');
+    const deadline = Date.now() + workspaceBudget.maxDurationMs;
+    let bytes = status.length + indexState.length;
+    const paths = changedPaths(status);
+    if (paths.length > workspaceBudget.maxFiles) return null;
+    hash.update('harness-workspace-v1\0');
+    hash.update(status);
+    hash.update('\0index\0');
+    hash.update(indexState);
+    for (const name of paths) {
+      if (Date.now() > deadline) return null;
+      hash.update(`path:${name}\0`);
+      const path = resolve(root, name);
+      const route = relative(root, path);
+      if (route === '..' || route.startsWith(`..${sep}`) || isAbsolute(route)) {
+        hash.update('unsafe\0');
+        continue;
+      }
+      if (!existsSync(path)) {
+        hash.update('missing\0');
+        continue;
+      }
+      const stat = lstatSync(path);
+      if (stat.isFile()) {
+        hash.update(`file:${stat.mode & 0o777}:${stat.size}\0`);
+        bytes += hashFile(path, hash, deadline);
+        if (bytes > workspaceBudget.maxBytes) return null;
+      } else if (stat.isSymbolicLink()) {
+        hash.update(`symlink:${readlinkSync(path)}\0`);
+      } else if (stat.isDirectory()) hash.update('directory\0');
+      else hash.update('other\0');
+    }
+    return `sha256:${hash.digest('hex')}`;
+  } catch {
+    return null;
+  }
+}
+
+function localWorkspaceDigest(root: string): string | null {
+  try {
+    const digest = digestPath(root, {
+      exclude: (path) =>
+        path === '.git' ||
+        path.startsWith(`.git${sep}`) ||
+        path === '.agent-docs' ||
+        path.startsWith(`.agent-docs${sep}`),
+    });
+    return digest ? `sha256:${digest}` : null;
   } catch {
     return null;
   }
@@ -54,21 +195,30 @@ function packageScripts(root: string): string[] {
   }
 }
 
-export function projectSnapshot(input = process.cwd()): ProjectSnapshot {
-  const requested = resolve(input);
-  if (!existsSync(requested)) throw new Error(`Path does not exist: ${requested}`);
-  const root =
-    gitRoot(requested) || (statSync(requested).isDirectory() ? requested : dirname(requested));
-  const status = git(root, ['status', '--short']);
+export function projectSnapshot(
+  input = process.cwd(),
+  options: ProjectSnapshotOptions = {},
+): ProjectSnapshot {
+  const budget = createProjectGitBudget(options);
+  const { requested, repository, root } = projectLocation(input, budget);
+  const status = repository ? projectGit(root, ['status', '--short'], budget) : null;
+  const branch = repository ? projectGit(root, ['branch', '--show-current'], budget) : null;
+  const head = repository ? projectGit(root, ['rev-parse', '--short=12', 'HEAD'], budget) : null;
+  const workspace = budget.exhausted
+    ? null
+    : repository
+      ? workspaceDigest(root, budget)
+      : localWorkspaceDigest(root);
   const memoryRoot = join(root, '.agent-docs');
   return {
     requested,
     root,
     name: basename(root),
-    isGitRepository: Boolean(gitRoot(requested)),
-    branch: git(root, ['branch', '--show-current']),
-    head: git(root, ['rev-parse', '--short=12', 'HEAD']),
+    isGitRepository: Boolean(repository),
+    branch,
+    head,
     dirty: status === null ? null : status.length > 0,
+    workspaceDigest: workspace,
     status: status ? status.split(/\r?\n/) : [],
     agents: nearestAgents(requested, root),
     docs: existsSync(join(root, 'docs')),

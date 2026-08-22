@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:harnessmith:eval-scenarios:v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "scenarios"],
+  "properties": {
+    "schemaVersion": { "const": 2 },
+    "scenarios": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": { "$ref": "#/$defs/scenario" }
+    }
+  },
+  "$defs": {
+    "nonEmptyText": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "textList": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/nonEmptyText" }
+    },
+    "scenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "prompt", "setup", "pass", "forbidden", "automatedChecks"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+          "maxLength": 128
+        },
+        "prompt": { "$ref": "#/$defs/nonEmptyText" },
+        "setup": { "$ref": "#/$defs/textList" },
+        "pass": { "$ref": "#/$defs/textList" },
+        "forbidden": { "$ref": "#/$defs/textList" },
+        "automatedChecks": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[^#]+#[^#]+$",
+            "maxLength": 1024
+          }
+        }
+      }
+    }
+  }
+}

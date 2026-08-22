@@ -26,12 +26,13 @@ host-neutrality test passing.
   installation code.
 - Runtime source is strict TypeScript under `src/` and `template/agent-harness/src/`. Generated `dist/`
   files are build products: change the TypeScript source and run `pnpm run build`; never edit them directly.
-- Biome is the shared formatter and linter. Run `pnpm run format` after source changes; `pnpm run check` rejects
-  lint or formatting drift before rebuilding the published runtimes.
+- Biome is the shared formatter and linter, Knip rejects unreachable files or exports, and Secretlint scans
+  source plus prompt/document surfaces for known credential formats. Run `pnpm run format` after source
+  changes; `pnpm run check` rejects quality drift before rebuilding the published runtimes.
 - Markdownlint checks repository documentation. `scripts/preflight.ts` checks package and CLI contracts plus
   Harness document routing, frontmatter, relative links, template tokens, and host-neutrality.
-- Vitest owns unit and integration tests. Coverage thresholds are a regression floor; subprocess-based CLI
-  tests remain mandatory even though Vitest cannot attribute their execution to TypeScript source coverage.
+- Vitest owns unit and integration tests. Its V8 gate covers imported runtime and release helpers; c8 merges
+  coverage from the preflight and eval CLI subprocesses. Both thresholds are regression floors.
 - Keep tests beside their owning code under `src/__tests__/`,
   `template/agent-harness/src/__tests__/`, or `evals/__tests__/`; do not recreate a root `test/` directory.
   Changes to the embedded runtime require focused tests under its own `__tests__/` directory; run them with

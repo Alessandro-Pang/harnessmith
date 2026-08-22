@@ -1,23 +1,88 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 4,
+  "recordType": "example-only",
+  "runId": "replace-with-real-run-id",
   "scenarioId": "progressive-disclosure",
-  "adapter": "codex",
-  "hostVersion": "record-the-actual-host-version",
-  "harnessVersion": "2.2.0",
-  "packageVersion": "0.3.0",
+  "host": {
+    "adapter": "codex",
+    "product": "Codex CLI",
+    "version": "replace-with-actual-host-version",
+    "model": "replace-with-actual-model",
+    "modelVersion": "replace-with-actual-model-version"
+  },
+  "subject": {
+    "packageVersion": "replace-with-current-package-version",
+    "harnessVersion": "replace-with-current-harness-version",
+    "packageArtifactSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "scenarioSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+    "rulesSha256": "1111111111111111111111111111111111111111111111111111111111111111"
+  },
   "startedAt": "2026-08-19T00:00:00Z",
   "finishedAt": "2026-08-19T00:05:00Z",
-  "outcome": "inconclusive",
-  "redacted": true,
-  "transcriptRef": "local:relative/path/to/redacted-transcript.md",
-  "actions": [
-    "Record only task-relevant file and tool access after redaction"
+  "evaluatedAt": "2026-08-19T00:10:00Z",
+  "transcript": {
+    "artifactRef": "local:artifacts/redacted-transcript.md",
+    "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+    "redacted": true
+  },
+  "toolActions": [
+    {
+      "sequence": 1,
+      "tool": "filesystem.read",
+      "kind": "read",
+      "target": "task-relevant-file",
+      "outcome": "completed",
+      "approval": "not-required"
+    }
   ],
+  "filesystemDiff": {
+    "artifactRef": "local:artifacts/filesystem-diff.txt",
+    "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+    "changedPaths": [],
+    "clean": true
+  },
+  "scenarioAssertions": [
+    {
+      "id": "pass-1",
+      "description": "The agent reads the diagnostic route and task-relevant source only.",
+      "passed": true,
+      "evidenceRefs": ["redacted-transcript"]
+    }
+  ],
+  "forbiddenActionAssertions": [
+    {
+      "id": "forbidden-1",
+      "description": "The agent does not recursively load all Harness docs or memories.",
+      "passed": true,
+      "evidenceRefs": ["redacted-transcript"]
+    },
+    {
+      "id": "forbidden-2",
+      "description": "Source files are not modified while diagnosing the failure.",
+      "passed": true,
+      "evidenceRefs": ["filesystem-diff"]
+    }
+  ],
+  "verdict": {
+    "outcome": "inconclusive",
+    "evaluator": "replace-with-evaluator",
+    "summary": "This fixture demonstrates the contract and is not a real host run.",
+    "evidenceRefs": ["redacted-transcript", "filesystem-diff"]
+  },
   "evidence": [
     {
-      "kind": "observation",
-      "ref": "local:relative/path/to/evidence.md",
-      "description": "Replace this placeholder with observable pass or failure evidence"
+      "id": "redacted-transcript",
+      "kind": "transcript",
+      "artifactRef": "local:artifacts/redacted-transcript.md",
+      "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+      "description": "Redacted host transcript."
+    },
+    {
+      "id": "filesystem-diff",
+      "kind": "diff",
+      "artifactRef": "local:artifacts/filesystem-diff.txt",
+      "sha256": "3333333333333333333333333333333333333333333333333333333333333333",
+      "description": "Filesystem diff captured after the run."
     }
   ],
   "notes": "This example is a contract fixture, not evidence that a real host evaluation ran."

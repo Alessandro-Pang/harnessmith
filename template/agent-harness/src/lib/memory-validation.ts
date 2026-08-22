@@ -1,40 +1,13 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve, sep } from 'node:path';
 import type { Io } from '../types.js';
-import { parseFrontmatter } from './frontmatter.js';
+import { type FrontmatterResult, parseFrontmatterDocument } from './frontmatter.js';
+import { validateMemoryDocumentRules } from './memory-document-rules.js';
 import { markdownFiles } from './memory-path.js';
+import { containsHighConfidenceSecret, secretTextFiles } from './secret-hygiene.js';
 
-const requiredMetadata = [
-  'title',
-  'description',
-  'type',
-  'memory-kind',
-  'status',
-  'owners',
-  'created',
-  'updated',
-  'project',
-  'tags',
-  'scope',
-  'source-refs',
-  'source-of-truth',
-  'schema-version',
-] as const;
-const memoryKinds = new Set(['input', 'episode', 'working', 'distilled', 'evidence', 'index']);
-const memoryStatuses = new Set(['active', 'blocked', 'complete', 'superseded', 'archived']);
-const inputSources = new Set(['chat', 'file', 'meeting', 'link', 'other']);
-const arrayMetadata = ['owners', 'tags', 'scope', 'source-refs'] as const;
-const stringMetadata = ['title', 'description', 'type', 'project'] as const;
-const secretPatterns = [
-  /-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----/,
-  /\b(?:AKIA[0-9A-Z]{16}|github_pat_[A-Za-z0-9_]{20,}|gh[pousr]_[A-Za-z0-9]{20,})\b/,
-  /\bBearer\s+[A-Za-z0-9._~+/=-]{20,}\b/i,
-];
-
-function validCalendarDate(value: unknown): value is string {
-  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  const date = new Date(`${value}T00:00:00Z`);
-  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+export function contentMemoryReferences(content: string): string[] {
+  return [...content.matchAll(/memory:([A-Za-z0-9_./-]+)/g)].map((match) => match[1]);
 }
 
 export function metadataReferences(metadata: Map<string, unknown>): string[] {
@@ -47,158 +20,66 @@ export function metadataReferences(metadata: Map<string, unknown>): string[] {
   return values.filter((value) => value.startsWith('memory:'));
 }
 
-function validateMetadata(path: string, metadata: Map<string, unknown>, io: Io): number {
-  let failures = 0;
-  for (const field of requiredMetadata) {
-    if (!metadata.has(field)) {
-      io.error(`Missing memory metadata ${field}: ${path}`);
-      failures += 1;
-    }
-  }
-  for (const field of stringMetadata) {
-    const value = metadata.get(field);
-    if (metadata.has(field) && (typeof value !== 'string' || !value.trim())) {
-      io.error(`Memory metadata ${field} must be a non-empty string: ${path}`);
-      failures += 1;
-    }
-  }
-  for (const field of arrayMetadata) {
-    const value = metadata.get(field);
-    if (
-      metadata.has(field) &&
-      (!Array.isArray(value) || value.some((item) => typeof item !== 'string'))
-    ) {
-      io.error(`Memory metadata ${field} must be an array of strings: ${path}`);
-      failures += 1;
-    }
-  }
-  if (metadata.has('memory-kind') && !memoryKinds.has(String(metadata.get('memory-kind')))) {
-    io.error(`Invalid memory kind: ${path}`);
-    failures += 1;
-  }
-  if (metadata.has('status') && !memoryStatuses.has(String(metadata.get('status')))) {
-    io.error(`Invalid memory status: ${path}`);
-    failures += 1;
-  }
-  if (metadata.get('source-of-truth') !== false) {
-    io.error(`Memory must declare source-of-truth: false: ${path}`);
-    failures += 1;
-  }
-  if (metadata.get('schema-version') !== 1) {
-    io.error(`Unsupported memory schema: ${path}`);
-    failures += 1;
-  }
-  return failures;
-}
-
-function validateLifecycle(path: string, metadata: Map<string, unknown>, io: Io): number {
-  let failures = 0;
-  for (const field of ['created', 'updated'] as const) {
-    if (!validCalendarDate(metadata.get(field))) {
-      io.error(`Invalid ${field} date: ${path}`);
-      failures += 1;
-    }
-  }
-  const created = metadata.get('created');
-  const updated = metadata.get('updated');
-  if (validCalendarDate(created) && validCalendarDate(updated) && updated < created) {
-    io.error(`Memory updated date precedes created date: ${path}`);
-    failures += 1;
-  }
-  if (metadata.get('memory-kind') === 'input') {
-    if (!inputSources.has(String(metadata.get('input-source')))) {
-      io.error(`Input memory requires a valid input-source: ${path}`);
-      failures += 1;
-    }
-    if (typeof metadata.get('verbatim') !== 'boolean') {
-      io.error(`Input memory requires boolean verbatim metadata: ${path}`);
-      failures += 1;
-    }
-  }
-  if (metadata.get('status') === 'superseded' && !metadata.has('superseded-by')) {
-    io.error(`Superseded memory requires superseded-by: ${path}`);
-    failures += 1;
-  }
-  if (metadata.get('memory-kind') === 'working' && !metadata.has('expires')) {
-    io.log(`WARNING Working memory should declare expires: ${path}`);
-  }
-  if (metadata.has('expires') && !validCalendarDate(metadata.get('expires'))) {
-    io.error(`Invalid expires date: ${path}`);
-    failures += 1;
-  }
-  return failures;
-}
-
-function validateUserProfile(
+function validateParsedMemoryDocument(
   root: string,
   path: string,
   content: string,
-  metadata: Map<string, unknown>,
+  frontmatter: FrontmatterResult,
   io: Io,
 ): number {
-  let failures = 0;
-  const canonicalProfile = resolve(root, 'profile.md');
-  if (path === canonicalProfile && metadata.get('type') !== 'user-profile') {
-    io.error(`profile.md must declare type user-profile: ${path}`);
+  let failures = validateMemoryDocumentRules(
+    root,
+    path,
+    frontmatter.body,
+    frontmatter.metadata,
+    io,
+  );
+  if (containsHighConfidenceSecret(content)) {
+    io.error(`Memory contains high-confidence secret material: ${path}`);
     failures += 1;
-  }
-  if (metadata.get('type') !== 'user-profile') return failures;
-  if (path !== canonicalProfile) {
-    io.error(`User profile must be stored at profile.md: ${path}`);
-    failures += 1;
-  }
-  if (metadata.get('memory-kind') !== 'distilled' || metadata.get('project') !== 'global') {
-    io.error(`User profile must be global distilled memory: ${path}`);
-    failures += 1;
-  }
-  const body = content.replace(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/, '');
-  const entries = body.split(/\r?\n/).filter((line) => line.startsWith('- '));
-  if (entries.length > 32) {
-    io.error(`User profile permits at most 32 active entries: ${path}`);
-    failures += 1;
-  }
-  const keys = new Set<string>();
-  const entryPattern =
-    /^- ([a-z0-9]+(?:[.-][a-z0-9]+)*) \| ([^|]{1,200}) \| (explicit|observed|inferred) \| (high|medium|low) \| (\d{4}-\d{2}-\d{2})$/;
-  for (const entry of entries) {
-    const match = entry.match(entryPattern);
-    if (!match || !validCalendarDate(match[5])) {
-      io.error(`Invalid user-profile entry: ${path}: ${entry}`);
-      failures += 1;
-      continue;
-    }
-    const key = match[1];
-    if (keys.has(key)) {
-      io.error(`Duplicate user-profile key ${key}: ${path}`);
-      failures += 1;
-    }
-    keys.add(key);
   }
   return failures;
+}
+
+export function validateMemoryDocument(
+  root: string,
+  path: string,
+  content: string,
+  io: Io,
+): number {
+  let frontmatter: FrontmatterResult;
+  try {
+    frontmatter = parseFrontmatterDocument(content);
+  } catch (error) {
+    io.error(`Invalid memory frontmatter: ${path}: ${String(error)}`);
+    return 1;
+  }
+  return validateParsedMemoryDocument(root, path, content, frontmatter, io);
 }
 
 export function validateMemoryRoot(
   root: string,
   io: Io,
-  { quietSuccess = false }: { quietSuccess?: boolean } = {},
+  {
+    quietSuccess = false,
+    contentOverrides = new Map(),
+  }: { quietSuccess?: boolean; contentOverrides?: Map<string, string> } = {},
 ): void {
   let failures = 0;
   const references = new Set<string>();
   const sessions = new Map<string, string>();
   for (const path of markdownFiles(root)) {
-    const content = readFileSync(path, 'utf8');
-    let metadata: Map<string, unknown>;
+    const content = contentOverrides.get(path) ?? readFileSync(path, 'utf8');
+    let frontmatter: FrontmatterResult;
     try {
-      metadata = parseFrontmatter(content);
+      frontmatter = parseFrontmatterDocument(content);
     } catch (error) {
       io.error(`Invalid memory frontmatter: ${path}: ${String(error)}`);
       failures += 1;
       continue;
     }
-    failures += validateMetadata(path, metadata, io);
-    failures += validateLifecycle(path, metadata, io);
-    failures += validateUserProfile(root, path, content, metadata, io);
-    const sessionId = metadata.get('session-id');
+    failures += validateParsedMemoryDocument(root, path, content, frontmatter, io);
+    const sessionId = frontmatter.metadata.get('session-id');
     if (typeof sessionId === 'string' && sessionId) {
       const existing = sessions.get(sessionId);
       if (existing) {
@@ -206,13 +87,13 @@ export function validateMemoryRoot(
         failures += 1;
       } else sessions.set(sessionId, path);
     }
-    if (secretPatterns.some((pattern) => pattern.test(content))) {
-      io.error(`Memory contains high-confidence secret material: ${path}`);
-      failures += 1;
-    }
-    for (const match of content.matchAll(/memory:([A-Za-z0-9_./-]+)/g)) references.add(match[1]);
-    for (const reference of metadataReferences(metadata))
+    for (const reference of contentMemoryReferences(content)) references.add(reference);
+    for (const reference of metadataReferences(frontmatter.metadata))
       references.add(reference.slice('memory:'.length));
+  }
+  for (const path of secretTextFiles(root, new Set(markdownFiles(root)))) {
+    io.error(`Memory contains high-confidence secret material: ${path}`);
+    failures += 1;
   }
   for (const name of references) {
     const direct = resolve(root, name);

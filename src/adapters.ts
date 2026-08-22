@@ -1,10 +1,74 @@
-import { execFileSync } from 'node:child_process';
 import { existsSync, statSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
+import { execaSync } from 'execa';
 import { canonicalPath } from './safe-path.js';
 import type { Adapter, AdapterCapabilities, AgentName } from './types.js';
 import { HarnessmithError } from './types.js';
+
+type GitFailureKind = 'not-repository' | 'unavailable' | 'timeout' | 'permission' | 'failed';
+
+export type GitInspection =
+  | { ok: true; stdout: string }
+  | { ok: false; kind: GitFailureKind; message: string };
+
+interface GitFailureResult {
+  code?: string;
+  exitCode?: number;
+  failed: boolean;
+  isMaxBuffer: boolean;
+  shortMessage?: string;
+  stderr?: string | Uint8Array;
+  timedOut: boolean;
+}
+
+function outputText(value: string | Uint8Array | undefined): string {
+  return typeof value === 'string' ? value : Buffer.from(value || []).toString('utf8');
+}
+
+function gitFailure(result: GitFailureResult): Exclude<GitInspection, { ok: true }> {
+  const details = outputText(result.stderr).trim() || result.shortMessage || 'unknown Git failure';
+  if (result.timedOut) return { ok: false, kind: 'timeout', message: 'Git command timed out' };
+  if (result.code === 'ENOENT') {
+    return { ok: false, kind: 'unavailable', message: 'Git executable is unavailable' };
+  }
+  if (
+    result.code === 'EACCES' ||
+    result.code === 'EPERM' ||
+    /permission denied|dubious ownership|unsafe repository/i.test(details)
+  ) {
+    return {
+      ok: false,
+      kind: 'permission',
+      message: `Git executable permission denied: ${details}`,
+    };
+  }
+  if (/not a git repository/i.test(details)) {
+    return { ok: false, kind: 'not-repository', message: details };
+  }
+  if (result.isMaxBuffer) {
+    return { ok: false, kind: 'failed', message: 'Git command output exceeded its buffer limit' };
+  }
+  return { ok: false, kind: 'failed', message: `Git command failed: ${details}` };
+}
+
+export function inspectGit(root: string, args: string[], timeout = 5_000): GitInspection {
+  const result = execaSync('git', args, {
+    cwd: root,
+    encoding: 'utf8',
+    env: { GCM_INTERACTIVE: 'Never', GIT_TERMINAL_PROMPT: '0', LANG: 'C', LC_ALL: 'C' },
+    maxBuffer: 20 * 1024 * 1024,
+    reject: false,
+    stdin: 'ignore',
+    stripFinalNewline: false,
+    timeout,
+  });
+  return result.failed ? gitFailure(result) : { ok: true, stdout: result.stdout };
+}
+
+function gitInspectionError(action: string, result: Exclude<GitInspection, { ok: true }>): never {
+  throw new HarnessmithError('INTEGRITY_ERROR', `Unable to ${action}: ${result.message}`, 3);
+}
 
 export function adapterCapabilities(name: AgentName): AdapterCapabilities {
   const cursor = name === 'cursor';
@@ -26,16 +90,10 @@ function projectRoot(input: string): string {
     throw new HarnessmithError('CLI_USAGE', `Project path does not exist: ${requested}`, 2);
   if (!statSync(requested).isDirectory())
     throw new HarnessmithError('CLI_USAGE', `Project path is not a directory: ${requested}`, 2);
-  try {
-    return canonicalPath(
-      execFileSync('git', ['-C', requested, 'rev-parse', '--show-toplevel'], {
-        encoding: 'utf8',
-        stdio: ['ignore', 'pipe', 'ignore'],
-      }).trim(),
-    );
-  } catch {
-    return canonicalPath(requested);
-  }
+  const inspection = inspectGit(requested, ['rev-parse', '--show-toplevel']);
+  if (inspection.ok) return canonicalPath(inspection.stdout.trim());
+  if (inspection.kind === 'not-repository') return canonicalPath(requested);
+  return gitInspectionError('resolve the project Git root', inspection);
 }
 
 function plainInstructions(content: string): string {
@@ -47,15 +105,10 @@ function mdcInstructions(content: string): string {
 }
 
 function gitExcludePath(root: string): string | null {
-  try {
-    const path = execFileSync('git', ['-C', root, 'rev-parse', '--git-path', 'info/exclude'], {
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'ignore'],
-    }).trim();
-    return resolve(root, path);
-  } catch {
-    return null;
-  }
+  const inspection = inspectGit(root, ['rev-parse', '--git-path', 'info/exclude']);
+  if (inspection.ok) return resolve(root, inspection.stdout.trim());
+  if (inspection.kind === 'not-repository') return null;
+  return gitInspectionError('resolve the Git exclude path', inspection);
 }
 
 export function createAdapter(

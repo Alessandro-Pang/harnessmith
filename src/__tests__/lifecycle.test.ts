@@ -1,11 +1,20 @@
 import assert from 'node:assert/strict';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { createAdapter } from '../adapters.js';
 import { installAll } from '../install.js';
 import { restoreAll, statusAll, uninstallAll } from '../lifecycle.js';
+import { describeLifecycle } from '../lifecycle-plan.js';
 
 function fixture() {
   const root = mkdtempSync(join(tmpdir(), 'harnessmith-lifecycle-unit-'));
@@ -58,6 +67,31 @@ test('direct multi-Adapter lifecycle preflight leaves every installation untouch
   assert.ok(existsSync(claude.harness));
 });
 
+test('multi-Adapter lifecycle transaction rolls back an earlier Adapter after a later runtime failure', () => {
+  const { root, env } = fixture();
+  const codex = createAdapter('codex', { env });
+  const cursor = createAdapter('cursor', { env, project: root });
+  installAll([codex, cursor], { env });
+  const codexRecordBefore = readFileSync(codex.record, 'utf8');
+  const codexRules = codex.instructions[0].path;
+  const codexRulesBefore = readFileSync(codexRules, 'utf8');
+  const cursorIgnore = cursor.localIgnoreFiles?.at(-1)?.path;
+  assert.ok(cursorIgnore);
+  rmSync(cursorIgnore);
+  mkdirSync(cursorIgnore);
+
+  assert.throws(() => uninstallAll([codex, cursor]));
+
+  assert.equal(readFileSync(codex.record, 'utf8'), codexRecordBefore);
+  assert.equal(readFileSync(codexRules, 'utf8'), codexRulesBefore);
+  assert.ok(existsSync(cursor.record));
+  assert.ok(existsSync(cursor.harness));
+  assert.deepEqual(
+    readdirSync(cursor.home).filter((name) => name.startsWith('.harnessmith-restore-')),
+    [],
+  );
+});
+
 test('status of an uninstalled Adapter is read-only', () => {
   const { env } = fixture();
   const adapter = createAdapter('codex', { env });
@@ -66,4 +100,21 @@ test('status of an uninstalled Adapter is read-only', () => {
 
   assert.equal(status[0].installed, false);
   assert.equal(existsSync(adapter.home), false);
+});
+
+test('lifecycle preflight rejects a missing installation-record backup before mutation', () => {
+  const { env } = fixture();
+  const adapter = createAdapter('codex', { env });
+  installAll([adapter], { env });
+  installAll([adapter], { env });
+  const recordBefore = readFileSync(adapter.record, 'utf8');
+  const record = JSON.parse(recordBefore) as { recordBackup: string };
+  assert.ok(record.recordBackup);
+  rmSync(record.recordBackup);
+
+  for (const command of ['restore', 'uninstall'] as const) {
+    assert.throws(() => describeLifecycle(command, adapter), /record backup is missing/i);
+    assert.equal(readFileSync(adapter.record, 'utf8'), recordBefore);
+    assert.ok(existsSync(adapter.harness));
+  }
 });

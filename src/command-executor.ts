@@ -1,11 +1,12 @@
 import type { Readable, Writable } from 'node:stream';
-import { createAdapter } from './adapters.js';
+import { adapterCapabilities, createAdapter } from './adapters.js';
 import { normalizeAgents } from './agents.js';
 import { installAll } from './install.js';
 import { restoreAll, statusAll, uninstallAll } from './lifecycle.js';
+import { describeLifecycle } from './lifecycle-plan.js';
 import type { HarnessmithCommand } from './program.js';
 import { assertNonOverlappingAdapters, describeInstall } from './records.js';
-import type { Adapter, CliOptions, Io } from './types.js';
+import type { Adapter, CliOptions, Io, LifecycleCommand, LifecyclePlan } from './types.js';
 import { HarnessmithError } from './types.js';
 import {
   confirmConflicts,
@@ -50,8 +51,45 @@ async function resolveAdapters(options: CliOptions, context: ExecuteContext): Pr
   return adapters;
 }
 
+function printLifecyclePlans(
+  plans: LifecyclePlan[],
+  context: ExecuteContext,
+  machineReadable: boolean,
+): void {
+  if (machineReadable) {
+    for (const plan of plans) context.io.log(JSON.stringify(plan));
+    return;
+  }
+  for (const plan of plans) {
+    context.io.log(`${plan.command} ${plan.adapter}  ${plan.home}`);
+    for (const [index, layer] of plan.layers.entries()) {
+      context.io.log(`  layer ${index + 1}  ${layer.sourceRecord}`);
+      for (const change of layer.changes) {
+        context.io.log(
+          `    ${change.action.padEnd(20)} ${change.path}${change.source ? ` <- ${change.source}` : ''}`,
+        );
+      }
+    }
+  }
+}
+
+function previewLifecycle(
+  command: LifecycleCommand,
+  adapters: Adapter[],
+  options: CliOptions,
+  context: ExecuteContext,
+  interactive: boolean,
+): number {
+  const plans = adapters.map((adapter) =>
+    describeLifecycle(command, adapter, options.force || false),
+  );
+  printLifecyclePlans(plans, context, Boolean(options.json || !interactive));
+  if (interactive) finishInteractive('Preview complete. No files were changed.', context.output);
+  return 0;
+}
+
 function executeLifecycle(
-  command: Exclude<HarnessmithCommand, 'install'>,
+  command: Exclude<HarnessmithCommand, 'install' | 'capabilities'>,
   adapters: Adapter[],
   options: CliOptions,
   context: ExecuteContext,
@@ -71,6 +109,9 @@ function executeLifecycle(
       ? 0
       : 1;
   }
+  if (options.dryRun) {
+    return previewLifecycle(command, adapters, options, context, interactive);
+  }
   const results =
     command === 'restore'
       ? restoreAll(adapters, { force: options.force })
@@ -89,6 +130,24 @@ function executeLifecycle(
       command === 'restore' ? 'Previous installation restored.' : 'Harnesssmith uninstalled.',
       context.output,
     );
+  }
+  return 0;
+}
+
+function executeCapabilities(options: CliOptions, context: ExecuteContext): number {
+  const agents = normalizeAgents(options.agent.length > 0 ? options.agent : ['all']);
+  const report = {
+    version: 1,
+    adapters: agents.map((agent) => ({ agent, capabilities: adapterCapabilities(agent) })),
+  };
+  if (options.json) context.io.log(JSON.stringify(report));
+  else {
+    for (const { agent, capabilities } of report.adapters) {
+      context.io.log(
+        `${agent}: scope=${capabilities.scope}, activation=${capabilities.nativeRuleActivation}, ` +
+          `instructions=${capabilities.enforcement.instructions}, permissions=${capabilities.enforcement.permissions}`,
+      );
+    }
   }
   return 0;
 }
@@ -145,6 +204,7 @@ export async function executeCommand(
   const interactive =
     !options.yes && isTty(context.input) && isTty(context.output) && !options.json;
   if (interactive) startInteractive(context.output);
+  if (command === 'capabilities') return executeCapabilities(options, context);
   const adapters = await resolveAdapters(options, context);
   return command === 'install'
     ? executeInstall(adapters, options, context, interactive)

@@ -1,0 +1,7 @@
+{
+  "all": true,
+  "exclude": ["scripts/release-publish.ts"],
+  "include": ["scripts/**/*.ts"],
+  "reports-dir": "coverage/scripts",
+  "temp-directory": "coverage/.tmp-scripts"
+}

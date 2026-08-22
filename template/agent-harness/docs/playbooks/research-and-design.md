@@ -2,7 +2,7 @@
 title: Research, Planning, and Design Playbook
 type: harness-playbook
 status: active
-updated: 2026-08-17
+updated: 2026-08-22
 ---
 
 # 调研、计划与设计
@@ -16,5 +16,6 @@ updated: 2026-08-17
 5. 评价成本、风险、可逆性、迁移、运维、测试、跨仓消费者和退出策略。
 6. 输出推荐、理由、被否决方案、阶段、验收、未决问题和决策 owner。
 
-形成长期跨模块约束时写正式 ADR；仍在探索的材料放 `.agent-docs/working/`；经采纳的结论回写
-项目 `docs/`，并把记忆更新为指向正式文档的来源索引。计划不得把目标架构描述为当前已实现。
+只有用户授权项目写入且结论已被采纳，才写正式 ADR 或项目 `docs/`，并把已有记忆更新为指向正式
+文档的来源索引；否则只提交 proposal。探索材料达到记忆阈值且获写入授权后，才放入
+`.agent-docs/working/`。计划不得把目标架构描述为当前已实现。

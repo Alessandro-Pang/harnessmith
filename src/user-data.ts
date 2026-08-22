@@ -1,9 +1,10 @@
-import { execFileSync } from 'node:child_process';
 import { existsSync, rmdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { execaSync } from 'execa';
 import { installationValues } from './install-template.js';
 import { restoreSnapshots, snapshotFiles } from './records.js';
 import type { PreparedInstall } from './types.js';
+import { withUserDataCoordinationLocks } from './user-data-lock.js';
 
 export function initializeUserData(
   prepared: PreparedInstall,
@@ -19,50 +20,58 @@ export function initializeUserData(
     join(values.personalHome, 'AGENTS.md'),
     join(values.personalHome, 'projects', 'repository-map.md'),
   ];
-  const snapshots = snapshotFiles([...memoryFiles, ...personalFiles].map((path) => ({ path })));
-  const memoryRootExisted = existsSync(values.memoryHome);
-  const personalRootExisted = existsSync(values.personalHome);
-  try {
-    const output = [
-      execFileSync(
-        process.execPath,
-        [join(prepared.adapter.harness, 'bin', 'harness.mjs'), 'init', 'personal'],
-        {
-          encoding: 'utf8',
-          env,
-        },
-      ).trim(),
-    ];
-    if (global) {
-      output.push(
-        execFileSync(
+  const roots = [values.personalHome, ...(global ? [values.memoryHome] : [])];
+  return withUserDataCoordinationLocks(roots, (lockKeys) => {
+    const coordination = ['--coordination-keys', lockKeys.join(',')];
+    const snapshots = snapshotFiles([...memoryFiles, ...personalFiles].map((path) => ({ path })));
+    const memoryRootExisted = existsSync(values.memoryHome);
+    const personalRootExisted = existsSync(values.personalHome);
+    try {
+      const output = [
+        execaSync(
           process.execPath,
-          [join(prepared.adapter.harness, 'bin', 'harness.mjs'), 'init', 'global'],
-          {
-            encoding: 'utf8',
-            env,
-          },
-        ).trim(),
-      );
-    }
-    return output.filter(Boolean).join('\n');
-  } catch (error) {
-    restoreSnapshots(snapshots);
-    if (!personalRootExisted && existsSync(values.personalHome)) {
-      try {
-        rmdirSync(join(values.personalHome, 'projects'));
-        rmdirSync(values.personalHome);
-      } catch {
-        // Preserve unexpected user content created concurrently.
+          [
+            join(prepared.adapter.harness, 'bin', 'harness.mjs'),
+            'init',
+            'personal',
+            ...coordination,
+          ],
+          { encoding: 'utf8', env, extendEnv: false },
+        ).stdout.trim(),
+      ];
+      if (global) {
+        output.push(
+          execaSync(
+            process.execPath,
+            [
+              join(prepared.adapter.harness, 'bin', 'harness.mjs'),
+              'init',
+              'global',
+              ...coordination,
+            ],
+            { encoding: 'utf8', env, extendEnv: false },
+          ).stdout.trim(),
+        );
       }
-    }
-    if (!memoryRootExisted && existsSync(values.memoryHome)) {
-      try {
-        rmdirSync(values.memoryHome);
-      } catch {
-        // Preserve unexpected user content created concurrently.
+      return output.filter(Boolean).join('\n');
+    } catch (error) {
+      restoreSnapshots(snapshots);
+      if (!personalRootExisted && existsSync(values.personalHome)) {
+        try {
+          rmdirSync(join(values.personalHome, 'projects'));
+          rmdirSync(values.personalHome);
+        } catch {
+          // Preserve unexpected user content created concurrently.
+        }
       }
+      if (!memoryRootExisted && existsSync(values.memoryHome)) {
+        try {
+          rmdirSync(values.memoryHome);
+        } catch {
+          // Preserve unexpected user content created concurrently.
+        }
+      }
+      throw error;
     }
-    throw error;
-  }
+  });
 }

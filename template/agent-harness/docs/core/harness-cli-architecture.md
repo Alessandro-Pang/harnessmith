@@ -2,7 +2,7 @@
 title: Harness CLI Architecture
 type: harness-core
 status: active
-updated: 2026-08-19
+updated: 2026-08-22
 ---
 
 # Harness CLI Architecture
@@ -33,7 +33,8 @@ bin/harness.mjs
 - `templates/`：安装时保留动态 token，实际初始化全局或项目记忆时再渲染。
 - `docs/`：Agent 按需读取的规则、playbook、标准和研究；不放可执行源码。
 - `schemas/`：任务、配置和结果等机器契约；schema 变更必须升级版本，并先提供显式、可测试、
-  可回滚的迁移命令。当前 schema 都为 1，没有待迁移内容，也没有 `migrate` 命令。
+  fail-closed 的兼容路径。当前 Task schema 为 3、Memory schema 为 1；旧 Task evidence 读取时降级为
+  不可通过门禁的 `legacy`/`external`，旧 Memory metadata 只能经 `memory migrate` 显式迁移。
 - `state/`：安装态可选运行数据，升级时保留且不参与受管理 runtime checksum；不得存 secret，
   也不作为规则或项目事实源。
 - `{{HARNESS_PERSONAL_HOME}}/`：用户所有的个人 overlay，位于受管理安装目录之外。CLI 只幂等创建
@@ -60,13 +61,41 @@ frontmatter，Ajv 负责 JSON Schema，`write-file-atomic` 负责原子写。路
 结构和项目接入。宿主安装、规则文件
 映射、staging、备份和回滚属于外层 adapter，不进入通用 Harness 命令层。
 
+`health --json` 聚合 Runtime、安装、全局记忆和可选项目记忆；warning 不等于失败，任一 failed check
+使退出码非零。`route` 与 `explain` 只读取 manifest trigger 并返回名称、路径和 matched triggers，不
+加载文档正文。`search` 与 `memory search` 的结果数/行长限制和扫描预算彼此独立；扫描默认最多深入
+8 层、访问 5000 个目录条目、进入 1000 个目录、访问 1000 个普通文件、读取单文件 1 MiB、
+总计 8 MiB，并运行 2 秒；读取前先 stat。JSON 结果除
+source、trust、path、line 和结果 `truncated` 外，还携带 `scanTruncated`、`scanLimits`、`scanStats`
+和至多 50 条结构化跳过详情；超出的详情数仍在统计中可见。项目 docs 与记忆默认标为 untrusted。
+
+`health` 的 installation check 先验证 Runtime 身份：managed 分发必须存在合法且与当前 Runtime
+完全一致的 `install-context.json`，随后再核验 installation record 与全部 managed checksum；缺失或
+损坏 context 不得降级为 standalone。standalone 只接受 Harnesssmith 源码树布局与 package manifest
+共同证明的身份。managed output containment 同时拒绝 `..`、absolute relative route 和 Windows
+跨盘路径。
+
 `version --json` 是兼容性查询入口，返回 `harnessVersion`、`schemaVersion`、
 `memorySchemaVersion` 和 Node 契约。`validate` 必须拒绝未知 schema，不能把未知版本当作兼容。
 
-Memory maintenance 遵循非权威边界：`supersede` 只建立可校验的替代链接，`archive` 默认只移动
-complete 或 superseded 文档并拒绝仍被 active index 引用的记忆，`promote` 只输出 proposal；
-`check --indexed` 要求 active/blocked 文档可从 index 到达，`maintain` 只读报告未索引、过期 working
-和 closed 候选。Runtime 不得通过 promote 或 maintain 自动写项目 `docs/`、ADR 或删除记忆。
+Task acceptance gate 是机械新鲜度门禁，不是语义评审器或安全边界。`task verify` 可以证明调用方选择
+的 command/test 退出成功，或 file/diff 已被读取并摘要，并将证据绑定到当时的 HEAD、workspace 与
+scope 以及对应 task/criterion；它不能判断自由文本 criterion 是否真的被这些证据满足。绑定可拒绝
+原样跨任务复制，但 schema、原子写和锁不提供签名、防篡改能力。高风险 predicate 必须由用户审阅
+或 CI/Host-owned verifier 持有，并
+限制当前任务替换 verifier 的权限；Task ledger 只记录结果，外部 evidence 不能直接产生 `passed`。
+
+外层 Adapter 的 rollback 按已登记路径尝试恢复，但不把多文件系统操作宣传为不可失败的原子事务。
+若逆向操作失败，命令必须报错并保留 recovery path，供用户核验和恢复，不能声称整体已回滚。
+
+Memory maintenance 遵循非权威边界：`migrate` 默认只输出 proposal，只有 ready 提案与显式
+`--apply` 才写入；`supersede` 建立可校验替代链接，`archive` 默认只移动 complete/superseded 且拒绝
+仍被 active index 引用的记忆，`promote` 只输出 proposal。`check --indexed` 要求 active/blocked
+文档可从 index 到达，`maintain` 只读报告候选。Runtime 不得自动写项目正式文档或删除记忆。
+
+初始化、Memory 写命令以及 task progress/core 协调写入使用同一共享 memory-root lock；proposal、
+list、search、check、maintain 和 route 保持只读。锁只保证 CLI 并发互斥，不把 Markdown guidance
+提升为权限强制，也不替代 Host sandbox。
 
 ## 调试路径
 
@@ -74,8 +103,9 @@ complete 或 superseded 文档并拒绝仍被 active index 引用的记忆，`pr
 - 自动初始化或 ignore 异常：`src/commands/init.ts`。
 - 记忆索引、引用或 metadata 异常：`src/commands/memory.ts` 与 `src/lib/frontmatter.ts`。
 - 搜索结果异常：`src/commands/search.ts` 与 `src/lib/search.ts`。
+- 文档路由异常：`src/commands/route.ts`、`src/lib/docs-routing.ts` 与 `docs/manifest.yaml`。
 - 路径在不同机器不一致：`src/runtime.ts` 与模板 token。
-- 环境诊断异常：`src/commands/doctor.ts`。
+- 环境诊断异常：`src/commands/doctor.ts`、`src/commands/health.ts` 与 `src/lib/health.ts`。
 
 测试命令：
 

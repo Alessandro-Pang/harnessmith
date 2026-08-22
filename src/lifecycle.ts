@@ -7,7 +7,11 @@ import {
   assertUninstallable,
   installationLayers,
 } from './lifecycle-plan.js';
-import { lifecycleTransaction, mutableLifecyclePaths } from './lifecycle-transaction.js';
+import {
+  type LifecycleTransactionContext,
+  lifecycleTransaction,
+  mutableLifecyclePaths,
+} from './lifecycle-transaction.js';
 import { withAdapterLocks } from './operation-lock.js';
 import {
   assertNonOverlappingAdapters,
@@ -67,6 +71,7 @@ function rollbackRestore(adapter: Adapter, record: InstallRecord, state: Restore
 
 function restoreOnce(
   adapter: Adapter,
+  transaction: LifecycleTransactionContext,
   { force = false }: Pick<InstallOptions, 'force'> = {},
 ): InstallRecord {
   assertLifecyclePaths(adapter);
@@ -79,14 +84,16 @@ function restoreOnce(
     );
   assertRestorable(adapter, record, force);
   assertLifecyclePaths(adapter, [{ path: adapter.record, record }]);
+  const ignoreSnapshots = snapshotFiles(adapter.localIgnoreFiles || []);
   const stageRoot = mkdtempSync(join(adapter.home, '.harnessmith-restore-'));
   assertSafePath(adapter.home, stageRoot);
+  const releaseStage = transaction.registerRecoveryPath(adapter.home, stageRoot);
   const state: RestoreState = {
     stageRoot,
     stagedRecord: join(stageRoot, 'install.json'),
     moved: [],
     restored: [],
-    ignoreSnapshots: snapshotFiles(adapter.localIgnoreFiles || []),
+    ignoreSnapshots,
     recordMoved: false,
     previousRecordRestored: false,
     ignoreChanged: 0,
@@ -126,9 +133,18 @@ function restoreOnce(
       }
     }
     removeExact(stageRoot);
+    releaseStage();
     return record;
   } catch (error) {
-    rollbackRestore(adapter, record, state);
+    try {
+      rollbackRestore(adapter, record, state);
+      releaseStage();
+    } catch (rollbackError) {
+      throw new Error(
+        `Could not restore ${adapter.label}: ${errorMessage(error)}; rollback was incomplete: ${errorMessage(rollbackError)}`,
+        { cause: error instanceof Error ? error : undefined },
+      );
+    }
     if (error instanceof HarnessmithError) {
       throw new HarnessmithError(
         error.code,
@@ -188,10 +204,10 @@ export function restoreAll(adapters: Adapter[], options: Pick<InstallOptions, 'f
     });
     return lifecycleTransaction(
       layers.flatMap(({ adapter, layers: records }) => mutableLifecyclePaths(adapter, records)),
-      () =>
+      (transaction) =>
         layers.map(({ adapter }) => ({
           adapter: adapter.name,
-          restored: restoreOnce(adapter, options),
+          restored: restoreOnce(adapter, transaction, options),
         })),
     );
   });
@@ -207,11 +223,11 @@ export function uninstallAll(adapters: Adapter[], options: Pick<InstallOptions, 
     });
     return lifecycleTransaction(
       plans.flatMap(({ adapter, layers }) => mutableLifecyclePaths(adapter, layers)),
-      () =>
+      (transaction) =>
         plans.map(({ adapter }) => {
           let layers = 0;
           while (readInstallRecord(adapter)) {
-            restoreOnce(adapter, options);
+            restoreOnce(adapter, transaction, options);
             layers += 1;
           }
           return { adapter: adapter.name, layers };

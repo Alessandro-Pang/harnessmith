@@ -1,32 +1,113 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:agent-harness:schema:task:v1",
+  "$id": "urn:agent-harness:schema:task:v3",
   "title": "Agent Harness Task",
-  "type": "object",
-  "required": [
-    "schemaVersion",
-    "id",
-    "objective",
-    "status",
-    "created",
-    "updated",
-    "projectRoot",
-    "nextAction",
-    "baseline",
-    "acceptance",
-    "checkpoints"
+  "oneOf": [
+    { "$ref": "#/$defs/taskV3" },
+    { "$ref": "#/$defs/legacyTaskV2" },
+    { "$ref": "#/$defs/legacyTaskV1" }
   ],
-  "properties": {
-    "schemaVersion": { "const": 1 },
-    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" },
-    "objective": { "type": "string", "minLength": 1 },
-    "status": {
-      "enum": ["pending", "in_progress", "blocked", "complete", "superseded"]
+  "$defs": {
+    "commandEvidence": {
+      "type": "object",
+      "required": ["type", "producer", "verificationPassed", "taskId", "criterionId", "recordedAt", "cwd", "head", "workspaceDigest", "scopeDigests", "command", "args", "exitCode", "signal", "timedOut", "outputDigest"],
+      "properties": {
+        "type": { "enum": ["command", "test"] },
+        "producer": { "enum": ["harness", "external"] },
+        "verificationPassed": { "type": "boolean" },
+        "taskId": { "type": "string", "minLength": 1 },
+        "criterionId": { "type": ["string", "null"], "minLength": 1 },
+        "recordedAt": { "type": "string", "format": "date-time" },
+        "cwd": { "type": "string", "minLength": 1 },
+        "head": { "type": ["string", "null"] },
+        "workspaceDigest": { "type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$" },
+        "scopeDigests": { "$ref": "#/$defs/scopeDigests" },
+        "command": { "type": "string", "minLength": 1 },
+        "args": { "type": "array", "items": { "type": "string" } },
+        "exitCode": { "type": ["integer", "null"], "minimum": 0 },
+        "signal": { "type": ["string", "null"] },
+        "timedOut": { "type": "boolean" },
+        "outputDigest": { "type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false
     },
-    "created": { "type": "string", "format": "date-time" },
-    "updated": { "type": "string", "format": "date-time" },
-    "projectRoot": { "type": "string", "minLength": 1 },
-    "nextAction": { "type": "string" },
+    "artifactEvidence": {
+      "type": "object",
+      "required": ["type", "producer", "verificationPassed", "taskId", "criterionId", "recordedAt", "cwd", "head", "workspaceDigest", "scopeDigests", "reference", "artifactDigest"],
+      "properties": {
+        "type": { "enum": ["file", "diff"] },
+        "producer": { "enum": ["harness", "external"] },
+        "verificationPassed": { "type": "boolean" },
+        "taskId": { "type": "string", "minLength": 1 },
+        "criterionId": { "type": ["string", "null"], "minLength": 1 },
+        "recordedAt": { "type": "string", "format": "date-time" },
+        "cwd": { "type": "string", "minLength": 1 },
+        "head": { "type": ["string", "null"] },
+        "workspaceDigest": { "type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$" },
+        "scopeDigests": { "$ref": "#/$defs/scopeDigests" },
+        "reference": { "type": "string", "minLength": 1 },
+        "artifactDigest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+      },
+      "additionalProperties": false
+    },
+    "observationEvidence": {
+      "type": "object",
+      "required": ["type", "producer", "verificationPassed", "taskId", "criterionId", "recordedAt", "cwd", "head", "workspaceDigest", "scopeDigests", "tool", "result"],
+      "properties": {
+        "type": { "enum": ["browser", "observation"] },
+        "producer": { "const": "external" },
+        "verificationPassed": { "const": false },
+        "taskId": { "type": "string", "minLength": 1 },
+        "criterionId": { "type": ["string", "null"], "minLength": 1 },
+        "recordedAt": { "type": "string", "format": "date-time" },
+        "cwd": { "type": "string", "minLength": 1 },
+        "head": { "type": ["string", "null"] },
+        "workspaceDigest": { "type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$" },
+        "scopeDigests": { "$ref": "#/$defs/scopeDigests" },
+        "tool": { "type": "string", "minLength": 1 },
+        "result": { "type": "string", "minLength": 1 },
+        "host": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "legacyEvidence": {
+      "type": "object",
+      "required": ["type", "producer", "verificationPassed", "taskId", "criterionId", "recordedAt", "cwd", "head", "workspaceDigest", "scopeDigests", "reference"],
+      "properties": {
+        "type": { "const": "legacy" },
+        "producer": { "const": "legacy" },
+        "verificationPassed": { "const": false },
+        "taskId": { "type": "string", "minLength": 1 },
+        "criterionId": { "type": ["string", "null"], "minLength": 1 },
+        "recordedAt": { "type": "string", "format": "date-time" },
+        "cwd": { "type": "string", "minLength": 1 },
+        "head": { "type": ["string", "null"] },
+        "workspaceDigest": { "type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$" },
+        "scopeDigests": { "$ref": "#/$defs/scopeDigests" },
+        "reference": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "evidence": {
+      "oneOf": [
+        { "$ref": "#/$defs/commandEvidence" },
+        { "$ref": "#/$defs/artifactEvidence" },
+        { "$ref": "#/$defs/observationEvidence" },
+        { "$ref": "#/$defs/legacyEvidence" }
+      ]
+    },
+    "scopeDigests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path", "digest"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "digest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+        },
+        "additionalProperties": false
+      }
+    },
     "baseline": {
       "type": "object",
       "required": ["branch", "head", "dirty"],
@@ -37,61 +118,174 @@
       },
       "additionalProperties": false
     },
-    "acceptance": {
-      "type": "array",
-      "minItems": 1,
-      "items": {
-        "type": "object",
-        "required": ["id", "description", "status", "evidence"],
-        "properties": {
-          "id": { "type": "string" },
-          "description": { "type": "string", "minLength": 1 },
-          "status": { "enum": ["pending", "passed", "failed", "inconclusive"] },
-          "evidence": {
-            "type": "array",
-            "items": { "type": "string", "minLength": 1 }
-          }
-        },
-        "additionalProperties": false
-      }
-    },
-    "checkpoints": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "required": ["time", "summary", "evidence"],
-        "properties": {
-          "time": { "type": "string", "format": "date-time" },
-          "summary": { "type": "string", "minLength": 1 },
-          "evidence": {
-            "type": "array",
-            "items": { "type": "string", "minLength": 1 }
-          },
-          "nextAction": { "type": "string" }
-        },
-        "additionalProperties": false
-      }
-    }
-  },
-  "allOf": [
-    {
-      "if": {
-        "properties": { "status": { "const": "complete" } },
-        "required": ["status"]
+    "acceptanceV3": {
+      "type": "object",
+      "required": ["id", "description", "status", "evidence"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["pending", "passed", "failed", "inconclusive"] },
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } }
       },
-      "then": {
-        "properties": {
-          "acceptance": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": { "status": { "const": "passed" } },
-              "required": ["status"]
+      "additionalProperties": false
+    },
+    "checkpointV3": {
+      "type": "object",
+      "required": ["time", "summary", "evidence"],
+      "properties": {
+        "time": { "type": "string", "format": "date-time" },
+        "summary": { "type": "string", "minLength": 1 },
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/evidence" } },
+        "nextAction": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "taskV3": {
+      "type": "object",
+      "required": [
+        "schemaVersion", "id", "objective", "status", "created", "updated",
+        "projectRoot", "nextAction", "baseline", "acceptance", "checkpoints"
+      ],
+      "properties": {
+        "schemaVersion": { "const": 3 },
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" },
+        "objective": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["pending", "in_progress", "blocked", "complete", "superseded"] },
+        "created": { "type": "string", "format": "date-time" },
+        "updated": { "type": "string", "format": "date-time" },
+        "projectRoot": { "type": "string", "minLength": 1 },
+        "nextAction": { "type": "string" },
+        "baseline": { "$ref": "#/$defs/baseline" },
+        "acceptance": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/acceptanceV3" }
+        },
+        "checkpoints": { "type": "array", "items": { "$ref": "#/$defs/checkpointV3" } }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "const": "complete" } }, "required": ["status"] },
+          "then": {
+            "properties": {
+              "acceptance": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": { "status": { "const": "passed" } },
+                  "required": ["status"]
+                }
+              }
             }
           }
         }
+      ],
+      "additionalProperties": false
+    },
+    "legacyEvidenceV2": {
+      "type": "object",
+      "required": ["type", "recordedAt", "cwd", "head", "workspaceDigest"],
+      "properties": {
+        "type": { "enum": ["command", "test", "file", "diff", "browser", "observation", "legacy"] },
+        "recordedAt": { "type": "string", "format": "date-time" },
+        "cwd": { "type": "string", "minLength": 1 },
+        "head": { "type": ["string", "null"] },
+        "workspaceDigest": { "type": ["string", "null"], "pattern": "^sha256:[0-9a-f]{64}$" }
       }
+    },
+    "legacyAcceptanceV2": {
+      "type": "object",
+      "required": ["id", "description", "status", "evidence"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["pending", "passed", "failed", "inconclusive"] },
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/legacyEvidenceV2" } }
+      },
+      "additionalProperties": false
+    },
+    "legacyCheckpointV2": {
+      "type": "object",
+      "required": ["time", "summary", "evidence"],
+      "properties": {
+        "time": { "type": "string", "format": "date-time" },
+        "summary": { "type": "string", "minLength": 1 },
+        "evidence": { "type": "array", "items": { "$ref": "#/$defs/legacyEvidenceV2" } },
+        "nextAction": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "legacyTaskV2": {
+      "type": "object",
+      "required": [
+        "schemaVersion", "id", "objective", "status", "created", "updated",
+        "projectRoot", "nextAction", "baseline", "acceptance", "checkpoints"
+      ],
+      "properties": {
+        "schemaVersion": { "const": 2 },
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" },
+        "objective": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["pending", "in_progress", "blocked", "complete", "superseded"] },
+        "created": { "type": "string", "format": "date-time" },
+        "updated": { "type": "string", "format": "date-time" },
+        "projectRoot": { "type": "string", "minLength": 1 },
+        "nextAction": { "type": "string" },
+        "baseline": { "$ref": "#/$defs/baseline" },
+        "acceptance": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/legacyAcceptanceV2" }
+        },
+        "checkpoints": { "type": "array", "items": { "$ref": "#/$defs/legacyCheckpointV2" } }
+      },
+      "additionalProperties": false
+    },
+    "legacyAcceptanceV1": {
+      "type": "object",
+      "required": ["id", "description", "status", "evidence"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["pending", "passed", "failed", "inconclusive"] },
+        "evidence": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      },
+      "additionalProperties": false
+    },
+    "legacyCheckpointV1": {
+      "type": "object",
+      "required": ["time", "summary", "evidence"],
+      "properties": {
+        "time": { "type": "string", "format": "date-time" },
+        "summary": { "type": "string", "minLength": 1 },
+        "evidence": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "nextAction": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "legacyTaskV1": {
+      "type": "object",
+      "required": [
+        "schemaVersion", "id", "objective", "status", "created", "updated",
+        "projectRoot", "nextAction", "baseline", "acceptance", "checkpoints"
+      ],
+      "properties": {
+        "schemaVersion": { "const": 1 },
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" },
+        "objective": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["pending", "in_progress", "blocked", "complete", "superseded"] },
+        "created": { "type": "string", "format": "date-time" },
+        "updated": { "type": "string", "format": "date-time" },
+        "projectRoot": { "type": "string", "minLength": 1 },
+        "nextAction": { "type": "string" },
+        "baseline": { "$ref": "#/$defs/baseline" },
+        "acceptance": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/legacyAcceptanceV1" }
+        },
+        "checkpoints": { "type": "array", "items": { "$ref": "#/$defs/legacyCheckpointV1" } }
+      },
+      "additionalProperties": false
     }
-  ],
-  "additionalProperties": false
+  }
 }

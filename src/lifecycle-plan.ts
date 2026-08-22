@@ -1,7 +1,14 @@
 import { existsSync } from 'node:fs';
 import { digestManagedOutput, readInstallRecordAt } from './records.js';
 import { assertSafeAdapterPaths, assertSafePath, ignoreRoot } from './safe-path.js';
-import type { Adapter, InstallRecord } from './types.js';
+import type {
+  Adapter,
+  InstallRecord,
+  LifecycleChange,
+  LifecycleCommand,
+  LifecycleLayerPlan,
+  LifecyclePlan,
+} from './types.js';
 import { HarnessmithError } from './types.js';
 
 export interface RecordLayer {
@@ -60,7 +67,14 @@ export function installationLayers(adapter: Adapter): RecordLayer[] {
     }
     seen.add(path);
     const record = readInstallRecordAt(adapter, path);
-    if (!record) break;
+    if (!record) {
+      if (layers.length === 0) break;
+      throw new HarnessmithError(
+        'INTEGRITY_ERROR',
+        `Installation record backup is missing: ${path}`,
+        3,
+      );
+    }
     layers.push({ path, record });
     path = record.recordBackup;
   }
@@ -110,4 +124,61 @@ export function assertUninstallable(adapter: Adapter, layers: RecordLayer[], for
     }
     activePaths = next;
   }
+}
+
+function describeLayer(adapter: Adapter, layer: RecordLayer): LifecycleLayerPlan {
+  const changes: LifecycleChange[] = layer.record.outputs.map(({ path, backup }) =>
+    backup ? { path, action: 'restore-backup', source: backup } : { path, action: 'remove' },
+  );
+  changes.push(
+    layer.record.recordBackup
+      ? {
+          path: adapter.record,
+          action: 'restore-backup',
+          source: layer.record.recordBackup,
+        }
+      : { path: adapter.record, action: 'remove' },
+  );
+  if (!layer.record.recordBackup) {
+    changes.push(
+      ...(adapter.localIgnoreFiles || []).map(({ path }) => ({
+        path,
+        action: 'remove-managed-block' as const,
+      })),
+    );
+  }
+  return { sourceRecord: layer.path, changes };
+}
+
+export function describeLifecycle(
+  command: LifecycleCommand,
+  adapter: Adapter,
+  force = false,
+): LifecyclePlan {
+  const layers = installationLayers(adapter);
+  if (command === 'restore') {
+    const current = layers[0];
+    if (!current)
+      throw new HarnessmithError(
+        'STATE_CONFLICT',
+        `No Harnesssmith installation found for ${adapter.label}: ${adapter.record}`,
+        5,
+      );
+    assertRestorable(adapter, current.record, force);
+    return {
+      command,
+      adapter: adapter.name,
+      capabilities: adapter.capabilities,
+      home: adapter.home,
+      layers: [describeLayer(adapter, current)],
+    };
+  }
+  assertUninstallable(adapter, layers, force);
+  return {
+    command,
+    adapter: adapter.name,
+    capabilities: adapter.capabilities,
+    home: adapter.home,
+    layers: layers.map((layer) => describeLayer(adapter, layer)),
+  };
 }

@@ -3,6 +3,7 @@ import { basename, join, resolve } from 'node:path';
 import type { Runtime } from '../types.js';
 import { atomicWrite, writeIfMissing } from './files.js';
 import { gitRoot } from './git.js';
+import { withMemoryLock } from './memory-lock.js';
 import { assertSafePath } from './safe-path.js';
 import { readTemplate, render } from './templates.js';
 
@@ -34,21 +35,22 @@ export function initializeProjectMemory(
   const memoryRoot = join(target, '.agent-docs');
   assertSafePath(target, memoryRoot);
   mkdirSync(memoryRoot, { recursive: true });
+  return withMemoryLock(memoryRoot, () => {
+    const created: string[] = [];
+    for (const name of ['README.md', 'core.md']) {
+      const destination = join(memoryRoot, name);
+      const content = render(runtime, readTemplate(runtime, `project-agent-docs/${name}`), {
+        PROJECT_KEY: basename(target),
+      });
+      if (writeIfMissing(destination, content)) created.push(destination);
+    }
 
-  const created: string[] = [];
-  for (const name of ['README.md', 'core.md']) {
-    const destination = join(memoryRoot, name);
-    const content = render(runtime, readTemplate(runtime, `project-agent-docs/${name}`), {
-      PROJECT_KEY: basename(target),
-    });
-    if (writeIfMissing(destination, content)) created.push(destination);
-  }
-
-  const ignoreFiles = [join(target, '.gitignore'), join(target, '.ignore')];
-  for (const path of ignoreFiles) assertSafePath(target, path);
-  return {
-    memoryRoot,
-    created,
-    updatedIgnores: ignoreFiles.filter(ensureIgnore),
-  };
+    const ignoreFiles = [join(target, '.gitignore'), join(target, '.ignore')];
+    for (const path of ignoreFiles) assertSafePath(target, path);
+    return {
+      memoryRoot,
+      created,
+      updatedIgnores: ignoreFiles.filter(ensureIgnore),
+    };
+  });
 }
