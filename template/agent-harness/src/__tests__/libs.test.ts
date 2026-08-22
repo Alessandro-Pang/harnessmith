@@ -5,6 +5,7 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  realpathSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -293,7 +294,7 @@ test('project snapshot reports Git, package manager, manifests, and nearest inst
   const snapshot = projectSnapshot(join(root, 'src'));
   const repositoryRoot = gitRoot(root);
   assert.ok(repositoryRoot);
-  assert.equal(snapshot.root, repositoryRoot);
+  assert.equal(snapshot.root, realpathSync.native(repositoryRoot));
   assert.match(gitVersion() ?? '', /^git version /);
   assert.equal(snapshot.isGitRepository, true);
   assert.equal(snapshot.branch, 'feature/20260819_test');
