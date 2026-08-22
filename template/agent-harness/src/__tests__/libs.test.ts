@@ -294,7 +294,8 @@ test('project snapshot reports Git, package manager, manifests, and nearest inst
   const snapshot = projectSnapshot(join(root, 'src'));
   const repositoryRoot = gitRoot(root);
   assert.ok(repositoryRoot);
-  assert.equal(snapshot.root, realpathSync.native(repositoryRoot));
+  const canonicalRepositoryRoot = realpathSync.native(repositoryRoot);
+  assert.equal(snapshot.root, canonicalRepositoryRoot);
   assert.match(gitVersion() ?? '', /^git version /);
   assert.equal(snapshot.isGitRepository, true);
   assert.equal(snapshot.branch, 'feature/20260819_test');
@@ -308,7 +309,7 @@ test('project snapshot reports Git, package manager, manifests, and nearest inst
 
   const output = capturedIo();
   const inspected = inspectProject(root, { json: true }, output);
-  assert.equal(inspected.root, repositoryRoot);
+  assert.equal(inspected.root, canonicalRepositoryRoot);
   assert.equal((JSON.parse(output.logs[0]) as { packageManager: string }).packageManager, 'npm');
   writeFileSync(join(root, 'package.json'), '{invalid json\n');
   assert.deepEqual(projectSnapshot(join(root, 'package.json')).packageScripts, []);
