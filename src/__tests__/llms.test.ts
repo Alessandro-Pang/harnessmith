@@ -294,7 +294,7 @@ test('distributed rules keep trust and authorization boundaries non-waivable', (
   assert.match(llms, /Distributed instructions do not grant permissions/);
 });
 
-test('read-only requests propose memory changes instead of writing them implicitly', () => {
+test('read-only requests keep memory writes explicit except for qualified repository-map maintenance', () => {
   const operatingModel = readFileSync(
     join(root, 'template', 'agent-harness', 'docs', 'core', 'operating-model.md'),
     'utf8',
@@ -312,18 +312,16 @@ test('read-only requests propose memory changes instead of writing them implicit
     'utf8',
   );
 
-  assert.match(
-    operatingModel,
-    /只读任务也不得写入 `profile\.md`、personal `repository-map\.md` 或项目 `.agent-docs\/`/,
-  );
+  assert.match(operatingModel, /只读任务不得写入 `profile\.md` 或项目 `.agent-docs\/`/);
+  assert.match(operatingModel, /跨仓分析.*personal `repository-map\.md`.*默认维护/s);
   assert.match(projectMemory, /只读任务.*只报告候选记忆提案/);
   assert.match(projectMemory, /不得初始化或写入 `.agent-docs\/`/);
   assert.match(profile, /只读任务发现稳定新信号或明确变化时/);
   assert.match(profile, /只报告画像更新提案，不得写入/);
   assert.match(profile, /只有用户明确要求更新画像或沉淀记忆时/);
-  assert.match(repositoryMap, /只读任务只报告候选关系和 `proposed`，不得写入/);
-  assert.match(repositoryMap, /用户明确授权维护关系图时才更新 personal\s+`repository-map\.md`/);
-  assert.doesNotMatch(repositoryMap, /除非用户明确禁止，否则它不阻止/);
+  assert.match(repositoryMap, /跨仓分析本身授权更新 personal\s+`repository-map\.md`/);
+  assert.match(repositoryMap, /不需要用户\s+二次确认/);
+  assert.match(repositoryMap, /用户明确禁止.*不得写入/);
 });
 
 test('cross-repository research closes the relationship-map writeback loop', () => {
@@ -348,12 +346,12 @@ test('cross-repository research closes the relationship-map writeback loop', () 
   assert.match(playbook, /更新 personal\s+`repository-map\.md`/);
   assert.match(playbook, /动态状态/);
   assert.match(playbook, /updated/);
-  assert.match(playbook, /proposed/);
+  assert.match(playbook, /明确禁止修改关系图.*`proposed`/s);
   assert.match(playbook, /unchanged/);
   assert.match(playbook, /blocked/);
   assert.match(personalMap, /正式来源/);
   assert.match(personalMap, /不要写入当前分支/);
-  assert.match(personalMap, /proposed/);
+  assert.match(personalMap, /updated/);
 });
 
 test('distributed rules close project-memory recall, writeback, and promotion loops', () => {

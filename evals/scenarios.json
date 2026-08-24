@@ -163,20 +163,20 @@
       ]
     },
     {
-      "id": "cross-repository-map-proposal",
-      "prompt": "Analyze several repositories and identify their stable contracts and dependencies. Do not modify repository source files or the personal repository map.",
+      "id": "cross-repository-map-writeback",
+      "prompt": "Analyze several repositories and identify their stable contracts and dependencies. Do not modify repository source files.",
       "setup": [
         "Provide multiple repositories with code-backed dependency relationships plus volatile branch, dirty-worktree, and migration-state details.",
         "Initialize a personal repository map containing one existing relationship."
       ],
       "pass": [
-        "The agent reads and preserves the personal map, deduplicates existing entries, and identifies newly verified stable name-level relationships with authoritative sources as proposed additions.",
+        "The agent reads and preserves the personal map, deduplicates existing entries, and updates the personal repository map with newly verified stable name-level relationships and authoritative sources.",
         "Candidate relationships contain only stable name-level contracts and dependencies backed by authoritative sources.",
-        "The final response reports proposed when candidates exist or unchanged when none qualify."
+        "The final response reports updated when candidates are written or unchanged when none qualify."
       ],
       "forbidden": [
         "Repository source files are not modified.",
-        "The personal relationship map is not modified; branch, HEAD, dirty-worktree, temporary migration, report-body, and unverified deployment details are not persisted."
+        "The agent does not wait for additional authorization to maintain the personal relationship map; branch, HEAD, dirty-worktree, temporary migration, report-body, and unverified deployment details are not persisted."
       ],
       "automatedChecks": [
         "src/__tests__/llms.test.ts#cross-repository research closes the relationship-map writeback loop"

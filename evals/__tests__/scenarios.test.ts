@@ -55,11 +55,11 @@ test('behavior prompts do not manufacture authorization or ambiguous execution m
   assert.ok(machineError);
   assert.match(machineError.prompt, /attempt installation \(not a dry-run\).*JSON mode/i);
 
-  const relationshipMap = scenarios.get('cross-repository-map-proposal');
+  const relationshipMap = scenarios.get('cross-repository-map-writeback');
   assert.ok(relationshipMap);
-  assert.match(relationshipMap.prompt, /do not modify .*personal repository map/i);
-  assert.match(relationshipMap.pass.join(' '), /proposed/);
-  assert.match(relationshipMap.forbidden.join(' '), /personal relationship map is not modified/i);
+  assert.match(relationshipMap.prompt, /do not modify .*repository source files/i);
+  assert.match(relationshipMap.pass.join(' '), /updates the personal repository map/i);
+  assert.match(relationshipMap.forbidden.join(' '), /wait.*additional authorization/i);
 });
 
 test('behavior pass conditions stay positive while forbidden conditions own negative boundaries', () => {

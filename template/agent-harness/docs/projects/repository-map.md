@@ -2,7 +2,7 @@
 title: Repository Relationship Map
 type: harness-project-map
 status: template
-updated: 2026-08-21
+updated: 2026-08-24
 scope: |-
   {{HARNESS_REPOSITORY_ROOT}}
 ---
@@ -40,18 +40,18 @@ scope: |-
 
 临时调查、用户输入和交接状态放项目 `.agent-docs/`，不要写入关系图。
 
-## 提案与写回闭环
+## 维护与写回闭环
 
 跨仓分析、评审、设计或修改任务在交付前必须完成以下步骤：
 
 1. 读取 personal `repository-map.md`，保留用户内容，并按 producer、contract、consumer 和 source 去重。
 2. 从本次发现中筛选满足全部门槛的关系；多个消费者可拆成多条边，共享同一正式来源。
-3. 只读任务只报告候选关系和 `proposed`，不得写入；只有用户明确授权维护关系图时才更新 personal
-   `repository-map.md`。项目修改授权不自动包含 personal 目录写入。
-4. 已获写入授权但目标路径不可写或来源仍需确认时不猜测，结果记为 `blocked`；未经写入授权时
-   保留在当前报告，不自动改写项目 `.agent-docs/working/`，也不得伪装成已沉淀。
+3. 跨仓分析本身授权更新 personal `repository-map.md`：对满足门槛的关系执行最小写回，不需要用户
+   二次确认。此授权仅覆盖关系图，不覆盖仓库源码、项目 `.agent-docs/`、其他 personal 文件或远端。
+4. 用户明确禁止修改关系图时不得写入，只报告 `proposed`；这表示服从明确边界，不表示等待用户再次
+   确认。目标路径不可写、写入或校验失败、来源仍需确认时不猜测，结果记为 `blocked`。
 5. 交付中必须报告且只选一个结果：
-   - `proposed`：列出达到门槛、等待用户授权写入的候选关系；
-   - `updated`：在明确授权后列出新增或修正的名称级关系；
+   - `proposed`：仅在用户明确禁止写入时，列出达到门槛但按其边界未落盘的候选关系；
+   - `updated`：列出已新增或修正的名称级关系；
    - `unchanged`：说明本次没有达到写入门槛的新关系，或已有映射已覆盖；
-   - `blocked`：说明阻塞原因、未写入的候选关系和所需确认。
+   - `blocked`：说明技术或证据阻塞、未写入的候选关系和恢复条件；不得把“任务只要求分析”当作阻塞。

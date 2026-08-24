@@ -2,7 +2,7 @@
 title: Agent Operating Model
 type: harness-core
 status: active
-updated: 2026-08-21
+updated: 2026-08-24
 ---
 
 # Agent Operating Model
@@ -17,8 +17,9 @@ updated: 2026-08-21
 ## 2. 先判定请求类型
 
 - 回答/解释/评审/诊断/报告：只读调查并给证据；评审不默认修复，诊断不默认实施修复。
-- 只读任务也不得写入 `profile.md`、personal `repository-map.md` 或项目 `.agent-docs/`；有长期价值的
-  候选内容作为 proposal 交付，不因 Harness 维护规则自动落盘。
+- 只读任务不得写入 `profile.md` 或项目 `.agent-docs/`；有长期价值的候选内容作为 proposal 交付，
+  不因 Harness 维护规则自动落盘。跨仓分析的 personal `repository-map.md` 是窄例外：满足关系图维护
+  门槛时默认维护，除非用户明确禁止；不得借此写入报告正文、动态状态或其他 personal 文件。
 - 修改/构建：实现、验证并完成交付，不停在建议层。
 - 计划/设计：明确目标、约束、取舍、阶段和验收，不把计划写成已实现事实。
 - 监控/等待：使用对应等待机制，不把“暂时没有变化”当成失败。

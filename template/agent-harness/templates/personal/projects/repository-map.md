@@ -14,4 +14,5 @@
 
 不要写入当前分支、HEAD、dirty 状态、临时迁移阶段、一次性调查结论、用户输入、报告正文或未经核验
 的线上状态。临时材料放项目 `.agent-docs/`；正式关系仍以项目文档、ADR、代码、测试、schema 或
-部署契约为准。跨仓任务交付时按维护规范报告 `proposed`、`updated`、`unchanged` 或 `blocked`。
+部署契约为准。跨仓分析默认最小写回达到门槛的关系，不要求二次确认；用户明确禁止写入时才报告
+`proposed`。跨仓任务交付时按维护规范报告 `proposed`、`updated`、`unchanged` 或 `blocked`。
