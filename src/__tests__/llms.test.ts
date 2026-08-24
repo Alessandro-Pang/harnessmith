@@ -48,10 +48,13 @@ test('public docs distinguish source development from the published npm workflow
   assert.doesNotMatch(security, /`\d+\.x`/);
 });
 
-test('public prose uses one human-facing brand while npm commands keep the package identifier', () => {
+test('public prose uses the established Harnessmith brand while npm commands keep the package identifier', () => {
+  const canonicalBrand = 'Harnessmith';
+  const nonCanonicalBrand = ['Harness', 'smith'].join('');
   for (const path of ['README.md', 'README.en.md', 'SECURITY.md', 'llms.txt']) {
     const content = readFileSync(join(root, path), 'utf8');
-    assert.doesNotMatch(content, /\bHarnessmith\b/, path);
+    assert.ok(content.includes(canonicalBrand), `${path} is missing ${canonicalBrand}`);
+    assert.ok(!content.includes(nonCanonicalBrand), `${path} contains ${nonCanonicalBrand}`);
   }
   assert.match(readFileSync(join(root, 'llms.txt'), 'utf8'), /npx --yes harnessmith\b/);
 });

@@ -3,6 +3,18 @@
 All notable changes are documented here. The project follows Semantic Versioning for the npm package.
 The embedded Harness schema has its own explicitly recorded version.
 
+## 0.4.1 - 2026-08-24
+
+### Changed
+
+- Persist stable, verified cross-repository relationships to the personal repository map by default while
+  preserving explicit user prohibitions and excluding volatile checkout or deployment state.
+
+### Fixed
+
+- Restore the established human-facing `Harnessmith` brand spelling while retaining the published
+  `harnessmith` package identifier and command name.
+
 ## 0.4.0 - 2026-08-24
 
 ### Added
@@ -26,7 +38,7 @@ The embedded Harness schema has its own explicitly recorded version.
   mechanical acceptance evidence as a derived task-status field without mutating the ledger.
 - Bind Cursor Git discovery to the requested project and canonical Git common directory, ignore ambient Git
   repository redirection, and canonicalize user-data roots across locks, snapshots, and initialization writes.
-- Use one human-facing Harnesssmith brand spelling while retaining the published `harnessmith` package identifier.
+- Use one human-facing Harnessmith brand spelling while retaining the published `harnessmith` package identifier.
 - Make lifecycle dry-runs read-only plans, preflight every multi-Adapter change before mutation, and preserve
   recovery snapshots when rollback itself is incomplete.
 - Reduce permanent prompt content to high-loss boundaries and route detailed procedures through compact docs.

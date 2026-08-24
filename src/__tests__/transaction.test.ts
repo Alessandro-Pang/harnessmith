@@ -105,7 +105,7 @@ test('install refuses to run while another process holds the Adapter operation l
         env: { ...process.env, HOME: root },
         noInitGlobal: true,
       }),
-    /another Harnesssmith process|operation lock/i,
+    /another Harnessmith process|operation lock/i,
   );
   assert.equal(existsSync(adapter.harness), false);
   assert.equal(existsSync(adapter.record), false);

@@ -1,6 +1,6 @@
-# Harnesssmith
+# Harnessmith
 
-> Harnesssmith installs a portable personal coding-agent harness for Codex, Cursor, and Claude Code.
+> Harnessmith installs a portable personal coding-agent harness for Codex, Cursor, and Claude Code.
 > This file is an operational guide for an LLM helping a user install or initialize it.
 
 Project: https://www.npmjs.com/package/harnessmith
@@ -35,7 +35,7 @@ use the published `npx --yes harnessmith` commands below.
   - Active project rule: `<project>/.cursor/rules/agent-harness.mdc`
   - Canonical copy: `<project>/.cursor/AGENTS.md`
   - Harness: `<project>/.cursor/agent-harness`
-  - Cursor installation is project-scoped. Resolve `--project` to the intended repository; Harnesssmith
+  - Cursor installation is project-scoped. Resolve `--project` to the intended repository; Harnessmith
     automatically uses its Git root when possible.
 
 ## LLM installation protocol
@@ -74,7 +74,7 @@ use the published `npx --yes harnessmith` commands below.
 
 ## Post-install verification
 
-Harnesssmith always initializes the user-owned personal overlay after a successful install and initializes
+Harnessmith always initializes the user-owned personal overlay after a successful install and initializes
 shared global memory unless `--no-init-global` was explicitly supplied. Existing personal files are never
 overwritten. If shared global memory was initialized, verify it with:
 

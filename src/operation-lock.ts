@@ -44,7 +44,7 @@ export function withAdapterLocks<T>(
       } catch (error) {
         throw new HarnessmithError(
           'OPERATION_LOCKED',
-          `Another Harnesssmith process holds the operation lock for ${adapter.label}: ${errorMessage(error)}`,
+          `Another Harnessmith process holds the operation lock for ${adapter.label}: ${errorMessage(error)}`,
           4,
           { cause: error },
         );

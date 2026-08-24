@@ -1,6 +1,6 @@
-# Harnesssmith Contributor Guide
+# Harnessmith Contributor Guide
 
-Harnesssmith 是跨 Codex、Cursor、Claude Code 分发个人 Agent Harness 的 npm initializer。详细贡献
+Harnessmith 是跨 Codex、Cursor、Claude Code 分发个人 Agent Harness 的 npm initializer。详细贡献
 规范见 `CONTRIBUTING.md`；内置 Harness 架构见
 `template/agent-harness/docs/core/harness-cli-architecture.md`。
 

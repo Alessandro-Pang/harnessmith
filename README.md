@@ -1,4 +1,4 @@
-# Harnesssmith
+# Harnessmith
 
 > Forge once. Work consistently across coding agents.
 
@@ -8,7 +8,7 @@
 
 [English](./README.en.md) · **简体中文**
 
-Harnesssmith 是一个本地优先的 Personal Coding Agent Harness initializer。它把同一套个人工作规则、
+Harnessmith 是一个本地优先的 Personal Coding Agent Harness initializer。它把同一套个人工作规则、
 渐进式文档、记忆协议和任务状态工具，安全地安装到 Codex、Cursor 与 Claude Code。
 
 ```bash
@@ -18,12 +18,12 @@ npx harnessmith
 一次配置，多端保持一致。你的 coding agent 会知道如何开始任务、何时读取上下文、怎样保护现有改动，
 以及在什么条件下才能宣告完成。
 
-## 为什么需要 Harnesssmith
+## 为什么需要 Harnessmith
 
 不同 Agent 的规则文件、作用域和目录结构各不相同。手工维护通常会遇到三个问题：规则逐渐漂移、
 升级容易覆盖个人内容、长任务换会话后丢失上下文。
 
-Harnesssmith 将它们拆成职责清晰的四层：
+Harnessmith 将它们拆成职责清晰的四层：
 
 | 层 | 解决什么问题 |
 | --- | --- |
@@ -32,7 +32,7 @@ Harnesssmith 将它们拆成职责清晰的四层：
 | Memory & work state | 保存非权威记忆、紧凑用户画像和可恢复的长任务状态 |
 | Installer safety | 通过预检、备份、校验、锁与回滚保护用户文件 |
 
-Harnesssmith 不替代 Agent Runtime，也不接管模型循环、工具调用、sandbox 或权限审批。Markdown 规则
+Harnessmith 不替代 Agent Runtime，也不接管模型循环、工具调用、sandbox 或权限审批。Markdown 规则
 属于行为引导；真正的安全强制仍由安装器、测试、CI 和宿主权限系统承担。
 
 ## 30 秒开始
@@ -50,7 +50,7 @@ npx harnessmith --agent codex
 npx harnessmith --agent all --project /absolute/path/to/repository --dry-run
 ```
 
-安装完成后，Harnesssmith 会初始化：
+安装完成后，Harnessmith 会初始化：
 
 - 宿主对应的规则入口和内嵌 Harness CLI；
 - 用户维护的 `~/.agent-harness` personal overlay；
@@ -62,7 +62,7 @@ npx harnessmith --agent all --project /absolute/path/to/repository --dry-run
 >
 > 将下面的指令直接发送给 AI。它会先读取 [llms.txt](https://raw.githubusercontent.com/Alessandro-Pang/harnessmith/refs/heads/main/llms.txt)，再按照其中的安装流程、目标核对、权限边界和失败处理规范完成安装。
 >
-> `请先阅读 https://raw.githubusercontent.com/Alessandro-Pang/harnessmith/refs/heads/main/llms.txt，并按照其中的协议为我安装 Harnesssmith。`
+> `请先阅读 https://raw.githubusercontent.com/Alessandro-Pang/harnessmith/refs/heads/main/llms.txt，并按照其中的协议为我安装 Harnessmith。`
 
 ## 支持的 Agent
 
@@ -72,7 +72,7 @@ npx harnessmith --agent all --project /absolute/path/to/repository --dry-run
 | Claude Code | `$CLAUDE_CONFIG_DIR/CLAUDE.md`，并保留 `AGENTS.md` | `$CLAUDE_CONFIG_DIR/agent-harness` | 全局 |
 | Cursor | `<project>/.cursor/rules/agent-harness.mdc` | `<project>/.cursor/agent-harness` | 项目 |
 
-Cursor 的文件化规则按项目安装。使用 `--project` 指定仓库；Harnesssmith 只把自己管理的文件写入
+Cursor 的文件化规则按项目安装。使用 `--project` 指定仓库；Harnessmith 只把自己管理的文件写入
 repository-local Git exclude 和 `.cursor/.ignore`，不会隐藏或覆盖团队已有的整个 `.cursor/` 目录。
 
 ## 常用操作
@@ -122,7 +122,7 @@ node <harness-path>/bin/harness.mjs health --json
 
 ### 分层记忆
 
-Harnesssmith 将“如何工作”“用户是谁”“之前发生了什么”和“项目当前事实”刻意分开：
+Harnessmith 将“如何工作”“用户是谁”“之前发生了什么”和“项目当前事实”刻意分开：
 
 | 位置 | 保存内容 | 边界 |
 | --- | --- | --- |
@@ -252,5 +252,5 @@ npm pack --dry-run
 
 ---
 
-如果你希望不同 coding agent 以同样谨慎、可恢复、可验证的方式工作，Harnesssmith 就是那层共同的
+如果你希望不同 coding agent 以同样谨慎、可恢复、可验证的方式工作，Harnessmith 就是那层共同的
 个人基础设施。

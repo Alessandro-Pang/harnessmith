@@ -1,6 +1,6 @@
-# Harnesssmith Architecture and Enforcement Model
+# Harnessmith Architecture and Enforcement Model
 
-Harnesssmith 是一个本地优先、opinionated、跨 Codex、Cursor 和 Claude Code 的 Personal Harness
+Harnessmith 是一个本地优先、opinionated、跨 Codex、Cursor 和 Claude Code 的 Personal Harness
 分发与管理工具。它安全地安装和升级规则与内嵌 Harness CLI，并提供渐进式文档、项目上下文、
 非权威记忆和带验收门禁的长任务状态。
 
@@ -27,7 +27,7 @@ The gate does not launch or authenticate to any third-party host. 真实宿主�
 授权的维护者或 CI runner 完成。因此 gate
 通过只表示“maintainer-attested structure 内部一致且绑定当前候选包”；本地记录和摘要可由仓库写入者
 伪造，不能证明证据确由真实 Host 产生、内容完整或 verdict 为真。可信来源需要外部 CI/attestation
-和人工证据复核；Harnesssmith 仍未接管宿主 Runtime 或权限系统。
+和人工证据复核；Harnessmith 仍未接管宿主 Runtime 或权限系统。
 
 ## Adapter 能力契约
 
@@ -40,7 +40,7 @@ result 与 status JSON 中。
 | Claude Code | global | Markdown | host-default | advisory | host-owned |
 | Cursor | project | MDC | always | advisory | host-owned |
 
-Cursor 的 `always` 只用于当前高损失 personal baseline，不表示 Harnesssmith 已建模所有宿主原生规则
+Cursor 的 `always` 只用于当前高损失 personal baseline，不表示 Harnessmith 已建模所有宿主原生规则
 类型。若未来需要不同激活策略，应先增加真实宿主 Eval，再扩展 capability descriptor。
 
 ## 安装安全边界

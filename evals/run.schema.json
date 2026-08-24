@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "urn:harnessmith:eval-run:v4",
-  "title": "Harnesssmith maintainer-attested host evaluation run",
+  "title": "Harnessmith maintainer-attested host evaluation run",
   "type": "object",
   "required": [
     "schemaVersion",

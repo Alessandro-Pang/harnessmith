@@ -127,7 +127,7 @@ function executeLifecycle(
   }
   if (interactive) {
     finishInteractive(
-      command === 'restore' ? 'Previous installation restored.' : 'Harnesssmith uninstalled.',
+      command === 'restore' ? 'Previous installation restored.' : 'Harnessmith uninstalled.',
       context.output,
     );
   }

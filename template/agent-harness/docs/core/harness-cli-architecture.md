@@ -71,7 +71,7 @@ source、trust、path、line 和结果 `truncated` 外，还携带 `scanTruncate
 
 `health` 的 installation check 先验证 Runtime 身份：managed 分发必须存在合法且与当前 Runtime
 完全一致的 `install-context.json`，随后再核验 installation record 与全部 managed checksum；缺失或
-损坏 context 不得降级为 standalone。standalone 只接受 Harnesssmith 源码树布局与 package manifest
+损坏 context 不得降级为 standalone。standalone 只接受 Harnessmith 源码树布局与 package manifest
 共同证明的身份。managed output containment 同时拒绝 `..`、absolute relative route 和 Windows
 跨盘路径。
 

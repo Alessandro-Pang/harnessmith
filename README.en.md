@@ -1,4 +1,4 @@
-# Harnesssmith
+# Harnessmith
 
 > Forge once. Work consistently across coding agents.
 
@@ -8,7 +8,7 @@
 
 **English** · [简体中文](./README.md)
 
-Harnesssmith is a local-first initializer for a personal coding-agent harness. It safely installs the same
+Harnessmith is a local-first initializer for a personal coding-agent harness. It safely installs the same
 working rules, progressive documentation, memory protocol, and task-state tools across Codex, Cursor, and
 Claude Code.
 
@@ -19,13 +19,13 @@ npx harnessmith
 Configure once, work consistently everywhere. Your coding agents get a shared understanding of how to start
 tasks, when to load context, how to protect existing work, and what evidence is required before completion.
 
-## Why Harnesssmith
+## Why Harnessmith
 
 Each coding agent has different instruction files, scopes, and directory layouts. Maintaining them by hand
 usually leads to drifting rules, overwritten personal content, and lost context when long tasks move between
 sessions.
 
-Harnesssmith separates those concerns into four layers:
+Harnessmith separates those concerns into four layers:
 
 | Layer | Responsibility |
 | --- | --- |
@@ -34,7 +34,7 @@ Harnesssmith separates those concerns into four layers:
 | Memory & work state | Non-authoritative memory, a compact user profile, and resumable task state |
 | Installer safety | Preflight, backups, validation, locks, and rollback |
 
-Harnesssmith does not replace the host Agent Runtime or control the model loop, tools, sandbox, or permission
+Harnessmith does not replace the host Agent Runtime or control the model loop, tools, sandbox, or permission
 prompts. Markdown instructions are guidance; enforcement remains with the installer, tests, CI, and the host
 permission system.
 
@@ -53,7 +53,7 @@ npx harnessmith --agent codex
 npx harnessmith --agent all --project /absolute/path/to/repository --dry-run
 ```
 
-After installation, Harnesssmith initializes:
+After installation, Harnessmith initializes:
 
 - the host instruction entry point and embedded Harness CLI;
 - the user-owned `~/.agent-harness` personal overlay;
@@ -65,7 +65,7 @@ After installation, Harnesssmith initializes:
 >
 > Send the prompt below directly to your AI. It will read [llms.txt](https://raw.githubusercontent.com/Alessandro-Pang/harnessmith/refs/heads/main/llms.txt) first, then follow its installation flow, target checks, permission boundaries, and failure-handling rules.
 >
-> `Read https://raw.githubusercontent.com/Alessandro-Pang/harnessmith/refs/heads/main/llms.txt first, then install Harnesssmith for me by following its protocol.`
+> `Read https://raw.githubusercontent.com/Alessandro-Pang/harnessmith/refs/heads/main/llms.txt first, then install Harnessmith for me by following its protocol.`
 
 ## Supported agents
 
@@ -75,7 +75,7 @@ After installation, Harnesssmith initializes:
 | Claude Code | `$CLAUDE_CONFIG_DIR/CLAUDE.md`, with `AGENTS.md` retained | `$CLAUDE_CONFIG_DIR/agent-harness` | Global |
 | Cursor | `<project>/.cursor/rules/agent-harness.mdc` | `<project>/.cursor/agent-harness` | Project |
 
-Cursor file-based rules are project-scoped. Pass `--project` for the intended repository. Harnesssmith adds
+Cursor file-based rules are project-scoped. Pass `--project` for the intended repository. Harnessmith adds
 only its managed files to the repository-local Git exclude file and `.cursor/.ignore`; it never hides or
 overwrites the team's entire `.cursor/` directory.
 
@@ -128,7 +128,7 @@ while human output reports incomplete scans.
 
 ### Layered memory
 
-Harnesssmith deliberately separates how an agent works, who the user is, what happened before, and what is
+Harnessmith deliberately separates how an agent works, who the user is, what happened before, and what is
 currently true about a project:
 
 | Location | Content | Boundary |
@@ -192,7 +192,7 @@ or `inconclusive`; it cannot directly pass the gate.
 - Lexical and canonical containment for output, backup, record, and ignore paths.
 - Fail-closed handling of symlinks, junctions, and reparse paths below authorized roots.
 - Refusal of unmanaged or user-modified targets by default.
-- Cross-process locks and complete preflight for multi-agent operations. On failure, Harnesssmith attempts
+- Cross-process locks and complete preflight for multi-agent operations. On failure, Harnessmith attempts
   rollback along recorded paths; an incomplete rollback reports an error and retains recovery paths rather
   than claiming atomic restoration.
 - Preservation of mutable `state/`; upgrades, restore, and uninstall never overwrite the personal overlay.
@@ -271,4 +271,4 @@ distribution manifest.
 ---
 
 If you want every coding agent to work with the same care, recoverability, and evidence standards,
-Harnesssmith is the shared personal infrastructure layer.
+Harnessmith is the shared personal infrastructure layer.

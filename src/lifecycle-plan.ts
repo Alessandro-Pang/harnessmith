@@ -161,7 +161,7 @@ export function describeLifecycle(
     if (!current)
       throw new HarnessmithError(
         'STATE_CONFLICT',
-        `No Harnesssmith installation found for ${adapter.label}: ${adapter.record}`,
+        `No Harnessmith installation found for ${adapter.label}: ${adapter.record}`,
         5,
       );
     assertRestorable(adapter, current.record, force);

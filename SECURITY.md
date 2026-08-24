@@ -16,7 +16,7 @@ reproduction without secrets or personal memory content.
 
 ## Security boundaries
 
-- Harnesssmith never requires `sudo`.
+- Harnessmith never requires `sudo`.
 - Existing unmanaged or modified files require explicit `--force` before replacement.
 - Managed outputs, backups, records, and ignore files must remain within their authorized canonical roots.
   Existing symlink, junction, and reparse segments below those roots are rejected by default.

@@ -103,7 +103,7 @@ export function withUserDataCoordinationLocks<T>(
       } catch (error) {
         throw new HarnessmithError(
           'OPERATION_LOCKED',
-          `Another Harnesssmith process is initializing user data at ${root}: ${errorMessage(error)}`,
+          `Another Harnessmith process is initializing user data at ${root}: ${errorMessage(error)}`,
           4,
           { cause: error },
         );
