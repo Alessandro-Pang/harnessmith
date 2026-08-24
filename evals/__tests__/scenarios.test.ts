@@ -58,7 +58,7 @@ test('behavior prompts do not manufacture authorization or ambiguous execution m
   const relationshipMap = scenarios.get('cross-repository-map-writeback');
   assert.ok(relationshipMap);
   assert.match(relationshipMap.prompt, /do not modify .*repository source files/i);
-  assert.match(relationshipMap.pass.join(' '), /updates the personal repository map/i);
+  assert.match(relationshipMap.pass.join(' '), /canonical YAML map.*generated Markdown view/i);
   assert.match(relationshipMap.forbidden.join(' '), /wait.*additional authorization/i);
 });
 

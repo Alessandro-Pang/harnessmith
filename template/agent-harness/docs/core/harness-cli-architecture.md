@@ -78,6 +78,11 @@ source、trust、path、line 和结果 `truncated` 外，还携带 `scanTruncate
 `version --json` 是兼容性查询入口，返回 `harnessVersion`、`schemaVersion`、
 `memorySchemaVersion` 和 Node 契约。`validate` 必须拒绝未知 schema，不能把未知版本当作兼容。
 
+`repository-map` 把 personal YAML 语义层、generated Markdown 视图与 runtime verification state
+分开。`check`、`maintain` 和外部 observation reconcile 默认只读；`render --write`、内置确定性
+`discover packages --apply` 与 `verify --record` 才写入，并使用 personal/state 对应的协调锁和原子
+写。外部 observation 是不可信 proposal，不能仅凭自报 extractor id 获得自动提升权限。
+
 Task acceptance gate 是机械新鲜度门禁，不是语义评审器或安全边界。`task verify` 可以证明调用方选择
 的 command/test 退出成功，或 file/diff 已被读取并摘要，并将证据绑定到当时的 HEAD、workspace 与
 scope 以及对应 task/criterion；它不能判断自由文本 criterion 是否真的被这些证据满足。绑定可拒绝

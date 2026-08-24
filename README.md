@@ -163,6 +163,14 @@ task progress 和 Memory 写命令通过共享 memory-root lock 串行化。
 达到沉淀阈值的任务在交付时明确报告记忆为 `proposed`、`updated`、`unchanged` 或 `blocked`；长任务
 入口由 task 命令自动同步到 `core.md`，稳定经验只有实际写入并验证正式文档后才算完成提升。
 
+### 可维护的 Repository Map
+
+Personal overlay 使用 `projects/repository-map.yaml` 保存带职责描述的仓库目录和有类型的直接关系，
+`repository-map.md` 只是确定性生成视图。`harness repository-map check` 校验 schema、方向、双侧证据与
+容量预算；`discover packages --apply` 可从本地 package manifest 幂等维护直接包依赖；`verify
+--record` 把 source fingerprint 和时效记录到宿主 `state/`；`maintain` 只读报告漂移和缺失。外部或
+启发式 observation 始终停留在 proposal，不能通过自报 deterministic 自动写回。
+
 ### 长任务账本
 
 内嵌 Harness CLI 可以保存目标、下一步、checkpoint 和 acceptance evidence。任务只能通过

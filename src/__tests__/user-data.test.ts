@@ -26,7 +26,12 @@ function preparedInstall(root: string): PreparedInstall {
 import { join } from 'node:path';
 const personal = process.env.HARNESS_PERSONAL_HOME || join(process.env.HOME, '.agent-harness');
 if (process.env.TEST_ENV_RECORD) writeFileSync(process.env.TEST_ENV_RECORD, personal);
-for (const name of ['README.md', 'AGENTS.md', join('projects', 'repository-map.md')]) {
+for (const name of [
+  'README.md',
+  'AGENTS.md',
+  join('projects', 'repository-map.yaml'),
+  join('projects', 'repository-map.md'),
+]) {
   const path = join(personal, name);
   mkdirSync(join(path, '..'), { recursive: true });
   writeFileSync(path, 'initialized\\n');

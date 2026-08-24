@@ -45,6 +45,7 @@ export function initPersonal(
   const templates = [
     ['README.md', 'personal/README.md'],
     ['AGENTS.md', 'personal/AGENTS.md'],
+    [join('projects', 'repository-map.yaml'), 'personal/projects/repository-map.yaml'],
     [join('projects', 'repository-map.md'), 'personal/projects/repository-map.md'],
   ] as const;
   withUserDataCoordinationLocks([runtime.personalHome], inheritedLockKeys, () => {

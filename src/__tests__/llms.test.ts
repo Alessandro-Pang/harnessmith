@@ -316,13 +316,16 @@ test('read-only requests keep memory writes explicit except for qualified reposi
   );
 
   assert.match(operatingModel, /只读任务不得写入 `profile\.md` 或项目 `.agent-docs\/`/);
-  assert.match(operatingModel, /跨仓分析.*personal `repository-map\.md`.*默认维护/s);
+  assert.match(operatingModel, /跨仓分析.*personal `repository-map\.yaml`.*默认维护/s);
   assert.match(projectMemory, /只读任务.*只报告候选记忆提案/);
   assert.match(projectMemory, /不得初始化或写入 `.agent-docs\/`/);
   assert.match(profile, /只读任务发现稳定新信号或明确变化时/);
   assert.match(profile, /只报告画像更新提案，不得写入/);
   assert.match(profile, /只有用户明确要求更新画像或沉淀记忆时/);
-  assert.match(repositoryMap, /跨仓分析本身授权更新 personal\s+`repository-map\.md`/);
+  assert.match(
+    repositoryMap,
+    /跨仓分析本身授权更新 personal\s+`repository-map\.md`.*`repository-map\.yaml`/,
+  );
   assert.match(repositoryMap, /不需要用户\s+二次确认/);
   assert.match(repositoryMap, /用户明确禁止.*不得写入/);
 });
@@ -344,17 +347,28 @@ test('cross-repository research closes the relationship-map writeback loop', () 
     ),
     'utf8',
   );
+  const canonicalMap = readFileSync(
+    join(
+      root,
+      'template',
+      'agent-harness',
+      'templates',
+      'personal',
+      'projects',
+      'repository-map.yaml',
+    ),
+    'utf8',
+  );
 
-  assert.match(playbook, /写回闭环/);
-  assert.match(playbook, /更新 personal\s+`repository-map\.md`/);
-  assert.match(playbook, /动态状态/);
+  assert.match(playbook, /自动发现、校验与维护/);
+  assert.match(playbook, /更新 personal\s+`repository-map\.md`.*`repository-map\.yaml`/);
+  assert.match(playbook, /HEAD.*dirty/);
   assert.match(playbook, /updated/);
-  assert.match(playbook, /明确禁止修改关系图.*`proposed`/s);
+  assert.match(playbook, /用户明确禁止写入.*`proposed`/s);
   assert.match(playbook, /unchanged/);
   assert.match(playbook, /blocked/);
-  assert.match(personalMap, /正式来源/);
-  assert.match(personalMap, /不要写入当前分支/);
-  assert.match(personalMap, /updated/);
+  assert.match(personalMap, /generated from repository-map\.yaml/);
+  assert.match(canonicalMap, /schemaVersion: 1/);
 });
 
 test('distributed rules close project-memory recall, writeback, and promotion loops', () => {

@@ -9,6 +9,7 @@ import { route } from './commands/route.js';
 import { contextSearch } from './commands/search.js';
 import { validate } from './commands/validate.js';
 import { registerMemoryCommands } from './program/memory.js';
+import { registerRepositoryMapCommands } from './program/repository-map.js';
 import { addSearchOptions, type SearchCommandOptions } from './program/search-options.js';
 import { registerTaskCommands } from './program/task.js';
 import type { CommandRunner } from './program/types.js';
@@ -165,6 +166,7 @@ export function createHarnessProgram(runtime: Runtime = createRuntime(), io: Io 
 
   registerTaskCommands(program, runtime, io, run);
   registerMemoryCommands(program, runtime, io, run);
+  registerRepositoryMapCommands(program, runtime, io, run);
 
   addSearchOptions(
     program

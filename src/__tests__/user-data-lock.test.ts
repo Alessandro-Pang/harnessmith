@@ -74,7 +74,12 @@ if (process.env.TEST_ROLE === 'holder') {
 
 const root = phase === 'personal' ? process.env.HARNESS_PERSONAL_HOME : process.env.HARNESS_MEMORY_HOME;
 const names = phase === 'personal'
-  ? ['README.md', 'AGENTS.md', join('projects', 'repository-map.md')]
+  ? [
+      'README.md',
+      'AGENTS.md',
+      join('projects', 'repository-map.yaml'),
+      join('projects', 'repository-map.md'),
+    ]
   : ['README.md', 'core.md', 'profile.md'];
 for (const name of names) {
   const path = join(root, name);

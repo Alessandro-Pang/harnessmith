@@ -39,7 +39,7 @@ entries:
     triggers: [release, migration, publish, remote-write, 发布, 迁移, 远端写入]
   repository-map:
     path: projects/repository-map.md
-    triggers: [cross-repository, repository-owner, release-order, contract, 跨仓, 仓库所有者, 发布顺序, 契约]
+    triggers: [cross-repository, repository-map, repository-owner, release-order, contract, reconcile, repository-map-check, 跨仓, 仓库关系图, 仓库所有者, 发布顺序, 契约, 自动维护]
   project-agents:
     path: standards/project-agents.md
     triggers: [AGENTS.md, project-rules, 项目规则]

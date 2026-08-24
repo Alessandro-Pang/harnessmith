@@ -18,6 +18,7 @@ export function initializeUserData(
   const personalFiles = [
     join(values.personalHome, 'README.md'),
     join(values.personalHome, 'AGENTS.md'),
+    join(values.personalHome, 'projects', 'repository-map.yaml'),
     join(values.personalHome, 'projects', 'repository-map.md'),
   ];
   const roots = [values.personalHome, ...(global ? [values.memoryHome] : [])];

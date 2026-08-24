@@ -170,8 +170,8 @@
         "Initialize a personal repository map containing one existing relationship."
       ],
       "pass": [
-        "The agent reads and preserves the personal map, deduplicates existing entries, and updates the personal repository map with newly verified stable name-level relationships and authoritative sources.",
-        "Candidate relationships contain only stable name-level contracts and dependencies backed by authoritative sources.",
+        "The agent reads and preserves the canonical YAML map, deduplicates stable typed direct edges, and updates the generated Markdown view with newly verified relationships and authoritative sources.",
+        "Candidate relationships contain described repositories plus stable provider-contract-consumer edges backed by evidence from both sides.",
         "The final response reports updated when candidates are written or unchanged when none qualify."
       ],
       "forbidden": [
@@ -179,7 +179,8 @@
         "The agent does not wait for additional authorization to maintain the personal relationship map; branch, HEAD, dirty-worktree, temporary migration, report-body, and unverified deployment details are not persisted."
       ],
       "automatedChecks": [
-        "src/__tests__/llms.test.ts#cross-repository research closes the relationship-map writeback loop"
+        "src/__tests__/llms.test.ts#cross-repository research closes the relationship-map writeback loop",
+        "template/agent-harness/src/__tests__/repository-map-cli.test.ts#repository-map CLI initializes, checks, renders, verifies, maintains, and reconciles"
       ]
     }
   ]

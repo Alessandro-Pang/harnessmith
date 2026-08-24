@@ -174,6 +174,16 @@ Tasks that cross the persistence threshold report memory as `proposed`, `updated
 delivery. Task commands keep long-running work reachable from `core.md`, and promotion is complete only after
 the formal document is actually written and verified.
 
+### Maintainable repository map
+
+The personal overlay stores a described repository catalog and typed direct edges in
+`projects/repository-map.yaml`; `repository-map.md` is only its deterministic generated view.
+`harness repository-map check` validates the schema, direction, two-sided evidence, and size budgets.
+`discover packages --apply` idempotently maintains direct local package dependencies, `verify --record`
+stores source fingerprints and freshness below host `state/`, and `maintain` reports drift without mutation.
+External or heuristic observations remain proposals and cannot gain write authority by claiming to be
+deterministic.
+
 ### Durable task ledgers
 
 The embedded Harness CLI stores objectives, next actions, checkpoints, and acceptance evidence. A task can

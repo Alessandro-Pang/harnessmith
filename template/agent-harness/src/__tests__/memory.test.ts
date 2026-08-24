@@ -99,6 +99,7 @@ test('personal overlay initialization is idempotent and preserves user rules', (
   initPersonal(runtime, capturedIo());
   assert.match(readFileSync(rules, 'utf8'), /user rule/);
   assert.ok(readFileSync(join(runtime.personalHome, 'projects', 'repository-map.md'), 'utf8'));
+  assert.ok(readFileSync(join(runtime.personalHome, 'projects', 'repository-map.yaml'), 'utf8'));
 });
 
 test('personal overlay initialization rejects concurrent writers', () => {
