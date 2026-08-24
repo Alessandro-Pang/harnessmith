@@ -41,7 +41,9 @@ Publishing is a maintainer-authorized external write. Never publish only because
    export HARNESS_RELEASE_ARTIFACT=/absolute/path/to/release-candidate/harnessmith-x.y.z.tgz
    ```
 
-6. Run every scenario in `evals/scenarios.json` against every supported real host. Preserve only redacted
+6. Run every scenario in `evals/scenarios.json` against every real host required by the checked-in release
+   policy. The current required host is Codex; Cursor and Claude Code remain supported optional evidence.
+   Preserve only redacted
    transcripts and local evidence artifacts, set `recordType: host-evaluation`, and bind the records to the
    candidate tarball and complete scenario fingerprints printed by `pnpm run eval:fingerprint`. Record one
    evidence-backed `pass-N` and `forbidden-N` assertion for every corresponding ordered condition. Then run:
@@ -58,7 +60,7 @@ Publishing is a maintainer-authorized external write. Never publish only because
    Publishing an existing tarball does not reliably invoke that tarball's `prepublishOnly`, so the supported
    release workflow performs this gate explicitly; `prepublishOnly` remains a secondary guard for worktree publication.
    `release:check` invokes the same gate and fails when fresh, passing, maintainer-attested real-host records
-   are absent from any host-by-scenario cell. The result is a **maintainer-attested structure** check: local
+   are absent from any required-host-by-scenario cell. The result is a **maintainer-attested structure** check: local
    artifacts and digests cannot authenticate their provenance or prove that a real Host behaved as claimed.
    `run.example.json`, schema validation alone, and local unit tests cannot satisfy it; trusted proof requires
    external CI/attestation and evidence review.

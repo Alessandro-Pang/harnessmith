@@ -1,7 +1,7 @@
 import {
   evaluationFingerprint,
   releaseArtifactPath,
-  supportedAdapters,
+  requiredEvaluationAdapters,
 } from './eval-fingerprint.js';
 import {
   type EvaluationRecordOptions,
@@ -75,7 +75,7 @@ export function gateEvaluationRecords(options: EvaluationGateOptions = {}) {
       );
   }
   const scenarioIds = Object.keys(current.scenarios);
-  const missing = supportedAdapters.flatMap((adapter) =>
+  const missing = requiredEvaluationAdapters.flatMap((adapter) =>
     scenarioIds.map((scenarioId) => `${adapter}/${scenarioId}`).filter((key) => !covered.has(key)),
   );
   if (missing.length > 0) {
@@ -90,7 +90,7 @@ export function gateEvaluationRecords(options: EvaluationGateOptions = {}) {
     assurance: 'maintainer-attested-structure',
     packageArtifactSha256: current.packageArtifactSha256,
     coverageCount: covered.size,
-    hosts: supportedAdapters,
+    hosts: requiredEvaluationAdapters,
     scenarios: scenarioIds,
     maxAgeDays,
   };

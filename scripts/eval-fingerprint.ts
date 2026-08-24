@@ -20,6 +20,7 @@ import {
 
 export const repositoryRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 export const supportedAdapters = supportedAgents.map(({ value }) => value) as AgentName[];
+export const requiredEvaluationAdapters = ['codex'] as const satisfies readonly AgentName[];
 
 type ScenarioContract = {
   automatedChecks: string[];

@@ -1,7 +1,8 @@
 # Harness behavior evaluations
 
 Unit tests prove deterministic file and CLI behavior. This directory defines a separate contract for
-recording a maintainer-observed Codex, Cursor, or Claude Code run against the installed Harness. A schema
+recording a maintainer-observed Codex, Cursor, or Claude Code run against the installed Harness. The current
+release policy requires Codex; Cursor and Claude Code records remain supported optional evidence. A schema
 fixture, scenario catalog, mocked transcript, or passing unit test is never real host evidence.
 
 ## Evidence contract
@@ -71,7 +72,7 @@ scenario identity, evidence references, containment, artifact digests, and high-
 `eval:gate` additionally requires the exact candidate tarball digest, current package/Harness/scenario/rule
 fingerprints, a passing verdict, every required scenario assertion and forbidden-action assertion to pass,
 and a fresh
-complete host × scenario matrix. The default freshness window is 30 days; use `--max-age-days` only when the
+complete required-host × scenario matrix. The default freshness window is 30 days; use `--max-age-days` only when the
 release policy explicitly chooses another bounded window.
 
 When a host/scenario cell contains multiple valid records, only the record with the latest `evaluatedAt` is
@@ -85,7 +86,9 @@ changing packaged executable behavior invalidates prior host records even if a m
 version string.
 
 The gate intentionally fails when records are absent, stale, inconclusive, failed, tied to another package or
-behavior contract, or missing any Codex/Cursor/Claude Code scenario cell. It never launches, authenticates to,
+behavior contract, or missing any scenario cell for a host required by the checked-in release policy. The
+current required host is Codex; Cursor and Claude Code can still be validated and retained as optional evidence.
+The gate never launches, authenticates to,
 or spends money on a third-party host. External host execution and evidence capture remain explicit
 maintainer/CI responsibilities.
 

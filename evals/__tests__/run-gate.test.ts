@@ -284,8 +284,9 @@ test('release gate fails when supported hosts and scenarios lack fresh passing c
 
   assert.equal(result.status, 1);
   assert.match(result.stderr, /Missing fresh passing host evaluation coverage/);
-  assert.match(result.stderr, /cursor\/progressive-disclosure/);
-  assert.match(result.stderr, /claude\/progressive-disclosure/);
+  assert.match(result.stderr, /codex\/bootstrap-global-memory/);
+  assert.doesNotMatch(result.stderr, /cursor\//);
+  assert.doesNotMatch(result.stderr, /claude\//);
 });
 
 test('release gate identifies stale records instead of counting them as coverage', () => {
@@ -301,7 +302,7 @@ test('release gate identifies stale records instead of counting them as coverage
 test('release gate emits machine-readable success only for the complete fresh host matrix', () => {
   const runsDirectory = temporaryDirectory();
   const scenarioIds = Object.keys(currentFingerprint().scenarios);
-  const adapters = ['codex', 'cursor', 'claude'] as const;
+  const adapters = ['codex'] as const;
   for (const adapter of adapters) {
     for (const scenarioId of scenarioIds) writeRun(runsDirectory, { adapter, scenarioId });
   }
@@ -374,17 +375,16 @@ test('release gate rejects records captured against a different candidate packag
   assert.match(result.stderr, /subject-drift packageArtifactSha256 codex\/progressive-disclosure/);
 });
 
-test('evaluation host coverage derives from the production adapter catalog', async () => {
+test('evaluation schema supports every adapter while release coverage uses the explicit host policy', async () => {
   const { supportedAgents } = await import('../../src/agents.js');
+  const { requiredEvaluationAdapters } = await import('../../scripts/eval-fingerprint.js');
   const schema = JSON.parse(readFileSync(join(root, 'evals', 'run.schema.json'), 'utf8'));
-  const fingerprintSource = readFileSync(join(root, 'scripts', 'eval-fingerprint.ts'), 'utf8');
 
   assert.deepEqual(
     schema.properties.host.properties.adapter.enum,
     supportedAgents.map(({ value }) => value),
   );
-  assert.match(fingerprintSource, /import \{ supportedAgents \} from '\.\.\/src\/agents\.js'/);
-  assert.doesNotMatch(fingerprintSource, /\['codex', 'cursor', 'claude'\]/);
+  assert.deepEqual(requiredEvaluationAdapters, ['codex']);
 });
 
 test('release gate rejects a passing verdict when a forbidden-action assertion failed', () => {
@@ -422,7 +422,8 @@ test('evaluation and release docs distinguish contracts from real fresh host evi
     'pnpm run eval:gate',
     'HARNESS_EVAL_RUNS_DIR',
     'recordType: host-evaluation',
-    'complete host × scenario matrix',
+    'complete required-host × scenario matrix',
+    'current required host is Codex',
     'maintainer-attested structure',
     'cannot prove that a real Host produced the submitted artifacts',
   ]) {
@@ -432,6 +433,7 @@ test('evaluation and release docs distinguish contracts from real fresh host evi
   assert.match(releasing, /fails when.*fresh.*real-host records/is);
   assert.match(releasing, /HARNESS_RELEASE_ARTIFACT/);
   assert.match(releasing, /maintainer-attested structure/i);
+  assert.match(releasing, /current required host is Codex/i);
   assert.match(architecture, /executable release gate/i);
   assert.match(architecture, /does not launch.*third-party host/i);
 });

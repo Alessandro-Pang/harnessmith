@@ -15,9 +15,10 @@ The embedded Harness schema has its own explicitly recorded version.
 - Add proposal-first memory migration, lifecycle maintenance, canonical cross-process memory locks, and
   indexed reachability plus secret-pattern validation.
 - Add `task verify` for Harness-produced command, test, file, and diff evidence with explicit freshness scopes.
-- Add a v4 maintainer-attested Host Eval contract and release gate covering every supported host and scenario,
-  bound to the exact candidate tarball and complete scenario contract, with required pass and forbidden
-  assertions and all-artifact secret scanning.
+- Add a v4 maintainer-attested Host Eval contract and release gate covering every scenario for the checked-in
+  required-host policy, bound to the exact candidate tarball and complete scenario contract, with required
+  pass and forbidden assertions and all-artifact secret scanning. The 0.4.0 policy requires Codex while
+  retaining Cursor and Claude Code as supported optional evidence.
 
 ### Changed
 
