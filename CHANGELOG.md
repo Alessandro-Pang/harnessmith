@@ -3,6 +3,28 @@
 All notable changes are documented here. The project follows Semantic Versioning for the npm package.
 The embedded Harness schema has its own explicitly recorded version.
 
+## 0.5.0 - 2026-08-24
+
+### Added
+
+- Add a schema-backed personal repository-map lifecycle with deterministic Markdown rendering, evidence
+  verification, staleness and size maintenance, trusted package discovery, proposal-first reconciliation,
+  and validated legacy migration.
+- Add `repository-map check`, `render`, `verify`, `maintain`, `discover packages`, `reconcile`, and `migrate`
+  commands with JSON contracts, coordinated locks, and atomic writes.
+
+### Changed
+
+- Store repository descriptions, ownership, aliases, remotes, and direct provider-to-consumer relations in a
+  canonical YAML source while keeping generated views and mutable verification state separate.
+- Preserve the canonical repository map across outer installer snapshots and initialize it idempotently for
+  new personal Harness installations.
+
+### Embedded Harness
+
+- Harness runtime remains at 2.4.0. Task schema remains at 3 and memory schema remains at 1; repository-map
+  schema version 1 is introduced without changing those compatibility contracts.
+
 ## 0.4.1 - 2026-08-24
 
 ### Changed
