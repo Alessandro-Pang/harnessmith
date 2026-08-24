@@ -24,13 +24,14 @@ Publishing is a maintainer-authorized external write. Never publish only because
    npm pack --dry-run
    npm pack --pack-destination /absolute/path/to/release-candidate
    pnpm audit --prod --audit-level=high
-   pnpm dlx @cyclonedx/cdxgen@12.8.2 -t js --no-install-deps --fail-on-error \
-     -o harnessmith-sbom.cdx.json .
+   pnpm run sbom
+   pnpm run sbom:check
    ```
 
    `npm pack` and `npm publish --dry-run` verify the npm distribution boundary. Dependency installation,
-   auditing, and the CycloneDX SBOM run from the frozen pnpm checkout. Verify the generator recognized the
-   committed `pnpm-lock.yaml`; keep the SBOM generator version pinned and record it with the release evidence.
+   auditing, and the CycloneDX SBOM run from the frozen pnpm checkout. `sbom` uses the pinned generator and
+   records a digest of `package.json` plus `pnpm-lock.yaml`; `sbom:check` and `release:check` reject a stale
+   document. Verify the generator recognized the committed lockfile and record it with the release evidence.
 
 5. Bind the release checks to that exact candidate, install the same file in a temporary home, and exercise
    install, status, restore, uninstall, personal overlay initialization, global and project memory, task
@@ -49,7 +50,7 @@ Publishing is a maintainer-authorized external write. Never publish only because
    export HARNESS_EVAL_RUNS_DIR="$PWD/.agent-docs/host-evals/runs"
    pnpm run eval:validate
    pnpm run eval:gate
-   pnpm run release:publish -- --dry-run
+   pnpm run release:publish --dry-run
    ```
 
    `release:publish` copies `HARNESS_RELEASE_ARTIFACT` to a read-only private snapshot, runs `release:check`
@@ -63,8 +64,9 @@ Publishing is a maintainer-authorized external write. Never publish only because
    external CI/attestation and evidence review.
 7. Verify actual CI runs on every supported operating system and Node.js version. Workflow configuration
    alone is not evidence that the matrix passed.
-8. Commit with a Conventional Commit, create a signed version tag, and run `pnpm run release:publish` only
-   after explicit maintainer approval. It publishes the immutable snapshot created from the selected artifact.
-   Prefer npm provenance when the public repository and publishing workflow are configured.
+8. Commit with a Conventional Commit and create a signed version tag only after explicit maintainer approval.
+   When trusted publishing or another supported public CI identity is configured, publish the immutable snapshot
+   with `pnpm run release:publish --provenance`; otherwise omit `--provenance` and record that no publisher
+   attestation was produced. Never infer publishing authorization from a passing gate.
 9. Verify the npm package page, executable, README links, tarball contents, SBOM, provenance statement, and
    clean-room installation.

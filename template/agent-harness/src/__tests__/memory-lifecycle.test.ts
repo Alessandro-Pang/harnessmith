@@ -10,6 +10,7 @@ import { memoryCheck, resolveMemoryRoot } from '../commands/memory.js';
 import { archiveMemory, memoryMaintenance, supersedeMemory } from '../commands/memory-lifecycle.js';
 import { memoryMigrate } from '../commands/memory-migration.js';
 import { memoryPromotionProposal } from '../commands/memory-promotion.js';
+import { memoryMaintenanceWarnings } from '../lib/memory-maintenance.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function temporaryRoot(): string {
@@ -61,6 +62,46 @@ test('memory maintenance reports unindexed, expired, and closed candidates', () 
   assert.deepEqual(report.unindexed, ['expired.md', 'orphan.md']);
   assert.deepEqual(report.expiredWorking, ['expired.md']);
   assert.deepEqual(report.closed, ['closed.md']);
+});
+
+test('memory maintenance reports duplicate active titles and supersession cycles', () => {
+  const root = temporaryRoot();
+  const runtime = harnessRuntime(root);
+  initGlobal(runtime, capturedIo());
+  writeFileSync(join(runtime.memoryHome, 'duplicate-a.md'), memoryDocument('Duplicate'));
+  writeFileSync(join(runtime.memoryHome, 'duplicate-b.md'), memoryDocument('Duplicate'));
+  writeFileSync(join(runtime.memoryHome, 'another-a.md'), memoryDocument('Another'));
+  writeFileSync(join(runtime.memoryHome, 'another-b.md'), memoryDocument('Another'));
+  writeFileSync(
+    join(runtime.memoryHome, 'cycle-a.md'),
+    memoryDocument('Cycle A')
+      .replace('status: active', 'status: superseded')
+      .replace('schema-version: 1', 'superseded-by: memory:cycle-b\nschema-version: 1'),
+  );
+  writeFileSync(
+    join(runtime.memoryHome, 'cycle-b.md'),
+    memoryDocument('Cycle B')
+      .replace('status: active', 'status: superseded')
+      .replace('schema-version: 1', 'superseded-by: memory:cycle-a\nschema-version: 1'),
+  );
+
+  const io = capturedIo();
+  const report = memoryMaintenance(runtime, 'global', { json: false }, io);
+
+  assert.deepEqual(report.duplicateTitles, [
+    { title: 'Another', paths: ['another-a.md', 'another-b.md'] },
+    { title: 'Duplicate', paths: ['duplicate-a.md', 'duplicate-b.md'] },
+  ]);
+  assert.deepEqual(report.supersessionCycles, [['cycle-a.md', 'cycle-b.md', 'cycle-a.md']]);
+  assert.deepEqual(memoryMaintenanceWarnings(report), [
+    'archive candidate: cycle-a.md',
+    'archive candidate: cycle-b.md',
+    'duplicate title: Another (another-a.md, another-b.md)',
+    'duplicate title: Duplicate (duplicate-a.md, duplicate-b.md)',
+    'supersession cycle: cycle-a.md -> cycle-b.md -> cycle-a.md',
+  ]);
+  assert.match(io.logs.join('\n'), /Duplicate active titles: 2/);
+  assert.match(io.logs.join('\n'), /Supersession cycles: 1/);
 });
 
 test('memory mutations reject concurrent writers through the shared root lock', () => {

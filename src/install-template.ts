@@ -4,6 +4,7 @@ import { basename, dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execaSync } from 'execa';
 import { fdir } from 'fdir';
+import { canonicalPath } from './safe-path.js';
 import type { Adapter } from './types.js';
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -40,10 +41,10 @@ export function installationRenderer(
   const values: Record<string, string> = {
     HOME: resolve(env.HOME || homedir()),
     HARNESS_HOME: adapter.home,
-    HARNESS_MEMORY_HOME: resolve(
+    HARNESS_MEMORY_HOME: canonicalPath(
       env.HARNESS_MEMORY_HOME || join(env.HOME || homedir(), '.agent-docs'),
     ),
-    HARNESS_PERSONAL_HOME: resolve(
+    HARNESS_PERSONAL_HOME: canonicalPath(
       env.HARNESS_PERSONAL_HOME || join(env.HOME || homedir(), '.agent-harness'),
     ),
     HARNESS_REPOSITORY_ROOT: resolve(
@@ -64,8 +65,8 @@ export function installationValues(adapter: Adapter, env: NodeJS.ProcessEnv) {
     adapter: adapter.name,
     harnessHome: adapter.home,
     instructionFiles: adapter.instructions.map(({ path }) => path),
-    memoryHome: resolve(env.HARNESS_MEMORY_HOME || join(home, '.agent-docs')),
-    personalHome: resolve(env.HARNESS_PERSONAL_HOME || join(home, '.agent-harness')),
+    memoryHome: canonicalPath(env.HARNESS_MEMORY_HOME || join(home, '.agent-docs')),
+    personalHome: canonicalPath(env.HARNESS_PERSONAL_HOME || join(home, '.agent-harness')),
     repositoryRoot: resolve(env.HARNESS_REPOSITORY_ROOT || join(home, 'git-repo')),
     owner: owner(env),
   };

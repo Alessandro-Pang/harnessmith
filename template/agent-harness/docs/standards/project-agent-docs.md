@@ -183,7 +183,7 @@ node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory archive . working/old
 node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory promote . distilled/current \
   --target docs/architecture.md --json
 
-# 只读报告未索引、过期 working 和可归档的 closed memory；不自动删除
+# 只读报告未索引、过期 working、可归档 closed memory、重复 active title 和 supersession cycle；不自动删除
 node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory maintain .
 
 # 除基础 schema/断链外，要求所有 active/blocked memory 可从 index 到达
@@ -205,7 +205,8 @@ memory-root lock；proposal、list、search、check 和 maintain 不获取写锁
 专用 secret scanner、组织级 DLP 或提交前凭据扫描。
 
 `memory maintain` 是维护候选报告，不会自动修改文件。发现 unindexed 时补索引或关闭无效记忆；
-发现 expired working 时续期、提炼、提升或归档；closed 项确认没有活跃索引引用后再归档。
+发现 expired working 时续期、提炼、提升或归档；closed 项确认没有活跃索引引用后再归档；重复 title
+需要人工判断是否合并，supersession cycle 必须先修正生命周期引用。
 
 Task 有两套刻意分离的状态表示：`working/<topic>/task.json` 使用 `pending`、`in_progress`、
 `blocked`、`complete`、`superseded` 描述任务状态机；同目录 `progress.md` 是 working memory，

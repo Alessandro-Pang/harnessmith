@@ -21,6 +21,11 @@ export function initializeUserData(
     join(values.personalHome, 'projects', 'repository-map.md'),
   ];
   const roots = [values.personalHome, ...(global ? [values.memoryHome] : [])];
+  const childEnv = {
+    ...env,
+    HARNESS_MEMORY_HOME: values.memoryHome,
+    HARNESS_PERSONAL_HOME: values.personalHome,
+  };
   return withUserDataCoordinationLocks(roots, (lockKeys) => {
     const coordination = ['--coordination-keys', lockKeys.join(',')];
     const snapshots = snapshotFiles([...memoryFiles, ...personalFiles].map((path) => ({ path })));
@@ -36,7 +41,7 @@ export function initializeUserData(
             'personal',
             ...coordination,
           ],
-          { encoding: 'utf8', env, extendEnv: false },
+          { encoding: 'utf8', env: childEnv, extendEnv: false },
         ).stdout.trim(),
       ];
       if (global) {
@@ -49,7 +54,7 @@ export function initializeUserData(
               'global',
               ...coordination,
             ],
-            { encoding: 'utf8', env, extendEnv: false },
+            { encoding: 'utf8', env: childEnv, extendEnv: false },
           ).stdout.trim(),
         );
       }

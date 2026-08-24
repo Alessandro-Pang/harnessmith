@@ -2,7 +2,7 @@ import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { homedir, userInfo } from 'node:os';
 import { basename, dirname, isAbsolute, join, relative, resolve, sep, win32 } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { isPathInside } from './lib/safe-path.js';
+import { canonicalPath, isPathInside } from './lib/safe-path.js';
 import type { InstallationContext, Runtime } from './types.js';
 
 const sourceDirectory = dirname(fileURLToPath(import.meta.url));
@@ -133,8 +133,8 @@ export function verifyRuntimeIdentity(
   const matches =
     context.adapter === runtime.hostAdapter &&
     resolve(context.harnessHome) === resolve(runtime.harnessHome) &&
-    resolve(context.memoryHome) === resolve(runtime.memoryHome) &&
-    resolve(context.personalHome) === resolve(runtime.personalHome) &&
+    canonicalPath(context.memoryHome) === canonicalPath(runtime.memoryHome) &&
+    canonicalPath(context.personalHome) === canonicalPath(runtime.personalHome) &&
     resolve(context.repositoryRoot) === resolve(runtime.repositoryRoot) &&
     context.owner === runtime.owner &&
     expectedInstructions.length === contextInstructions.length &&
@@ -182,10 +182,10 @@ export function createRuntime(env: NodeJS.ProcessEnv = process.env): Runtime {
     instructionFiles: context?.instructionFiles || [join(harnessHome, 'AGENTS.md')],
     installedHarness,
     docsRoot: join(installedHarness, 'docs'),
-    memoryHome: resolve(
+    memoryHome: canonicalPath(
       env.HARNESS_MEMORY_HOME || context?.memoryHome || join(home, '.agent-docs'),
     ),
-    personalHome: resolve(
+    personalHome: canonicalPath(
       env.HARNESS_PERSONAL_HOME || context?.personalHome || join(home, '.agent-harness'),
     ),
     repositoryRoot: resolve(

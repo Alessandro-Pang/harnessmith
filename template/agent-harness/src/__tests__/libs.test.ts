@@ -30,6 +30,7 @@ import {
 } from '../lib/frontmatter.js';
 import { gitRoot, gitVersion } from '../lib/git.js';
 import { projectSnapshot } from '../lib/project.js';
+import { canonicalPath } from '../lib/safe-path.js';
 import { outputSearch, searchableFiles, searchText, textSearch } from '../lib/search.js';
 import { render } from '../lib/templates.js';
 import { calendarDate, createRuntime, timestamp } from '../runtime.js';
@@ -259,7 +260,7 @@ test('runtime rendering keeps unknown tokens and formats stable dates', () => {
     HARNESS_OWNER: 'custom-owner',
   });
   assert.equal(created.owner, 'custom-owner');
-  assert.equal(created.memoryHome, join(root, 'custom-memory'));
+  assert.equal(created.memoryHome, canonicalPath(join(root, 'custom-memory')));
   assert.equal(Object.isFrozen(created), true);
 });
 

@@ -104,6 +104,30 @@ function failedRun(result: GitFailureResult): Exclude<GitRunResult, { ok: true }
 
 type GitExecutableResolver = (command: string, options: { cwd: string }) => string | undefined;
 
+function gitEnvironment(): NodeJS.ProcessEnv {
+  const env = { ...process.env };
+  for (const key of [
+    'GIT_ALTERNATE_OBJECT_DIRECTORIES',
+    'GIT_CEILING_DIRECTORIES',
+    'GIT_COMMON_DIR',
+    'GIT_DIR',
+    'GIT_DISCOVERY_ACROSS_FILESYSTEM',
+    'GIT_INDEX_FILE',
+    'GIT_OBJECT_DIRECTORY',
+    'GIT_WORK_TREE',
+  ]) {
+    delete env[key];
+  }
+  return {
+    ...env,
+    GCM_INTERACTIVE: 'Never',
+    GIT_TERMINAL_PROMPT: '0',
+    LANG: 'C',
+    LC_ALL: 'C',
+    NODEFAULTCURRENTDIRECTORYINEXEPATH: '1',
+  };
+}
+
 /** @public */
 export function resolveGitExecutable(
   platform: NodeJS.Platform,
@@ -134,13 +158,8 @@ export function runGit(args: string[], options: RunGitOptions = {}): GitRunResul
   }
   const result = execaSync(executable, args, {
     encoding: 'buffer',
-    env: {
-      GCM_INTERACTIVE: 'Never',
-      GIT_TERMINAL_PROMPT: '0',
-      LANG: 'C',
-      LC_ALL: 'C',
-      NODEFAULTCURRENTDIRECTORYINEXEPATH: '1',
-    },
+    env: gitEnvironment(),
+    extendEnv: false,
     maxBuffer: GIT_MAX_BUFFER,
     reject: false,
     stdin: 'ignore',

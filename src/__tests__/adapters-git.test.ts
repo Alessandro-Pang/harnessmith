@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import {
   chmodSync,
   existsSync,
@@ -28,6 +29,25 @@ function withPath<T>(path: string, operation: () => T): T {
     else process.env.PATH = original;
     if (originalPathExt === undefined) delete process.env.PATHEXT;
     else process.env.PATHEXT = originalPathExt;
+  }
+}
+
+function withGitRepositoryEnvironment<T>(
+  values: Partial<Record<'GIT_DIR' | 'GIT_WORK_TREE', string>>,
+  operation: () => T,
+): T {
+  const original = new Map<string, string | undefined>();
+  for (const [key, value] of Object.entries(values)) {
+    original.set(key, process.env[key]);
+    process.env[key] = value;
+  }
+  try {
+    return operation();
+  } finally {
+    for (const [key, value] of original) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
   }
 }
 
@@ -73,6 +93,93 @@ test('Cursor adapter falls back only when Git reports a non-repository', () => {
   );
 
   assert.equal(adapter.project, realpathSync.native(root));
+});
+
+test('Cursor adapter ignores ambient Git repository redirection', () => {
+  const root = mkdtempSync(join(tmpdir(), 'harness-adapter-git-env-'));
+  onTestFinished(() => rmSync(root, { recursive: true, force: true }));
+  const requested = join(root, 'requested');
+  const redirected = join(root, 'redirected');
+  mkdirSync(requested);
+  mkdirSync(redirected);
+  execFileSync('git', ['init', redirected], { stdio: 'ignore' });
+
+  const adapter = withGitRepositoryEnvironment(
+    { GIT_DIR: join(redirected, '.git'), GIT_WORK_TREE: redirected },
+    () => createAdapter('cursor', { env: { HOME: root }, project: requested }),
+  );
+
+  assert.equal(adapter.project, realpathSync.native(requested));
+});
+
+test('Cursor adapter rejects a Git root unrelated to the requested project', () => {
+  const root = mkdtempSync(join(tmpdir(), 'harness-adapter-git-root-'));
+  onTestFinished(() => rmSync(root, { recursive: true, force: true }));
+  const requested = join(root, 'requested');
+  const redirected = join(root, 'redirected');
+  mkdirSync(requested);
+  mkdirSync(redirected);
+  const bin = executable(
+    root,
+    `const args = process.argv.slice(2);
+if (args.includes('--show-toplevel')) process.stdout.write(${JSON.stringify(`${redirected}\n`)});
+else process.exit(1);`,
+  );
+
+  assert.throws(
+    () =>
+      withPath(`${bin}${delimiter}${process.env.PATH || ''}`, () =>
+        createAdapter('cursor', { env: { HOME: root }, project: requested }),
+      ),
+    /outside the requested project/i,
+  );
+});
+
+test('Cursor adapter rejects a Git exclude path outside the common directory', () => {
+  const root = mkdtempSync(join(tmpdir(), 'harness-adapter-git-exclude-'));
+  onTestFinished(() => rmSync(root, { recursive: true, force: true }));
+  const project = join(root, 'project');
+  const common = join(project, '.git');
+  const redirected = join(root, 'redirected-exclude');
+  mkdirSync(common, { recursive: true });
+  const bin = executable(
+    root,
+    `const args = process.argv.slice(2);
+if (args.includes('--show-toplevel')) process.stdout.write(${JSON.stringify(`${project}\n`)});
+else if (args.includes('--git-common-dir')) process.stdout.write(${JSON.stringify(`${common}\n`)});
+else if (args.includes('--git-path')) process.stdout.write(${JSON.stringify(`${redirected}\n`)});
+else process.exit(1);`,
+  );
+
+  assert.throws(
+    () =>
+      withPath(`${bin}${delimiter}${process.env.PATH || ''}`, () =>
+        createAdapter('cursor', { env: { HOME: root }, project }),
+      ),
+    /outside the Git common directory/i,
+  );
+});
+
+test('Cursor adapter accepts a linked worktree exclude path under git-common-dir', () => {
+  const root = mkdtempSync(join(tmpdir(), 'harness-adapter-git-worktree-'));
+  onTestFinished(() => rmSync(root, { recursive: true, force: true }));
+  const primary = join(root, 'primary');
+  const linked = join(root, 'linked');
+  execFileSync('git', ['init', primary], { stdio: 'ignore' });
+  execFileSync('git', ['-C', primary, 'config', 'user.email', 'test@example.com']);
+  execFileSync('git', ['-C', primary, 'config', 'user.name', 'Harness Test']);
+  writeFileSync(join(primary, 'tracked.txt'), 'tracked\n');
+  execFileSync('git', ['-C', primary, 'add', 'tracked.txt']);
+  execFileSync('git', ['-C', primary, 'commit', '-m', 'test'], { stdio: 'ignore' });
+  execFileSync('git', ['-C', primary, 'worktree', 'add', linked], { stdio: 'ignore' });
+
+  const adapter = createAdapter('cursor', { env: { HOME: root }, project: linked });
+  const exclude = adapter.localIgnoreFiles?.[0];
+  const common = realpathSync.native(join(primary, '.git'));
+
+  assert.equal(adapter.project, realpathSync.native(linked));
+  assert.equal(exclude?.root, common);
+  assert.equal(exclude?.path, join(common, 'info', 'exclude'));
 });
 
 test('Cursor adapter fails closed when Git is unavailable', () => {

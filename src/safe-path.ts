@@ -3,7 +3,7 @@ import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'nod
 import type { Adapter, IgnoreFile } from './types.js';
 import { HarnessmithError } from './types.js';
 
-function within(root: string, target: string): boolean {
+export function isPathInside(root: string, target: string): boolean {
   const path = relative(root, target);
   return path === '' || (!path.startsWith(`..${sep}`) && path !== '..' && !isAbsolute(path));
 }
@@ -60,7 +60,7 @@ function assertNoSymlinkSegments(root: string, target: string): void {
 export function assertSafePath(root: string, target: string): void {
   const authorizedRoot = resolve(root);
   const requested = resolve(target);
-  if (!within(authorizedRoot, requested)) {
+  if (!isPathInside(authorizedRoot, requested)) {
     throw new HarnessmithError(
       'UNSAFE_PATH',
       `Unsafe path escapes its authorized root: ${requested}`,
@@ -72,7 +72,7 @@ export function assertSafePath(root: string, target: string): void {
   const currentRoot = canonicalPath(authorizedRoot);
 
   const canonicalTarget = canonicalPath(requested);
-  if (!within(currentRoot, canonicalTarget)) {
+  if (!isPathInside(currentRoot, canonicalTarget)) {
     throw new HarnessmithError(
       'UNSAFE_PATH',
       `Unsafe path resolves outside its authorized root: ${requested}`,

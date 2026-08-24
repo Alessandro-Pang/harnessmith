@@ -75,6 +75,7 @@ node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs task close --project /absolu
   支持 `passed`。CLI 生成的证据自动绑定 `recordedAt`、规范化项目 `cwd`、当前 `HEAD`、workspace
   digest 和 scope digest。
 - `task status` 每次读取都会校验完整 schema，并报告 branch、HEAD、dirty 相对初始化基线的漂移；
+  已存储为 `passed` 但机械证据不再新鲜的 criterion 会派生只读 `stale: true`，不静默改写账本。
   task 列表遇到坏账本也明确失败，不静默跳过。
 - `task close --status complete` 会重新读取当前项目状态并重算 artifact/scope digest；每个 passed
   criterion 至少需要一条 Harness 机械生成、仍绑定当前项目、当前 HEAD 和 workspace digest 的证据。

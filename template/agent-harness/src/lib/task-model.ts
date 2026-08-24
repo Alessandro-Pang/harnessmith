@@ -6,7 +6,7 @@ import type {
   TaskStatus,
   TaskSummary,
 } from '../types.js';
-import { taskBaselineDrift } from './task-evidence.js';
+import { evidenceSupportsPass, taskBaselineDrift } from './task-evidence.js';
 
 export interface TaskBaseOptions {
   project?: string;
@@ -150,7 +150,19 @@ export function taskSummary(task: TaskRecord, snapshot: ProjectSnapshot): TaskSu
     status: task.status,
     updated: task.updated,
     nextAction: task.nextAction || '',
-    acceptance: task.acceptance,
+    acceptance: task.acceptance.map((criterion) => {
+      let stale = false;
+      if (criterion.status === 'passed') {
+        try {
+          stale = !criterion.evidence.some((evidence) =>
+            evidenceSupportsPass(evidence, task, snapshot, criterion.id),
+          );
+        } catch {
+          stale = true;
+        }
+      }
+      return { ...criterion, stale };
+    }),
     lastCheckpoint: task.checkpoints.at(-1) || null,
     baselineDrift: taskBaselineDrift(task, snapshot),
   };

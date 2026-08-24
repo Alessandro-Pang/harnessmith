@@ -11,10 +11,78 @@ export interface MemoryMaintenanceReport {
   unindexed: string[];
   expiredWorking: string[];
   closed: string[];
+  duplicateTitles: Array<{ title: string; paths: string[] }>;
+  supersessionCycles: string[][];
+}
+
+interface MemoryDocument {
+  name: string;
+  metadata: Map<string, unknown>;
+  references: string[];
 }
 
 function portablePath(root: string, path: string): string {
   return relative(root, path).replaceAll('\\', '/');
+}
+
+function supersededBy(metadata: Map<string, unknown>): string | null {
+  const value = metadata.get('superseded-by');
+  return typeof value === 'string' && value.startsWith('memory:')
+    ? value.slice('memory:'.length).replace(/\.md$/, '')
+    : null;
+}
+
+function normalizedCycle(nodes: string[]): string[] {
+  const start = nodes.reduce((best, value, index) => (value < nodes[best] ? index : best), 0);
+  const rotated = [...nodes.slice(start), ...nodes.slice(0, start)];
+  return [...rotated, rotated[0]];
+}
+
+function duplicateActiveTitles(documents: MemoryDocument[]) {
+  const titles = new Map<string, string[]>();
+  for (const { name, metadata } of documents) {
+    if (!['active', 'blocked'].includes(String(metadata.get('status') || ''))) continue;
+    const title = String(metadata.get('title') || '').trim();
+    if (title) titles.set(title, [...(titles.get(title) || []), name]);
+  }
+  return [...titles]
+    .filter(([, paths]) => paths.length > 1)
+    .map(([title, paths]) => ({ title, paths: paths.sort() }))
+    .sort((left, right) => left.title.localeCompare(right.title));
+}
+
+function findSupersessionCycles(documents: MemoryDocument[]): string[][] {
+  const next = new Map<string, string>();
+  const names = new Map<string, string>();
+  for (const { name, metadata } of documents) {
+    const reference = name.replace(/\.md$/, '');
+    names.set(reference, name);
+    const target = supersededBy(metadata);
+    if (target) next.set(reference, target);
+  }
+  const cycleKeys = new Set<string>();
+  const cycles: string[][] = [];
+  for (const start of [...next.keys()].sort()) {
+    const order: string[] = [];
+    const seen = new Map<string, number>();
+    let current: string | undefined = start;
+    while (current && next.has(current)) {
+      const index = seen.get(current);
+      if (index !== undefined) {
+        const cycle = normalizedCycle(order.slice(index));
+        const key = cycle.join('\0');
+        if (!cycleKeys.has(key)) {
+          cycleKeys.add(key);
+          cycles.push(cycle.map((reference) => names.get(reference) || reference));
+        }
+        break;
+      }
+      seen.set(current, order.length);
+      order.push(current);
+      current = next.get(current);
+    }
+  }
+  return cycles;
 }
 
 export function memoryMaintenanceReport(root: string, today: string): MemoryMaintenanceReport {
@@ -25,7 +93,7 @@ export function memoryMaintenanceReport(root: string, today: string): MemoryMain
     const references = contentMemoryReferences(content).map((reference) =>
       reference.replace(/\.md$/, ''),
     );
-    return { path, name: portablePath(root, path), metadata, references };
+    return { name: portablePath(root, path), metadata, references };
   });
   const byReference = new Map(
     documents.map((document) => [document.name.replace(/\.md$/, ''), document]),
@@ -71,5 +139,18 @@ export function memoryMaintenanceReport(root: string, today: string): MemoryMain
     unindexed: unindexed.sort(),
     expiredWorking: expiredWorking.sort(),
     closed: closed.sort(),
+    duplicateTitles: duplicateActiveTitles(documents),
+    supersessionCycles: findSupersessionCycles(documents),
   };
+}
+
+export function memoryMaintenanceWarnings(report: MemoryMaintenanceReport): string[] {
+  return [
+    ...report.expiredWorking.map((path) => `expired: ${path}`),
+    ...report.closed.map((path) => `archive candidate: ${path}`),
+    ...report.duplicateTitles.map(
+      ({ title, paths }) => `duplicate title: ${title} (${paths.join(', ')})`,
+    ),
+    ...report.supersessionCycles.map((cycle) => `supersession cycle: ${cycle.join(' -> ')}`),
+  ];
 }

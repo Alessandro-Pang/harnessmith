@@ -26,6 +26,8 @@ test('llms.txt exposes a complete non-interactive install protocol', () => {
   ]) {
     assert.ok(content.includes(required), `llms.txt is missing: ${required}`);
   }
+  assert.doesNotMatch(content, /npx --yes (?!harnessmith\b)/);
+  assert.doesNotMatch(content, /\bharnesssmith\b/);
   assert.doesNotMatch(content, /create-coding-agent-harness/);
 });
 
@@ -44,6 +46,14 @@ test('public docs distinguish source development from the published npm workflow
   assert.doesNotMatch(english, /current public version|latest.*dist-tag/i);
   assert.match(security, /The latest published release receives security fixes/);
   assert.doesNotMatch(security, /`\d+\.x`/);
+});
+
+test('public prose uses one human-facing brand while npm commands keep the package identifier', () => {
+  for (const path of ['README.md', 'README.en.md', 'SECURITY.md', 'llms.txt']) {
+    const content = readFileSync(join(root, path), 'utf8');
+    assert.doesNotMatch(content, /\bHarnessmith\b/, path);
+  }
+  assert.match(readFileSync(join(root, 'llms.txt'), 'utf8'), /npx --yes harnessmith\b/);
 });
 
 test('public guidance routes advanced runtime contracts instead of duplicating them', () => {

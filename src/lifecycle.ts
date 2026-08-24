@@ -196,7 +196,7 @@ export function restoreAll(adapters: Adapter[], options: Pick<InstallOptions, 'f
       if (!current)
         throw new HarnessmithError(
           'STATE_CONFLICT',
-          `No Harnessmith installation found for ${adapter.label}: ${adapter.record}`,
+          `No Harnesssmith installation found for ${adapter.label}: ${adapter.record}`,
           5,
         );
       assertRestorable(adapter, current.record, options.force || false);

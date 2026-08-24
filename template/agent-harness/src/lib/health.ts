@@ -4,7 +4,7 @@ import { calendarDate, managedOutputWithinHome } from '../runtime.js';
 import { errorMessage, type Io, type Runtime } from '../types.js';
 import { digestPath } from './files.js';
 import { installationIdentityHealth, runtimeHealth } from './health-runtime.js';
-import { memoryMaintenanceReport } from './memory-maintenance.js';
+import { memoryMaintenanceReport, memoryMaintenanceWarnings } from './memory-maintenance.js';
 import { resolveMemoryRoot } from './memory-path.js';
 import { validateMemoryRoot } from './memory-validation.js';
 import { projectSnapshot } from './project.js';
@@ -202,10 +202,7 @@ function memoryHealth(
         details: maintenance.unindexed,
       };
     }
-    const warnings = [
-      ...maintenance.expiredWorking.map((path) => `expired: ${path}`),
-      ...maintenance.closed.map((path) => `archive candidate: ${path}`),
-    ];
+    const warnings = memoryMaintenanceWarnings(maintenance);
     return {
       id,
       status: warnings.length > 0 ? 'warning' : 'passed',

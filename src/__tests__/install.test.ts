@@ -6,6 +6,7 @@ import {
   mkdtempSync,
   readdirSync,
   readFileSync,
+  realpathSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -135,8 +136,8 @@ test('installs all adapters, maps paths, and renames existing rules', () => {
       readFileSync(join(agentHome, 'agent-harness', 'install-context.json'), 'utf8'),
     );
     assert.equal(contextValue.adapter, agent);
-    assert.equal(contextValue.memoryHome, join(root, 'agent-docs'));
-    assert.equal(contextValue.personalHome, join(root, 'personal-harness'));
+    assert.equal(contextValue.memoryHome, realpathSync.native(join(root, 'agent-docs')));
+    assert.equal(contextValue.personalHome, realpathSync.native(join(root, 'personal-harness')));
     assert.equal(contextValue.repositoryRoot, join(root, 'repos'));
     const version = spawnSync(
       process.execPath,

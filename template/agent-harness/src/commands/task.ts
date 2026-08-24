@@ -5,11 +5,7 @@ import { updateFrontmatter } from '../lib/frontmatter.js';
 import { projectSnapshot } from '../lib/project.js';
 import { initializeProjectMemory } from '../lib/project-memory.js';
 import { assertNoHighConfidenceSecret } from '../lib/secret-hygiene.js';
-import {
-  assertTaskCanComplete,
-  captureTaskEvidence,
-  evidenceSupportsPass,
-} from '../lib/task-evidence.js';
+import { assertTaskCanComplete, captureTaskEvidence } from '../lib/task-evidence.js';
 import {
   type AcceptanceOptions,
   assertTaskId,
@@ -194,9 +190,12 @@ export function updateAcceptance(
   if (!id || !criterion) throw new Error('Task requires --id <id> and --criterion <id>');
   if (!status || !isAcceptanceStatus(status))
     throw new Error(`Invalid acceptance status: ${status}`);
+  if (status === 'passed') {
+    throw new Error(
+      'task accept cannot mark acceptance passed; use task verify for mechanical evidence',
+    );
+  }
   assertNoHighConfidenceSecret(evidence, 'Task acceptance evidence');
-  if (status === 'passed' && evidence.length === 0)
-    throw new Error('Passed acceptance requires evidence: --evidence <json>');
   const root = projectRoot(project);
   return withTaskLock(root, id, () => {
     const { path, value: task, snapshot } = readTask(root, id);
@@ -205,12 +204,6 @@ export function updateAcceptance(
     if (!target) throw new Error(`Acceptance criterion does not exist: ${criterion}`);
     const time = now();
     const capturedEvidence = captureTaskEvidence(evidence, snapshot, time, task.id, target.id);
-    if (
-      status === 'passed' &&
-      capturedEvidence.some((item) => !evidenceSupportsPass(item, task, snapshot, target.id))
-    ) {
-      throw new Error('Acceptance evidence does not support passed at the current project HEAD');
-    }
     target.status = status;
     target.evidence.push(...capturedEvidence);
     task.updated = time;

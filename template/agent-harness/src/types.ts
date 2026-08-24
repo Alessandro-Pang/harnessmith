@@ -111,6 +111,10 @@ interface AcceptanceCriterion {
   evidence: TaskEvidence[];
 }
 
+interface TaskAcceptanceSummary extends AcceptanceCriterion {
+  stale: boolean;
+}
+
 export interface TaskCheckpoint {
   time: string;
   summary: string;
@@ -147,7 +151,7 @@ export interface TaskSummary {
   status: TaskStatus;
   updated: string;
   nextAction: string;
-  acceptance: AcceptanceCriterion[];
+  acceptance: TaskAcceptanceSummary[];
   lastCheckpoint: TaskCheckpoint | null;
   baselineDrift: TaskBaselineDrift;
 }

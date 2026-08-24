@@ -332,7 +332,7 @@ test('task output renders JSON, lists, details, and acceptance criteria', () => 
     status: 'in_progress',
     updated: '2026-08-19T00:00:00.000Z',
     nextAction: '',
-    acceptance: [{ id: 'a1', description: 'Pass', status: 'pending', evidence: [] }],
+    acceptance: [{ id: 'a1', description: 'Pass', status: 'pending', evidence: [], stale: false }],
     lastCheckpoint: null,
     baselineDrift: {
       branch: false,

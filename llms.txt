@@ -1,6 +1,6 @@
-# Harnessmith
+# Harnesssmith
 
-> Harnessmith installs a portable personal coding-agent harness for Codex, Cursor, and Claude Code.
+> Harnesssmith installs a portable personal coding-agent harness for Codex, Cursor, and Claude Code.
 > This file is an operational guide for an LLM helping a user install or initialize it.
 
 Project: https://www.npmjs.com/package/harnessmith
@@ -35,7 +35,7 @@ use the published `npx --yes harnessmith` commands below.
   - Active project rule: `<project>/.cursor/rules/agent-harness.mdc`
   - Canonical copy: `<project>/.cursor/AGENTS.md`
   - Harness: `<project>/.cursor/agent-harness`
-  - Cursor installation is project-scoped. Resolve `--project` to the intended repository; Harnessmith
+  - Cursor installation is project-scoped. Resolve `--project` to the intended repository; Harnesssmith
     automatically uses its Git root when possible.
 
 ## LLM installation protocol
@@ -74,7 +74,7 @@ use the published `npx --yes harnessmith` commands below.
 
 ## Post-install verification
 
-Harnessmith always initializes the user-owned personal overlay after a successful install and initializes
+Harnesssmith always initializes the user-owned personal overlay after a successful install and initializes
 shared global memory unless `--no-init-global` was explicitly supplied. Existing personal files are never
 overwritten. If shared global memory was initialized, verify it with:
 
@@ -87,7 +87,7 @@ node <harness-path>/bin/harness.mjs health --json
 If `--no-init-global` was used, do not run the global-memory checks above; verify installation status and version instead:
 
 ```bash
-npx --yes harnesssmith status --agent <agents> --project <project-path> --json
+npx --yes harnessmith status --agent <agents> --project <project-path> --json
 node <harness-path>/bin/harness.mjs --version
 ```
 

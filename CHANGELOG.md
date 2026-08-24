@@ -3,10 +3,12 @@
 All notable changes are documented here. The project follows Semantic Versioning for the npm package.
 The embedded Harness schema has its own explicitly recorded version.
 
-## Unreleased
+## 0.4.0 - 2026-08-24
 
 ### Added
 
+- Add an SBOM generation command and a source-input freshness gate to the supported release workflow.
+- Report duplicate active-memory titles and supersession cycles as read-only maintenance signals.
 - Add provenance-carrying Harness search with independent result, depth, file-count, per-file, and total-byte
   budgets plus observable scan truncation; add read-only route/explain/capability discovery and a fail-closed
   health report that verifies managed runtime identity and installed checksums.
@@ -19,6 +21,11 @@ The embedded Harness schema has its own explicitly recorded version.
 
 ### Changed
 
+- Reject caller-selected `task accept --status passed` immediately in favor of `task verify`, and expose stale
+  mechanical acceptance evidence as a derived task-status field without mutating the ledger.
+- Bind Cursor Git discovery to the requested project and canonical Git common directory, ignore ambient Git
+  repository redirection, and canonicalize user-data roots across locks, snapshots, and initialization writes.
+- Use one human-facing Harnesssmith brand spelling while retaining the published `harnessmith` package identifier.
 - Make lifecycle dry-runs read-only plans, preflight every multi-Adapter change before mutation, and preserve
   recovery snapshots when rollback itself is incomplete.
 - Reduce permanent prompt content to high-loss boundaries and route detailed procedures through compact docs.

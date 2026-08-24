@@ -51,6 +51,12 @@ export function memoryMaintenance(
     for (const path of report.expiredWorking) io.log(`  ${path}`);
     io.log(`Closed archive candidates: ${report.closed.length}`);
     for (const path of report.closed) io.log(`  ${path}`);
+    io.log(`Duplicate active titles: ${report.duplicateTitles.length}`);
+    for (const candidate of report.duplicateTitles) {
+      io.log(`  ${candidate.title}: ${candidate.paths.join(', ')}`);
+    }
+    io.log(`Supersession cycles: ${report.supersessionCycles.length}`);
+    for (const cycle of report.supersessionCycles) io.log(`  ${cycle.join(' -> ')}`);
   }
   return report;
 }

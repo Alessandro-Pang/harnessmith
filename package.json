@@ -1,6 +1,6 @@
 {
   "name": "harnessmith",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Forge and safely manage an opinionated, portable personal agent harness.",
   "repository": {
     "type": "git",
@@ -61,6 +61,8 @@
     "eval:fingerprint": "node --import tsx scripts/eval-gate.ts fingerprint --json",
     "eval:validate": "node --import tsx scripts/eval-gate.ts validate",
     "eval:gate": "node --import tsx scripts/eval-gate.ts gate",
+    "sbom": "node --import tsx scripts/sbom.ts generate",
+    "sbom:check": "node --import tsx scripts/sbom.ts check",
     "pretest:coverage": "pnpm run build",
     "test:coverage": "pnpm run test:coverage:unit && pnpm run test:scripts-coverage",
     "test:coverage:unit": "vitest run --coverage",
@@ -69,7 +71,7 @@
     "test:scripts-coverage:eval": "c8 -c c8.scripts.json --reporter=text --clean=false --check-coverage --lines 90 --functions 95 --branches 70 --statements 90 pnpm exec vitest run evals/__tests__ src/__tests__/adapters-git.test.ts src/__tests__/preflight-docs.test.ts",
     "quality:dead-code": "knip --reporter compact",
     "quality:secrets": "secretlint --no-color \"src/**/*\" \"scripts/**/*\" \"template/**/*\" \"evals/**/*\" \"docs/**/*\" \".github/**/*\" \".husky/**/*\" \"*.md\" \"*.txt\" \"*.json\" \"*.yaml\" \"*.yml\" \"*.ts\" \"*.mjs\"",
-    "release:check": "pnpm run preflight && pnpm run test:coverage && pnpm run eval:gate",
+    "release:check": "pnpm run preflight && pnpm run test:coverage && pnpm run sbom:check && pnpm run eval:gate",
     "release:publish": "node --import tsx scripts/release-publish.ts",
     "prepack": "pnpm run preflight",
     "prepublishOnly": "pnpm run release:check"

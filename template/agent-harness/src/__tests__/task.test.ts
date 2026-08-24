@@ -111,7 +111,7 @@ test('task state transitions require valid statuses and acceptance evidence', ()
         criterion: 'criterion-1',
         status: 'passed',
       }),
-    /requires evidence/,
+    /cannot mark acceptance passed.*task verify/i,
   );
   assert.throws(
     () =>

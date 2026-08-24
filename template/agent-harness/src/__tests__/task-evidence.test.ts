@@ -81,7 +81,7 @@ test('acceptance rejects unstructured or non-passing evidence', () => {
         status: 'passed',
         evidence: [testEvidence('pnpm test', 1)],
       }),
-    /does not support passed/,
+    /cannot mark acceptance passed.*task verify/i,
   );
 });
 
@@ -333,6 +333,9 @@ test('close rejects evidence recorded at an older HEAD and reports baseline drif
   );
   assert.equal(task.baseline.head, baselineHead);
   verifyTest(project, 'head-drift', 'work.txt');
+  const freshIo = capturedIo();
+  taskStatus({ project, id: 'head-drift', json: true }, freshIo);
+  assert.equal(JSON.parse(freshIo.logs[0]).acceptance[0].stale, false);
   writeFileSync(join(project, 'work.txt'), 'changed\n');
   const currentHead = commit(project, 'change revision');
 
@@ -341,9 +344,12 @@ test('close rejects evidence recorded at an older HEAD and reports baseline drif
   const summary = JSON.parse(statusIo.logs[0]);
   assert.equal(summary.baselineDrift.head, true);
   assert.equal(summary.baselineDrift.currentHead, currentHead);
+  assert.equal(summary.acceptance[0].status, 'passed');
+  assert.equal(summary.acceptance[0].stale, true);
   const humanStatusIo = capturedIo();
   taskStatus({ project, id: 'head-drift' }, humanStatusIo);
   assert.match(humanStatusIo.logs.join('\n'), /Baseline drift: head/);
+  assert.match(humanStatusIo.logs.join('\n'), /criterion-1 \| passed \| stale/);
   assert.throws(
     () => closeTask({ project, id: 'head-drift', summary: 'Stale verification' }),
     /stale or non-passing evidence: criterion-1/,

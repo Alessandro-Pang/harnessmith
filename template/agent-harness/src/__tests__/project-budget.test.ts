@@ -75,6 +75,25 @@ function withGitPath<T>(bin: string, operation: () => T, exact = false): T {
   }
 }
 
+function withGitRepositoryEnvironment<T>(
+  values: Partial<Record<'GIT_DIR' | 'GIT_WORK_TREE', string>>,
+  operation: () => T,
+): T {
+  const original = new Map<string, string | undefined>();
+  for (const [key, value] of Object.entries(values)) {
+    original.set(key, process.env[key]);
+    process.env[key] = value;
+  }
+  try {
+    return operation();
+  } finally {
+    for (const [key, value] of original) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  }
+}
+
 test('Harness Git resolution uses a trusted resolver cwd instead of the project cwd', () => {
   const resolved = resolveGitExecutable('win32', (command, options) => {
     assert.equal(command, 'git');
@@ -255,6 +274,23 @@ test('task project root canonicalizes filesystem aliases', () => {
   symlinkSync(project, alias, process.platform === 'win32' ? 'junction' : 'dir');
 
   assert.equal(projectRoot(alias), realpathSync.native(project));
+});
+
+test('task project root ignores ambient Git repository redirection', () => {
+  const root = mkdtempSync(join(tmpdir(), 'harness-project-git-env-'));
+  onTestFinished(() => rmSync(root, { recursive: true, force: true }));
+  const requested = join(root, 'requested');
+  const redirected = join(root, 'redirected');
+  mkdirSync(requested);
+  mkdirSync(redirected);
+  execFileSync('git', ['init', redirected], { stdio: 'ignore' });
+
+  const resolved = withGitRepositoryEnvironment(
+    { GIT_DIR: join(redirected, '.git'), GIT_WORK_TREE: redirected },
+    () => projectRoot(requested),
+  );
+
+  assert.equal(resolved, realpathSync.native(requested));
 });
 
 test('project Git probes disable repository-controlled fsmonitor hooks', () => {

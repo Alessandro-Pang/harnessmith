@@ -150,7 +150,8 @@ Harnesssmith 将“如何工作”“用户是谁”“之前发生了什么”�
 长任务的目标、checkpoint、验收项和下一步保存在 `working/<task-id>/task.json`，稳定事实仍必须提升到
 正式事实层。记忆支持 `active`、`blocked`、`complete`、`superseded`、`archived` 生命周期，以及
 检查、检索、替代、归档和 proposal-only 提升。`memory check --indexed` 会拒绝无法从索引到达的
-active/blocked 记忆，`memory maintain` 只读报告未索引、过期 working 和可归档内容。
+active/blocked 记忆，`memory maintain` 只读报告未索引、过期 working、可归档内容、重复 active title
+和 supersession cycle。
 
 `memory list --json` 和 `memory check --json` 提供版本化机器契约。旧 metadata 只通过显式
 `memory migrate --set ...` 迁移：默认输出 proposal，审阅且 `ready` 后才使用 `--apply`；初始化、

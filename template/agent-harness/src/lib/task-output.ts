@@ -24,6 +24,8 @@ export function outputTask(value: TaskSummary | TaskSummary[], json: boolean, io
     );
   }
   for (const criterion of value.acceptance || []) {
-    io.log(`  ${criterion.id} | ${criterion.status} | ${criterion.description}`);
+    io.log(
+      `  ${criterion.id} | ${criterion.status}${criterion.stale ? ' | stale' : ''} | ${criterion.description}`,
+    );
   }
 }

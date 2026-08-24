@@ -1,4 +1,4 @@
-# Harnessmith
+# Harnesssmith
 
 > Forge once. Work consistently across coding agents.
 
@@ -8,7 +8,7 @@
 
 **English** · [简体中文](./README.md)
 
-Harnessmith is a local-first initializer for a personal coding-agent harness. It safely installs the same
+Harnesssmith is a local-first initializer for a personal coding-agent harness. It safely installs the same
 working rules, progressive documentation, memory protocol, and task-state tools across Codex, Cursor, and
 Claude Code.
 
@@ -19,7 +19,7 @@ npx harnessmith
 Configure once, work consistently everywhere. Your coding agents get a shared understanding of how to start
 tasks, when to load context, how to protect existing work, and what evidence is required before completion.
 
-## Why Harnessmith
+## Why Harnesssmith
 
 Each coding agent has different instruction files, scopes, and directory layouts. Maintaining them by hand
 usually leads to drifting rules, overwritten personal content, and lost context when long tasks move between
@@ -65,7 +65,7 @@ After installation, Harnesssmith initializes:
 >
 > Send the prompt below directly to your AI. It will read [llms.txt](https://raw.githubusercontent.com/Alessandro-Pang/harnessmith/refs/heads/main/llms.txt) first, then follow its installation flow, target checks, permission boundaries, and failure-handling rules.
 >
-> `Read https://raw.githubusercontent.com/Alessandro-Pang/harnessmith/refs/heads/main/llms.txt first, then install Harnessmith for me by following its protocol.`
+> `Read https://raw.githubusercontent.com/Alessandro-Pang/harnessmith/refs/heads/main/llms.txt first, then install Harnesssmith for me by following its protocol.`
 
 ## Supported agents
 
@@ -158,8 +158,8 @@ Long-task objectives, checkpoints, acceptance criteria, and next actions live in
 `working/<task-id>/task.json`, while stable facts still move to the authoritative layer. Memory supports
 `active`, `blocked`, `complete`, `superseded`, and `archived` lifecycle states, plus validation, search,
 supersede, archive, and proposal-only promotion. `memory check --indexed` rejects active or blocked memory
-that cannot be reached from an index, while `memory maintain` reports unindexed, expired working, and
-archive-ready entries without changing them.
+that cannot be reached from an index, while `memory maintain` reports unindexed, expired working,
+archive-ready entries, duplicate active titles, and supersession cycles without changing them.
 
 `memory list --json` and `memory check --json` expose versioned machine contracts. Legacy metadata changes only
 through explicit `memory migrate --set ...`: it emits a proposal by default and accepts `--apply` only after the
@@ -192,7 +192,7 @@ or `inconclusive`; it cannot directly pass the gate.
 - Lexical and canonical containment for output, backup, record, and ignore paths.
 - Fail-closed handling of symlinks, junctions, and reparse paths below authorized roots.
 - Refusal of unmanaged or user-modified targets by default.
-- Cross-process locks and complete preflight for multi-agent operations. On failure, Harnessmith attempts
+- Cross-process locks and complete preflight for multi-agent operations. On failure, Harnesssmith attempts
   rollback along recorded paths; an incomplete rollback reports an error and retains recovery paths rather
   than claiming atomic restoration.
 - Preservation of mutable `state/`; upgrades, restore, and uninstall never overwrite the personal overlay.
@@ -271,4 +271,4 @@ distribution manifest.
 ---
 
 If you want every coding agent to work with the same care, recoverability, and evidence standards,
-Harnessmith is the shared personal infrastructure layer.
+Harnesssmith is the shared personal infrastructure layer.
