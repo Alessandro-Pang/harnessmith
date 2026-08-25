@@ -64,7 +64,7 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   );
   assert.match(agents, /explicit\/high.*静默 reconcile/s);
   assert.match(agents, /(?:本次或本项目|单次).*信号.*项目 Memory/s);
-  assert.match(agents, /completed.*累计.*next.*文件.*命令.*动作/);
+  assert.match(agents, /completed.*累计.*next.*具体.*文件.*命令.*动作.*禁.*泛化/);
   assert.match(
     agents,
     /handoff payload.*每次.*必含.*session.*title.*objective.*completed.*next.*reason/s,
@@ -75,18 +75,21 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
     /未变.*facts.*decisions.*open.*verification.*scope.*sourceRefs.*省略.*不.*改写/s,
   );
   assert.match(agents, /未变.*facts.*sourceRefs.*省略.*不改写.*原样重放除外/s);
-  assert.match(agents, /completed.*累计.*next.*文件.*命令.*动作/s);
+  assert.match(agents, /completed.*累计.*next.*具体.*文件.*命令.*动作.*禁.*泛化/s);
   assert.match(agents, /(?:只有|仅).*resolved.*superseded.*清理.*模糊.*保留/s);
-  assert.match(agents, /宿主压缩(?:或预算|\/预算)?信号.*新快照.*reason=compaction.*预判压缩/s);
+  assert.match(
+    agents,
+    /宿主压缩\/预算.*signal.*本 signal turn.*下条用户消息前.*(?:须|必须).*单独执行.*校验.*reason=compaction.*handoff.*已有.*相同.*刚更新.*均不豁免.*仅预判压缩.*旧快照不足恢复.*实质变化/s,
+  );
   assert.match(agents, /同一会话(?:连续)?完成多项任务\/决策/);
   assert.match(agents, /capture-input.*handoff.*reconcile-profile.*--payload-file.*--json/s);
-  assert.match(agents, /close-handoff.*--session.*--json.*不支持.*--payload-file/s);
+  assert.match(agents, /close-handoff.*--session\s+<stable-id>\s+--json.*不支持.*--payload-file/s);
   assert.match(agents, /payload.*宿主(?:提供的)?任务临时目录/s);
   assert.match(
     agents,
     /本轮完成.*并非.*结束.*仅.*用户明示.*或宿主标记.*workstream.*结束\/取消.*无有效后续.*close-handoff.*存疑不关/s,
   );
-  assert.match(agents, /压缩.*信号.*快照.*(?:仍|须|必须).*checkpoint/s);
+  assert.match(agents, /压缩.*预算.*signal.*本 signal turn.*下条用户消息前.*(?:须|必须).*handoff/s);
   assert.match(
     agents,
     /自动 sidecar.*例行成功.*不对用户预告.*Memory.*画像.*偏好.*状态.*快照.*交接.*输入记录.*正常.*进度.*不受限/s,
@@ -107,7 +110,7 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   assert.match(agents, /项目.*scope.*用.*`\.`.*绝对项目根/s);
   assert.match(
     agents,
-    /验收\/scope\/constraints.*变化.*不可廉价恢复.*项目 Memory.*已有\/任务应初始化.*去重后须先.*capture-input.*再作任务改动/s,
+    /验收\/scope\/constraints.*变化.*不可廉价恢复.*项目 Memory.*已有\/(?:任务)?应初始化.*去重后须先.*capture-input.*再(?:作任务改动|改任务)/s,
   );
   assert.match(agents, /workstream.*plan\/backlog.*已核验.*具体后续阶段/s);
   assert.match(agents, /高损失.*不可推断/);
@@ -120,6 +123,10 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   assert.match(agents, /敏感.*冲突.*越界.*提示/s);
   assert.match(
     agents,
+    /Harness 画像明示.*纠正=reconcile-profile.*--payload-file\s+<path>\s+--json.*遗忘=forget-profile.*--key.*profile exact key.*--json.*暂停\/恢复=profile-autopilot.*pause\|resume.*--json.*memory 子命令.*直接执行.*不查.*文档.*skill.*help/s,
+  );
+  assert.match(
+    agents,
     /第二个.*独立.*验证.*最终答复前.*reason.*multi-task.*后续.*原位更新.*compaction.*multi-task.*phase/s,
   );
   assert.match(
@@ -130,7 +137,7 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   assert.match(agents, /不以.*删除断言.*篡改 verifier.*降低门槛.*通过/s);
   const agentLines = agents.trimEnd().split('\n');
   assert.ok(agentLines.length <= 55, `template/AGENTS.md has ${agentLines.length} lines`);
-  assert.ok(Buffer.byteLength(agents) <= 5_400, 'template/AGENTS.md exceeds 5400 bytes');
+  assert.ok(Buffer.byteLength(agents) <= 5_600, 'template/AGENTS.md exceeds 5600 bytes');
   const representativeRenderedAgents = agents
     .replaceAll('{{HARNESS_HOME}}', '/Users/example/.config/codex')
     .replaceAll('{{HARNESS_MEMORY_HOME}}', '/Users/example/.local/share/agent-docs')
@@ -169,7 +176,10 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
     /capture-input.*handoff.*reconcile-profile.*--payload-file.*--json.*close-handoff.*--session.*--json.*不支持.*--payload-file/s,
   );
   assert.match(projectMemory, /用户明示.*宿主.*completed\/cancelled.*close-handoff/s);
-  assert.match(projectMemory, /压缩.*信号.*即使.*快照.*仍.*checkpoint/s);
+  assert.match(
+    projectMemory,
+    /压缩.*信号.*signal turn.*下一?条用户消息前.*reason.*compaction.*checkpoint.*已有.*相同.*刚更新.*不豁免.*仅预判压缩/s,
+  );
   assert.match(
     projectMemory,
     /阶段.*已验证.*仍有后续.*最终答复前.*必须.*handoff.*校验.*不得.*下一.*用户.*消息/s,
@@ -240,6 +250,10 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
     /handoff payload.*每次.*必填.*session.*title.*objective.*completed.*next.*reason/s,
   );
   assert.match(longRunning, /title.*objective.*未变.*当前 handoff.*原样带入/s);
+  assert.match(
+    longRunning,
+    /压缩.*信号.*signal turn.*下一?条用户消息前.*reason.*compaction.*checkpoint.*已有.*相同.*刚更新.*不豁免.*仅预判压缩/s,
+  );
   assert.match(
     longRunning,
     /自动 sidecar.*宿主强制.*commentary\/final.*只.*用户任务.*进度.*结果.*不提.*已保存.*压缩.*切换.*收尾/s,

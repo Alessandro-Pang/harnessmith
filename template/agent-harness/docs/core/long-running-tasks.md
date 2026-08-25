@@ -66,8 +66,9 @@ handoff payload 每次必填 session、title、objective、completed、next、re
 active task、plan/backlog 与 handoff `open`/`next` 后确认无仍有效事项，才运行 `memory close-handoff`，
 只关闭并移出最新 active generation。`next` 是 active/blocked checkpoint 的必填恢复动作，关闭不要求其
 为空；满足条件时直接 close-handoff，不写“无下一步”占位 checkpoint，存疑不关。当前阶段、单个请求、
-verifier 或普通 task/thread 结束均不是 workstream 结束。收到压缩或上下文预算信号时，即使现有快照刚
-更新，仍以 `reason: compaction` 单独执行并校验一次 checkpoint。
+verifier 或普通 task/thread 结束均不是 workstream 结束。收到压缩或上下文预算信号时，必须在该
+signal turn 内、下一条用户消息前，以 `reason: compaction` 单独执行并校验一次 checkpoint；已有、相同
+或刚更新快照均不豁免。仅预判压缩而尚未收到明确信号时，才按“旧快照不足恢复且有实质变化”去重。
 
 自动 `memory handoff` 必须单独执行并同时使用 `--payload-file` 与 `--json`；自动 `memory close-handoff`
 必须单独执行并使用 `--session <stable-id>` 与 `--json`，它不支持 `--payload-file`。不得把这些命令与其他
