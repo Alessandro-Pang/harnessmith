@@ -110,5 +110,5 @@ node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory profile-autopilot res
 `reconcile-profile` 必须单独执行并带 `--payload-file` 与 `--json`，不得与验证命令拼接。
 `profile-autopilot: paused` 会机械拒绝自动 reconcile；
 仅当用户明确要求修改画像本身时，payload 才设置 `userDirected: true` 绕过当次拒绝，不会恢复 autopilot。
-暂停不阻止精确遗忘，恢复自动维护必须由用户明确要求。例行 `created/updated/unchanged` 不发过程通知；用户要求查看、
-纠正、忘记或暂停时，该操作本身是交付物，简短报告结果或阻塞。
+暂停不阻止精确遗忘，恢复自动维护必须由用户明确要求。例行 `created/updated/unchanged` 不发过程通知；用户要求
+纠正、忘记、暂停或恢复时仅用单句简短报告结果或阻塞；查看画像按用户请求完整回答。

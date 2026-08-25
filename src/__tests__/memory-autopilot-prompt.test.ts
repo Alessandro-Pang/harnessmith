@@ -65,7 +65,10 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   assert.match(agents, /payload.*宿主提供.*任务临时目录/s);
   assert.match(agents, /未收到.*明确结束信号.*不得.*close-handoff/s);
   assert.match(agents, /压缩.*信号.*即使.*快照.*(?:仍|须|必须).*checkpoint/s);
-  assert.match(agents, /例行.*不(?:在|得).*(?:过程|最终答复).*Memory.*(?:handoff|checkpoint)/s);
+  assert.match(
+    agents,
+    /自动 sidecar.*例行成功.*不发.*(?:过程|最终).*不预告.*交接.*输入记录.*正常任务进度.*不受限.*失败后.*用户明确.*报告/s,
+  );
   assert.match(
     agents,
     /阶段.*已验证.*仍有后续.*最终答复前.*必须.*handoff.*校验.*不得.*下一.*用户.*消息/s,
@@ -82,11 +85,12 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   );
   assert.match(agents, /当前 workstream.*plan\/backlog.*已核验.*具体后续阶段/s);
   assert.match(agents, /高损失.*不可推断/);
+  assert.match(agents, /纠正.*遗忘.*暂停.*恢复.*单句.*简短报告.*查看.*完整回答/s);
   assert.match(
     agents,
     /第二个.*独立.*验证.*最终答复前.*reason.*multi-task.*后续.*原位更新.*compaction.*multi-task.*phase/s,
   );
-  assert.match(agents, /静默.*不得.*预告.*Memory.*(?:写入|动作).*失败后.*报告/s);
+  assert.match(agents, /自动 sidecar.*不预告.*Memory.*(?:交接|handoff).*输入记录/s);
   assert.match(agents, /用户指定.*verifier.*单独执行.*&&.*后续(?:命令)?退出码.*不得.*替代/s);
   assert.match(agents, /不以.*删除断言.*篡改 verifier.*降低门槛.*通过/s);
   const agentLines = agents.trimEnd().split('\n');
@@ -137,7 +141,10 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
     /`completed`.*string.*`verification`.*string.*`scope`.*string\[\].*`sourceRefs`.*string\[\]/s,
   );
   assert.match(projectMemory, /`source`.*`chat`.*`file`.*`meeting`.*`link`.*`other`/s);
-  assert.match(projectMemory, /静默.*不得.*预告.*Memory.*(?:写入|动作).*失败后.*报告/s);
+  assert.match(
+    projectMemory,
+    /自动 sidecar.*例行成功.*不发.*过程.*不列.*最终.*不预告.*Memory.*交接.*输入记录.*正常任务进度.*不受限.*失败后.*用户明确.*报告/s,
+  );
   assert.match(
     projectMemory,
     /同一.*thread.*不相关.*目标.*沿用.*handoff.*明确.*pivot.*resolved.*superseded.*重写.*objective.*清理.*不追加.*历史/s,
@@ -157,6 +164,7 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   );
   assert.match(profile, /自动.*自由文本.*--payload-file.*shell.*插值/s);
   assert.match(profile, /暂停.*更正.*userDirected.*paused/s);
+  assert.match(profile, /纠正.*(?:忘记|遗忘).*暂停.*恢复.*单句.*报告.*查看.*完整回答/s);
   assert.match(profile, /每个新宿主.*task\/thread.*首次工作前.*读取一次.*`profile\.md`/s);
   assert.match(profile, /最多.*32.*有界/s);
   assert.match(architecture, /自动.*自由文本.*--payload-file.*shell.*插值/s);
