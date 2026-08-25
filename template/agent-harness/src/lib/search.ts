@@ -7,6 +7,7 @@ import {
   searchDeadlineExceeded,
 } from './search-budget.js';
 import { readSearchCandidate } from './search-reader.js';
+import { assertNoHighConfidenceSecret } from './secret-hygiene.js';
 
 const defaultLimit = 50;
 const defaultMaxLineLength = 400;
@@ -116,6 +117,7 @@ export function searchText(
   sources: SearchSource[],
   options: SearchOptions = {},
 ): SearchReport {
+  assertNoHighConfidenceSecret([query], 'Search query');
   const resultLimit = positiveInteger(options.limit, defaultLimit, 'Search limit');
   const lineLimit = positiveInteger(
     options.maxLineLength,

@@ -55,8 +55,10 @@ Publishing is a maintainer-authorized external write. Never publish only because
 
    `release:prepare` copies `HARNESS_RELEASE_ARTIFACT` to a read-only private snapshot under ignored local
    `.release/` state, runs `release:check` against that exact candidate tarball, and preserves the verified
-   artifact digest, behavior fingerprint, and compact Host matrix summary. When compatible evidence is reused,
-   the state records a Host Eval inheritance source version and artifact digest. `finalize` verifies that state,
+   artifact digest, behavior fingerprint, and compact Host matrix summary. An explicit `--package-artifact` or
+   `HARNESS_RELEASE_ARTIFACT` replaces any older prepared state; only a run without either setting resumes the
+   existing snapshot. When compatible evidence is reused, the state records a Host Eval inheritance source
+   version and artifact digest. `finalize` verifies that state,
    writes the bounded `release-attestation.json`, creates a
    Conventional Commit, and creates a signed `vX.Y.Z` tag. It does not push or publish.
    `release:check` invokes the same gate and fails when fresh, passing, maintainer-attested real-host records

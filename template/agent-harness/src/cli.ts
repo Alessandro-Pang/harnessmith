@@ -8,6 +8,7 @@ import { inspectProject } from './commands/project.js';
 import { route } from './commands/route.js';
 import { contextSearch } from './commands/search.js';
 import { validate } from './commands/validate.js';
+import { containsHighConfidenceSecret } from './lib/secret-hygiene.js';
 import { registerMemoryCommands } from './program/memory.js';
 import { registerRepositoryMapCommands } from './program/repository-map.js';
 import { addSearchOptions, type SearchCommandOptions } from './program/search-options.js';
@@ -43,6 +44,24 @@ function outputAdapter(io: Io) {
   return {
     writeOut: (value: string) => io.log(value.trimEnd()),
     writeErr: (value: string) => io.error(value.trimEnd()),
+  };
+}
+
+const redactedCommandDiagnostic =
+  'Command output redacted because it contains high-confidence secret material';
+
+function redactingCommandIo(io: Io): Io {
+  const emit = (operation: Io['log'], values: unknown[]) => {
+    const containsSecret = values.some((value) =>
+      containsHighConfidenceSecret(typeof value === 'string' ? value : String(value ?? '')),
+    );
+    if (containsSecret) operation.call(io, redactedCommandDiagnostic);
+    else operation.call(io, ...values);
+  };
+  return {
+    log: (message: unknown = '', ...optional: unknown[]) => emit(io.log, [message, ...optional]),
+    error: (message: unknown = '', ...optional: unknown[]) =>
+      emit(io.error, [message, ...optional]),
   };
 }
 
@@ -142,13 +161,20 @@ function registerCoreCommands(
     .action(run((path = '.') => initProject(runtime, path, io)));
 }
 
-export function createHarnessProgram(runtime: Runtime = createRuntime(), io: Io = console) {
+export function createHarnessProgram(runtime: Runtime = createRuntime(), outputIo: Io = console) {
+  const io = redactingCommandIo(outputIo);
   let exitCode = 0;
   const run: CommandRunner =
     <TArgs extends unknown[]>(operation: (...args: TArgs) => unknown) =>
     (...args: TArgs): void => {
-      const result = operation(...args);
-      exitCode = typeof result === 'number' && Number.isInteger(result) ? result : 0;
+      try {
+        const result = operation(...args);
+        exitCode = typeof result === 'number' && Number.isInteger(result) ? result : 0;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (containsHighConfidenceSecret(message)) throw new Error(redactedCommandDiagnostic);
+        throw error;
+      }
     };
   const manifest = JSON.parse(
     readFileSync(join(runtime.harnessRoot, 'manifest.json'), 'utf8'),

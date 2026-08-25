@@ -1,5 +1,16 @@
 import { resolve } from 'node:path';
 import type { Io } from '../types.js';
+import {
+  type MemoryRootKind,
+  validateAutopilotDocumentRules,
+} from './memory-autopilot-document-rules.js';
+import { containsUnsafeDisplayCharacters } from './memory-root-path-rules.js';
+import { validateTaskLedgerMemory } from './task-ledger-memory.js';
+import {
+  isCanonicalUserProfileRecord,
+  maximumUserProfileRecords,
+  parseUserProfileRecords,
+} from './user-profile-record.js';
 
 const requiredMetadata = [
   'title',
@@ -23,6 +34,32 @@ const inputSources = new Set(['chat', 'file', 'meeting', 'link', 'other']);
 const arrayMetadata = ['owners', 'tags', 'scope', 'source-refs'] as const;
 const stringMetadata = ['title', 'description', 'type', 'project'] as const;
 
+function isMemoryReference(value: unknown): value is string {
+  return (
+    typeof value === 'string' && value.startsWith('memory:') && value.length > 'memory:'.length
+  );
+}
+
+function validateLifecycleReference(
+  path: string,
+  field: 'derived-from' | 'supersedes' | 'superseded-by',
+  value: unknown,
+  io: Io,
+): number {
+  const valid =
+    field === 'superseded-by'
+      ? isMemoryReference(value)
+      : isMemoryReference(value) ||
+        (Array.isArray(value) && value.length > 0 && value.every(isMemoryReference));
+  if (valid) return 0;
+  io.error(
+    `Memory metadata ${field} must be ${
+      field === 'superseded-by' ? 'a single ' : ''
+    }canonical memory reference${field === 'superseded-by' ? '' : ' string or string array'}: ${path}`,
+  );
+  return 1;
+}
+
 function validCalendarDate(value: unknown): value is string {
   if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const date = new Date(`${value}T00:00:00Z`);
@@ -43,6 +80,11 @@ function validateMetadata(path: string, metadata: Map<string, unknown>, io: Io):
       io.error(`Memory metadata ${field} must be a non-empty string: ${path}`);
       failures += 1;
     }
+  }
+  const title = metadata.get('title');
+  if (typeof title === 'string' && containsUnsafeDisplayCharacters(title)) {
+    io.error(`Memory metadata title must be a single safe display line: ${path}`);
+    failures += 1;
   }
   for (const field of arrayMetadata) {
     const value = metadata.get(field);
@@ -101,8 +143,13 @@ function validateLifecycle(path: string, metadata: Map<string, unknown>, io: Io)
     io.error(`Superseded memory requires superseded-by: ${path}`);
     failures += 1;
   }
+  for (const field of ['derived-from', 'supersedes', 'superseded-by'] as const) {
+    if (metadata.has(field)) {
+      failures += validateLifecycleReference(path, field, metadata.get(field), io);
+    }
+  }
   if (metadata.get('memory-kind') === 'working' && !metadata.has('expires')) {
-    io.log(`WARNING Working memory should declare expires: ${path}`);
+    io.error(`WARNING Working memory should declare expires: ${path}`);
   }
   if (metadata.has('expires') && !validCalendarDate(metadata.get('expires'))) {
     io.error(`Invalid expires date: ${path}`);
@@ -116,10 +163,18 @@ function validateUserProfile(
   path: string,
   body: string,
   metadata: Map<string, unknown>,
+  rootKind: MemoryRootKind,
   io: Io,
 ): number {
   let failures = 0;
   const canonicalProfile = resolve(root, 'profile.md');
+  if (rootKind === 'project') {
+    if (path === canonicalProfile || metadata.get('type') === 'user-profile') {
+      io.error(`User profile is permitted only in global memory: ${path}`);
+      failures += 1;
+    }
+    return failures;
+  }
   if (path === canonicalProfile && metadata.get('type') !== 'user-profile') {
     io.error(`profile.md must declare type user-profile: ${path}`);
     failures += 1;
@@ -133,27 +188,32 @@ function validateUserProfile(
     io.error(`User profile must be global distilled memory: ${path}`);
     failures += 1;
   }
-  const entries = body.split(/\r?\n/).filter((line) => line.startsWith('- '));
-  if (entries.length > 32) {
+  const autopilot = metadata.get('profile-autopilot');
+  if (autopilot !== undefined && autopilot !== 'enabled' && autopilot !== 'paused') {
+    io.error(`Invalid user-profile autopilot state: ${path}`);
+    failures += 1;
+  }
+  const records = parseUserProfileRecords(body);
+  if (records.length > maximumUserProfileRecords) {
     io.error(`User profile permits at most 32 active entries: ${path}`);
     failures += 1;
   }
   const keys = new Set<string>();
-  const entryPattern =
-    /^- ([a-z0-9]+(?:[.-][a-z0-9]+)*) \| ([^|]{1,200}) \| (explicit|observed|inferred) \| (high|medium|low) \| (\d{4}-\d{2}-\d{2})$/;
-  for (const entry of entries) {
-    const match = entry.match(entryPattern);
-    if (!match || !validCalendarDate(match[5])) {
-      io.error(`Invalid user-profile entry: ${path}: ${entry}`);
+  for (const record of records) {
+    if (!record.canonicalMarker) {
+      io.error(`Non-canonical user-profile entry: ${path}: ${record.line}`);
       failures += 1;
-      continue;
-    }
-    const key = match[1];
-    if (keys.has(key)) {
-      io.error(`Duplicate user-profile key ${key}: ${path}`);
+    } else if (!isCanonicalUserProfileRecord(record)) {
+      io.error(`Invalid user-profile entry: ${path}: ${record.line}`);
       failures += 1;
     }
-    keys.add(key);
+    if (record.key) {
+      if (keys.has(record.key)) {
+        io.error(`Duplicate user-profile key ${record.key}: ${path}`);
+        failures += 1;
+      }
+      keys.add(record.key);
+    }
   }
   return failures;
 }
@@ -164,9 +224,12 @@ export function validateMemoryDocumentRules(
   body: string,
   metadata: Map<string, unknown>,
   io: Io,
+  rootKind: MemoryRootKind = 'auto',
 ): number {
   let failures = validateMetadata(path, metadata, io);
   failures += validateLifecycle(path, metadata, io);
-  failures += validateUserProfile(root, path, body, metadata, io);
+  failures += validateUserProfile(root, path, body, metadata, rootKind, io);
+  failures += validateTaskLedgerMemory(root, path, metadata, io);
+  failures += validateAutopilotDocumentRules(root, path, body, metadata, rootKind, io);
   return failures;
 }

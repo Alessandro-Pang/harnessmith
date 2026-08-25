@@ -2,7 +2,7 @@
 title: Long-running Task Protocol
 type: harness-core
 status: active
-updated: 2026-08-21
+updated: 2026-08-25
 ---
 
 # Long-running Task Protocol
@@ -40,6 +40,21 @@ node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs task status --project /absol
 node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs task close --project /absolute/project/path \
   --id <task-id> --summary "全部验收通过"
 ```
+
+## 阶段与压缩检查点
+
+长任务不等待宿主会话结束事件。每个阶段完成、已验证且仍有后续时，先写 task checkpoint，再用 `memory handoff`
+更新可恢复快照；发现上下文接近宿主限制、收到压缩信号或继续累积会使早期信息难以恢复时，在压缩前
+执行 handoff。同一会话连续完成多项任务或形成多项决策，导致旧快照不足恢复且关键信息实质变化时
+也应更新，不等用户提醒；快照相同或只有措辞变化时不写。
+
+同一 session/workstream 使用稳定 base；最新 generation 为 active/blocked 时原位更新该 episode，
+latest generation 已 complete 或 archived 且同一 base 出现新任务时，确定性创建下一 generation 并保留旧 episode。
+写前读取旧 handoff 与 active task；`facts`、`decisions`、
+`verification`、`open`、scope 和 source refs 省略时保留，只有已证实 resolved/superseded 的可选区块才用
+clear 指令删除，模糊时保留。`completed` 与 `next` 每次都提交完整 reconcile 后的当前状态。自动 handoff
+的自由文本必须写入安全 JSON payload 并通过 `--payload-file` 传递，禁止 shell 插值。task ledger 保留完整验收状态，session 只保存恢复所需摘要，
+两者不互相复制。最终无后续时运行 `memory close-handoff`，只关闭并移出最新 active generation。
 
 ## 行为约束
 

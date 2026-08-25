@@ -6,13 +6,8 @@ import { join } from 'node:path';
 import lockfile from 'proper-lockfile';
 import { onTestFinished, test } from 'vitest';
 import { memoryCheck } from '../commands/memory.js';
-import {
-  checkpointTask,
-  closeTask,
-  initTask,
-  taskStatus,
-  updateAcceptance,
-} from '../commands/task.js';
+import { checkpointTask, closeTask, initTask, taskStatus } from '../commands/task.js';
+import { updateAcceptance } from '../commands/task-acceptance.js';
 import { verifyAcceptance } from '../commands/task-verification.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
@@ -245,7 +240,7 @@ test('failed progress writes do not commit a task checkpoint', () => {
 
   assert.throws(
     () => checkpointTask({ project, id: 'atomic', summary: 'must roll back' }, capturedIo()),
-    /EISDIR|directory/i,
+    /EISDIR|directory|regular non-symlink/i,
   );
   assert.equal(readFileSync(taskPath, 'utf8'), before);
 });

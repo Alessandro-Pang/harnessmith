@@ -1,8 +1,7 @@
-import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { withExclusiveDirectoryLock } from '../lib/exclusive-lock.js';
 import { writeIfMissing } from '../lib/files.js';
-import { withMemoryLock } from '../lib/memory-lock.js';
+import { initializeGlobalMemory } from '../lib/global-memory.js';
 import { initializeProjectMemory } from '../lib/project-memory.js';
 import { readTemplate, render } from '../lib/templates.js';
 import { withUserDataCoordinationLocks } from '../lib/user-data-lock.js';
@@ -15,25 +14,15 @@ export function initGlobal(
   inheritedLockKeys: string[] = [],
 ): void {
   assertRuntimeCanMutate(runtime);
-  withMemoryLock(
-    runtime.memoryHome,
-    () => {
-      mkdirSync(runtime.memoryHome, { recursive: true });
-      const created: string[] = [];
-      for (const name of ['README.md', 'core.md', 'profile.md']) {
-        const destination = join(runtime.memoryHome, name);
-        const content = render(runtime, readTemplate(runtime, `global-agent-docs/${name}`));
-        if (writeIfMissing(destination, content)) created.push(destination);
-      }
-      if (created.length > 0) {
-        io.log(`Initialized global memory: ${runtime.memoryHome}`);
-        for (const path of created) io.log(`  created ${path}`);
-      } else {
-        io.log(`Global memory already initialized: ${runtime.memoryHome}`);
-      }
-    },
-    inheritedLockKeys,
-  );
+  const { created, repairedProfileRoute } = initializeGlobalMemory(runtime, inheritedLockKeys);
+  if (created.length > 0) {
+    io.log(`Initialized global memory: ${runtime.memoryHome}`);
+    for (const path of created) io.log(`  created ${path}`);
+  } else if (repairedProfileRoute) {
+    io.log(`Updated global memory profile route: ${runtime.memoryHome}`);
+  } else {
+    io.log(`Global memory already initialized: ${runtime.memoryHome}`);
+  }
 }
 
 export function initPersonal(

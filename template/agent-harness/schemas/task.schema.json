@@ -8,6 +8,11 @@
     { "$ref": "#/$defs/legacyTaskV1" }
   ],
   "$defs": {
+    "taskId": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z0-9][a-z0-9._-]*$"
+    },
     "commandEvidence": {
       "type": "object",
       "required": ["type", "producer", "verificationPassed", "taskId", "criterionId", "recordedAt", "cwd", "head", "workspaceDigest", "scopeDigests", "command", "args", "exitCode", "signal", "timedOut", "outputDigest"],
@@ -15,7 +20,7 @@
         "type": { "enum": ["command", "test"] },
         "producer": { "enum": ["harness", "external"] },
         "verificationPassed": { "type": "boolean" },
-        "taskId": { "type": "string", "minLength": 1 },
+        "taskId": { "$ref": "#/$defs/taskId" },
         "criterionId": { "type": ["string", "null"], "minLength": 1 },
         "recordedAt": { "type": "string", "format": "date-time" },
         "cwd": { "type": "string", "minLength": 1 },
@@ -38,7 +43,7 @@
         "type": { "enum": ["file", "diff"] },
         "producer": { "enum": ["harness", "external"] },
         "verificationPassed": { "type": "boolean" },
-        "taskId": { "type": "string", "minLength": 1 },
+        "taskId": { "$ref": "#/$defs/taskId" },
         "criterionId": { "type": ["string", "null"], "minLength": 1 },
         "recordedAt": { "type": "string", "format": "date-time" },
         "cwd": { "type": "string", "minLength": 1 },
@@ -57,7 +62,7 @@
         "type": { "enum": ["browser", "observation"] },
         "producer": { "const": "external" },
         "verificationPassed": { "const": false },
-        "taskId": { "type": "string", "minLength": 1 },
+        "taskId": { "$ref": "#/$defs/taskId" },
         "criterionId": { "type": ["string", "null"], "minLength": 1 },
         "recordedAt": { "type": "string", "format": "date-time" },
         "cwd": { "type": "string", "minLength": 1 },
@@ -77,7 +82,7 @@
         "type": { "const": "legacy" },
         "producer": { "const": "legacy" },
         "verificationPassed": { "const": false },
-        "taskId": { "type": "string", "minLength": 1 },
+        "taskId": { "$ref": "#/$defs/taskId" },
         "criterionId": { "type": ["string", "null"], "minLength": 1 },
         "recordedAt": { "type": "string", "format": "date-time" },
         "cwd": { "type": "string", "minLength": 1 },
@@ -148,7 +153,7 @@
       ],
       "properties": {
         "schemaVersion": { "const": 3 },
-        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" },
+        "id": { "$ref": "#/$defs/taskId" },
         "objective": { "type": "string", "minLength": 1 },
         "status": { "enum": ["pending", "in_progress", "blocked", "complete", "superseded"] },
         "created": { "type": "string", "format": "date-time" },
@@ -223,7 +228,7 @@
       ],
       "properties": {
         "schemaVersion": { "const": 2 },
-        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" },
+        "id": { "$ref": "#/$defs/taskId" },
         "objective": { "type": "string", "minLength": 1 },
         "status": { "enum": ["pending", "in_progress", "blocked", "complete", "superseded"] },
         "created": { "type": "string", "format": "date-time" },
@@ -270,7 +275,7 @@
       ],
       "properties": {
         "schemaVersion": { "const": 1 },
-        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" },
+        "id": { "$ref": "#/$defs/taskId" },
         "objective": { "type": "string", "minLength": 1 },
         "status": { "enum": ["pending", "in_progress", "blocked", "complete", "superseded"] },
         "created": { "type": "string", "format": "date-time" },

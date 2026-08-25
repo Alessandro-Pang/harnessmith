@@ -1,5 +1,4 @@
-import { lstatSync, readFileSync } from 'node:fs';
-import { basename, extname } from 'node:path';
+import { readBoundedRegularFile } from './bounded-file.js';
 import type { ListFilesOptions } from './file-discovery.js';
 import { listFiles } from './files.js';
 
@@ -24,7 +23,26 @@ export function assertNoHighConfidenceSecret(
   }
 }
 
+export function assertNoHighConfidenceSecretInValue(value: unknown, subject: string): void {
+  const pending: unknown[] = [value];
+  const visited = new WeakSet<object>();
+  while (pending.length > 0) {
+    const current = pending.pop();
+    if (typeof current === 'string') {
+      assertNoHighConfidenceSecret([current], subject);
+      continue;
+    }
+    if (current === null || typeof current !== 'object' || visited.has(current)) continue;
+    visited.add(current);
+    if (Array.isArray(current)) pending.push(...current);
+    else {
+      for (const [key, nested] of Object.entries(current)) pending.push(key, nested);
+    }
+  }
+}
+
 interface SecretScanOptions extends ListFilesOptions {
+  exclude?: (path: string) => boolean;
   maxFileBytes?: number;
   maxTotalBytes?: number;
 }
@@ -41,35 +59,36 @@ export function secretTextFiles(
   excluded: Set<string> = new Set(),
   options: SecretScanOptions = {},
 ): string[] {
-  const textExtensions = new Set([
-    '.json',
-    '.key',
-    '.log',
-    '.pem',
-    '.toml',
-    '.txt',
-    '.yaml',
-    '.yml',
-  ]);
   const maxFileBytes = secretScanLimit(options.maxFileBytes, 1024 * 1024, 'maxFileBytes');
   const maxTotalBytes = secretScanLimit(options.maxTotalBytes, 8 * 1024 * 1024, 'maxTotalBytes');
   let totalBytes = 0;
-  return listFiles(root, options).filter((path) => {
-    if (
-      excluded.has(path) ||
-      (!textExtensions.has(extname(path).toLowerCase()) && !basename(path).startsWith('.env'))
-    ) {
-      return false;
+  const secretFiles: string[] = [];
+  for (const path of listFiles(root, options)) {
+    if (options.exclude?.(path) || excluded.has(path)) {
+      continue;
     }
-    const stat = lstatSync(path);
-    if (!stat.isFile() || stat.isSymbolicLink()) {
-      throw new Error(`Secret scan expected a regular file: ${path}`);
-    }
-    if (stat.size > maxFileBytes) throw new Error(`Secret scan file byte budget exceeded: ${path}`);
-    if (stat.size > maxTotalBytes - totalBytes) {
+    const remaining = maxTotalBytes - totalBytes;
+    if (remaining < 1) {
       throw new Error(`Secret scan total byte budget exceeded: ${path}`);
     }
-    totalBytes += stat.size;
-    return containsHighConfidenceSecret(readFileSync(path, 'utf8'));
-  });
+    let result: ReturnType<typeof readBoundedRegularFile>;
+    try {
+      result = readBoundedRegularFile(path, {
+        maxBytes: Math.min(maxFileBytes, remaining),
+        subject: 'Secret scan file',
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (remaining < maxFileBytes && /exceeds \d+ bytes/.test(message)) {
+        throw new Error(`Secret scan total byte budget exceeded: ${path}`, { cause: error });
+      }
+      if (/exceeds \d+ bytes/.test(message)) {
+        throw new Error(`Secret scan file byte budget exceeded: ${path}`, { cause: error });
+      }
+      throw error;
+    }
+    totalBytes += result.bytes;
+    if (containsHighConfidenceSecret(result.content)) secretFiles.push(path);
+  }
+  return secretFiles;
 }

@@ -1,8 +1,11 @@
-import { readFileSync } from 'node:fs';
 import { relative } from 'node:path';
-import { parseFrontmatter } from './frontmatter.js';
-import { markdownFiles } from './memory-path.js';
-import { contentMemoryReferences } from './memory-validation.js';
+import { parseFrontmatterDocument } from './frontmatter.js';
+import { markdownFiles, readMemoryDocument } from './memory-path.js';
+import {
+  contentMemoryReferences,
+  isOpaqueMemoryContent,
+  metadataReferences,
+} from './memory-validation.js';
 
 export interface MemoryMaintenanceReport {
   version: 1;
@@ -25,11 +28,16 @@ function portablePath(root: string, path: string): string {
   return relative(root, path).replaceAll('\\', '/');
 }
 
+function referenceIdentity(value: string): string {
+  return value
+    .replace(/^memory:/, '')
+    .replace(/\.md$/, '')
+    .toLowerCase();
+}
+
 function supersededBy(metadata: Map<string, unknown>): string | null {
   const value = metadata.get('superseded-by');
-  return typeof value === 'string' && value.startsWith('memory:')
-    ? value.slice('memory:'.length).replace(/\.md$/, '')
-    : null;
+  return typeof value === 'string' && value.startsWith('memory:') ? referenceIdentity(value) : null;
 }
 
 function normalizedCycle(nodes: string[]): string[] {
@@ -55,7 +63,7 @@ function findSupersessionCycles(documents: MemoryDocument[]): string[][] {
   const next = new Map<string, string>();
   const names = new Map<string, string>();
   for (const { name, metadata } of documents) {
-    const reference = name.replace(/\.md$/, '');
+    const reference = referenceIdentity(name);
     names.set(reference, name);
     const target = supersededBy(metadata);
     if (target) next.set(reference, target);
@@ -88,15 +96,19 @@ function findSupersessionCycles(documents: MemoryDocument[]): string[][] {
 export function memoryMaintenanceReport(root: string, today: string): MemoryMaintenanceReport {
   const files = markdownFiles(root, { archive: false });
   const documents = files.map((path) => {
-    const content = readFileSync(path, 'utf8');
-    const metadata = parseFrontmatter(content);
-    const references = contentMemoryReferences(content).map((reference) =>
-      reference.replace(/\.md$/, ''),
+    const content = readMemoryDocument(path);
+    const parsed = parseFrontmatterDocument(content);
+    const metadata = parsed.metadata;
+    const bodyReferences = isOpaqueMemoryContent(metadata, { root, path })
+      ? []
+      : contentMemoryReferences(content);
+    const references = [...bodyReferences, ...metadataReferences(metadata)].map((reference) =>
+      referenceIdentity(reference),
     );
     return { name: portablePath(root, path), metadata, references };
   });
   const byReference = new Map(
-    documents.map((document) => [document.name.replace(/\.md$/, ''), document]),
+    documents.map((document) => [referenceIdentity(document.name), document]),
   );
   const reachable = new Set<string>();
   const pending = byReference.has('core') ? ['core'] : [];
@@ -119,7 +131,7 @@ export function memoryMaintenanceReport(root: string, today: string): MemoryMain
   for (const { name, metadata } of documents) {
     if (name === 'README.md' || name === 'core.md') continue;
     const status = String(metadata.get('status') || '');
-    const reference = name.replace(/\.md$/, '');
+    const reference = referenceIdentity(name);
     if (active.has(status) && !reachable.has(reference)) unindexed.push(name);
     if (
       active.has(status) &&

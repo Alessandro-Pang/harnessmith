@@ -19,7 +19,10 @@ import {
 } from '../../template/agent-harness/src/__tests__/helpers/harness.js';
 import { initGlobal } from '../../template/agent-harness/src/commands/init.js';
 import { checkpointTask, initTask } from '../../template/agent-harness/src/commands/task.js';
-import { userDataCoordinationTargets as embeddedTargets } from '../../template/agent-harness/src/lib/user-data-lock.js';
+import {
+  userDataCoordinationTargets as embeddedTargets,
+  withUserDataCoordinationLocks as withEmbeddedUserDataCoordinationLocks,
+} from '../../template/agent-harness/src/lib/user-data-lock.js';
 import { userDataCoordinationTargets, withUserDataCoordinationLocks } from '../user-data-lock.js';
 
 const worker = fileURLToPath(new URL('./fixtures/user-data-worker.ts', import.meta.url));
@@ -197,7 +200,7 @@ test('Task writes cannot race an outer user-data snapshot for the same memory ro
   assert.equal(readFileSync(taskPath, 'utf8'), before);
 });
 
-test('outer and embedded initialization share canonical locks across path aliases', () => {
+test('coordination canonicalizes aliases while embedded memory roots still reject symlinks', () => {
   const root = mkdtempSync(join(tmpdir(), 'harnessmith-user-data-alias-'));
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
   const memoryHome = join(root, 'memory');
@@ -213,21 +216,15 @@ test('outer and embedded initialization share canonical locks across path aliase
 
   const runtime = { ...harnessRuntime(root), memoryHome: alias };
   withUserDataCoordinationLocks([memoryHome], () => {
-    assert.throws(
-      () => initGlobal(runtime, capturedIo()),
-      /user data is being initialized by another process/i,
-    );
-    assert.throws(
-      () => initGlobal(runtime, capturedIo(), [outer.key]),
-      /user data is being initialized by another process/i,
-    );
+    assert.throws(() => initGlobal(runtime, capturedIo()), /symbolic link/i);
+    assert.throws(() => initGlobal(runtime, capturedIo(), [outer.key]), /symbolic link/i);
   });
   assert.equal(existsSync(join(memoryHome, 'core.md')), false);
 
   withUserDataCoordinationLocks([memoryHome], (keys) => {
-    initGlobal(runtime, capturedIo(), keys);
+    assert.throws(() => initGlobal(runtime, capturedIo(), keys), /symbolic link/i);
   });
-  assert.equal(existsSync(join(memoryHome, 'core.md')), true);
+  assert.equal(existsSync(join(memoryHome, 'core.md')), false);
 });
 
 test('outer user-data locks do not swallow a falsy thrown value', () => {
@@ -245,4 +242,16 @@ test('outer user-data locks do not swallow a falsy thrown value', () => {
   }
 
   assert.equal(completed, false);
+});
+
+test('outer handoff tokens let the embedded Harness inherit the same live lock', () => {
+  const root = mkdtempSync(join(tmpdir(), 'harnessmith-user-data-handoff-'));
+  onTestFinished(() => rmSync(root, { recursive: true, force: true }));
+  const memoryHome = join(root, 'memory');
+
+  const result = withUserDataCoordinationLocks([memoryHome], (tokens) =>
+    withEmbeddedUserDataCoordinationLocks([memoryHome], tokens, () => 'inherited'),
+  );
+
+  assert.equal(result, 'inherited');
 });

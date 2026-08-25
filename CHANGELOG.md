@@ -5,6 +5,35 @@ The embedded Harness schema has its own explicitly recorded version.
 
 ## Unreleased
 
+### Added
+
+- Add typed Memory Autopilot commands for payload-file important-input capture, indexed recovery snapshots and
+  close lifecycle, plus canonical profile reconcile, forget, pause, and resume controls.
+- Add a concrete, reproducible multi-turn Host Eval scenario contract for proactive persistence without memory
+  language in the task prompt; a real Host pass still requires a separately recorded and validated run.
+- Make handoff snapshots preserve omitted facts, decisions, verification, open issues, scope, and source references;
+  explicit clear options remove stale fields without accumulating a transcript.
+
+### Changed
+
+- Allow initialized local memory sidecars to be maintained quietly within a narrow boundary while keeping
+  source, formal documentation, remote writes, and uninitialized read-only projects outside implicit scope.
+- Repair the canonical profile route during global-memory initialization and exclude local Host Eval artifacts
+  from project-memory validation and secret-scan budgets; `eval:validate` remains their separate gate.
+- Make an explicit release candidate override stale prepared release state while preserving artifact-less publish
+  resume after an interrupted registry attempt.
+- Reject root-internal symlink escapes before any coordinated write, update exact memory references without
+  prefix collisions, and deduplicate inputs across dates and titles by full semantic digest.
+
+### Fixed
+
+- Keep task ledgers created under the earlier lexical ID contract readable after portable IDs become mandatory
+  for new tasks, without reopening unsafe path separators or leading characters.
+
+### Embedded Harness
+
+- Harness runtime advances from 2.4.0 to 2.5.0. Task schema remains at 3 and memory schema remains at 1.
+
 ## 0.5.1 - 2026-08-25
 
 ### Changed

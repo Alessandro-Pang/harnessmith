@@ -1,9 +1,13 @@
-import { readFileSync } from 'node:fs';
-import { atomicWrite } from '../lib/files.js';
 import { parseFrontmatter, updateFrontmatter } from '../lib/frontmatter.js';
+import { snapshotMemoryFile } from '../lib/memory-lifecycle-transaction.js';
 import { withMemoryLock } from '../lib/memory-lock.js';
+import { applyMigration } from '../lib/memory-migration-apply.js';
 import { memoryDocumentPath, memoryReference, resolveMemoryRoot } from '../lib/memory-path.js';
 import { validateMemoryDocument, validateMemoryRoot } from '../lib/memory-validation.js';
+import {
+  assertNoHighConfidenceSecret,
+  assertNoHighConfidenceSecretInValue,
+} from '../lib/secret-hygiene.js';
 import { assertRuntimeCanMutate, calendarDate } from '../runtime.js';
 import type { Io, Runtime } from '../types.js';
 
@@ -16,20 +20,27 @@ export interface MemoryMigrationReport {
   issues: string[];
 }
 
+function collectValidationDiagnostic(message: unknown, errors: string[], warnings: string[]): void {
+  const diagnostic = String(message);
+  (diagnostic.startsWith('WARNING ') ? warnings : errors).push(diagnostic);
+}
+
 function migrationUpdates(
   runtime: Runtime,
   current: Map<string, unknown>,
   metadataJson: string,
 ): Record<string, unknown> {
+  assertNoHighConfidenceSecret([metadataJson], 'Memory migration metadata');
   let supplied: unknown;
   try {
     supplied = JSON.parse(metadataJson || '{}');
-  } catch (error) {
-    throw new Error(`Invalid migration metadata JSON: ${String(error)}`);
+  } catch {
+    throw new Error('Invalid migration metadata JSON');
   }
   if (!supplied || typeof supplied !== 'object' || Array.isArray(supplied)) {
     throw new Error('Migration metadata must be a JSON object');
   }
+  assertNoHighConfidenceSecretInValue(supplied, 'Memory migration metadata');
   const updates: Record<string, unknown> = {
     'source-of-truth': false,
     'schema-version': 1,
@@ -50,6 +61,7 @@ function migrationUpdates(
       updates[`legacy-${field}`] = previous;
     }
   }
+  assertNoHighConfidenceSecretInValue(updates, 'Memory migration metadata');
   return updates;
 }
 
@@ -62,11 +74,19 @@ function migrationReport(
 ): {
   report: MemoryMigrationReport;
   content: string;
-  original: string;
+  originalState: ReturnType<typeof snapshotMemoryFile>;
   baselineErrors: string[];
 } {
-  const original = readFileSync(source, 'utf8');
-  const current = parseFrontmatter(original);
+  const rootKind = root === runtime.memoryHome ? 'global' : 'project';
+  const originalState = snapshotMemoryFile(source);
+  const original = originalState.content;
+  assertNoHighConfidenceSecret([original], 'Memory migration source');
+  let current: Map<string, unknown>;
+  try {
+    current = parseFrontmatter(original);
+  } catch {
+    throw new Error('Invalid memory migration source frontmatter');
+  }
   const proposedUpdates = migrationUpdates(runtime, current, metadataJson);
   const content = updateFrontmatter(original, proposedUpdates);
   const rootDiagnostics = (contentOverrides = new Map<string, string>()) => {
@@ -77,12 +97,10 @@ function migrationReport(
       validateMemoryRoot(
         root,
         {
-          log: (message) => {
-            if (String(message).startsWith('WARNING ')) warnings.push(String(message));
-          },
-          error: (message) => errors.push(String(message)),
+          log: (message) => collectValidationDiagnostic(message, errors, warnings),
+          error: (message) => collectValidationDiagnostic(message, errors, warnings),
         },
-        { quietSuccess: true, contentOverrides },
+        { quietSuccess: true, contentOverrides, rootKind },
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -97,12 +115,17 @@ function migrationReport(
   const baseline = rootDiagnostics();
   const candidate = rootDiagnostics(new Map([[source, content]]));
   const documentErrors: string[] = [];
-  validateMemoryDocument(root, source, content, {
-    log: (message) => {
-      if (String(message).startsWith('WARNING ')) candidate.warnings.push(String(message));
+  const documentWarnings: string[] = [];
+  validateMemoryDocument(
+    root,
+    source,
+    content,
+    {
+      log: (message) => collectValidationDiagnostic(message, documentErrors, documentWarnings),
+      error: (message) => collectValidationDiagnostic(message, documentErrors, documentWarnings),
     },
-    error: (message) => documentErrors.push(String(message)),
-  });
+    { rootKind },
+  );
   const baselineSet = new Set(baseline.errors);
   const newRootErrors = candidate.errors.filter((issue) => !baselineSet.has(issue));
   const issues = [
@@ -112,11 +135,12 @@ function migrationReport(
       ...documentErrors,
       ...newRootErrors,
       ...candidate.warnings,
+      ...documentWarnings,
     ]),
   ];
   return {
     content,
-    original,
+    originalState,
     baselineErrors: baseline.errors,
     report: {
       version: 1,
@@ -141,11 +165,14 @@ export function memoryMigrate(
   { apply = false, json = false }: { apply?: boolean; json?: boolean } = {},
   io: Io = console,
 ): MemoryMigrationReport {
+  assertNoHighConfidenceSecret([input, name], 'Memory migration request');
+  assertNoHighConfidenceSecret([metadataJson], 'Memory migration metadata');
   if (apply) assertRuntimeCanMutate(runtime);
   const root = resolveMemoryRoot(runtime, input);
+  const rootKind = root === runtime.memoryHome ? 'global' : 'project';
   const operation = (): MemoryMigrationReport => {
     const source = memoryDocumentPath(root, name);
-    const { report, content, original, baselineErrors } = migrationReport(
+    const { report, content, originalState, baselineErrors } = migrationReport(
       runtime,
       root,
       source,
@@ -156,36 +183,7 @@ export function memoryMigrate(
       if (!report.ready) {
         throw new Error(`Memory migration is not ready:\n${report.issues.join('\n')}`);
       }
-      atomicWrite(source, content);
-      const postErrors: string[] = [];
-      const postDocumentErrors: string[] = [];
-      const postExecutionIssues: string[] = [];
-      try {
-        validateMemoryRoot(
-          root,
-          { log: () => {}, error: (message) => postErrors.push(String(message)) },
-          { quietSuccess: true },
-        );
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        const expectedValidationFailure =
-          postErrors.length > 0 && /^Memory check failed: \d+ issue\(s\)$/.test(message);
-        if (!expectedValidationFailure) postExecutionIssues.push(message);
-      }
-      validateMemoryDocument(root, source, readFileSync(source, 'utf8'), {
-        log: () => {},
-        error: (message) => postDocumentErrors.push(String(message)),
-      });
-      const baselineSet = new Set(baselineErrors);
-      const newPostErrors = postErrors.filter((issue) => !baselineSet.has(issue));
-      if (
-        postExecutionIssues.length > 0 ||
-        postDocumentErrors.length > 0 ||
-        newPostErrors.length > 0
-      ) {
-        atomicWrite(source, original);
-        throw new Error('Memory migration failed post-write validation and was rolled back');
-      }
+      applyMigration(root, rootKind, source, content, originalState, baselineErrors);
     }
     if (json) io.log(JSON.stringify(report, null, 2));
     else {
@@ -194,5 +192,5 @@ export function memoryMigrate(
     }
     return report;
   };
-  return apply ? withMemoryLock(root, operation) : operation();
+  return apply ? withMemoryLock(root, operation, [], { requireExisting: true }) : operation();
 }

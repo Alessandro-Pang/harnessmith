@@ -62,6 +62,85 @@ test('behavior prompts do not manufacture authorization or ambiguous execution m
   assert.match(relationshipMap.forbidden.join(' '), /wait.*additional authorization/i);
 });
 
+test('memory autopilot evaluation measures discovery without lexical or semantic trigger hints', () => {
+  const catalog = JSON.parse(readFileSync(join(root, 'evals', 'scenarios.json'), 'utf8')) as {
+    scenarios: Array<{
+      id: string;
+      prompt: string;
+      setup: string[];
+      pass: string[];
+      forbidden: string[];
+      automatedChecks: string[];
+    }>;
+  };
+  const scenario = catalog.scenarios.find(({ id }) => id === 'memory-autopilot-unprompted');
+
+  assert.ok(scenario);
+  assert.doesNotMatch(scenario.prompt, /remember|memory|handoff|沉淀|交接|记住/i);
+  assert.doesNotMatch(
+    scenario.prompt,
+    /exact input|unobtrusive|continuity|several completed|context limit|later session|stop after/i,
+  );
+  assert.match(scenario.pass.join(' '), /important input/i);
+  assert.match(scenario.pass.join(' '), /profile/i);
+  assert.match(scenario.pass.join(' '), /session episode/i);
+  assert.match(scenario.pass.join(' '), /same session document/i);
+  assert.match(scenario.forbidden.join(' '), /permission/i);
+  assert.match(scenario.prompt, /docs\/status\.txt.*pending.*ready/i);
+  assert.match(scenario.prompt, /For all future tasks.*one sentence/i);
+  assert.match(scenario.setup.join(' '), /verify-autopilot\.mjs/i);
+  assert.match(scenario.setup.join(' '), /context_budget_remaining=8%/i);
+  assert.match(scenario.setup.join(' '), /exact follow-up user turn/i);
+  assert.match(scenario.setup.join(' '), /Pause automatic profile updates/i);
+  assert.match(scenario.pass.join(' '), /omitted.*decisions.*preserved/i);
+  assert.match(scenario.pass.join(' '), /resolved.*open.*cleared.*verification.*updated/i);
+  assert.match(scenario.pass.join(' '), /closed.*active index/i);
+  assert.match(scenario.pass.join(' '), /paused.*profile.*unchanged.*forget/i);
+  assert.match(scenario.forbidden.join(' '), /commentary.*final response/i);
+  assert.match(scenario.automatedChecks.join(' '), /Closing a handoff/i);
+  assert.match(scenario.automatedChecks.join(' '), /profile autopilot can be paused/i);
+});
+
+test('memory autopilot trigger scenarios isolate phase, multi-task, and cross-task profile recall', () => {
+  const catalog = JSON.parse(readFileSync(join(root, 'evals', 'scenarios.json'), 'utf8')) as {
+    scenarios: Array<{
+      id: string;
+      prompt: string;
+      setup: string[];
+      pass: string[];
+      forbidden: string[];
+    }>;
+  };
+  const scenarios = new Map(catalog.scenarios.map((scenario) => [scenario.id, scenario]));
+  const phase = scenarios.get('memory-autopilot-phase-only');
+  const multiTask = scenarios.get('memory-autopilot-multi-task');
+  const profileRecall = scenarios.get('memory-profile-cross-task-recall');
+
+  assert.ok(phase);
+  assert.doesNotMatch(`${phase.prompt} ${phase.setup.join(' ')}`, /context[_ -]?budget|compress/i);
+  assert.match(phase.setup.join(' '), /verified stage.*follow-up work remains/i);
+  assert.match(phase.pass.join(' '), /same indexed.*handoff.*before.*follow-up/i);
+
+  assert.ok(multiTask);
+  assert.doesNotMatch(
+    `${multiTask.prompt} ${multiTask.setup.join(' ')}`,
+    /context[_ -]?budget|compress/i,
+  );
+  assert.match(multiTask.setup.join(' '), /three exact user turns/i);
+  assert.match(multiTask.pass.join(' '), /same session document.*multi-task/i);
+  assert.match(multiTask.pass.join(' '), /completed.*three verified tasks/i);
+
+  assert.ok(profileRecall);
+  assert.doesNotMatch(
+    profileRecall.prompt,
+    /remember|memory|profile|preference|one[- ]sentence|status summar/i,
+  );
+  assert.match(profileRecall.setup.join(' '), /fresh host thread.*canonical profile/i);
+  assert.match(profileRecall.pass.join(' '), /reads.*profile\.md.*before.*project work/i);
+  assert.match(profileRecall.pass.join(' '), /one-sentence status summary/i);
+  assert.match(profileRecall.forbidden.join(' '), /prompt repeats.*preference/i);
+});
+
 test('behavior pass conditions stay positive while forbidden conditions own negative boundaries', () => {
   const catalog = JSON.parse(readFileSync(join(root, 'evals', 'scenarios.json'), 'utf8')) as {
     scenarios: Array<{ id: string; pass: string[]; forbidden: string[] }>;

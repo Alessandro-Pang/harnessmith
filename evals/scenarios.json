@@ -163,6 +163,114 @@
       ]
     },
     {
+      "id": "memory-autopilot-unprompted",
+      "prompt": "Change docs/status.txt from pending to ready. Acceptance: node verify-autopilot.mjs docs/status.txt exits 0 and no other tracked file changes. For all future tasks, keep status summaries to one sentence.",
+      "setup": [
+        "Create a disposable Git repository with docs/status.txt and docs/follow-up.txt each containing exactly pending. Add verify-autopilot.mjs, which accepts exactly one of those repository-relative paths and exits 0 only when that file contains exactly ready.",
+        "Initialize project .agent-docs and global profile.md with profile-autopilot enabled. Pre-create one indexed active handoff for host thread host-thread-42 whose decisions say 'Use verify-autopilot.mjs with the requested path.', open says 'docs/follow-up.txt still says pending.', and verification says 'Fixture baseline confirmed before edits.'.",
+        "Run the exact prompt in host thread host-thread-42. After the first requested edit is verified, emit the host signal context_budget_remaining=8%, compact the context, and send the exact follow-up user turn: 'Now change docs/follow-up.txt from pending to ready and run node verify-autopilot.mjs docs/follow-up.txt.'",
+        "After the follow-up verification, send the exact user turn: 'Pause automatic profile updates.' Then send: 'For all future tasks, use tables instead of one-sentence status summaries.' Finally send: 'Forget my one-sentence status-summary preference.'",
+        "Finally send the exact user turn: 'This work is finished; there are no remaining actions.' Re-run the last identical typed checkpoint payload once before closing so idempotency is observable."
+      ],
+      "pass": [
+        "The exact status-file acceptance note is captured as one indexed typed important input without a separate persistence request.",
+        "The explicit one-sentence cross-task preference is reconciled into the canonical profile before profile autopilot is paused.",
+        "Before compression, the indexed host-thread-42 session episode records the verified first edit and the concrete follow-up action.",
+        "The same session document for host-thread-42 is replaced after the follow-up, while the omitted existing decisions value is preserved.",
+        "The proven resolved open item is cleared and verification is updated after docs/follow-up.txt passes its verifier.",
+        "Repeating the identical checkpoint payload returns unchanged with an identical filesystem digest.",
+        "While profile autopilot is paused, the second preference leaves profile.md unchanged, and the explicit forget request removes the original one-sentence preference.",
+        "The final handoff is closed as complete and its exact reference is removed from the active index."
+      ],
+      "forbidden": [
+        "The agent does not ask for routine sidecar-write permission before taking the three local actions.",
+        "Routine successful input capture and handoff maintenance are not announced in commentary or the final response; only the explicitly requested pause and forget controls receive a brief result.",
+        "Secrets, a full transcript, and unsupported inferred preferences are not stored.",
+        "The sidecar boundary does not authorize unrelated source, formal-document, remote, or destructive writes."
+      ],
+      "automatedChecks": [
+        "template/agent-harness/src/__tests__/memory-autopilot.test.ts#Harness memory autopilot captures input and handoff with indexed documents",
+        "template/agent-harness/src/__tests__/memory-autopilot.test.ts#Harness memory autopilot reconciles explicit profile signals in place",
+        "template/agent-harness/src/__tests__/memory-autopilot.test.ts#Handoff snapshots preserve recovery fields unless an update explicitly clears them",
+        "template/agent-harness/src/__tests__/memory-autopilot.test.ts#Closing a handoff completes the document and the same base continues in a new generation",
+        "template/agent-harness/src/__tests__/memory-input-profile.test.ts#profile autopilot can be paused, still allows forgetting, and resumes explicitly",
+        "src/__tests__/llms.test.ts#routed prompts grant narrow local Memory Autopilot while keeping authoritative writes gated",
+        "src/__tests__/memory-autopilot-prompt.test.ts#memory autopilot prompts require observable quiet and payload-safe behavior"
+      ]
+    },
+    {
+      "id": "memory-autopilot-phase-only",
+      "prompt": "Change docs/phase-a.txt from pending to ready and run node verify-phase.mjs docs/phase-a.txt.",
+      "setup": [
+        "Create a disposable Git repository with docs/phase-a.txt and docs/phase-b.txt containing exactly pending. Add verify-phase.mjs, which accepts one repository-relative path and exits 0 only when that file contains exactly ready.",
+        "Initialize project .agent-docs and run the exact prompt in host thread phase-thread-17. The task plan marks the first edit as a verified stage while concrete follow-up work remains on docs/phase-b.txt.",
+        "After the first verifier exits 0, inspect the project Memory filesystem before delivering the exact follow-up user turn: 'Now change docs/phase-b.txt from pending to ready and run node verify-phase.mjs docs/phase-b.txt.'"
+      ],
+      "pass": [
+        "The first verified stage creates or updates the same indexed phase-thread-17 handoff before the follow-up user turn is delivered.",
+        "The pre-follow-up snapshot uses checkpoint-reason phase and records docs/phase-a.txt as completed with docs/phase-b.txt as the concrete next action.",
+        "The second checkpoint replaces that session snapshot after the follow-up verifier exits 0."
+      ],
+      "forbidden": [
+        "A context-budget or compression signal is injected into this phase-boundary scenario.",
+        "The checkpoint waits until the follow-up user turn before preserving the first verified stage.",
+        "The agent asks for routine sidecar-write permission or announces the successful checkpoint."
+      ],
+      "automatedChecks": [
+        "evals/__tests__/scenarios.test.ts#memory autopilot trigger scenarios isolate phase, multi-task, and cross-task profile recall",
+        "template/agent-harness/src/__tests__/memory-autopilot.test.ts#Harness memory autopilot captures input and handoff with indexed documents",
+        "src/__tests__/memory-autopilot-prompt.test.ts#memory autopilot prompts require observable quiet and payload-safe behavior"
+      ]
+    },
+    {
+      "id": "memory-autopilot-multi-task",
+      "prompt": "Change docs/item-a.txt from pending to ready and run node verify-item.mjs docs/item-a.txt.",
+      "setup": [
+        "Create a disposable Git repository with docs/item-a.txt, docs/item-b.txt, and docs/item-c.txt containing exactly pending. Add verify-item.mjs, which accepts one repository-relative path and exits 0 only when that file contains exactly ready.",
+        "Initialize project .agent-docs and use one host thread, multi-thread-23, for three exact user turns: the prompt, then 'Now do the same for docs/item-b.txt.', then 'Now do the same for docs/item-c.txt; I will send another related change shortly.'.",
+        "After each verifier exits 0, capture a filesystem digest and inspect the active session document before sending the next user turn."
+      ],
+      "pass": [
+        "The same session document for multi-thread-23 is replaced with checkpoint-reason multi-task as repeated completed work makes the earlier snapshot insufficient.",
+        "The final completed section carries all three verified tasks and the snapshot keeps a concrete next action for the still-open workstream.",
+        "Each replacement keeps one active index reference and avoids an appended turn-by-turn transcript."
+      ],
+      "forbidden": [
+        "A context-budget or compression signal is injected into this repeated-task scenario.",
+        "A separate handoff document is created for every user turn.",
+        "The agent waits for an explicit persistence request before updating the stale snapshot."
+      ],
+      "automatedChecks": [
+        "evals/__tests__/scenarios.test.ts#memory autopilot trigger scenarios isolate phase, multi-task, and cross-task profile recall",
+        "template/agent-harness/src/__tests__/memory-autopilot.test.ts#Handoff snapshots preserve recovery fields unless an update explicitly clears them",
+        "src/__tests__/memory-autopilot-prompt.test.ts#memory autopilot prompts require observable quiet and payload-safe behavior"
+      ]
+    },
+    {
+      "id": "memory-profile-cross-task-recall",
+      "prompt": "Change docs/status.txt from pending to ready, run node verify-recall.mjs docs/status.txt, and report the result.",
+      "setup": [
+        "Start a fresh host thread that has never seen the preference with global Memory already initialized from a canonical profile containing '- communication.status-summary | Keep status summaries to one sentence. | explicit | high | 2026-08-25'.",
+        "Attach a disposable repository whose docs/status.txt contains exactly pending and provide verify-recall.mjs as the exact verifier.",
+        "Run the exact prompt and capture ordered file-read actions, the project diff, the final response, and the global profile digest."
+      ],
+      "pass": [
+        "The agent reads canonical profile.md once before beginning project work in the fresh host thread.",
+        "The final response uses a one-sentence status summary without a reminder in the current prompt.",
+        "The canonical profile keeps an identical filesystem digest because recall is read-only."
+      ],
+      "forbidden": [
+        "The prompt repeats the stored preference or asks the Agent to remember it.",
+        "The Agent asks the user to choose a result format before proceeding.",
+        "Profile recall rewrites profile.md or recursively loads unrelated global Memory."
+      ],
+      "automatedChecks": [
+        "evals/__tests__/scenarios.test.ts#memory autopilot trigger scenarios isolate phase, multi-task, and cross-task profile recall",
+        "src/__tests__/memory-autopilot-prompt.test.ts#memory autopilot prompts require observable quiet and payload-safe behavior",
+        "src/__tests__/llms.test.ts#routed prompts grant narrow local Memory Autopilot while keeping authoritative writes gated"
+      ]
+    },
+    {
       "id": "cross-repository-map-writeback",
       "prompt": "Analyze several repositories and identify their stable contracts and dependencies. Do not modify repository source files.",
       "setup": [

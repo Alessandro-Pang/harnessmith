@@ -7,13 +7,16 @@ import {
   realpathSync,
   rmSync,
   symlinkSync,
+  truncateSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { closeTask, initTask, taskStatus, updateAcceptance } from '../commands/task.js';
+import { checkpointTask, closeTask, initTask, taskStatus } from '../commands/task.js';
+import { updateAcceptance } from '../commands/task-acceptance.js';
 import { verifyAcceptance } from '../commands/task-verification.js';
+import { maximumMemoryDocumentBytes } from '../lib/memory-path.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function projectFixture(): { project: string; runtime: ReturnType<typeof harnessRuntime> } {
@@ -65,6 +68,107 @@ test('external evidence scans decoded JSON values before persistence', () => {
   );
   const taskPath = join(project, '.agent-docs', 'working', 'escaped-secret', 'task.json');
   assert.equal(readFileSync(taskPath, 'utf8').includes(decodedSecret), false);
+});
+
+test('task status rejects a symlinked secret-bearing task record without reading its target', () => {
+  const { project, runtime } = projectFixture();
+  const created = initTask(
+    runtime,
+    { project, id: 'symlinked-task', objective: 'Reject task symlinks', acceptance: ['Safe'] },
+    capturedIo(),
+  );
+  const taskFile = join(project, '.agent-docs', 'working', created.id, 'task.json');
+  const outside = `${project}-outside-task.json`;
+  onTestFinished(() => rmSync(outside, { force: true }));
+  const secret = ['ghp', '_', 'Q'.repeat(24)].join('');
+  writeFileSync(outside, `{${secret}}\n`);
+  rmSync(taskFile);
+  symlinkSync(outside, taskFile, 'file');
+
+  let message = '';
+  try {
+    taskStatus({ project, id: created.id }, capturedIo());
+  } catch (error) {
+    message = error instanceof Error ? error.message : String(error);
+  }
+  assert.match(message, /regular non-symlink|symbolic link|task ledger read failed/i);
+  assert.doesNotMatch(message, new RegExp(secret));
+});
+
+test('task checkpoint rejects a symlinked secret-bearing progress record', () => {
+  const { project, runtime } = projectFixture();
+  const created = initTask(
+    runtime,
+    {
+      project,
+      id: 'symlinked-progress',
+      objective: 'Reject progress symlinks',
+      acceptance: ['Safe'],
+    },
+    capturedIo(),
+  );
+  const progress = join(project, '.agent-docs', 'working', created.id, 'progress.md');
+  const outside = `${project}-outside-progress.md`;
+  onTestFinished(() => rmSync(outside, { force: true }));
+  const secret = ['ghp', '_', 'R'.repeat(24)].join('');
+  writeFileSync(outside, `---\ntitle: [${secret}\n---\n`);
+  rmSync(progress);
+  symlinkSync(outside, progress, 'file');
+
+  let message = '';
+  try {
+    checkpointTask({ project, id: created.id, summary: 'Must fail safely.' }, capturedIo());
+  } catch (error) {
+    message = error instanceof Error ? error.message : String(error);
+  }
+  assert.match(message, /regular non-symlink|symbolic link|task progress read failed/i);
+  assert.doesNotMatch(message, new RegExp(secret));
+});
+
+test('task and progress reads enforce bounded regular-file limits', () => {
+  const taskFixture = projectFixture();
+  const task = initTask(
+    taskFixture.runtime,
+    {
+      project: taskFixture.project,
+      id: 'oversized-task',
+      objective: 'Bound task reads',
+      acceptance: ['Safe'],
+    },
+    capturedIo(),
+  );
+  truncateSync(
+    join(taskFixture.project, '.agent-docs', 'working', task.id, 'task.json'),
+    maximumMemoryDocumentBytes + 1,
+  );
+  assert.throws(
+    () => taskStatus({ project: taskFixture.project, id: task.id }, capturedIo()),
+    /exceeds .* bytes|byte (?:budget|limit)/i,
+  );
+
+  const progressFixture = projectFixture();
+  const progressTask = initTask(
+    progressFixture.runtime,
+    {
+      project: progressFixture.project,
+      id: 'oversized-progress',
+      objective: 'Bound progress reads',
+      acceptance: ['Safe'],
+    },
+    capturedIo(),
+  );
+  truncateSync(
+    join(progressFixture.project, '.agent-docs', 'working', progressTask.id, 'progress.md'),
+    maximumMemoryDocumentBytes + 1,
+  );
+  assert.throws(
+    () =>
+      checkpointTask(
+        { project: progressFixture.project, id: progressTask.id, summary: 'Must fail safely.' },
+        capturedIo(),
+      ),
+    /exceeds .* bytes|byte (?:budget|limit)/i,
+  );
 });
 
 test('legacy tasks reject duplicate acceptance identifiers that cannot be addressed safely', () => {

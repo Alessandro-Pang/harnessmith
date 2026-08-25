@@ -1,3 +1,6 @@
+import { join } from 'node:path';
+import { validateMemoryPreflight } from '../lib/memory-preflight.js';
+import { assertNoHighConfidenceSecret } from '../lib/secret-hygiene.js';
 import {
   assertTaskMutable,
   now,
@@ -24,6 +27,10 @@ export function verifyAcceptance(
   }: VerifyAcceptanceOptions = {},
   io: Io = console,
 ): TaskRecord {
+  assertNoHighConfidenceSecret(
+    [project, id, criterion, type, command, ...args, ...scope, file],
+    'Task verification request',
+  );
   if (!id || !criterion) {
     throw new Error('Task and criterion are required: --id <id> --criterion <id>');
   }
@@ -36,6 +43,7 @@ export function verifyAcceptance(
     assertTaskMutable(task);
     const target = task.acceptance.find((item) => item.id === criterion);
     if (!target) throw new Error(`Acceptance criterion does not exist: ${criterion}`);
+    validateMemoryPreflight(join(root, '.agent-docs'), 'project');
     const time = now();
     const result = mechanicallyVerifyEvidence(
       root,
@@ -47,7 +55,7 @@ export function verifyAcceptance(
     target.status = result.passed ? 'passed' : 'failed';
     target.evidence.push(result.evidence);
     task.updated = time;
-    writeTask(path, task);
+    writeTask(path, task, io);
     outputTask(taskSummary(task, result.snapshot), json, io);
     if (result.failure) throw new Error(`Task verification failed: ${result.failure}`);
     return task;

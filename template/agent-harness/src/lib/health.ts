@@ -3,7 +3,12 @@ import { join, resolve, sep } from 'node:path';
 import { calendarDate, managedOutputWithinHome } from '../runtime.js';
 import { errorMessage, type Io, type Runtime } from '../types.js';
 import { digestPath } from './files.js';
-import { installationIdentityHealth, runtimeHealth } from './health-runtime.js';
+import {
+  installationIdentityHealth,
+  type ManagedInstallRecord,
+  runtimeHealth,
+} from './health-runtime.js';
+import type { MemoryRootKind } from './memory-autopilot-document-rules.js';
 import { memoryMaintenanceReport, memoryMaintenanceWarnings } from './memory-maintenance.js';
 import { resolveMemoryRoot } from './memory-path.js';
 import { validateMemoryRoot } from './memory-validation.js';
@@ -12,12 +17,6 @@ import { projectSnapshot } from './project.js';
 type HealthStatus = 'passed' | 'warning' | 'failed';
 type HealthCheck = { id: string; status: HealthStatus; message: string; details?: string[] };
 export type HealthReport = { version: 1; healthy: boolean; checks: HealthCheck[] };
-type ManagedRecord = {
-  schemaVersion?: number;
-  adapter?: string;
-  outputs?: Array<{ path?: string; checksum?: string }>;
-};
-
 function managedInstallationHealth(runtime: Runtime): HealthCheck {
   const recordPath = join(runtime.harnessHome, '.harnessmith', 'install.json');
   if (!existsSync(recordPath)) {
@@ -28,9 +27,9 @@ function managedInstallationHealth(runtime: Runtime): HealthCheck {
       details: [recordPath],
     };
   }
-  let record: ManagedRecord;
+  let record: ManagedInstallRecord;
   try {
-    record = JSON.parse(readFileSync(recordPath, 'utf8')) as ManagedRecord;
+    record = JSON.parse(readFileSync(recordPath, 'utf8')) as ManagedInstallRecord;
   } catch (error) {
     return {
       id: 'installation',
@@ -144,10 +143,13 @@ function installationHealth(runtime: Runtime): HealthCheck {
 }
 
 function projectMemoryHealth(runtime: Runtime, projectRoot: string, today: string): HealthCheck {
-  const check = memoryHealth('project-memory', resolveMemoryRoot(runtime, projectRoot), today, [
-    'README.md',
-    'core.md',
-  ]);
+  const check = memoryHealth(
+    'project-memory',
+    resolveMemoryRoot(runtime, projectRoot),
+    today,
+    ['README.md', 'core.md'],
+    'project',
+  );
   if (check.status === 'failed') return check;
   const missingIgnoreRules: string[] = [];
   for (const name of ['.gitignore', '.ignore']) {
@@ -170,6 +172,7 @@ function memoryHealth(
   root: string,
   today: string,
   requiredEntries: string[],
+  rootKind: Exclude<MemoryRootKind, 'auto'>,
 ): HealthCheck {
   if (!existsSync(root))
     return { id, status: 'failed', message: `Memory root is missing: ${root}` };
@@ -192,7 +195,7 @@ function memoryHealth(
     },
   };
   try {
-    validateMemoryRoot(root, capture, { quietSuccess: true });
+    validateMemoryRoot(root, capture, { quietSuccess: true, rootKind });
     const maintenance = memoryMaintenanceReport(root, today);
     if (maintenance.unindexed.length > 0) {
       return {
@@ -227,11 +230,13 @@ export function createHealthReport(runtime: Runtime, project?: string): HealthRe
   const checks: HealthCheck[] = [
     runtimeHealth(),
     installationHealth(runtime),
-    memoryHealth('global-memory', runtime.memoryHome, today, [
-      'README.md',
-      'core.md',
-      'profile.md',
-    ]),
+    memoryHealth(
+      'global-memory',
+      runtime.memoryHome,
+      today,
+      ['README.md', 'core.md', 'profile.md'],
+      'global',
+    ),
   ];
   if (project) {
     const snapshot = projectSnapshot(project);

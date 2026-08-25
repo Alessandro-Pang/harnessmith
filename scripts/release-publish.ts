@@ -200,11 +200,13 @@ export function releaseCandidate(
   const options = releaseOptions(args);
   const directory = releaseStateDirectory(options.stateDir);
   const existing = readReleaseState(directory);
-  const source = options.packageArtifact
-    ? releaseArtifactPath(options.packageArtifact)
-    : existing
-      ? undefined
-      : releaseArtifactPath();
+  const configuredArtifact = options.packageArtifact ?? process.env.HARNESS_RELEASE_ARTIFACT;
+  const source =
+    configuredArtifact === undefined
+      ? existing
+        ? undefined
+        : releaseArtifactPath()
+      : releaseArtifactPath(configuredArtifact);
   const state = source
     ? prepareRelease(source, directory, runner, evaluator)
     : checkedPreparedState(directory, existing as ReleaseState);

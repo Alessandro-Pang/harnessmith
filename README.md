@@ -128,7 +128,7 @@ Harnessmith 将“如何工作”“用户是谁”“之前发生了什么”�
 | --- | --- | --- |
 | 宿主原生 memory | 宿主自动召回的历史线索 | 只作待核对输入，不是 Harness 当前画像 |
 | `~/.agent-harness` | 用户维护的个人规则和仓库关系 | 属于规则 overlay，不是记忆；升级和卸载不会覆盖 |
-| `~/.agent-docs/profile.md` | 当前身份、工作方式、技术背景、偏好和研究方向 | Harness 内唯一当前用户画像；明确要求维护时原位更新 |
+| `~/.agent-docs/profile.md` | 当前身份、工作方式、技术背景、偏好和研究方向 | Harness 内唯一当前用户画像；仅跨任务 `explicit/high` 信号自动原位更新，可暂停或遗忘 |
 | `~/.agent-docs/core.md` 与其他全局 memory | 跨项目活跃主题、经历及高价值提炼发现 | 只保留名称级入口、来源和上下文，不保存第二份当前画像 |
 | `<project>/.agent-docs` | 项目输入、会话、工作状态、证据、提炼发现和历史归档 | 可审阅但非权威；默认被 Git 与普通索引忽略 |
 | `docs/`、ADR、代码、测试、schema、lint、CI | 项目当前事实、正式决策与可执行约束 | 权威层；稳定结论最终应提升到这里 |
@@ -157,11 +157,32 @@ active/blocked 记忆，`memory maintain` 只读报告未索引、过期 working
 `memory migrate --set ...` 迁移：默认输出 proposal，审阅且 `ready` 后才使用 `--apply`；初始化、
 task progress 和 Memory 写命令通过共享 memory-root lock 串行化。
 
+Memory Autopilot 让 Agent 在不反复打扰用户的前提下调用类型化命令：`capture-input --payload-file`
+安全保存重要输入，`handoff` / `close-handoff` 维护未完成工作，`reconcile-profile` / `forget-profile` /
+`profile-autopilot` 维护可暂停的当前画像。verbatim 输入按原始文本、来源和模式精确去重，可靠摘要按
+规范化文本去重；命令会拒绝
+高置信敏感信息、精确更新索引、校验托管 Memory 并在失败时回滚。所有自动自由文本先由非 shell 文件
+能力写入 JSON，再经 `--payload-file` 传递，禁止把不可信文本做 shell 插值。例行自动
+`created/updated/unchanged` 不另行通知，`proposed/blocked` 简短告知；用户明确要求画像控制时简报结果。本地
+`host-evals/` 由独立的 `eval:validate` 校验，但 scenario 或单元测试不代表真实 Host 已通过。
+
+这里的“学习/进化”是可审计的记忆适配，不是模型权重学习，也不允许 Agent 自动改写 prompt、skill、
+规则或源码；这些变化仍需明确授权、评审和验证。
+
+handoff 不依赖宿主结束 hook：阶段已验证且仍有后续、宿主发出上下文压缩/预算信号，或旧快照已不足
+恢复且 `completed/decisions/open/verification/next` 发生实质变化时触发检查。写前读取当前 handoff 与
+active task；只有已证实 resolved/superseded 的内容才清理，模糊状态保留。宿主 thread/task id 优先作为稳定
+session base；同一 workstream 原位替换最新 active generation，不累积聊天流水。工作结束且无后续时关闭并
+移出 active index；同一 base 后续出现新任务时确定性创建下一 generation，并保留旧 episode。
+
 项目记忆只在已获工作区写入授权且任务确实需要跨会话交接、未完成状态或脱敏证据时初始化；简单
-问答和一次性小修改不触发初始化，只读任务即使发现昂贵结论也只报告 proposal。读取时先看
-`core.md` 和名称/元信息，再按引用加载正文，不默认读取整棵目录或 archive。
-达到沉淀阈值的任务在交付时明确报告记忆为 `proposed`、`updated`、`unchanged` 或 `blocked`；长任务
-入口由 task 命令自动同步到 `core.md`，稳定经验只有实际写入并验证正式文档后才算完成提升。
+问答和一次性小修改不触发初始化，未初始化的只读项目即使发现昂贵结论也只报告 proposal。读取时先看
+`core.md` 和名称/元信息，再按引用加载正文，不默认读取整棵目录或 archive。跨项目主题命中时同样按需
+读取全局 Memory 的 `core.md`；canonical `profile.md` 是有界例外，每个新宿主 task/thread 首次工作前读取
+一次以应用已有跨任务偏好。新 distilled 未经 typed 流程或当前授权只形成 proposal。
+达到沉淀阈值的任务在内部得到 `proposed`、`created`、`updated`、`unchanged` 或 `blocked` 结果；
+例行自动 `created/updated/unchanged` 静默，`proposed/blocked` 才简短说明。长任务入口由 task 命令自动同步到 `core.md`，
+稳定经验只有实际写入并验证正式文档后才算完成提升。
 
 ### 可维护的 Repository Map
 

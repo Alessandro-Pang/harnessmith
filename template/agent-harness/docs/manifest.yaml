@@ -1,5 +1,5 @@
 version: 1
-updated: 2026-08-22
+updated: 2026-08-25
 root: |-
   {{HARNESS_HOME}}/agent-harness/docs
 principle: progressive-disclosure
@@ -18,7 +18,7 @@ entries:
     triggers: [git, branch, commit, commitlint, conventional-commits, 分支, 提交, 提交规范]
   harness-cli-architecture:
     path: core/harness-cli-architecture.md
-    triggers: [harness-cli, install, init, memory-command, doctor, health, route, explain, memory-migrate, 安装, 初始化, 记忆命令, 健康检查, 路由, 记忆迁移]
+    triggers: [harness-cli, install, init, memory-command, memory-autopilot, capture-input, payload-file, handoff, close-handoff, reconcile-profile, forget-profile, profile-autopilot, doctor, health, route, explain, memory-migrate, 安装, 初始化, 记忆命令, 自动记忆, 健康检查, 路由, 记忆迁移]
   long-running-tasks:
     path: core/long-running-tasks.md
     triggers: [long-running, checkpoint, acceptance, resume, task-ledger, 长任务, 检查点, 验收, 恢复任务, 任务账本]
@@ -45,7 +45,7 @@ entries:
     triggers: [AGENTS.md, project-rules, 项目规则]
   project-agent-docs:
     path: standards/project-agent-docs.md
-    triggers: [.agent-docs, session, evidence, handoff, memory-list, memory-check, memory-migrate, secret-hygiene, 项目记忆, 会话, 记忆列表, 记忆检查, 记忆迁移, 凭据卫生]
+    triggers: [.agent-docs, session, evidence, handoff, close-handoff, memory-autopilot, capture-input, payload-file, memory-list, memory-check, memory-migrate, secret-hygiene, host-evals, 项目记忆, 会话, 自动记忆, 记忆列表, 记忆检查, 记忆迁移, 凭据卫生]
   user-profile-memory:
     path: standards/user-profile-memory.md
-    triggers: [user-profile, preference, identity, coding-style, research-interest, 用户画像, 偏好, 身份, 编码风格, 研究兴趣]
+    triggers: [user-profile, reconcile-profile, forget-profile, profile-autopilot, preference, identity, coding-style, research-interest, 用户画像, 画像合并, 画像暂停, 画像遗忘, 偏好, 身份, 编码风格, 研究兴趣]

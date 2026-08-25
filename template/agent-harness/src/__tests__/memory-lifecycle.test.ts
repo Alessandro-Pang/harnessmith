@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import lockfile from 'proper-lockfile';
 import { onTestFinished, test } from 'vitest';
-import { initGlobal } from '../commands/init.js';
+import { initGlobal, initProject } from '../commands/init.js';
 import { memoryCheck, resolveMemoryRoot } from '../commands/memory.js';
 import { archiveMemory, memoryMaintenance, supersedeMemory } from '../commands/memory-lifecycle.js';
 import { memoryMigrate } from '../commands/memory-migration.js';
@@ -331,12 +331,13 @@ test('memory promotion produces a proposal without writing authoritative docs', 
   const project = join(root, 'project');
   mkdirSync(join(project, '.agent-docs', 'distilled'), { recursive: true });
   execFileSync('git', ['-C', project, 'init', '-q']);
+  const runtime = harnessRuntime(root);
+  initProject(runtime, project, capturedIo());
   const memory = join(project, '.agent-docs', 'distilled', 'finding.md');
   writeFileSync(
     memory,
     memoryDocument('Finding').replace('memory-kind: episode', 'memory-kind: distilled'),
   );
-  const runtime = harnessRuntime(root);
   const target = join(dirname(resolveMemoryRoot(runtime, project)), 'docs', 'finding.md');
 
   const proposal = memoryPromotionProposal(

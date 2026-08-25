@@ -4,7 +4,8 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { closeTask, initTask, taskStatus, updateAcceptance } from '../commands/task.js';
+import { closeTask, initTask, taskStatus } from '../commands/task.js';
+import { updateAcceptance } from '../commands/task-acceptance.js';
 import { verifyAcceptance } from '../commands/task-verification.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 

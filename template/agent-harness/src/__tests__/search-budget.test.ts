@@ -16,6 +16,28 @@ function temporaryRoot(): string {
 
 const source = (root: string) => [{ root, label: 'memory', trust: 'untrusted' as const }];
 
+function validMemoryDocument(body: string): string {
+  return `---
+title: Search budget memory
+description: Valid memory search fixture
+type: evidence-manifest
+memory-kind: evidence
+status: complete
+owners: [test-owner]
+created: 2026-08-25
+updated: 2026-08-25
+project: global
+tags: [test]
+scope: []
+source-refs: []
+source-of-truth: false
+schema-version: 1
+---
+
+${body}
+`;
+}
+
 test('search rejects non-positive or fractional scan budgets', () => {
   const root = temporaryRoot();
 
@@ -198,7 +220,7 @@ test('context and memory search CLIs expose scan budgets in their JSON reports',
   assert.equal(contextReport.scanTruncated, true);
 
   initGlobal(runtime, capturedIo());
-  writeFileSync(join(runtime.memoryHome, 'large.md'), 'needle\n');
+  writeFileSync(join(runtime.memoryHome, 'large.md'), validMemoryDocument('needle'));
   const memoryOutput = capturedIo();
   assert.equal(
     runCli(

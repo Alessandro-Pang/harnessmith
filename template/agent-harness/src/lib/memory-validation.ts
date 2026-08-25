@@ -1,10 +1,40 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { resolve, sep } from 'node:path';
 import type { Io } from '../types.js';
 import { type FrontmatterResult, parseFrontmatterDocument } from './frontmatter.js';
+import type { MemoryRootKind } from './memory-autopilot-document-rules.js';
 import { validateMemoryDocumentRules } from './memory-document-rules.js';
-import { markdownFiles } from './memory-path.js';
+import {
+  type HandoffGenerationState,
+  recordTypedHandoffGeneration,
+  validateHandoffGenerations,
+} from './memory-handoff-generation-rules.js';
+import {
+  isExcludedMemoryArtifact,
+  type ManagedMemoryEntry,
+  managedMemoryEntries,
+  markdownFiles,
+  maximumMemoryDocumentBytes,
+  memoryDocumentPath,
+  readMemoryDocument,
+} from './memory-path.js';
+import { sanitizeDiagnosticText, validatePortableMemoryPaths } from './memory-root-path-rules.js';
 import { containsHighConfidenceSecret, secretTextFiles } from './secret-hygiene.js';
+import { canonicalTaskLedgerId } from './task-ledger-memory.js';
+
+const redactedSecretDiagnostic =
+  'Memory validation diagnostic redacted because it contains high-confidence secret material';
+
+function redactingIo(io: Io): Io {
+  const safeMessage = (message: unknown) => {
+    const text = String(message);
+    return containsHighConfidenceSecret(text)
+      ? redactedSecretDiagnostic
+      : sanitizeDiagnosticText(text);
+  };
+  return {
+    log: (message: unknown = '') => io.log(safeMessage(message)),
+    error: (message: unknown = '') => io.error(safeMessage(message)),
+  };
+}
 
 export function contentMemoryReferences(content: string): string[] {
   return [...content.matchAll(/memory:([A-Za-z0-9_./-]+)/g)].map((match) => match[1]);
@@ -12,12 +42,25 @@ export function contentMemoryReferences(content: string): string[] {
 
 export function metadataReferences(metadata: Map<string, unknown>): string[] {
   const values: string[] = [];
-  for (const field of ['derived-from', 'supersedes', 'superseded-by']) {
+  for (const field of ['derived-from', 'supersedes', 'superseded-by', 'source-refs']) {
     const value = metadata.get(field);
     if (typeof value === 'string') values.push(value);
     else if (Array.isArray(value)) values.push(...value.filter((item) => typeof item === 'string'));
   }
   return values.filter((value) => value.startsWith('memory:'));
+}
+
+export function isOpaqueMemoryContent(
+  metadata: Map<string, unknown>,
+  location?: { root: string; path: string },
+): boolean {
+  return (
+    metadata.get('memory-kind') === 'input' ||
+    metadata.get('type') === 'user-profile' ||
+    (metadata.get('type') === 'session-handoff' && metadata.get('snapshot-mode') === 'replace') ||
+    (location !== undefined &&
+      canonicalTaskLedgerId(location.root, location.path, metadata) !== undefined)
+  );
 }
 
 function validateParsedMemoryDocument(
@@ -26,6 +69,7 @@ function validateParsedMemoryDocument(
   content: string,
   frontmatter: FrontmatterResult,
   io: Io,
+  rootKind: MemoryRootKind,
 ): number {
   let failures = validateMemoryDocumentRules(
     root,
@@ -33,6 +77,7 @@ function validateParsedMemoryDocument(
     frontmatter.body,
     frontmatter.metadata,
     io,
+    rootKind,
   );
   if (containsHighConfidenceSecret(content)) {
     io.error(`Memory contains high-confidence secret material: ${path}`);
@@ -46,6 +91,53 @@ export function validateMemoryDocument(
   path: string,
   content: string,
   io: Io,
+  { rootKind = 'auto' }: { rootKind?: MemoryRootKind } = {},
+): number {
+  const safeIo = redactingIo(io);
+  let frontmatter: FrontmatterResult;
+  try {
+    frontmatter = parseFrontmatterDocument(content);
+  } catch (error) {
+    safeIo.error(`Invalid memory frontmatter: ${path}: ${String(error)}`);
+    return 1;
+  }
+  return validateParsedMemoryDocument(root, path, content, frontmatter, safeIo, rootKind);
+}
+
+function discoveredMemoryFiles(
+  root: string,
+  io: Io,
+): { entries: ManagedMemoryEntry[]; files: string[] } {
+  try {
+    const entries = managedMemoryEntries(root);
+    return { entries, files: markdownFiles(root, { entries }) };
+  } catch (error) {
+    const message = String(error);
+    io.error(
+      message.toLowerCase().includes('symbolic link')
+        ? `Invalid memory reference or managed memory entry: ${message}`
+        : `Invalid managed memory tree: ${message}`,
+    );
+    throw new Error('Memory check failed: 1 issue(s)', {
+      cause: error instanceof Error ? error : undefined,
+    });
+  }
+}
+
+interface RootValidationState {
+  references: Set<string>;
+  sessions: Map<string, string>;
+  inputIdentities: Map<string, string>;
+  handoffGenerations: HandoffGenerationState;
+}
+
+function validateRootDocument(
+  root: string,
+  path: string,
+  content: string,
+  io: Io,
+  state: RootValidationState,
+  rootKind: MemoryRootKind,
 ): number {
   let frontmatter: FrontmatterResult;
   try {
@@ -54,7 +146,54 @@ export function validateMemoryDocument(
     io.error(`Invalid memory frontmatter: ${path}: ${String(error)}`);
     return 1;
   }
-  return validateParsedMemoryDocument(root, path, content, frontmatter, io);
+  let failures = validateParsedMemoryDocument(root, path, content, frontmatter, io, rootKind);
+  const sessionId = frontmatter.metadata.get('session-id');
+  if (typeof sessionId === 'string' && sessionId) {
+    const identity = sessionId.normalize('NFC').toLowerCase();
+    const existing = state.sessions.get(identity);
+    if (existing) {
+      io.error(`Duplicate session-id identity: ${existing} and ${path}`);
+      failures += 1;
+    } else state.sessions.set(identity, path);
+  }
+  recordTypedHandoffGeneration(frontmatter.metadata, path, state.handoffGenerations);
+  if (frontmatter.metadata.get('memory-kind') === 'input') {
+    const digest = frontmatter.metadata.get('content-digest');
+    if (typeof digest === 'string' && digest) {
+      const existing = state.inputIdentities.get(digest);
+      if (existing) {
+        io.error(`Duplicate input identity ${digest}: ${existing} and ${path}`);
+        failures += 1;
+      } else state.inputIdentities.set(digest, path);
+    }
+  }
+  if (!isOpaqueMemoryContent(frontmatter.metadata, { root, path })) {
+    for (const reference of contentMemoryReferences(content)) state.references.add(reference);
+  }
+  for (const reference of metadataReferences(frontmatter.metadata)) {
+    state.references.add(reference.slice('memory:'.length));
+  }
+  return failures;
+}
+
+function validateReferences(root: string, references: Set<string>, io: Io): number {
+  let failures = 0;
+  for (const name of references) {
+    try {
+      memoryDocumentPath(root, name);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      io.error(
+        message.includes('does not exist')
+          ? `Broken memory reference: memory:${name}`
+          : message.includes('escapes root')
+            ? `Memory reference escapes root: memory:${name}`
+            : `Invalid memory reference memory:${name}: ${message}`,
+      );
+      failures += 1;
+    }
+  }
+  return failures;
 }
 
 export function validateMemoryRoot(
@@ -63,48 +202,48 @@ export function validateMemoryRoot(
   {
     quietSuccess = false,
     contentOverrides = new Map(),
-  }: { quietSuccess?: boolean; contentOverrides?: Map<string, string> } = {},
+    rootKind = 'auto',
+  }: {
+    quietSuccess?: boolean;
+    contentOverrides?: Map<string, string>;
+    rootKind?: MemoryRootKind;
+  } = {},
 ): void {
-  let failures = 0;
-  const references = new Set<string>();
-  const sessions = new Map<string, string>();
-  for (const path of markdownFiles(root)) {
-    const content = contentOverrides.get(path) ?? readFileSync(path, 'utf8');
-    let frontmatter: FrontmatterResult;
-    try {
-      frontmatter = parseFrontmatterDocument(content);
-    } catch (error) {
-      io.error(`Invalid memory frontmatter: ${path}: ${String(error)}`);
+  const safeIo = redactingIo(io);
+  const { entries, files } = discoveredMemoryFiles(root, safeIo);
+  let failures = validatePortableMemoryPaths(root, entries, safeIo);
+  const state: RootValidationState = {
+    references: new Set(),
+    sessions: new Map(),
+    inputIdentities: new Map(),
+    handoffGenerations: new Map(),
+  };
+  for (const path of files) {
+    const override = contentOverrides.get(path);
+    if (override !== undefined && Buffer.byteLength(override) > maximumMemoryDocumentBytes) {
+      io.error(`Memory document byte budget exceeded: ${path}`);
       failures += 1;
       continue;
     }
-    failures += validateParsedMemoryDocument(root, path, content, frontmatter, io);
-    const sessionId = frontmatter.metadata.get('session-id');
-    if (typeof sessionId === 'string' && sessionId) {
-      const existing = sessions.get(sessionId);
-      if (existing) {
-        io.error(`Duplicate session-id ${sessionId}: ${existing} and ${path}`);
-        failures += 1;
-      } else sessions.set(sessionId, path);
-    }
-    for (const reference of contentMemoryReferences(content)) references.add(reference);
-    for (const reference of metadataReferences(frontmatter.metadata))
-      references.add(reference.slice('memory:'.length));
+    const content = override ?? readMemoryDocument(path);
+    failures += validateRootDocument(root, path, content, safeIo, state, rootKind);
   }
-  for (const path of secretTextFiles(root, new Set(markdownFiles(root)))) {
-    io.error(`Memory contains high-confidence secret material: ${path}`);
+  failures += validateHandoffGenerations(state.handoffGenerations, safeIo);
+  let secretFiles: string[];
+  try {
+    secretFiles = secretTextFiles(root, new Set(files), {
+      exclude: (path) => isExcludedMemoryArtifact(root, path),
+      excludeDirectory: (path) => isExcludedMemoryArtifact(root, path),
+    });
+  } catch (error) {
+    safeIo.error(`Memory secret scan failed: ${String(error)}`);
+    throw new Error(`Memory check failed: ${failures + 1} issue(s)`);
+  }
+  for (const path of secretFiles) {
+    safeIo.error(`Memory contains high-confidence secret material: ${path}`);
     failures += 1;
   }
-  for (const name of references) {
-    const direct = resolve(root, name);
-    if (direct !== root && !direct.startsWith(`${root}${sep}`)) {
-      io.error(`Memory reference escapes root: memory:${name}`);
-      failures += 1;
-    } else if (!existsSync(direct) && !existsSync(`${direct}.md`)) {
-      io.error(`Broken memory reference: memory:${name}`);
-      failures += 1;
-    }
-  }
+  failures += validateReferences(root, state.references, safeIo);
   if (failures > 0) throw new Error(`Memory check failed: ${failures} issue(s)`);
-  if (!quietSuccess) io.log(`Memory check passed: ${root}`);
+  if (!quietSuccess) safeIo.log(`Memory check passed: ${root}`);
 }

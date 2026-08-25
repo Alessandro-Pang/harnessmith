@@ -2,7 +2,7 @@
 title: Compact User Profile Memory
 type: harness-standard
 status: active
-updated: 2026-08-22
+updated: 2026-08-25
 ---
 
 # 紧凑用户画像记忆
@@ -51,8 +51,9 @@ updated: 2026-08-22
 `communication.explanation`、`interests.current-research`。同一维度只能存在一个 key。正文最多 32 条
 活跃结论；优先合并语义相近条目，用一条高信息密度陈述覆盖多个重复观察。
 
-“完整”指在已有证据覆盖的不同维度中不遗漏高价值信息，不代表记录每个细节。达到上限时按以下
-顺序压缩：删除过时推断，合并重复项，删除低价值细节，最后只保留各维度的最近当前状态。
+“完整”指在已有证据覆盖的不同维度中不遗漏高价值信息，不代表记录每个细节。达到上限时不得静默
+驱逐现有条目：先更新已有 key；确需新增时报告 capacity 阻塞，只有用户明确纠正或要求遗忘后才释放
+对应槽位。
 
 ## 变化与冲突
 
@@ -64,7 +65,12 @@ updated: 2026-08-22
 有用且篇幅允许，可写成“以前喜欢披萨，现在不喜欢”。不得同时保留“喜欢”和“不喜欢”两条。
 
 冲突信息无法判断新旧或可靠性时，不得擅自二选一：降低置信度、暂缓写入，或在确实影响当前结果
-时向用户确认。用户纠正画像时立即以其当前表述更新；用户要求删除时删除对应条目。
+时向用户确认。Autopilot enabled 时，用户纠正画像后立即按当前表述更新。自动画像暂停时，普通偏好表达不得
+自动 reconcile；只有用户明确要求更正画像本身时，才可以 `userDirected: true` 执行当次纠正，且保持
+paused。用户要求恢复自动维护时才 `resume`；精确删除条目始终可执行，pause 不阻止 forget。
+
+全局 `.agent-docs/` 默认收紧为仅当前用户可访问：目录 `0700`，受管的 `README.md`、`core.md` 与
+`profile.md` 为 `0600`。这只是本地文件权限边界，不替代磁盘加密、备份治理或宿主访问控制。
 
 更新前必须先读取现有 `profile.md`，把新信号映射到已有稳定 key；禁止先在其他 memory 新建偏好
 摘要再复制回来。合并优先级为：用户当前明确表达 > 画像现有当前条目 > 带时间的 input/episode >
@@ -77,8 +83,28 @@ updated: 2026-08-22
 
 ## Agent 维护时机
 
-每次任务启动可按需读取这份小型画像，但读取不授权写入。只读任务发现稳定新信号或明确变化时，
-只报告画像更新提案，不得写入；没有新信息时也不改写。只有用户明确要求更新画像或沉淀记忆时，
-才读取现有 key、最小写入对应结论与 `updated` 日期，并运行
-`node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory check global`。用户只要求完成项目工作不等于
-授权维护用户画像。
+每个新宿主 task/thread 首次工作前有界读取一次 canonical `profile.md`，即使当前请求没有重复偏好；同一
+task/thread 不重复读取，文件缺失时继续。正文最多 32 条使该启动读取保持有界；读取本身不授权写入，
+也不触发其他全局 Memory 的递归加载。
+
+安装初始化的全局 Memory root 使用 local-safe Autopilot。只有用户明确表达为跨任务默认的稳定偏好、
+角色、工作方式，或明确纠正旧画像时，才以 `explicit/high` 自动原位更新，无需再说“请记住”：
+
+```bash
+node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory reconcile-profile \
+  --payload-file /absolute/path/to/profile-reconcile.json
+
+node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory forget-profile \
+  --key "<stable-key>"
+
+node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory profile-autopilot pause
+node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory profile-autopilot resume
+```
+
+本次任务或本项目偏好只留在项目 `input`/`handoff`，不能提升为全局画像。Runtime 尚不能绑定多条独立
+观察证据，因此 `observed`/`inferred` 只保留为候选，不自动落盘。命令原位替换同 key 并在失败时回滚；
+没有新信息时不改写。自动产生的 conclusion 等自由文本必须由非 shell 文件能力写入 JSON payload，并用
+`--payload-file` 传递；禁止把不可信文本做 shell 插值。`profile-autopilot: paused` 会机械拒绝自动 reconcile；
+仅当用户明确要求修改画像本身时，payload 才设置 `userDirected: true` 绕过当次拒绝，不会恢复 autopilot。
+暂停不阻止精确遗忘，恢复自动维护必须由用户明确要求。例行 `created/updated/unchanged` 不发过程通知；用户要求查看、
+纠正、忘记或暂停时，该操作本身是交付物，简短报告结果或阻塞。

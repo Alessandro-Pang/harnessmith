@@ -62,7 +62,7 @@ function scanSource(
   seenFiles: Set<string>,
 ): boolean {
   if (!existsSync(source.root)) return false;
-  const excluded = new Set(source.excludeDirectories || []);
+  const excluded = new Set((source.excludeDirectories || []).map((name) => name.toLowerCase()));
   const pending: PendingPath[] = [{ path: source.root, depth: 0 }];
   while (pending.length > 0) {
     const item = pending.pop();
@@ -94,7 +94,7 @@ function scanSource(
       for (const entry of scanned.entries.sort((left, right) =>
         right.name.localeCompare(left.name),
       )) {
-        if (entry.isDirectory() && excluded.has(entry.name)) continue;
+        if (entry.isDirectory() && excluded.has(entry.name.toLowerCase())) continue;
         pending.push({ path: join(item.path, entry.name), depth: item.depth + 1 });
       }
       if (scanned.exhausted) return true;

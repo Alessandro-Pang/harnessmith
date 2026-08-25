@@ -2,7 +2,7 @@
 title: Project Memory Standard
 type: harness-standard
 status: active
-updated: 2026-08-22
+updated: 2026-08-25
 ---
 
 # 项目 `.agent-docs`：纯记忆层
@@ -25,7 +25,8 @@ Agent 不应因为进入一个项目就创建 `.agent-docs/`。目录缺失时�
 - 自动初始化：已获工作区写入授权的修改/构建任务明确需要跨会话继续、交接、保存未完成状态或
   脱敏证据；初始化仍须属于当前任务范围。
 - 不初始化：简单问答、一次性小修改、能从代码与正式文档快速恢复的事实、无需交接的只读检查。
-- 提案而不初始化：只读任务即使发现昂贵结论，也只报告候选记忆提案，等待用户明确授权后再写入。
+- 提案而不初始化：未初始化的只读项目不自动创建 `.agent-docs/`；即使发现昂贵结论，也只报告候选
+  记忆提案，不要为了 sidecar 修改项目 ignore 文件。
 - 询问用户：任务可能持续多轮，但是否需要持久记忆无法从范围、成本和用户意图判断。
 
 确认需要后运行幂等命令：
@@ -89,8 +90,8 @@ node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs init project /absolute/proje
 2. 读取 `core.md`，并用 `node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs task status --project .`
    检查活跃或 blocked task。
 3. 只读取与当前目标、路径或关键词匹配的引用正文；记忆结论须用当前代码、测试或正式文档复核。
-4. 若记忆已失效或互相冲突，不得继续当作当前事实。只读任务报告 `proposed` 且不得修改记忆；只有
-   用户明确要求本轮维护项目记忆时才更新或 supersede，写入或校验失败时报告 `blocked`。
+4. 若记忆已失效或互相冲突，不得继续当作当前事实。已初始化 Memory 中符合 Autopilot 边界的去重、
+   索引修复和明确纠错可原位维护；超出该边界只报告 `proposed`，写入或校验失败时报告 `blocked`。
 
 ## 元信息
 
@@ -116,33 +117,92 @@ schema-version: 1
 ```
 
 可选：`expires`、`confidence`、`derived-from`、`supersedes`、`superseded-by`、`agent`、
-`session-id`、`session-queryable`、`request-id`。`input` 应增加 `input-source` 与 `verbatim`。
+`session-id`、`session-base`、`handoff-generation`、`session-queryable`、`request-id`。`input` 应增加
+`input-source` 与 `verbatim`。
 
 ## 写入阈值
 
 应写：跨会话交接；用户提供的重要原始输入；未完成工作；昂贵排查；无法从代码快速恢复的背景；
-需要证据链的判断；多次出现且尚未适合进入正式文档的经验。
+需要证据链的判断；多次出现且尚未适合进入正式文档的经验。对于新增且影响验收、scope、constraints，
+或包含不可廉价恢复 source 的用户输入，已初始化项目必须在继续工作前去重捕获；语义重复或无新信息不写。
 
 不应写：框架常识；容易重新搜索的事实；逐行代码摘要；已在正式文档中完整表达的事实副本；
 没有来源的猜测；密码、Token、Cookie、验证码、私钥或未脱敏生产数据。
 
+## Memory Autopilot
+
+项目 Memory 已初始化，或修改/构建任务符合初始化门槛后，Agent 对以下低风险本地 sidecar 写入
+无需逐次询问用户：重要原始输入、明确约束、未完成任务的会话交接，以及已有记忆的去重和索引修复。优先使用
+类型化命令，不自由拼接 frontmatter：
+
+```bash
+node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory capture-input . \
+  --payload-file /absolute/path/to/capture-input.json
+
+node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory handoff . \
+  --payload-file /absolute/path/to/handoff.json
+
+node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory close-handoff . \
+  --session "<stable-id>"
+```
+
+`capture-input` payload 包含 `title`、`content`、`source` 和可选 `summary`；`handoff` payload 包含
+`session`、`title`、`objective`、`completed`、可选 `facts/decisions/open/verification`、`next`、`reason`、scope、
+source refs 与显式 clear/status。自动产生的任何自由文本都必须由宿主非 shell 文件能力写入 payload，再用
+`--payload-file` 传递；禁止把用户原文、摘要或 Agent 生成文本做 shell 插值。可靠摘要在 payload 中设置
+`summary: true`；否则内容按 verbatim 保存。payload 临时文件不得包含 secret，并按宿主安全机制清理。
+
+命令会生成 schema-valid 文档、精确更新 `core.md`、执行托管 Memory 校验并在失败时回滚。重复输入按
+verbatim 内容以原始文本、来源和模式的完整 digest 保持逐字节身份；可靠摘要先规范化再计算 digest，
+二者都跨标题、日期与归档路径幂等。命中 `complete`、`superseded` 或 `archived` 输入时返回 `unchanged`，
+不得复活或重新索引；仅 active/blocked 输入可修复缺失索引。同一 session base 原位更新最新
+active/blocked generation；最新 generation 已 complete 或 archived 时，新任务创建下一 generation，旧 episode
+保持不变。
+
+写 handoff 前必须读取 `core.md` 指向的当前 handoff 和 active task，并与当前已验证事实 reconcile。
+仍然有效且影响恢复的事实必须保留；只有已由当前事实或用户意图证实为 `resolved`/`superseded` 的内容
+才能删除，相关性或状态模糊时必须保留。
+省略 `facts`、`decisions`、`verification`、`open`、`scope` 或 `source-ref` 表示保留现值；使用对应
+`--clear-*` 才删除。省略 `status` 同样保留 active/blocked 生命周期，只有显式 `--status active`
+才解除 blocked。`completed` 与 `next` 不支持省略 patch，每次 checkpoint 必须提交完整 reconcile 后的累计
+`completed` 与具体 `next`。整体重写当前状态，不追加会话流水账；无法确认是否失效时保留并提示冲突。
+
+传给命令的 session base 依次使用宿主不可变 thread/task id、已绑定的 active task id、现有唯一匹配
+workstream id；首次确无匹配时才生成并立即索引。generation 1 为兼容旧文档沿用 base 作为 `session-id`；
+后续 generation 由完整 base 与 generation 确定性派生，超过上限时加入稳定 digest 截断为最长 100 字符的
+唯一 `session-id`，并保存 `session-base` 与 `handoff-generation`。多个 active 候选、代际或 portable
+identity 冲突时禁止覆盖。
+后续始终向命令传同一 base；工作明确结束且无后续时运行 `close-handoff`，标记最新 active generation 为
+`complete` 并移出 active index。
+
+无需等待宿主结束事件。以下任一可观察边界触发检查：阶段已验证且仍有后续；宿主发出压缩或上下文预算
+信号；Agent 判断长上下文即将压缩；或旧快照已不足恢复，且 `completed/decisions/open/verification/next`
+中至少一项发生实质变化。
+能观察到压缩边界时，必须先 reconcile、写入并校验当前压缩快照，再继续处理压缩；宿主未暴露信号时，
+prompt 不能凭空补出事件 hook。
+快照相同或只有措辞变化时不写。例行成功不询问、不发过程通知；内部 action 保留可审计，只有冲突、
+敏感信息、校验失败或需要扩大写入范围时才提示用户。自动权限不扩大到源码、正式文档或远端。
+
 ## 沉淀闭环
 
-达到写入阈值的任务，交付前必须给出一种项目记忆结果：
+达到写入阈值的任务，内部必须得到一种项目记忆结果。`created/updated/unchanged` 例行成功保持静默；
+`proposed/blocked` 在交付中简短说明候选或阻塞，不展开内部工具流水：
 
-- `proposed`：只读任务或未获记忆写入授权时，只在交付中说明达到阈值的候选内容、来源和目标位置；
-  不得初始化或写入 `.agent-docs/`，也不能报告为 updated。
+- `proposed`：未初始化的只读项目，或候选内容超出 Autopilot sidecar 边界时，只在交付中说明来源和
+  目标位置；不得借此初始化或扩大写入范围。
+- `created`：首次生成一个 typed input、handoff 或 profile 条目，并完成索引与全根校验。
 - `updated`：新增或更新 input、episode、working、distilled 或 evidence，并把仍活跃或高价值的文档
   挂到 `core.md`；随后运行
   `node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory check . --indexed`。校验失败不算完成。
 - `unchanged`：已检查现有记忆，结论重复、可从权威事实低成本恢复，或任务明显一次性，因此无需写入。
-- `blocked`：用户已明确要求本轮完成写入，但因权限、缺失来源、写入或校验失败而未完成；说明阻塞项。
+- `blocked`：因权限、冲突、缺失来源、写入或校验失败而未完成；必须向用户说明阻塞项。
 
 长任务通过 task 命令自动把 active/blocked `progress.md` 挂入 `core.md`；complete 或 superseded 后
 自动移除入口。普通记忆仍需写入者显式维护索引。
 
-当多个 episode 反复出现同一不变量、陷阱或昂贵发现时，必须提炼为 `distilled/`，保留
-`derived-from`/`source-refs`，并让 `core.md` 指向提炼结果；不要只追加新的会话流水。
+当多个 episode 反复出现同一不变量、陷阱或昂贵发现时，应形成带 `derived-from`/`source-refs` 的
+`distilled/` 候选。只有当前任务明确授权该项目 Memory 写入，或存在校验过的 typed distill 流程时才落盘
+并更新 `core.md`；否则只报告 proposal。不要以自动 sidecar 权限自由拼接或追加新的会话流水。
 
 ## 正式提升闭环
 
@@ -203,6 +263,13 @@ memory-root lock；proposal、list、search、check 和 maintain 不获取写锁
 重复 `session-id`、memory 引用和高置信 secret pattern。`working` 缺少 `expires` 会告警；Harness
 生成的 task progress 默认 30 天到期，checkpoint 会续期。Secret hygiene 只拦截高置信模式，不替代
 专用 secret scanner、组织级 DLP 或提交前凭据扫描。
+
+托管 Markdown 只接受精确小写 `.md` 扩展名，单文档最多 2 MiB、整棵托管 Markdown 最多 64 MiB；
+大小写扩展别名、符号链接、特殊文件、portable 路径碰撞或超出扫描预算都会 fail closed。
+
+`.agent-docs/host-evals/` 是本地 Host Eval 证据隔离区，不属于项目 Memory 文档，也不计入
+`memory list/search/check` 与其 secret-scan 预算；必须另行运行 `pnpm run eval:validate`，不能用
+`memory check` 的成功替代 Host Eval schema、artifact digest 与 secret gate。
 
 `memory maintain` 是维护候选报告，不会自动修改文件。发现 unindexed 时补索引或关闭无效记忆；
 发现 expired working 时续期、提炼、提升或归档；closed 项确认没有活跃索引引用后再归档；重复 title

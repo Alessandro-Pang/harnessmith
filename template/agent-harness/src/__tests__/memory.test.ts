@@ -65,6 +65,28 @@ test('global memory initialization is idempotent and preserves user content', ()
   assert.equal(resolveMemoryRoot(runtime, 'global'), runtime.memoryHome);
 });
 
+test('global memory initialization repairs the profile route in a preserved legacy core', () => {
+  const root = temporaryRoot();
+  const runtime = harnessRuntime(root);
+  initGlobal(runtime, capturedIo());
+  const core = join(runtime.memoryHome, 'core.md');
+  writeFileSync(
+    core,
+    readFileSync(core, 'utf8').replace(
+      /## User Profile[\s\S]*?其余跨项目记忆/,
+      '当前没有需要主动路由的跨项目记忆。\n\n其余跨项目记忆',
+    ),
+  );
+  writeFileSync(core, `${readFileSync(core, 'utf8')}\nuser-owned note\n`);
+
+  initGlobal(runtime, capturedIo());
+
+  const repaired = readFileSync(core, 'utf8');
+  assert.match(repaired, /memory:profile/);
+  assert.match(repaired, /user-owned note/);
+  assert.doesNotThrow(() => memoryCheck(runtime, 'global', capturedIo(), { indexed: true }));
+});
+
 test('global memory initialization participates in the shared root lock', () => {
   const root = temporaryRoot();
   const runtime = harnessRuntime(root);
@@ -149,6 +171,35 @@ test('project initialization rejects a symlinked memory root', () => {
   assert.equal(existsSync(join(outside, 'core.md')), false);
 });
 
+test('project memory ignores local host-evaluation artifacts', () => {
+  const root = temporaryRoot();
+  const project = join(root, 'project');
+  mkdirSync(project, { recursive: true });
+  execFileSync('git', ['-C', project, 'init', '-q']);
+  const runtime = harnessRuntime(root);
+  initProject(runtime, project, capturedIo());
+  const artifacts = join(project, '.agent-docs', 'host-evals', 'runs', 'run-1');
+  mkdirSync(artifacts, { recursive: true });
+  writeFileSync(
+    join(artifacts, 'transcript.md'),
+    '# Redacted transcript\n\nisolated-host-eval-marker\n',
+  );
+  writeFileSync(join(artifacts, 'host-output.txt'), 'x'.repeat(1024 * 1024 + 1));
+
+  assert.doesNotThrow(() => memoryCheck(runtime, project, capturedIo(), { indexed: true }));
+  const listed = memoryList(runtime, project, capturedIo(), { json: true });
+  assert.equal(
+    listed.documents.some(({ path }) => path.startsWith('host-evals/')),
+    false,
+  );
+  const searched = capturedIo();
+  assert.equal(memorySearch(runtime, project, 'isolated-host-eval-marker', searched), 1);
+  assert.equal(
+    searched.logs.some((line) => line.includes('host-evals')),
+    false,
+  );
+});
+
 test('project initialization participates in the project memory root lock', () => {
   const root = temporaryRoot();
   const project = join(root, 'project');
@@ -175,7 +226,7 @@ test('memory list, search, and reference validation handle archive and broken re
   mkdirSync(join(runtime.memoryHome, '_archive'));
   writeFileSync(
     join(runtime.memoryHome, '_archive', 'old.md'),
-    memoryDocument('Old', 'ArchiveOnlyNeedle'),
+    memoryDocument('Old', 'ArchiveOnlyNeedle').replace('status: active', 'status: archived'),
   );
 
   const listed = capturedIo();

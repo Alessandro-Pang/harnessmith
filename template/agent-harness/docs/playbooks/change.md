@@ -2,7 +2,7 @@
 title: Change and Implementation Playbook
 type: harness-playbook
 status: active
-updated: 2026-08-22
+updated: 2026-08-25
 ---
 
 # 修改与实现
@@ -13,8 +13,9 @@ updated: 2026-08-22
 2. 搜索现有相似实现、公共边界、生成流程和测试模式；先确认 owner，再新增文件。
 3. 明确输入、输出、失败、权限、幂等、数据迁移和兼容性中哪些适用。
 4. 选择最小完整方案。不要用占位实现、假成功 mock、硬编码演示值或无期限 TODO 交付生产功能。
-5. 修改与行为变化直接相关的测试和正式文档；用户原始输入、交接和阶段状态只有
-   达到项目记忆写入阈值且已获相应授权时才放 `.agent-docs/`。
+5. 修改与行为变化直接相关的测试和正式文档；用户新增验收、scope/constraints 或不可廉价恢复 source
+   时，必须先去重并通过安全 `--payload-file` 捕获，无新信息不写。交接达到可观察边界时同样使用 typed
+   Memory Autopilot；自动自由文本不得 shell 插值，超出边界只提交 proposal。
 6. 先跑定向验证，再根据跨模块程度扩大；失败时修根因，不降低门槛。
 7. 检查 diff 是否混入用户改动、生成噪声、秘密、无关格式化或跨仓遗漏。
 

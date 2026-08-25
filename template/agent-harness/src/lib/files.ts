@@ -34,15 +34,26 @@ export function atomicWriteMany(
   let written = 0;
   try {
     for (const entry of entries) {
-      atomicWrite(entry.path, entry.content, entry.mode);
+      atomicWrite(entry.path, entry.content, entry.mode ?? snapshots[written].mode);
       written += 1;
     }
   } catch (error) {
+    const rollbackErrors: string[] = [];
     for (let index = written - 1; index >= 0; index -= 1) {
       const entry = entries[index];
       const snapshot = snapshots[index];
-      if (snapshot.existed) atomicWrite(entry.path, snapshot.content, snapshot.mode);
-      else rmSync(entry.path, { force: true });
+      try {
+        if (snapshot.existed) atomicWrite(entry.path, snapshot.content, snapshot.mode);
+        else rmSync(entry.path, { force: true });
+      } catch (rollbackError) {
+        rollbackErrors.push(`${entry.path}: ${String(rollbackError)}`);
+      }
+    }
+    if (rollbackErrors.length > 0) {
+      throw new Error(
+        `Atomic write failed and rollback was incomplete: ${String(error)}; unresolved paths: ${rollbackErrors.join('; ')}`,
+        { cause: error instanceof Error ? error : undefined },
+      );
     }
     throw error;
   }

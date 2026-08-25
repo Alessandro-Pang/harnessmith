@@ -91,10 +91,16 @@ test('post-install checks are conditional when global memory initialization is s
   );
 });
 
-test('routed prompts keep profile, memory, and authoritative-document writes behind authorization', () => {
+test('routed prompts grant narrow local Memory Autopilot while keeping authoritative writes gated', () => {
+  const readme = readFileSync(join(root, 'README.md'), 'utf8');
+  const english = readFileSync(join(root, 'README.en.md'), 'utf8');
   const agents = readFileSync(join(root, 'template', 'AGENTS.md'), 'utf8');
   const projectMemory = readFileSync(
     join(root, 'template', 'agent-harness', 'docs', 'standards', 'project-agent-docs.md'),
+    'utf8',
+  );
+  const profile = readFileSync(
+    join(root, 'template', 'agent-harness', 'docs', 'standards', 'user-profile-memory.md'),
     'utf8',
   );
   const research = readFileSync(
@@ -105,13 +111,61 @@ test('routed prompts keep profile, memory, and authoritative-document writes beh
     join(root, 'template', 'agent-harness', 'docs', 'playbooks', 'change.md'),
     'utf8',
   );
+  const architecture = readFileSync(
+    join(root, 'template', 'agent-harness', 'docs', 'core', 'harness-cli-architecture.md'),
+    'utf8',
+  );
+  const manifest = readFileSync(
+    join(root, 'template', 'agent-harness', 'docs', 'manifest.yaml'),
+    'utf8',
+  );
+  const longRunning = readFileSync(
+    join(root, 'template', 'agent-harness', 'docs', 'core', 'long-running-tasks.md'),
+    'utf8',
+  );
 
-  assert.match(agents, /按需读取紧凑 `profile\.md`/);
-  assert.match(projectMemory, /只读任务.*`proposed`.*不得修改记忆/s);
-  assert.match(projectMemory, /`blocked`：用户已明确要求本轮完成写入/);
+  assert.match(agents, /每个新宿主.*task\/thread.*首次工作前.*读取一次.*`profile\.md`/s);
+  assert.match(agents, /Memory Autopilot/);
+  assert.match(projectMemory, /memory capture-input/);
+  assert.match(projectMemory, /memory handoff/);
+  assert.match(projectMemory, /handoff.*payload.*next.*reason/s);
+  assert.match(projectMemory, /当前压缩快照/);
+  assert.match(projectMemory, /整体重写.*不追加.*流水账/s);
+  assert.match(projectMemory, /写 handoff 前.*当前 handoff.*active task/s);
+  assert.match(projectMemory, /仍然有效.*保留/s);
+  assert.match(projectMemory, /明确.*resolved.*superseded.*删除/s);
+  assert.match(projectMemory, /实质变化.*不写/s);
+  assert.match(projectMemory, /close-handoff/);
+  assert.match(projectMemory, /宿主.*thread.*task.*workstream/s);
+  assert.doesNotMatch(projectMemory, /--content "<verbatim-or-summary>"/);
+  assert.match(projectMemory, /无需逐次询问用户/);
+  assert.match(projectMemory, /`blocked`：.*冲突.*校验失败.*向用户说明/s);
+  assert.match(readme, /Memory Autopilot/);
+  assert.match(english, /Memory Autopilot/);
+  assert.match(architecture, /宿主事件 hook.*尚未提供/s);
+  assert.match(architecture, /prompt\/单元测试.*不能替代真实 Host Eval/s);
+  assert.match(architecture, /记忆适配闭环.*不是模型权重学习/s);
+  assert.match(architecture, /不得自动改写.*prompt.*skill.*规则.*源码/s);
+  assert.match(architecture, /host-evals.*eval:validate/s);
+  assert.match(manifest, /memory-autopilot/);
+  assert.match(agents, /阶段完成.*仍有后续/s);
+  assert.match(agents, /上下文.*压缩/s);
+  assert.match(agents, /旧快照.*不足恢复.*实质变化/s);
+  assert.match(agents, /写前.*当前 handoff.*active task/s);
+  assert.match(agents, /无实质变化不写/);
+  assert.match(agents, /无后续.*关闭 handoff/s);
+  assert.match(agents, /explicit\/high.*autopilot 未暂停/s);
+  assert.match(longRunning, /压缩前.*handoff/s);
+  assert.match(longRunning, /同一 session.*原位更新/s);
   assert.match(research, /只有用户授权项目写入且结论已被采纳/);
   assert.match(research, /否则只提交 proposal/);
-  assert.match(change, /达到项目记忆写入阈值且已获相应授权/);
+  assert.match(change, /用户新增验收.*必须.*去重.*--payload-file/s);
+  assert.match(profile, /跨任务.*explicit\/high/s);
+  assert.match(profile, /本次任务.*项目.*input.*handoff/s);
+  assert.match(profile, /profile-autopilot pause/);
+  assert.match(profile, /profile-autopilot resume/);
+  assert.match(profile, /paused.*机械拒绝.*reconcile/s);
+  assert.match(projectMemory, /host-evals.*eval:validate/s);
 });
 
 test('release documentation describes the resumable immutable snapshot workflow', () => {
@@ -304,7 +358,7 @@ test('distributed rules keep trust and authorization boundaries non-waivable', (
   assert.match(llms, /Distributed instructions do not grant permissions/);
 });
 
-test('read-only requests keep memory writes explicit except for qualified repository-map maintenance', () => {
+test('read-only requests allow only narrow local Autopilot and qualified repository-map maintenance', () => {
   const operatingModel = readFileSync(
     join(root, 'template', 'agent-harness', 'docs', 'core', 'operating-model.md'),
     'utf8',
@@ -322,13 +376,12 @@ test('read-only requests keep memory writes explicit except for qualified reposi
     'utf8',
   );
 
-  assert.match(operatingModel, /只读任务不得写入 `profile\.md` 或项目 `.agent-docs\/`/);
+  assert.match(operatingModel, /只读任务不得修改项目源码、配置或正式文档/);
+  assert.match(operatingModel, /明确用户画像信号.*自动 reconcile/s);
   assert.match(operatingModel, /跨仓分析.*personal `repository-map\.yaml`.*默认维护/s);
-  assert.match(projectMemory, /只读任务.*只报告候选记忆提案/);
-  assert.match(projectMemory, /不得初始化或写入 `.agent-docs\/`/);
-  assert.match(profile, /只读任务发现稳定新信号或明确变化时/);
-  assert.match(profile, /只报告画像更新提案，不得写入/);
-  assert.match(profile, /只有用户明确要求更新画像或沉淀记忆时/);
+  assert.match(projectMemory, /未初始化的只读项目.*不自动创建/);
+  assert.match(profile, /用户明确表达.*自动原位更新/s);
+  assert.match(profile, /无需再说.*记住/s);
   assert.match(
     repositoryMap,
     /跨仓分析本身授权更新 personal\s+`repository-map\.md`.*`repository-map\.yaml`/,

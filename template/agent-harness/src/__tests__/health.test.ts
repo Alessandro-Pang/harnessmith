@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { runCli } from '../cli.js';
+import { initGlobal } from '../commands/init.js';
 import { createHealthReport } from '../lib/health.js';
 import {
   managedOutputWithinHome,
@@ -16,6 +17,59 @@ function temporaryRoot(): string {
   const root = mkdtempSync(join(tmpdir(), 'harness-health-'));
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
   return root;
+}
+
+function managedHealthFixture(): {
+  runtime: ReturnType<typeof harnessRuntime>;
+  recordPath: string;
+} {
+  const root = temporaryRoot();
+  const harnessHome = join(root, 'host');
+  const harnessRoot = join(harnessHome, 'agent-harness');
+  const instruction = join(harnessHome, 'AGENTS.md');
+  const memoryHome = join(root, 'memory');
+  const personalHome = join(root, 'personal');
+  const repositoryRoot = join(root, 'repositories');
+  const recordPath = join(harnessHome, '.harnessmith', 'install.json');
+  mkdirSync(join(harnessRoot, 'bin'), { recursive: true });
+  mkdirSync(join(harnessHome, '.harnessmith'), { recursive: true });
+  mkdirSync(personalHome, { recursive: true });
+  writeFileSync(instruction, '# rules\n');
+  writeFileSync(join(personalHome, 'AGENTS.md'), '# personal\n');
+  writeFileSync(join(harnessRoot, 'bin', 'harness.mjs'), '#!/usr/bin/env node\n');
+  writeFileSync(
+    join(harnessRoot, 'manifest.json'),
+    JSON.stringify({ schemaVersion: 3, memorySchemaVersion: 1 }),
+  );
+  writeFileSync(
+    join(harnessRoot, 'install-context.json'),
+    JSON.stringify({
+      version: 1,
+      adapter: 'coverage-host',
+      harnessHome,
+      instructionFiles: [instruction],
+      memoryHome,
+      personalHome,
+      repositoryRoot,
+      owner: 'test-owner',
+    }),
+  );
+  return {
+    recordPath,
+    runtime: harnessRuntime(root, {
+      harnessRoot,
+      distributionRoot: harnessHome,
+      harnessHome,
+      hostAdapter: 'coverage-host',
+      instructionFiles: [instruction],
+      installedHarness: harnessRoot,
+      docsRoot: join(harnessRoot, 'docs'),
+      memoryHome,
+      personalHome,
+      repositoryRoot,
+      identityOverride: undefined,
+    }),
+  };
 }
 
 test('runtime identity fails closed for missing or malformed managed context', () => {
@@ -257,6 +311,87 @@ test('health rejects empty global and project memory roots', () => {
   assert.match(globalMemory?.message ?? '', /required memory entr/i);
   assert.equal(projectMemory?.status, 'failed');
   assert.match(projectMemory?.message ?? '', /required memory entr/i);
+});
+
+test('health reports malformed, incompatible, and mismatched managed installation records', () => {
+  const invalid = managedHealthFixture();
+  writeFileSync(invalid.recordPath, '{invalid json\n');
+  const invalidCheck = createHealthReport(invalid.runtime).checks.find(
+    ({ id }) => id === 'installation',
+  );
+  assert.match(invalidCheck?.message ?? '', /record is invalid/i);
+
+  const incompatible = managedHealthFixture();
+  writeFileSync(
+    incompatible.recordPath,
+    JSON.stringify({ schemaVersion: 2, adapter: 'coverage-host', outputs: [] }),
+  );
+  const incompatibleCheck = createHealthReport(incompatible.runtime).checks.find(
+    ({ id }) => id === 'installation',
+  );
+  assert.match(incompatibleCheck?.message ?? '', /record is incompatible/i);
+
+  const mismatched = managedHealthFixture();
+  writeFileSync(
+    mismatched.recordPath,
+    JSON.stringify({ schemaVersion: 1, adapter: 'coverage-host', outputs: [] }),
+  );
+  const mismatchedCheck = createHealthReport(mismatched.runtime).checks.find(
+    ({ id }) => id === 'installation',
+  );
+  assert.match(mismatchedCheck?.message ?? '', /outputs do not match/i);
+});
+
+test('health reports an invalid installation manifest without throwing', () => {
+  const root = temporaryRoot();
+  const runtime = harnessRuntime(root);
+  mkdirSync(join(runtime.installedHarness, 'bin'), { recursive: true });
+  mkdirSync(runtime.personalHome, { recursive: true });
+  writeFileSync(runtime.instructionFiles[0], '# rules\n');
+  writeFileSync(join(runtime.personalHome, 'AGENTS.md'), '# personal\n');
+  writeFileSync(join(runtime.installedHarness, 'bin', 'harness.mjs'), '#!/usr/bin/env node\n');
+  writeFileSync(join(runtime.installedHarness, 'manifest.json'), '{invalid json\n');
+
+  const check = createHealthReport(runtime).checks.find(({ id }) => id === 'installation');
+
+  assert.equal(check?.status, 'failed');
+  assert.match(check?.message ?? '', /manifest is invalid/i);
+});
+
+test('health fails an otherwise valid memory root when an active document is unindexed', () => {
+  const root = temporaryRoot();
+  const runtime = harnessRuntime(root);
+  initGlobal(runtime, capturedIo());
+  writeFileSync(
+    join(runtime.memoryHome, 'unindexed.md'),
+    [
+      '---',
+      'title: Unindexed memory',
+      'description: Active memory omitted from the core index',
+      'type: evidence-manifest',
+      'memory-kind: working',
+      'status: active',
+      'owners: [test-owner]',
+      'created: 2026-08-25',
+      'updated: 2026-08-25',
+      'expires: 2026-09-25',
+      'project: global',
+      'tags: [test]',
+      'scope: []',
+      'source-refs: []',
+      'source-of-truth: false',
+      'schema-version: 1',
+      '---',
+      '',
+      'Unindexed fixture.',
+    ].join('\n'),
+  );
+
+  const check = createHealthReport(runtime).checks.find(({ id }) => id === 'global-memory');
+
+  assert.equal(check?.status, 'failed');
+  assert.match(check?.message ?? '', /active memory document.*unindexed/i);
+  assert.deepEqual(check?.details, ['unindexed.md']);
 });
 
 test('managed output containment fails closed for Windows cross-drive paths', () => {

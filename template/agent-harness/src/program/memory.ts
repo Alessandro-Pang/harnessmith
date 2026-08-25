@@ -4,6 +4,7 @@ import { archiveMemory, memoryMaintenance, supersedeMemory } from '../commands/m
 import { memoryMigrate } from '../commands/memory-migration.js';
 import { memoryPromotionProposal } from '../commands/memory-promotion.js';
 import type { Io, Runtime } from '../types.js';
+import { registerMemoryAutopilotCommands } from './memory-autopilot.js';
 import { addSearchOptions, type SearchCommandOptions } from './search-options.js';
 import type { CommandRunner } from './types.js';
 
@@ -50,6 +51,7 @@ export function registerMemoryCommands(
       ),
     );
   registerMemoryMutationCommands(memory, runtime, io, run);
+  registerMemoryAutopilotCommands(memory, runtime, io, run);
 }
 
 function registerMemoryMutationCommands(

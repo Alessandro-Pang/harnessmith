@@ -2,7 +2,7 @@
 title: Harness CLI Architecture
 type: harness-core
 status: active
-updated: 2026-08-22
+updated: 2026-08-25
 ---
 
 # Harness CLI Architecture
@@ -97,6 +97,36 @@ Memory maintenance 遵循非权威边界：`migrate` 默认只输出 proposal，
 `--apply` 才写入；`supersede` 建立可校验替代链接，`archive` 默认只移动 complete/superseded 且拒绝
 仍被 active index 引用的记忆，`promote` 只输出 proposal。`check --indexed` 要求 active/blocked
 文档可从 index 到达，`maintain` 只读报告候选。Runtime 不得自动写项目正式文档或删除记忆。
+
+Memory Autopilot 只有三类窄写入口：`capture-input` 从 `--payload-file` 生成语义幂等 input；
+`handoff` / `close-handoff` 维护同一 session base 下最新 active generation 的可恢复 snapshot；
+`reconcile-profile` / `forget-profile` /
+`profile-autopilot` 只处理跨任务 `explicit/high` 当前画像及用户控制。Input identity 对 verbatim 绑定
+原始文本，对可靠摘要绑定规范化文本，并同时绑定来源和模式；handoff 的 `facts`、`decisions`、
+`verification`、`open`、`scope` 与 `source-refs` 省略时保留，只有显式 clear 才删除，status 省略时保留
+active/blocked 生命周期。`completed` 与 `next` 不支持省略 patch；每次 checkpoint 必须提交完整 reconcile
+后的累计 `completed` 与具体 `next`。complete 或 archived generation 不会重开；同一 base 后续出现新任务时，
+`handoff` 确定性创建下一 generation 并保留旧 episode，之后的更新与 `close-handoff` 只命中最新 active
+generation。所有自动自由文本
+必须先由非 shell 文件 API 写入 JSON payload，再经 `--payload-file` 进入 CLI；禁止不可信文本 shell 插值。
+所有 coordinated write 在读取或写入任何 entry 前对整组路径执行 SafePath preflight，再使用
+secret scan、共享锁、原子写、托管 Memory 校验和失败回滚；`core.md` 按完整 `memory:` token 更新，
+不能用前缀匹配。
+
+这里的“自我学习/进化”只是可审计的记忆适配闭环，不是模型权重学习；Autopilot 不得自动改写
+prompt、skill、规则或源码，这些变化仍需明确授权、评审和验证。
+
+Prompt 优先复用宿主不可变 thread/task id，并在阶段已验证且仍有后续、宿主发出压缩/预算信号，或旧
+快照已不足恢复且关键状态发生实质变化时调用；仅已证实 resolved/superseded 内容可清理，模糊内容保留；
+无变化不写，无后续则 close。宿主事件 hook 尚未提供，因此“每次宿主会话结束必定执行”仍不是 Runtime
+的机械保证，prompt/单元测试和 scenario contract 也不能替代真实 Host Eval；没有绑定候选包的 passing
+record 时不得声称 Host 行为已经通过。
+`.agent-docs/host-evals/` 刻意排除在 Memory 扫描之外，由 `pnpm run eval:validate` 单独执行 schema、
+artifact digest 与高置信 secret gate。
+
+每个新宿主 task/thread 首次工作前有界读取一次 canonical `profile.md`；其余全局 Memory 才按当前主题读取
+元信息与 `core.md`，且不递归加载历史。新 distilled memory 若没有 typed 流程或当前明确写入授权，只能
+形成 proposal；Autopilot 不得凭推断自由扩展写入类型。
 
 初始化、Memory 写命令以及 task progress/core 协调写入使用同一共享 memory-root lock；proposal、
 list、search、check、maintain 和 route 保持只读。锁只保证 CLI 并发互斥，不把 Markdown guidance

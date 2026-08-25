@@ -1,10 +1,12 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, lstatSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { parseFrontmatter } from '../lib/frontmatter.js';
 import { memoryMaintenanceReport } from '../lib/memory-maintenance.js';
-import { markdownFiles, resolveMemoryRoot } from '../lib/memory-path.js';
+import { markdownFiles, readMemoryDocument, resolveMemoryRoot } from '../lib/memory-path.js';
 import { validateMemoryRoot } from '../lib/memory-validation.js';
+import { assertSafePath } from '../lib/safe-path.js';
 import { outputSearch, type SearchOptions, searchText } from '../lib/search.js';
+import { assertNoHighConfidenceSecret } from '../lib/secret-hygiene.js';
 import { calendarDate } from '../runtime.js';
 import type { Io, Runtime } from '../types.js';
 
@@ -26,9 +28,14 @@ export function memoryList(
   io: Io = console,
   { json = false }: { json?: boolean } = {},
 ): MemoryListReport {
+  assertNoHighConfidenceSecret([input], 'Memory list request');
   const root = resolveMemoryRoot(runtime, input);
+  validateMemoryRoot(root, io, {
+    quietSuccess: true,
+    rootKind: root === runtime.memoryHome ? 'global' : 'project',
+  });
   const documents = markdownFiles(root, { archive: false }).map((path) => {
-    const metadata = parseFrontmatter(readFileSync(path, 'utf8'));
+    const metadata = parseFrontmatter(readMemoryDocument(path));
     return {
       path: relative(root, path).replaceAll('\\', '/'),
       kind: String(metadata.get('memory-kind') || metadata.get('type') || 'unknown'),
@@ -59,14 +66,20 @@ export function memorySearch(
   { json = false, ...options }: SearchOptions & { json?: boolean } = {},
 ): number {
   if (!query) throw new Error('Usage: harness memory search <global|project-path> <query>');
+  assertNoHighConfidenceSecret([input, query], 'Memory search request');
+  const root = resolveMemoryRoot(runtime, input);
+  validateMemoryRoot(root, io, {
+    quietSuccess: true,
+    rootKind: root === runtime.memoryHome ? 'global' : 'project',
+  });
   const report = searchText(
     query,
     [
       {
-        root: resolveMemoryRoot(runtime, input),
+        root,
         label: 'memory',
         trust: 'untrusted',
-        excludeDirectories: ['_archive'],
+        excludeDirectories: ['_archive', 'host-evals'],
       },
     ],
     options,
@@ -81,17 +94,37 @@ export function memoryCheck(
   io: Io = console,
   { indexed = false, json = false }: { indexed?: boolean; json?: boolean } = {},
 ): { version: 1; root: string; indexed: boolean; valid: true; totalFiles: number } {
+  assertNoHighConfidenceSecret([input], 'Memory check request');
   const root = resolveMemoryRoot(runtime, input);
-  validateMemoryRoot(root, io, { quietSuccess: indexed || json });
+  validateMemoryRoot(root, io, {
+    quietSuccess: indexed || json,
+    rootKind: root === runtime.memoryHome ? 'global' : 'project',
+  });
   if (indexed) {
     const required = [
       'README.md',
       'core.md',
       ...(root === runtime.memoryHome ? ['profile.md'] : []),
     ];
-    const missing = required.filter((name) => !existsSync(join(root, name)));
-    for (const name of missing) io.error(`Required memory entry is missing: ${name}`);
-    if (missing.length > 0) throw new Error(`Memory check failed: ${missing.length} issue(s)`);
+    const invalid: Array<{ name: string; reason: 'missing' | 'unsafe' }> = [];
+    for (const name of required) {
+      const path = join(root, name);
+      if (!existsSync(path)) {
+        invalid.push({ name, reason: 'missing' });
+        continue;
+      }
+      try {
+        assertSafePath(root, path);
+        const entry = lstatSync(path);
+        if (entry.isSymbolicLink() || !entry.isFile()) invalid.push({ name, reason: 'unsafe' });
+      } catch {
+        invalid.push({ name, reason: 'unsafe' });
+      }
+    }
+    for (const { name, reason } of invalid) {
+      io.error(`Required memory entry is ${reason}: ${name}`);
+    }
+    if (invalid.length > 0) throw new Error(`Memory check failed: ${invalid.length} issue(s)`);
   }
   const report = memoryMaintenanceReport(root, calendarDate(runtime));
   if (indexed) {

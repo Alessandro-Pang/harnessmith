@@ -21,17 +21,18 @@ const inheritedSource = {
 
 function evaluationGate() {
   const fingerprint = currentFingerprint();
+  const coverageCount = Object.keys(fingerprint.scenarios).length;
   return {
     valid: true as const,
     assurance: 'maintainer-attested-structure' as const,
     packageArtifactSha256: digest(readFileSync(candidateArtifact)),
     behaviorSha256: fingerprint.behaviorSha256,
-    coverageCount: 11,
+    coverageCount,
     exactArtifactCoverageCount: 0,
-    inheritedBehaviorCoverageCount: 11,
+    inheritedBehaviorCoverageCount: coverageCount,
     inheritedFrom: [inheritedSource],
     hosts: ['codex'],
-    scenarios: Array.from({ length: 11 }, (_value, index) => `scenario-${index + 1}`),
+    scenarios: Object.keys(fingerprint.scenarios),
     maxAgeDays: 30,
   };
 }
@@ -176,6 +177,75 @@ test('release publish preserves a checked snapshot and resumes without rerunning
   assert.equal(existsSync(stagedPath), true);
 });
 
+test('release prepare prefers HARNESS_RELEASE_ARTIFACT over an existing prepared state', () => {
+  const stateDirectory = temporaryDirectory();
+  const replacementArtifact = join(temporaryDirectory(), 'replacement.tgz');
+  copyFileSync(candidateArtifact, replacementArtifact);
+  const calls: string[][] = [];
+  const runner: ReleaseRunner = (_executable, args) => {
+    calls.push(args);
+    return { status: 0, signal: null, error: undefined };
+  };
+
+  release(
+    ['--package-artifact', candidateArtifact, '--state-dir', stateDirectory, '--prepare-only'],
+    runner,
+  );
+  const initialState = JSON.parse(readFileSync(join(stateDirectory, 'release-state.json'), 'utf8'));
+  calls.length = 0;
+
+  const previousArtifact = process.env.HARNESS_RELEASE_ARTIFACT;
+  process.env.HARNESS_RELEASE_ARTIFACT = replacementArtifact;
+  try {
+    release(['--state-dir', stateDirectory, '--prepare-only'], runner);
+  } finally {
+    if (previousArtifact === undefined) delete process.env.HARNESS_RELEASE_ARTIFACT;
+    else process.env.HARNESS_RELEASE_ARTIFACT = previousArtifact;
+  }
+
+  const replacementState = JSON.parse(
+    readFileSync(join(stateDirectory, 'release-state.json'), 'utf8'),
+  );
+  assert.deepEqual(calls, [['run', 'release:check']]);
+  assert.notEqual(replacementState.artifactPath, initialState.artifactPath);
+  assert.match(replacementState.artifactPath, /replacement\.tgz$/);
+});
+
+test('release prepare prefers --package-artifact over existing state and environment', () => {
+  const stateDirectory = temporaryDirectory();
+  const environmentArtifact = join(temporaryDirectory(), 'environment.tgz');
+  const cliArtifact = join(temporaryDirectory(), 'cli.tgz');
+  copyFileSync(candidateArtifact, environmentArtifact);
+  copyFileSync(candidateArtifact, cliArtifact);
+  const calls: string[][] = [];
+  const runner: ReleaseRunner = (_executable, args) => {
+    calls.push(args);
+    return { status: 0, signal: null, error: undefined };
+  };
+
+  release(
+    ['--package-artifact', candidateArtifact, '--state-dir', stateDirectory, '--prepare-only'],
+    runner,
+  );
+  calls.length = 0;
+
+  const previousArtifact = process.env.HARNESS_RELEASE_ARTIFACT;
+  process.env.HARNESS_RELEASE_ARTIFACT = environmentArtifact;
+  try {
+    release(
+      ['--package-artifact', cliArtifact, '--state-dir', stateDirectory, '--prepare-only'],
+      runner,
+    );
+  } finally {
+    if (previousArtifact === undefined) delete process.env.HARNESS_RELEASE_ARTIFACT;
+    else process.env.HARNESS_RELEASE_ARTIFACT = previousArtifact;
+  }
+
+  const state = JSON.parse(readFileSync(join(stateDirectory, 'release-state.json'), 'utf8'));
+  assert.deepEqual(calls, [['run', 'release:check']]);
+  assert.match(state.artifactPath, /cli\.tgz$/);
+});
+
 test('release prepare checks a persistent snapshot without contacting npm', () => {
   const stateDirectory = temporaryDirectory();
   const calls: string[][] = [];
@@ -193,11 +263,14 @@ test('release prepare checks a persistent snapshot without contacting npm', () =
   const state = JSON.parse(readFileSync(join(stateDirectory, 'release-state.json'), 'utf8'));
   assert.equal(state.schemaVersion, 3);
   assert.equal(state.evaluation.assurance, 'maintainer-attested-structure');
-  assert.equal(state.evaluation.coverageCount, 11);
+  assert.equal(state.evaluation.coverageCount, Object.keys(currentFingerprint().scenarios).length);
   assert.equal(state.evaluation.packageArtifactSha256, state.artifactSha256);
   assert.equal(state.evaluation.behaviorSha256, currentFingerprint().behaviorSha256);
   assert.equal(state.evaluation.exactArtifactCoverageCount, 0);
-  assert.equal(state.evaluation.inheritedBehaviorCoverageCount, 11);
+  assert.equal(
+    state.evaluation.inheritedBehaviorCoverageCount,
+    Object.keys(currentFingerprint().scenarios).length,
+  );
   assert.deepEqual(state.evaluation.inheritedFrom, [inheritedSource]);
 });
 

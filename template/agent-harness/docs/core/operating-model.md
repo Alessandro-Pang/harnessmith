@@ -2,7 +2,7 @@
 title: Agent Operating Model
 type: harness-core
 status: active
-updated: 2026-08-24
+updated: 2026-08-25
 ---
 
 # Agent Operating Model
@@ -17,9 +17,10 @@ updated: 2026-08-24
 ## 2. 先判定请求类型
 
 - 回答/解释/评审/诊断/报告：只读调查并给证据；评审不默认修复，诊断不默认实施修复。
-- 只读任务不得写入 `profile.md` 或项目 `.agent-docs/`；有长期价值的候选内容作为 proposal 交付，
-  不因 Harness 维护规则自动落盘。跨仓分析的 personal `repository-map.yaml` 是窄例外：满足关系图维护
-  门槛时默认维护，除非用户明确禁止；不得借此写入报告正文、动态状态或其他 personal 文件。
+- 只读任务不得修改项目源码、配置或正式文档。已经初始化的本地 Memory roots 是窄 sidecar：新增验收、
+  scope/constraints 或不可廉价恢复 source 的重要输入必须去重捕获；明确用户画像信号仅在跨任务
+  `explicit/high` 且未暂停时自动 reconcile；未初始化的只读项目不为此创建 `.agent-docs/`。
+  跨仓分析的 personal `repository-map.yaml` 同样按维护门槛默认维护，除非用户明确禁止。
 - 修改/构建：实现、验证并完成交付，不停在建议层。
 - 计划/设计：明确目标、约束、取舍、阶段和验收，不把计划写成已实现事实。
 - 监控/等待：使用对应等待机制，不把“暂时没有变化”当成失败。
@@ -28,10 +29,10 @@ updated: 2026-08-24
 
 1. 当前用户目标和明确边界。
 2. 当前目录、Git 根、工作树状态、最近 `AGENTS.md`。
-3. 相关入口代码、配置、测试、manifest、生成脚本和运行命令。
-4. 项目文档索引或搜索命中；避免顺序读取整棵文档树。
-5. 版本匹配的官方文档、连接器或远程事实。
-6. 只有在缺乏证据时才做推断，并明确标注。
+3. 每个新宿主 task/thread 首次工作前有界读取一次 canonical `profile.md`；同一 task/thread 不重复读取。
+4. 当前主题命中跨项目记忆时，全局 Memory 名称/元信息与 `core.md`；只加载命中正文。
+5. 相关入口代码、配置、测试、manifest、生成脚本和运行命令。
+6. 项目文档索引或搜索命中；再按需核验官方或远程事实，只有缺乏证据时才做标注过的推断。
 
 ## 4. 计划粒度
 
@@ -57,6 +58,8 @@ updated: 2026-08-24
 完成不是“文件已修改”，而是：需求落地、相关失败路径处理、验证与风险相称、没有遗留占位、
 文档事实同步、用户改动保持完好。环境不允许验证时，精确列出未验证项和可执行命令。
 
-已获写入授权且需要跨会话继续时，在项目 `.agent-docs/sessions/` 写交接；昂贵发现可压缩到
-`distilled/`，但已成为长期事实的内容必须提升到项目 `docs/`、ADR、测试、schema、lint 或 CI。记忆只保留
-来源、上下文和重新发现成本，不复制为第二份权威事实。
+任务跨会话、验证阶段仍有后续、宿主压缩信号、Agent 判断上下文即将压缩，或当前 handoff 已不足恢复时，
+Memory Autopilot 原位更新 session；仍有效状态保留，只有已证实 resolved/superseded 内容才清理，模糊状态
+保留，无后续时 close。每次 checkpoint 提交完整 reconcile 后的累计 `completed` 与具体 `next`。自动
+自由文本只经安全 `--payload-file`，不得 shell 插值。新 distilled 未经 typed 流程或当前授权只形成
+proposal；长期事实仍提升到 `docs/`、ADR、测试、schema、lint 或 CI。

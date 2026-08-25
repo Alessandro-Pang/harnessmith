@@ -5,6 +5,7 @@ export interface ListFilesOptions {
   maxDepth?: number;
   maxDurationMs?: number;
   maxEntries?: number;
+  excludeDirectory?: (path: string) => boolean;
 }
 
 const defaultLimits = {
@@ -38,6 +39,7 @@ export function listFiles(root: string, options: ListFilesOptions = {}): string[
     .withErrors()
     .withFullPaths()
     .withDirs()
+    .exclude((_name, path) => options.excludeDirectory?.(path) ?? false)
     .filter((path, isDirectory) => {
       if (Date.now() > deadline) throw new Error(`File discovery time budget exceeded: ${path}`);
       const depth = relative(root, path).split(sep).filter(Boolean).length;

@@ -9,6 +9,12 @@ export interface RuntimeHealthCheck {
   details: string[];
 }
 
+export interface ManagedInstallRecord {
+  schemaVersion?: number;
+  adapter?: string;
+  outputs?: Array<{ path?: string; checksum?: string }>;
+}
+
 export function runtimeHealth(): RuntimeHealthCheck {
   const [major, minor] = process.versions.node
     .split('.')

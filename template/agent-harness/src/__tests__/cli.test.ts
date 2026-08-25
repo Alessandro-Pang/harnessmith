@@ -70,7 +70,7 @@ test('Harness CLI dispatches version and memory commands through injected IO', (
   const runtime = harnessRuntime(root);
   const version = capturedIo();
   assert.equal(runCli(['version'], { runtime, io: version }), 0);
-  assert.deepEqual(version.logs, ['2.4.0']);
+  assert.deepEqual(version.logs, ['2.5.0']);
   assert.equal(runCli(['init', 'global'], { runtime, io: capturedIo() }), 0);
   assert.equal(runCli(['init', 'personal'], { runtime, io: capturedIo() }), 0);
   assert.equal(runCli(['memory', 'check', 'global'], { runtime, io: capturedIo() }), 0);
@@ -145,7 +145,10 @@ test('Harness memory search exposes the same bounded JSON contract', () => {
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
   const runtime = harnessRuntime(root);
   initGlobal(runtime, capturedIo());
-  writeFileSync(join(runtime.memoryHome, 'search.md'), 'needle first\nneedle second\n');
+  writeFileSync(
+    join(runtime.memoryHome, 'search.md'),
+    healthMemoryDocument('Search memory', { body: 'needle first\nneedle second' }),
+  );
   const output = capturedIo();
 
   assert.equal(
@@ -197,7 +200,7 @@ test('Harness version exposes its schema compatibility contract as JSON', () => 
   assert.equal(runCli(['version', '--json'], { runtime, io: output }), 0);
   const contract = JSON.parse(output.logs[0]);
   assert.equal(contract.version, 1);
-  assert.equal(contract.harnessVersion, '2.4.0');
+  assert.equal(contract.harnessVersion, '2.5.0');
   assert.equal(contract.schemaVersion, 3);
   assert.equal(contract.memorySchemaVersion, 1);
   assert.equal(contract.node, '>=24.12.0');

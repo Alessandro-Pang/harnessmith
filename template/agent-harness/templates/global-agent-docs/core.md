@@ -21,6 +21,6 @@ schema-version: 1
 
 ## User Profile
 
-- 需要理解用户身份、工作方式、技术背景或当前兴趣时读取 `memory:profile`。
+- 每个新宿主 task/thread 首次工作前读取一次 `memory:profile`；同一 task/thread 不重复读取。
 
 其余跨项目记忆只写“何时读取 + 能回答什么 + `memory:` 引用”。

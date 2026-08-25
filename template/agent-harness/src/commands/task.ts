@@ -1,19 +1,18 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { listFiles } from '../lib/files.js';
 import { updateFrontmatter } from '../lib/frontmatter.js';
 import { projectSnapshot } from '../lib/project.js';
 import { initializeProjectMemory } from '../lib/project-memory.js';
+import { assertSafePath } from '../lib/safe-path.js';
 import { assertNoHighConfidenceSecret } from '../lib/secret-hygiene.js';
 import { assertTaskCanComplete, captureTaskEvidence } from '../lib/task-evidence.js';
 import {
-  type AcceptanceOptions,
-  assertTaskId,
+  assertPortableTaskId,
   assertTaskMutable,
   type CheckpointOptions,
   defaultTaskId,
   type InitTaskOptions,
-  isAcceptanceStatus,
   isCheckpointStatus,
   isTaskStatus,
   now,
@@ -26,15 +25,23 @@ import { outputTask } from '../lib/task-output.js';
 import {
   projectRoot,
   readTask,
+  readTaskProgress,
   taskDirectory,
   taskPath,
   withTaskLock,
-  writeTask,
   writeTaskWithProgress,
 } from '../lib/task-store.js';
 import type { Io, Runtime, TaskCheckpoint, TaskRecord, TaskSummary } from '../types.js';
 
-export type { AcceptanceOptions, CheckpointOptions } from '../lib/task-model.js';
+export type { CheckpointOptions } from '../lib/task-model.js';
+
+function assertSafeTaskRequest(subject: string, ...values: Array<string | string[] | undefined>) {
+  assertNoHighConfidenceSecret(
+    values.flatMap((value) => (Array.isArray(value) ? value : [value])),
+    subject,
+  );
+}
+
 export function initTask(
   runtime: Runtime,
   {
@@ -47,17 +54,24 @@ export function initTask(
   }: InitTaskOptions = {},
   io: Io = console,
 ): TaskRecord {
+  assertSafeTaskRequest(
+    'Task initialization request',
+    project,
+    id,
+    objective,
+    nextAction,
+    acceptance,
+  );
   if (!objective?.trim()) throw new Error('Task objective is required: --objective <text>');
   if (acceptance.length === 0)
     throw new Error('At least one acceptance criterion is required: --accept <text>');
-  assertNoHighConfidenceSecret([objective, nextAction, ...acceptance], 'Task initialization');
-  const root = projectRoot(project);
   const taskId = id || defaultTaskId(objective);
-  assertTaskId(taskId);
-  initializeProjectMemory(runtime, root);
+  assertPortableTaskId(taskId);
   const criteria = acceptance.map((description) => description.trim());
   if (criteria.some((description) => !description))
     throw new Error('Acceptance criteria must not be empty');
+  const root = projectRoot(project);
+  initializeProjectMemory(runtime, root);
   return withTaskLock(root, taskId, () => {
     const path = taskPath(root, taskId);
     if (existsSync(path)) throw new Error(`Task already exists: ${taskId}`);
@@ -86,6 +100,7 @@ export function initTask(
       task,
       join(taskDirectory(root, taskId), 'progress.md'),
       progressDocument(task, runtime.owner),
+      io,
     );
     outputTask(taskSummary(task, snapshot), json, io);
     return task;
@@ -96,6 +111,7 @@ export function taskStatus(
   { project = process.cwd(), id, json = false }: TaskBaseOptions = {},
   io: Io = console,
 ): TaskRecord | TaskSummary[] {
+  assertSafeTaskRequest('Task status request', project, id);
   const root = projectRoot(project);
   if (id) {
     const { value: task, snapshot } = readTask(root, id);
@@ -138,8 +154,9 @@ function checkpointTaskAtRoot(
   if (nextAction !== undefined) task.nextAction = nextAction;
   if (status) task.status = status;
   const progressPath = join(taskDirectory(root, id), 'progress.md');
+  assertSafePath(root, progressPath);
   let progress = existsSync(progressPath)
-    ? readFileSync(progressPath, 'utf8')
+    ? readTaskProgress(root, progressPath)
     : progressDocument(task, 'agent');
   progress = updateFrontmatter(progress, updateProgressFrontmatter(task, time));
   writeTaskWithProgress(
@@ -147,6 +164,7 @@ function checkpointTaskAtRoot(
     task,
     progressPath,
     `${progress}## ${time}\n\n${normalizedSummary}\n\n`,
+    io,
   );
   outputTask(taskSummary(task, snapshot), json, io);
   return task;
@@ -164,9 +182,17 @@ export function checkpointTask(
   }: CheckpointOptions = {},
   io: Io = console,
 ): TaskRecord {
+  assertSafeTaskRequest(
+    'Task checkpoint request',
+    project,
+    id,
+    summary,
+    nextAction,
+    status,
+    evidence,
+  );
   if (!id) throw new Error('Task id is required: --id <id>');
   if (!summary?.trim()) throw new Error('Checkpoint summary is required: --summary <text>');
-  assertNoHighConfidenceSecret([summary, nextAction, ...evidence], 'Task checkpoint');
   if (status && !isTaskStatus(status)) throw new Error(`Invalid task status: ${status}`);
   if (status && !isCheckpointStatus(status))
     throw new Error(`Checkpoint cannot close a task; use task close --status ${status}`);
@@ -176,45 +202,17 @@ export function checkpointTask(
   );
 }
 
-export function updateAcceptance(
-  {
-    project = process.cwd(),
-    id,
-    criterion,
-    status,
-    evidence = [],
-    json = false,
-  }: AcceptanceOptions = {},
-  io: Io = console,
-): TaskRecord {
-  if (!id || !criterion) throw new Error('Task requires --id <id> and --criterion <id>');
-  if (!status || !isAcceptanceStatus(status))
-    throw new Error(`Invalid acceptance status: ${status}`);
-  if (status === 'passed') {
-    throw new Error(
-      'task accept cannot mark acceptance passed; use task verify for mechanical evidence',
-    );
-  }
-  assertNoHighConfidenceSecret(evidence, 'Task acceptance evidence');
-  const root = projectRoot(project);
-  return withTaskLock(root, id, () => {
-    const { path, value: task, snapshot } = readTask(root, id);
-    assertTaskMutable(task);
-    const target = task.acceptance.find((item) => item.id === criterion);
-    if (!target) throw new Error(`Acceptance criterion does not exist: ${criterion}`);
-    const time = now();
-    const capturedEvidence = captureTaskEvidence(evidence, snapshot, time, task.id, target.id);
-    target.status = status;
-    target.evidence.push(...capturedEvidence);
-    task.updated = time;
-    writeTask(path, task);
-    outputTask(taskSummary(task, snapshot), json, io);
-    return task;
-  });
-}
-
 export function closeTask(options: CheckpointOptions = {}, io: Io = console): TaskRecord {
   const status = options.status || 'complete';
+  assertSafeTaskRequest(
+    'Task closure request',
+    options.project,
+    options.id,
+    options.summary,
+    options.nextAction,
+    status,
+    options.evidence,
+  );
   if (!['complete', 'blocked', 'superseded'].includes(status))
     throw new Error(`Invalid closing status: ${status}`);
   if (!options.id) throw new Error('Task id is required: --id <id>');
@@ -222,10 +220,6 @@ export function closeTask(options: CheckpointOptions = {}, io: Io = console): Ta
   const nextAction = options.nextAction?.trim();
   if (status === 'blocked' && !nextAction)
     throw new Error('Blocked closure requires a next action: --next <text>');
-  assertNoHighConfidenceSecret(
-    [options.summary, nextAction, ...(options.evidence || [])],
-    'Task closure',
-  );
   const root = projectRoot(options.project || process.cwd());
   return withTaskLock(root, options.id, () => {
     const loaded = readTask(root, options.id as string);

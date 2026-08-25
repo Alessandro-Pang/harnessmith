@@ -135,7 +135,7 @@ currently true about a project:
 | --- | --- | --- |
 | Host-native memory | Historical signals recalled by the host | Input to verify, never the current Harness profile |
 | `~/.agent-harness` | User-maintained personal rules and repository relationships | A rule overlay, not memory; preserved across upgrades and uninstall |
-| `~/.agent-docs/profile.md` | Current identity, working style, technical background, preferences, and interests | The only current user profile inside the Harness; updated in place only when explicitly requested |
+| `~/.agent-docs/profile.md` | Current identity, working style, technical background, preferences, and interests | The only current user profile inside the Harness; only cross-task `explicit/high` signals update automatically, with pause and forget controls |
 | `~/.agent-docs/core.md` and other global memory | Cross-project active topics, experience, and distilled findings | Name-level routing, sources, and context; never a second current profile |
 | `<project>/.agent-docs` | Project input, sessions, work state, evidence, distilled findings, and archive | Reviewable but non-authoritative; ignored by Git and normal indexing |
 | `docs/`, ADRs, code, tests, schemas, lint, and CI | Current project facts, accepted decisions, and executable constraints | Authoritative; stable conclusions are promoted here |
@@ -166,13 +166,42 @@ through explicit `memory migrate --set ...`: it emits a proposal by default and 
 reviewed result is `ready`. Initialization, task-progress updates, and Memory write commands serialize on a
 shared memory-root lock.
 
+Memory Autopilot gives agents typed, low-noise writes without repeated user prompting. `capture-input --payload-file`
+safely stores important input, `handoff` / `close-handoff` maintain unfinished work, and
+`reconcile-profile` / `forget-profile` / `profile-autopilot` maintain a pausable current profile. Inputs are
+deduplicated by exact text for verbatim input or normalized text for reliable summaries, plus source and mode.
+Commands reject high-confidence secrets, update
+exact index references, validate managed memory, and roll back failed writes. Every automatically generated
+free-text value is written with a non-shell file API and passed through `--payload-file`; untrusted text is never
+interpolated into a shell command. Routine automatic `created`, `updated`, and `unchanged` results are not
+announced separately, while `proposed` and `blocked` are reported briefly; explicit profile controls receive a
+brief result. Local `host-evals/` artifacts are checked by `eval:validate`, but a scenario or unit test is not evidence
+that behavior passed in a real host.
+
+Here, "learning/evolution" means auditable memory adaptation, not model-weight training or autonomous
+changes to prompts, skills, rules, or source code. Those changes still require explicit authority,
+review, and verification.
+
+Handoffs do not depend on a host shutdown hook. A verified stage with follow-up work, a host context-budget or
+compression signal, or a material change to `completed/decisions/open/verification/next` that makes the current
+snapshot insufficient triggers a check. Before writing, the agent reads the current handoff and active task;
+only confirmed resolved or superseded content is cleared, and ambiguous state is preserved. A host thread/task
+id is preferred as the stable session base, so one workstream replaces its latest active generation instead of
+accumulating a transcript. Finished work with no follow-up is closed; a later task on the same base creates the
+next deterministic generation while preserving the older episode. The closed generation is
+removed from the active index.
+
 Project memory is initialized only when workspace writes are authorized and a task needs cross-session handoff,
 unfinished state, or redacted evidence. Small questions and one-off changes do not trigger initialization;
-read-only tasks report expensive findings as proposals. Agents read `core.md` and names/metadata first, then
-follow explicit references without loading the full tree or archive by default.
-Tasks that cross the persistence threshold report memory as `proposed`, `updated`, `unchanged`, or `blocked` at
-delivery. Task commands keep long-running work reachable from `core.md`, and promotion is complete only after
-the formal document is actually written and verified.
+uninitialized read-only projects report expensive findings as proposals. Agents read `core.md` and names/metadata first, then
+follow explicit references without loading the full tree or archive by default. Matching cross-project topics
+route through the global Memory `core.md`. The canonical `profile.md` is a bounded exception: each new host
+task/thread reads it once before beginning work so existing cross-task preferences can be applied. A new distilled
+memory remains a proposal without a typed flow or current write authorization. Tasks that cross the persistence
+threshold resolve internally to `proposed`, `created`, `updated`, `unchanged`, or `blocked`: routine automatic
+`created`, `updated`, and `unchanged` stay quiet, while `proposed` and `blocked` are reported briefly. Task commands
+keep long-running work reachable from `core.md`, and promotion is complete only after the formal document is
+actually written and verified.
 
 ### Maintainable repository map
 

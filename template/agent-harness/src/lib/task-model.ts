@@ -6,6 +6,8 @@ import type {
   TaskStatus,
   TaskSummary,
 } from '../types.js';
+import { escapeCoreLabel } from './memory-core.js';
+import { isPortableIdentityComponent } from './portable-path-component.js';
 import { evidenceSupportsPass, taskBaselineDrift } from './task-evidence.js';
 
 export interface TaskBaseOptions {
@@ -93,6 +95,10 @@ export function assertTaskId(id: string): void {
   if (!/^[a-z0-9][a-z0-9._-]*$/.test(id)) throw new Error(`Invalid task id: ${id}`);
 }
 
+export function assertPortableTaskId(id: string): void {
+  if (!isPortableIdentityComponent(id)) throw new Error(`Invalid task id: ${id}`);
+}
+
 export function assertTaskMutable(task: TaskRecord): void {
   if (task.status === 'complete' || task.status === 'superseded') {
     throw new Error(`Task is already closed with status ${task.status}: ${task.id}`);
@@ -112,8 +118,9 @@ function taskMemoryStatus(status: TaskStatus): 'active' | 'blocked' | 'complete'
 
 export function progressDocument(task: TaskRecord, owner: string): string {
   const date = task.created.slice(0, 10);
+  const objective = escapeCoreLabel(task.objective);
   return `---
-title: ${JSON.stringify(task.objective)}
+title: ${JSON.stringify(objective)}
 description: ${JSON.stringify(`Long-running task progress for ${task.id}`)}
 type: working-note
 memory-kind: working
@@ -130,7 +137,7 @@ source-of-truth: false
 schema-version: 1
 ---
 
-# ${task.objective}
+# ${objective}
 
 `;
 }

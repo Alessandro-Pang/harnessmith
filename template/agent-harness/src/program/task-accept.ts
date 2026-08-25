@@ -1,5 +1,5 @@
 import type { Command } from 'commander';
-import { updateAcceptance } from '../commands/task.js';
+import { updateAcceptance } from '../commands/task-acceptance.js';
 import { assertRuntimeCanMutate } from '../runtime.js';
 import type { AcceptanceStatus, Io, Runtime } from '../types.js';
 import { type TaskCliOptions, taskOptions } from './task-options.js';

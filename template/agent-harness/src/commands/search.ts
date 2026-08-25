@@ -1,6 +1,7 @@
 import { join, resolve } from 'node:path';
 import { gitRoot } from '../lib/git.js';
 import { outputSearch, type SearchOptions, searchText } from '../lib/search.js';
+import { assertNoHighConfidenceSecret } from '../lib/secret-hygiene.js';
 import type { Io, Runtime } from '../types.js';
 
 export function contextSearch(
@@ -10,6 +11,7 @@ export function contextSearch(
   io: Io = console,
   { json = false, ...options }: SearchOptions & { json?: boolean } = {},
 ): number {
+  assertNoHighConfidenceSecret([query, project], 'Context search request');
   const target = resolve(project);
   const root = gitRoot(target) || target;
   const report = searchText(
