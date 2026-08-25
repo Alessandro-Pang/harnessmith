@@ -62,7 +62,9 @@ handoff payload 每次必填 session、title、objective、completed、next、re
 `open`、active task、plan/backlog 取首个仍有效的未完成项，点名具体文件、命令或动作；已知 verifier 时
 一并写明。旧 `next` 空泛或与更具体的已知项冲突时视为无效并替换，不能写“处理下一请求”等泛化占位。
 只有确无仍有效待办、且缺少结束信号而不能 close 时，`next` 才可使用固定 sentinel“等待用户给出范围”；
-它表示静默等待后续 scope，不要求主动询问用户，也不得覆盖任何已知 `open`、plan/backlog 或 `next`。自动 handoff
+它表示静默等待后续 scope，不要求主动询问用户，也不得覆盖任何已知 `open`、plan/backlog 或 `next`。
+handoff 执行前必须自检所选首个仍有效项：该项点名文件时，`next` 必须点名同一文件；仅当 verifier 已知
+且适用于该项时还必须包含该命令。缺一须在当前 turn 修正 payload 后执行，不得跳过显式 signal checkpoint。自动 handoff
 的自由文本必须写入安全 JSON payload 并通过 `--payload-file` 传递，禁止 shell 插值。task ledger 保留完整验收状态，session 只保存恢复所需摘要，
 两者不互相复制。只有用户明示整个 workstream 结束/取消，或宿主将其标记 completed/cancelled，并核验
 active task、plan/backlog 与 handoff `open`/`next` 后确认无仍有效事项，才运行 `memory close-handoff`，

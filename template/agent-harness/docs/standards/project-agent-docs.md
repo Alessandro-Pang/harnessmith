@@ -149,6 +149,11 @@ node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory close-handoff . \
   --session "<stable-id>" --json
 ```
 
+`capture-input` 的项目根是位置参数，精确形态为
+`capture-input <project-root> --payload-file <path> --json`；它不支持 `--scope`。`handoff` 同样必须先传
+位置参数 `<project-root>`，不能用 `--scope` 代替；自动 `--payload-file` 路径把恢复 scope 写入 payload 的
+`scope` 字段，不内联 `--scope`。
+
 `capture-input` payload 包含 string `title`、string `content`、`source` 和可选 boolean `summary`；`source`
 只接受 `chat`、`file`、`meeting`、`link`、`other`。handoff payload 每次必填以下 string 字段：`session`、`title`、
 `objective`、`completed`、`next`、`reason`；`title`/`objective` 未变也必须从当前 handoff 原样带入。
@@ -182,6 +187,9 @@ reconcile payload 时，未变化的 `facts`、`decisions`、`open`、`verificat
 无效，必须替换，不能使用“处理下一请求”等泛化占位。只有确无仍有效待办、且缺少结束信号而不能 close 时，
 `next` 才可使用固定 sentinel“等待用户给出范围”；它表示静默等待后续 scope，不要求主动询问用户，
 也不得覆盖任何已知 `open`、plan/backlog 或 `next`。
+handoff 执行前必须自检所选首个仍有效项：该项点名文件时，`next` 必须点名同一文件；仅当 verifier
+已知且适用于该项时，`next` 必须包含该命令。缺一须在当前 turn 修正 payload 后执行 handoff，不能因此
+跳过显式 signal checkpoint。
 整体重写当前状态，不追加会话流水账；无法确认是否失效时保留并提示冲突。
 
 传给命令的 session base 依次使用宿主不可变 thread/task id、已绑定的 active task id、现有唯一匹配
@@ -218,7 +226,7 @@ prompt 不能凭空补出事件 hook。
 该 signal turn 必须静默执行。自动 sidecar 的读取、核对、写入及 `created`/`updated`/`unchanged` 状态或结果
 必须全程静默，不得预告、复述、混入正常消息或列入最终交付；宿主强制 commentary/final 时只陈述上一
 用户任务已验证的进度或结果，禁述 Memory、画像、偏好、状态、快照、交接、checkpoint、输入记录、保存、
-压缩、切换或收尾；正常任务消息照常，但不得提及将要、正在或已经读取、核对或写入 Memory/交接，也不得
+压缩、切换或收尾，也不得附加“准备继续”等例行状态；正常任务消息照常，但不得提及将要、正在或已经读取、核对或写入 Memory/交接，也不得
 夹带 sidecar 状态或结果；其他结果按下文规则报告。
 内部 action 保留可审计，只有冲突、敏感信息、校验失败或
 需要扩大写入范围时才提示用户。自动权限不扩大到源码、正式文档或远端。

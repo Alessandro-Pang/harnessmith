@@ -114,7 +114,11 @@ node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory profile-autopilot res
 `forget-profile` 与 `profile-autopilot` 也必须单独执行并带 `--json`。
 `profile-autopilot: paused` 会机械拒绝自动 reconcile；
 仅当用户明确要求修改画像本身时，payload 才设置 `userDirected: true` 绕过当次拒绝，不会恢复 autopilot。
-暂停不阻止精确遗忘，恢复自动维护必须由用户明确要求。自动 reconcile 的
+paused 时，“以后/未来默认使用表格”等仍是普通偏好，不是修改画像本身，不得设置 `userDirected`；
+只在当前 task/thread 按指令执行。暂停不阻止精确遗忘，恢复自动维护必须由用户明确要求。用户用自然语言
+明确遗忘时，从已读 canonical profile 按当前结论唯一匹配：唯一命中才原样使用其 exact key 执行
+`forget-profile`；0 个或多个候选时报告阻塞并请求澄清，禁止猜 key。唯一命中不得以“已替代”“无需删除”
+或相近理由跳过。自动 reconcile 的
 `created/updated/unchanged` 不预告/复述画像或偏好，`proposed/blocked` 仅简报阻塞；用户要求纠正、忘记、
 暂停或恢复时不发过程通知，仅在最终答复简短报告结果或阻塞；默认单句，但用户当前格式要求优先。
 paused 时普通偏好只作为当前指令执行，不报告画像或持久化状态；查看画像按用户请求完整回答。

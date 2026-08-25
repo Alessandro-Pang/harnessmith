@@ -106,6 +106,8 @@ Memory Autopilot 只有三类窄写入口：`capture-input` 从 `--payload-file`
 `verification`、`open`、`scope` 与 `source-refs` 省略时保留，只有显式 clear 才删除，status 省略时保留
 active/blocked 生命周期。`completed` 与 `next` 不支持省略 patch；每次 checkpoint 必须提交完整 reconcile
 后的累计 `completed`；`next` 取首个仍有效未完成项并点名文件、命令或动作，已知 verifier 时一并写明。
+执行 handoff 前必须自检所选首个仍有效项：该项点名文件时 `next` 须点名同一文件，仅当 verifier 已知且
+适用于该项时须包含该命令；缺一须在当前 turn 修正后执行，不得跳过显式 signal checkpoint。
 确无有效待办且因缺少结束信号不能 close 时，才用固定 sentinel“等待用户给出范围”，不得覆盖已知
 `open`、plan/backlog 或 `next`。
 complete 或 archived generation 不会重开；同一 base 后续出现新任务时，

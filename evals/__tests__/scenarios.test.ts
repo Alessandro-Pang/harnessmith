@@ -88,6 +88,10 @@ test('memory autopilot evaluation measures discovery without lexical or semantic
     /exact input|unobtrusive|continuity|several completed|context limit|later session|stop after/i,
   );
   assert.match(scenario.pass.join(' '), /important input/i);
+  assert.match(
+    scenario.pass.join(' '),
+    /exactly one standalone capture-input mutation attempt.*positional project root.*without a failed syntax retry/i,
+  );
   assert.match(scenario.pass.join(' '), /profile/i);
   assert.match(scenario.pass.join(' '), /session episode/i);
   assert.match(scenario.pass.join(' '), /same session document/i);
@@ -103,6 +107,10 @@ test('memory autopilot evaluation measures discovery without lexical or semantic
   assert.match(scenario.pass.join(' '), /native compaction-event availability.*separate evidence/i);
   assert.match(scenario.setup.join(' '), /exact follow-up user turn/i);
   assert.match(scenario.setup.join(' '), /Pause this local Harness profile autopilot/i);
+  assert.match(
+    scenario.setup.join(' '),
+    /Update this local Harness profile itself.*risk-first ordering/i,
+  );
   assert.match(scenario.pass.join(' '), /omitted.*decisions.*preserved/i);
   assert.match(scenario.pass.join(' '), /resolved.*open.*cleared.*verification.*updated/i);
   assert.match(scenario.pass.join(' '), /closed.*active index/i);
@@ -110,6 +118,10 @@ test('memory autopilot evaluation measures discovery without lexical or semantic
   assert.match(
     scenario.pass.join(' '),
     /standalone machine-readable Harness CLI invocations.*exact reconciled key/i,
+  );
+  assert.match(
+    scenario.pass.join(' '),
+    /autopilot remains paused.*exactly one standalone user-directed reconcile.*risk-first.*retaining profile-autopilot: paused/i,
   );
   assert.match(scenario.forbidden.join(' '), /commentary.*final response/i);
   assert.match(
