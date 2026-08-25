@@ -87,7 +87,7 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   assert.match(agents, /payload.*宿主(?:提供的)?任务临时目录/s);
   assert.match(
     agents,
-    /阶段\/请求\/verifier\/task.*完成.*workstream.*结束.*仅用户明示.*宿主标记.*结束\/取消.*无有效后续.*close-handoff.*存疑不关/s,
+    /阶段\/请求\/verifier\/task.*完成\s*(?:≠|不(?:是|等于|构成|算))\s*workstream\s*结束.*仅用户明示.*宿主标记.*结束\/取消.*无有效后续.*close-handoff.*存疑不关/s,
   );
   assert.match(agents, /压缩.*预算.*signal.*本 signal turn.*下条用户消息前.*(?:须|必须).*handoff/s);
   assert.match(
@@ -232,6 +232,10 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
     projectMemory,
     /用户明示.*workstream.*结束\/取消.*宿主.*workstream.*completed\/cancelled.*核验.*active task.*plan\/backlog.*`open`\/`next`.*有效.*不存在.*才.*close-handoff/s,
   );
+  assert.match(
+    projectMemory,
+    /当前或.*最后一个已知阶段.*单个请求.*verifier.*普通 task\/thread.*完成.*不构成 workstream 结束信号/s,
+  );
   assert.match(projectMemory, /关闭不以.*`next`.*存在.*为空.*必填恢复动作/s);
   assert.match(projectMemory, /不先写.*无下一步.*占位 checkpoint.*普通 task\/thread.*不构成/s);
   assert.match(projectMemory, /`source`.*`chat`.*`file`.*`meeting`.*`link`.*`other`/s);
@@ -300,6 +304,10 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
     longRunning,
     /用户明示.*workstream.*结束\/取消.*宿主.*completed\/cancelled.*核验.*open.*next.*有效.*才.*close-handoff.*`next`.*不要求.*为空.*存疑不关/s,
   );
+  assert.match(
+    longRunning,
+    /当前或最后一个已知阶段.*单个请求.*verifier.*普通 task\/thread.*完成.*不是 workstream 结束/s,
+  );
   assert.match(profile, /自动.*自由文本.*--payload-file.*shell.*插值/s);
   assert.match(
     profile,
@@ -336,6 +344,10 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   assert.match(
     operatingModel,
     /确无有效待办.*缺少结束信号.*不能 close.*sentinel.*等待用户给出范围.*不得覆盖.*open.*plan\/backlog.*next/s,
+  );
+  assert.match(
+    operatingModel,
+    /当前或最后一个.*已知阶段.*请求.*verifier.*task.*完成.*不算 workstream 结束信号/s,
   );
   assert.match(architecture, /显式 signal.*快照相同.*必须执行.*只有预判压缩.*无实质变化.*不写/s);
   assert.doesNotMatch(architecture, /(?:^|\n)[^。\n]*无变化不写/m);
