@@ -153,7 +153,7 @@ test('routed prompts grant narrow local Memory Autopilot while keeping authorita
   assert.match(agents, /旧快照.*不足恢复.*实质变化/s);
   assert.match(agents, /写前.*handoff.*active task/s);
   assert.match(agents, /否则不写/);
-  assert.match(agents, /本轮完成.*并非结束/s);
+  assert.match(agents, /本轮完成.*非结束/s);
   assert.match(
     agents,
     /用户明示.*宿主标记.*workstream.*结束\/取消.*无有效后续.*close-handoff.*存疑不关/s,

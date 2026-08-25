@@ -50,8 +50,7 @@ node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs task close --project /absolu
 `memory handoff` 更新并校验可恢复快照，不得留到下一条用户消息。同一 open thread
 完成第二个独立任务并验证后，最终答复前以 `reason: multi-task` 累计写入，后续任务原位更新；发现上下文接近
 宿主限制或收到压缩信号时，压缩前必须以 `reason: compaction` 完成 handoff。reason 优先级为
-`compaction > multi-task > phase`；
-快照相同或只有措辞变化时不写。
+`compaction > multi-task > phase`；仅预判压缩时，快照相同或只有措辞变化不写。
 
 同一 session/workstream 使用稳定 base；最新 generation 为 active/blocked 时原位更新该 episode，
 latest generation 已 complete 或 archived 且同一 base 出现新任务时，确定性创建下一 generation 并保留旧 episode。
@@ -60,7 +59,9 @@ latest generation 已 complete 或 archived 且同一 base 出现新任务时，
 只有已证实 resolved/superseded 才用 clear 删除。
 handoff payload 每次必填 session、title、objective、completed、next、reason；title/objective 未变也必须从
 当前 handoff 原样带入。`completed` 与 `next` 每次都提交完整 reconcile 后的当前状态，`next` 必须指出
-文件、命令或动作，不能用泛化占位。自动 handoff
+首个仍有效的未完成项，点名具体文件、命令或动作；已知 verifier 时一并写明，不能写“处理下一请求”等泛化占位。
+只有确无仍有效待办、且缺少结束信号而不能 close 时，`next` 才可使用固定 sentinel“等待用户给出范围”；
+它表示静默等待后续 scope，不要求主动询问用户，也不得覆盖任何已知 `open`、plan/backlog 或 `next`。自动 handoff
 的自由文本必须写入安全 JSON payload 并通过 `--payload-file` 传递，禁止 shell 插值。task ledger 保留完整验收状态，session 只保存恢复所需摘要，
 两者不互相复制。只有用户明示整个 workstream 结束/取消，或宿主将其标记 completed/cancelled，并核验
 active task、plan/backlog 与 handoff `open`/`next` 后确认无仍有效事项，才运行 `memory close-handoff`，
@@ -68,14 +69,14 @@ active task、plan/backlog 与 handoff `open`/`next` 后确认无仍有效事项
 为空；满足条件时直接 close-handoff，不写“无下一步”占位 checkpoint，存疑不关。当前阶段、单个请求、
 verifier 或普通 task/thread 结束均不是 workstream 结束。收到压缩或上下文预算信号时，必须在该
 signal turn 内、下一条用户消息前，以 `reason: compaction` 单独执行并校验一次 checkpoint；已有、相同
-或刚更新快照均不豁免。仅预判压缩而尚未收到明确信号时，才按“旧快照不足恢复且有实质变化”去重。
+或刚更新快照均不豁免。该 signal turn 必须静默执行。仅预判压缩而尚未收到明确信号时，
+才按“旧快照不足恢复且有实质变化”去重。
 
 自动 `memory handoff` 必须单独执行并同时使用 `--payload-file` 与 `--json`；自动 `memory close-handoff`
 必须单独执行并使用 `--session <stable-id>` 与 `--json`，它不支持 `--payload-file`。不得把这些命令与其他
-shell 命令拼接；自动 sidecar 例行成功全程静默：不发过程通知、不列最终交付，不预告/复述
-Memory、状态、快照、交接、checkpoint、输入记录或“上下文切换/准备/收尾”等同义动作；正常任务进度不受限，
-非例行成功按其结果规则报告。
-宿主强制 commentary/final 时，只陈述用户任务的已验证进度或结果，不提 sidecar、已保存、压缩、切换或收尾。
+shell 命令拼接；自动 sidecar 的 `created`/`updated`/`unchanged` 结果必须全程静默，不得预告、复述或列入
+最终交付。宿主强制 commentary/final 时只陈述上一用户任务已验证的进度或结果，禁述 Memory、画像、偏好、
+状态、快照、交接、checkpoint、输入记录、保存、压缩、切换或收尾；正常任务消息不受限，其他结果按其规则报告。
 
 ## 行为约束
 

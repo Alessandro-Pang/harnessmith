@@ -105,7 +105,10 @@ Memory Autopilot 只有三类窄写入口：`capture-input` 从 `--payload-file`
 原始文本，对可靠摘要绑定规范化文本，并同时绑定来源和模式；handoff 的 `facts`、`decisions`、
 `verification`、`open`、`scope` 与 `source-refs` 省略时保留，只有显式 clear 才删除，status 省略时保留
 active/blocked 生命周期。`completed` 与 `next` 不支持省略 patch；每次 checkpoint 必须提交完整 reconcile
-后的累计 `completed` 与具体 `next`。complete 或 archived generation 不会重开；同一 base 后续出现新任务时，
+后的累计 `completed`；`next` 取首个仍有效未完成项并点名文件、命令或动作，已知 verifier 时一并写明。
+确无有效待办且因缺少结束信号不能 close 时，才用固定 sentinel“等待用户给出范围”，不得覆盖已知
+`open`、plan/backlog 或 `next`。
+complete 或 archived generation 不会重开；同一 base 后续出现新任务时，
 `handoff` 确定性创建下一 generation 并保留旧 episode，之后的更新与 `close-handoff` 只命中最新 active
 generation。所有自动自由文本
 必须先由非 shell 文件 API 写入 JSON payload，再经 `--payload-file` 进入 CLI；禁止不可信文本 shell 插值。
@@ -116,9 +119,9 @@ secret scan、共享锁、原子写、托管 Memory 校验和失败回滚；`cor
 这里的“自我学习/进化”只是可审计的记忆适配闭环，不是模型权重学习；Autopilot 不得自动改写
 prompt、skill、规则或源码，这些变化仍需明确授权、评审和验证。
 
-Prompt 优先复用宿主不可变 thread/task id，并在阶段已验证且仍有后续、宿主发出压缩/预算信号，或旧
-快照已不足恢复且关键状态发生实质变化时调用；仅已证实 resolved/superseded 内容可清理，模糊内容保留，
-无变化不写。关闭采用双闩：只有用户明示整个 workstream 结束/取消或宿主标记 completed/cancelled，并核验
+Prompt 优先复用宿主不可变 thread/task id，并在阶段已验证且仍有后续、宿主发出压缩/预算信号，或仅预判
+压缩且旧快照不足恢复、关键状态发生实质变化时调用；显式 signal 即使快照相同也必须执行，只有预判压缩
+无实质变化时不写。仅已证实 resolved/superseded 内容可清理，模糊内容保留。关闭采用双闩：只有用户明示整个 workstream 结束/取消或宿主标记 completed/cancelled，并核验
 active task、plan/backlog 与 handoff 后确认无有效事项才 close；`next` 是 checkpoint 必填恢复动作，关闭
 不要求其为空，存疑不关。宿主事件 hook 尚未提供，因此“每次宿主会话结束必定执行”仍不是 Runtime 的
 机械保证，prompt/单元测试和 scenario contract 也不能替代真实 Host Eval；没有绑定候选包的 passing

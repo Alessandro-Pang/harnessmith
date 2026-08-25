@@ -17,8 +17,8 @@ updated: 2026-08-26
 ## 2. 先判定请求类型
 
 - 回答/解释/评审/诊断/报告：只读调查并给证据；评审不默认修复，诊断不默认实施修复。
-- 只读任务不得修改项目源码、配置或正式文档。已经初始化的本地 Memory roots 是窄 sidecar：新增验收、
-  scope/constraints 或不可廉价恢复 source 的重要输入必须去重捕获；明确用户画像信号仅在跨任务
+- 只读任务不得修改项目源码、配置或正式文档。已经初始化的本地 Memory roots 是窄 sidecar：首次或变更的
+  验收、scope/constraints 或不可廉价恢复 source，必须在任何任务改动前逐字去重捕获，画像/handoff 不替代；明确用户画像信号仅在跨任务
   `explicit/high` 且未暂停时自动 reconcile；未初始化的只读项目不为此创建 `.agent-docs/`。
   跨仓分析的 personal `repository-map.yaml` 同样按维护门槛默认维护，除非用户明确禁止。
 - 修改/构建：实现、验证并完成交付，不停在建议层。
@@ -62,6 +62,8 @@ updated: 2026-08-26
 Memory Autopilot 原位更新 session；仍有效状态保留，只有已证实 resolved/superseded 内容才清理，模糊状态
 保留。关闭采用双闩：只有用户明示整个 workstream 结束/取消或宿主标记 completed/cancelled，并核验 active
 task、plan/backlog 与 handoff 后确认无有效事项才 close；`next` 不要求其为空，存疑不关。每次 checkpoint
-提交完整 reconcile 后的累计 `completed` 与具体 `next`。自动自由文本只经安全 `--payload-file`，不得 shell
+提交完整 reconcile 后的累计 `completed`；`next` 取首个仍有效未完成项并点名文件、命令或动作，已知 verifier
+时一并写明。确无有效待办且因缺少结束信号不能 close 时，才用固定 sentinel“等待用户给出范围”，不得覆盖
+已知 `open`、plan/backlog 或 `next`。自动自由文本只经安全 `--payload-file`，不得 shell
 插值。新 distilled 未经 typed 流程或当前授权只形成 proposal；长期事实仍提升到 `docs/`、ADR、测试、
 schema、lint 或 CI。
