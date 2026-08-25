@@ -92,11 +92,12 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   assert.match(agents, /压缩.*预算.*signal.*本 signal turn.*下条用户消息前.*(?:须|必须).*handoff/s);
   assert.match(
     agents,
-    /例行 sidecar.*成功.*不得预告\/复述.*宿主强制消息.*上一用户任务.*已验证.*进展\/结果.*禁述.*Memory.*画像.*偏好.*状态.*快照.*交接.*输入记录.*保存.*压缩.*切换.*收尾.*正常任务消息.*不受限/s,
+    /例行 sidecar.*成功.*(?:不得|禁).*预告.*复述.*混入正常消息.*宿主强制消息.*上一用户任务.*已验证.*进展\/结果.*禁述.*Memory.*画像.*偏好.*状态.*快照.*交接.*输入记录.*保存.*压缩.*切换.*收尾/s,
   );
+  assert.doesNotMatch(agents, /正常任务消息不受限/);
   assert.match(
     agents,
-    /例行 sidecar.*不得预告\/复述.*宿主强制消息.*已验证.*禁述.*保存.*压缩.*切换.*收尾/s,
+    /例行 sidecar.*(?:不得|禁).*预告.*复述.*混入正常消息.*宿主强制消息.*已验证.*禁述.*保存.*压缩.*切换.*收尾/s,
   );
   assert.match(
     agents,
@@ -141,7 +142,7 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   );
   assert.match(
     agents,
-    /例行 sidecar.*不得预告\/复述.*宿主强制消息.*已验证.*禁述.*Memory.*画像.*偏好.*状态.*快照.*(?:交接|handoff).*输入记录/s,
+    /例行 sidecar.*(?:不得|禁).*预告.*复述.*混入正常消息.*宿主强制消息.*已验证.*禁述.*Memory.*画像.*偏好.*状态.*快照.*(?:交接|handoff).*输入记录/s,
   );
   assert.match(agents, /用户指定.*verifier.*单独执行.*&&.*后续(?:命令)?退出码.*不(?:得)?替代/s);
   assert.match(agents, /不以.*删除断言.*篡改 verifier.*降低门槛.*通过/s);
@@ -239,11 +240,11 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   );
   assert.match(
     projectMemory,
-    /自动 sidecar.*created.*updated.*unchanged.*必须全程静默.*不得预告.*复述.*列入.*最终交付.*宿主强制.*上一用户任务.*已验证.*进度或结果.*禁述.*Memory.*交接.*输入记录.*正常任务消息.*不受限.*其他结果.*规则报告/s,
+    /自动 sidecar.*created.*updated.*unchanged.*必须全程静默.*不得预告.*复述.*列入.*最终交付.*宿主强制.*上一用户任务.*已验证.*进度或结果.*禁述.*Memory.*交接.*输入记录.*正常任务消息.*照常.*不得.*夹带.*提及.*sidecar.*动作.*状态.*结果.*其他结果.*规则报告/s,
   );
   assert.match(
     projectMemory,
-    /自动 sidecar.*全程静默.*不得预告.*复述.*宿主强制.*已验证.*禁述.*保存.*压缩.*切换.*收尾.*正常任务消息.*不受限/s,
+    /自动 sidecar.*全程静默.*不得预告.*复述.*宿主强制.*已验证.*禁述.*保存.*压缩.*切换.*收尾.*正常任务消息.*照常.*不得.*sidecar/s,
   );
   assert.match(
     projectMemory,
@@ -284,7 +285,7 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   );
   assert.match(
     longRunning,
-    /signal turn.*必须静默执行.*自动 sidecar.*created.*updated.*unchanged.*必须全程静默.*不得预告.*复述.*宿主强制.*commentary\/final.*上一用户任务.*已验证.*禁述.*保存.*压缩.*切换.*收尾/s,
+    /signal turn.*必须静默执行.*自动 sidecar.*created.*updated.*unchanged.*必须全程静默.*不得预告.*复述.*宿主强制.*commentary\/final.*上一用户任务.*已验证.*禁述.*保存.*压缩.*切换.*收尾.*正常任务消息.*照常.*不得.*sidecar/s,
   );
   assert.match(
     longRunning,

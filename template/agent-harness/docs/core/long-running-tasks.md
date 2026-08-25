@@ -74,9 +74,10 @@ signal turn 内、下一条用户消息前，以 `reason: compaction` 单独执�
 
 自动 `memory handoff` 必须单独执行并同时使用 `--payload-file` 与 `--json`；自动 `memory close-handoff`
 必须单独执行并使用 `--session <stable-id>` 与 `--json`，它不支持 `--payload-file`。不得把这些命令与其他
-shell 命令拼接；自动 sidecar 的 `created`/`updated`/`unchanged` 结果必须全程静默，不得预告、复述或列入
-最终交付。宿主强制 commentary/final 时只陈述上一用户任务已验证的进度或结果，禁述 Memory、画像、偏好、
-状态、快照、交接、checkpoint、输入记录、保存、压缩、切换或收尾；正常任务消息不受限，其他结果按其规则报告。
+shell 命令拼接；自动 sidecar 的 `created`/`updated`/`unchanged` 结果必须全程静默，不得预告、复述、混入
+正常消息或列入最终交付。宿主强制 commentary/final 时只陈述上一用户任务已验证的进度或结果，禁述 Memory、
+画像、偏好、状态、快照、交接、checkpoint、输入记录、保存、压缩、切换或收尾；正常任务消息照常，但不得
+夹带或提及 sidecar 动作、状态或结果；其他结果按其规则报告。
 
 ## 行为约束
 

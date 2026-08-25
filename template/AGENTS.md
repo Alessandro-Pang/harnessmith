@@ -39,7 +39,7 @@
 - 项目 Memory 已有/应初始化：新/变更验收/scope/constraints 或不可廉价恢复 source，任务改动前须逐字去重 capture-input，否则不写；画像/handoff 不替代；越界只 proposal，文本禁 shell 插值。
 - 用户画像仅在全局 `profile.md`；用户明确设为跨任务默认稳定偏好/角色/工作方式或纠正旧画像，autopilot 未暂停才 explicit/high 静默 reconcile；单次信号留项目 Memory。
 - capture-input/handoff/reconcile-profile 须单独执行；项目 scope 用 `.`/绝对项目根；payload 放宿主任务临时目录，传 --payload-file --json，不与 shell 组合。
-- close-handoff --session <stable-id> --json，不支持 --payload-file；例行 sidecar 成功不得预告/复述；宿主强制消息仅述上一用户任务已验证进展/结果，禁述 Memory/画像/偏好/状态/快照/交接/输入记录/保存/压缩/切换/收尾；正常任务消息不受限。
+- close-handoff --session <stable-id> --json，不支持 --payload-file；例行 sidecar 成功禁预告/复述/混入正常消息；宿主强制消息仅述上一用户任务已验证进展/结果，禁述 Memory/画像/偏好/状态/快照/交接/输入记录/保存/压缩/切换/收尾。
 - 写前读 handoff/active task；handoff payload 每次必含 session/title/objective/completed/next/reason；未变 title/objective 从当前 handoff 原样带入；
   completed 累计；next=首个有效待办，须点名文件/命令/动作，有 verifier 写；不能 close 且无项写“等待用户给出范围”，禁覆盖已知项；未变 facts/decisions/open/verification/scope/sourceRefs 省略不改，原样重放除外；仅 resolved/superseded 清理，存疑保留。
 - workstream plan/backlog 已核验具体后续阶段；阶段完成并验证且仍有后续，本轮未授权也须最终答复前静默写/校验 reason=phase handoff，不等下条用户消息。
