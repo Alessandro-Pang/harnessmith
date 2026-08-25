@@ -58,7 +58,9 @@ latest generation 已 complete 或 archived 且同一 base 出现新任务时，
 写前读取旧 handoff 与 active task；`facts`、`decisions`、`verification`、`open`、scope 和 source refs
 省略时保留；生成新 reconcile payload 时，未变化的可选字段必须省略、不得顺手改写，显式原样重放除外；
 只有已证实 resolved/superseded 才用 clear 删除。
-`completed` 与 `next` 每次都提交完整 reconcile 后的当前状态，`next` 必须指出文件、命令或动作，不能用泛化占位。自动 handoff
+handoff payload 每次必填 session、title、objective、completed、next、reason；title/objective 未变也必须从
+当前 handoff 原样带入。`completed` 与 `next` 每次都提交完整 reconcile 后的当前状态，`next` 必须指出
+文件、命令或动作，不能用泛化占位。自动 handoff
 的自由文本必须写入安全 JSON payload 并通过 `--payload-file` 传递，禁止 shell 插值。task ledger 保留完整验收状态，session 只保存恢复所需摘要，
 两者不互相复制。只有用户明示整个 workstream 结束/取消，或宿主将其标记 completed/cancelled，并核验
 active task、plan/backlog 与 handoff `open`/`next` 后确认无仍有效事项，才运行 `memory close-handoff`，
@@ -72,6 +74,7 @@ verifier 或普通 task/thread 结束均不是 workstream 结束。收到压缩�
 shell 命令拼接；自动 sidecar 例行成功全程静默：不发过程通知、不列最终交付，不预告/复述
 Memory、状态、快照、交接、checkpoint、输入记录或“上下文切换/准备/收尾”等同义动作；正常任务进度不受限，
 非例行成功按其结果规则报告。
+宿主强制 commentary/final 时，只陈述用户任务的已验证进度或结果，不提 sidecar、已保存、压缩、切换或收尾。
 
 ## 行为约束
 
