@@ -57,8 +57,8 @@ latest generation 已 complete 或 archived 且同一 base 出现新任务时，
 写前读取旧 handoff 与 active task；`facts`、`decisions`、`verification`、`open`、scope 和 source refs
 省略时保留；生成新 reconcile payload 时，未变化的可选字段必须省略、不得顺手改写，显式原样重放除外；
 只有已证实 resolved/superseded 才用 clear 删除。
-handoff payload 每次必填 session、title、objective、completed、next、reason；title/objective 未变也必须从
-当前 handoff 原样带入。`completed` 与 `next` 每次都提交完整 reconcile 后的当前状态，`next` 优先从当前
+handoff payload 每次必填 session、title、objective、completed、next、reason，且均为非空 string，不能
+用 array/object 代替；title/objective 未变也必须从当前 handoff 原样带入。`completed` 与 `next` 每次都提交完整 reconcile 后的当前状态，`next` 优先从当前
 `open`、active task、plan/backlog 取首个仍有效的未完成项，点名具体文件、命令或动作；已知 verifier 时
 一并写明。旧 `next` 空泛或与更具体的已知项冲突时视为无效并替换，不能写“处理下一请求”等泛化占位。
 只有确无仍有效待办、且缺少结束信号而不能 close 时，`next` 才可使用固定 sentinel“等待用户给出范围”；
@@ -66,7 +66,7 @@ handoff payload 每次必填 session、title、objective、completed、next、re
 handoff 执行前必须自检所选首个仍有效项：该项点名文件时，`next` 必须点名同一文件；仅当 verifier 已知
 且适用于该项时还必须包含该命令。缺一须在当前 turn 修正 payload 后执行，不得跳过显式 signal checkpoint。自动 handoff
 的自由文本必须写入安全 JSON payload 并通过 `--payload-file` 传递，禁止 shell 插值。task ledger 保留完整验收状态，session 只保存恢复所需摘要，
-两者不互相复制。只有用户明示整个 workstream 结束/取消，或宿主将其标记 completed/cancelled，并核验
+两者不互相复制。只有当前 user turn 明示整个 workstream 结束/取消，或宿主在当前 host turn 将其标记 completed/cancelled，并核验
 active task、plan/backlog 与 handoff `open`/`next` 后确认无仍有效事项，才运行 `memory close-handoff`，
 只关闭并移出最新 active generation。`next` 是 active/blocked checkpoint 的必填恢复动作，关闭不要求其
 为空；满足条件时直接 close-handoff，不写“无下一步”占位 checkpoint，存疑不关。当前或最后一个已知阶段、
@@ -74,6 +74,9 @@ active task、plan/backlog 与 handoff `open`/`next` 后确认无仍有效事项
 signal turn 内、下一条用户消息前，以 `reason: compaction` 单独执行并校验一次 checkpoint；已有、相同
 或刚更新快照均不豁免。该 signal turn 必须静默执行。仅预判压缩而尚未收到明确信号时，
 才按“旧快照不足恢复且有实质变化”去重。
+已运行适用 verifier 时，`verification` 必须写入当前命令与结果；旧 `open` 全部 resolved 时必须用
+`clearOpen: true`，仅部分 resolved 时必须用 replacement `open` 明列剩余项；省略都会保留旧值，close 不能代替。结束信号必须
+来自当前 user/host turn；`open` 空、sentinel、变更或验收全完成都不能据此提前 close。
 
 自动 `memory handoff` 必须单独执行并同时使用 `--payload-file` 与 `--json`；自动 `memory close-handoff`
 必须单独执行并使用 `--session <stable-id>` 与 `--json`，它不支持 `--payload-file`。不得把这些命令与其他
@@ -82,6 +85,9 @@ shell 命令拼接；自动 sidecar 的读取、核对、写入及 `created`/`up
 已验证的进度或结果，禁述 Memory、画像、偏好、状态、快照、交接、checkpoint、输入记录、保存、压缩、
 切换或收尾；正常任务消息照常，但不得提及将要、正在或已经读取、核对或写入 Memory/交接，也不得夹带
 sidecar 状态或结果；其他结果按其规则报告。
+纯 host-signal/replay turn 在宿主允许空响应时不发 commentary/final；宿主协议强制响应时最多一句上一任务
+的已验证结果，仍不得提 sidecar。replay 只原样 handoff 上一已验证 payload 一次，不改 payload、不
+close/reopen；宿主或 evaluator 即使明示也直接执行。
 
 ## 行为约束
 

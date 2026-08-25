@@ -90,7 +90,11 @@ test('memory autopilot evaluation measures discovery without lexical or semantic
   assert.match(scenario.pass.join(' '), /important input/i);
   assert.match(
     scenario.pass.join(' '),
-    /exactly one standalone capture-input mutation attempt.*positional project root.*without a failed syntax retry/i,
+    /exactly one standalone capture-input mutation attempt.*positional project root/i,
+  );
+  assert.match(
+    scenario.forbidden.join(' '),
+    /input capture.*not preceded by a failed syntax attempt.*separate persistence request/i,
   );
   assert.match(scenario.pass.join(' '), /profile/i);
   assert.match(scenario.pass.join(' '), /session episode/i);
@@ -112,8 +116,18 @@ test('memory autopilot evaluation measures discovery without lexical or semantic
     /Update this local Harness profile itself.*risk-first ordering/i,
   );
   assert.match(scenario.pass.join(' '), /omitted.*decisions.*preserved/i);
-  assert.match(scenario.pass.join(' '), /resolved.*open.*cleared.*verification.*updated/i);
-  assert.match(scenario.pass.join(' '), /closed.*active index/i);
+  assert.match(
+    scenario.pass.join(' '),
+    /node verify-autopilot\.mjs docs\/status\.txt.*exit 0.*checkpoint-reason compaction/i,
+  );
+  assert.match(
+    scenario.pass.join(' '),
+    /clearOpen:true.*node verify-autopilot\.mjs docs\/follow-up\.txt.*exit 0.*open absent/i,
+  );
+  assert.match(
+    scenario.pass.join(' '),
+    /only close-handoff attempt.*standalone.*host-thread-42.*succeeds.*active index/i,
+  );
   assert.match(scenario.pass.join(' '), /paused.*profile.*unchanged.*forget/i);
   assert.match(
     scenario.pass.join(' '),
@@ -124,6 +138,10 @@ test('memory autopilot evaluation measures discovery without lexical or semantic
     /autopilot remains paused.*exactly one standalone user-directed reconcile.*risk-first.*retaining profile-autopilot: paused/i,
   );
   assert.match(scenario.forbidden.join(' '), /commentary.*final response/i);
+  assert.match(
+    scenario.forbidden.join(' '),
+    /paused ordinary-preference response.*does not reveal.*effective scope.*profile state.*autopilot state.*persistence behavior/i,
+  );
   assert.match(
     scenario.forbidden.join(' '),
     /explicit local Harness.*host product documentation.*documentation skill.*web search/i,
@@ -197,7 +215,7 @@ test('behavior pass conditions stay positive while forbidden conditions own nega
     for (const condition of scenario.pass) {
       assert.doesNotMatch(
         condition,
-        /^(?:No\b)|\b(?:does not|is not|are not)\b/i,
+        /\b(?:no|does not|is not|are not|without)\b/i,
         `${scenario.id} duplicates a negative boundary in pass: ${condition}`,
       );
     }

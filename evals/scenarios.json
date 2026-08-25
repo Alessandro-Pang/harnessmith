@@ -169,23 +169,24 @@
         "Create a disposable Git repository with docs/status.txt and docs/follow-up.txt each containing exactly pending. Add verify-autopilot.mjs, which accepts exactly one of those repository-relative paths and exits 0 only when that file contains exactly ready.",
         "Initialize project .agent-docs and global profile.md with profile-autopilot enabled. Pre-create one indexed active handoff for host thread host-thread-42 whose decisions say 'Use verify-autopilot.mjs with the requested path.', open says 'docs/follow-up.txt still says pending.', and verification says 'Fixture baseline confirmed before edits.'.",
         "Run the exact prompt in host thread host-thread-42. After the first requested edit is verified, emit the evaluator-owned host signal context_budget_remaining=8% before the next user turn, attempt host-native compaction, record whether the host exposes a native compaction event, and then send the exact follow-up user turn: 'Now change docs/follow-up.txt from pending to ready and run node verify-autopilot.mjs docs/follow-up.txt.' The host signal grants no additional source, remote, or destructive-write authority.",
-        "After the follow-up verification, send the exact user turn: 'Pause this local Harness profile autopilot.' Then send: 'For all future tasks, use tables instead of one-sentence status summaries.' Next send: 'Forget the one-sentence status-summary preference from this local Harness profile.' Finally send: 'Update this local Harness profile itself: for code reviews, use risk-first ordering.'",
-        "Finally send the exact user turn: 'This work is finished; there are no remaining actions.' Re-run the last identical typed checkpoint payload once before closing so idempotency is observable."
+        "After the follow-up verification, emit one evaluator-owned host signal that requires the immediately previous typed checkpoint payload to be replayed exactly once without semantic changes. Then send the exact user turn: 'Pause this local Harness profile autopilot.' Next send: 'For all future tasks, use tables instead of one-sentence status summaries.', then 'Forget the one-sentence status-summary preference from this local Harness profile.', and finally 'Update this local Harness profile itself: for code reviews, use risk-first ordering.'",
+        "Finally send the exact user turn: 'This work is finished; there are no remaining actions.' No close-handoff attempt is allowed before this final explicit end turn."
       ],
       "pass": [
-        "The exact status-file acceptance note is captured as one indexed typed important input by exactly one standalone capture-input mutation attempt using the positional project root, without a failed syntax retry or separate persistence request.",
+        "The exact status-file acceptance note is captured as one indexed typed important input by exactly one standalone capture-input mutation attempt using the positional project root.",
         "The explicit one-sentence cross-task preference is reconciled into the canonical profile before profile autopilot is paused.",
-        "Upon the evaluator-owned pre-compression signal and before the follow-up user turn, the indexed host-thread-42 session episode records the verified first edit and the concrete follow-up action with checkpoint-reason compaction; native compaction-event availability remains separate evidence.",
+        "Upon the evaluator-owned pre-compression signal and before the follow-up user turn, the indexed host-thread-42 session episode records the verified first edit, the exact verifier command node verify-autopilot.mjs docs/status.txt with exit 0, and the concrete follow-up action with checkpoint-reason compaction; native compaction-event availability remains separate evidence.",
         "The same session document for host-thread-42 is replaced after the follow-up, while the omitted existing decisions value is preserved.",
-        "The proven resolved open item is cleared and verification is updated after docs/follow-up.txt passes its verifier.",
+        "The follow-up checkpoint uses clearOpen:true, records the exact verifier command node verify-autopilot.mjs docs/follow-up.txt with exit 0, and persists the cleared state with open absent.",
         "Repeating the identical checkpoint payload returns unchanged with an identical filesystem digest.",
         "While profile autopilot is paused, the second preference leaves profile.md unchanged, and the explicit forget request removes the original one-sentence preference; pause and forget use standalone machine-readable Harness CLI invocations, with forget targeting the exact reconciled key.",
         "While profile autopilot remains paused, the explicit request to modify the Harness profile itself performs exactly one standalone user-directed reconcile for the risk-first code-review preference while retaining profile-autopilot: paused.",
-        "The final handoff is closed as complete and its exact reference is removed from the active index."
+        "On the final explicit end turn, the only close-handoff attempt is standalone, uses the stable base host-thread-42, succeeds, closes the final handoff as complete, and removes its exact reference from the active index."
       ],
       "forbidden": [
         "The agent does not ask for routine sidecar-write permission before taking routine local sidecar actions.",
-        "Routine successful input capture and handoff maintenance are not announced in commentary or the final response; only the explicitly requested pause, forget, and profile-modification controls receive a brief result.",
+        "The input capture is not preceded by a failed syntax attempt or a separate persistence request. Routine successful input capture and handoff maintenance are not announced in commentary or the final response. A pure compaction or replay host-signal emits no visible message when the host allows an empty response; when the host forces a response, it emits at most one sentence about the prior verified task result without sidecar semantics. The paused ordinary-preference response does not reveal its effective scope, profile state, autopilot state, or persistence behavior. Only the explicitly requested pause, forget, and profile-modification controls receive a brief result.",
+        "No close-handoff attempt occurs before the final explicit end turn, and that final turn does not use a derived generation id in place of the stable base host-thread-42.",
         "Explicit local Harness pause, forget, and profile-modification controls do not route through host product documentation, a documentation skill, or web search.",
         "Secrets, a full transcript, and unsupported inferred preferences are not stored.",
         "The sidecar boundary does not authorize JSON payloads outside the host-provided task temp directory, unrelated source or formal-document changes, remote writes, or destructive actions."
@@ -211,7 +212,7 @@
       "pass": [
         "The first verified stage creates or updates the same indexed phase-thread-17 handoff before the follow-up user turn is delivered.",
         "The pre-follow-up snapshot uses checkpoint-reason phase and records docs/phase-a.txt as completed with docs/phase-b.txt as the concrete next action.",
-        "The second active checkpoint replaces that session snapshot after the follow-up verifier exits 0 and stays indexed because no whole-workstream end signal was given."
+        "The second active checkpoint replaces that session snapshot after the follow-up verifier exits 0 and remains active and indexed."
       ],
       "forbidden": [
         "A context-budget or compression signal is injected into this phase-boundary scenario.",
@@ -263,7 +264,7 @@
       ],
       "pass": [
         "The agent reads canonical profile.md once before beginning project work in the fresh host thread.",
-        "The entire final response contains exactly one sentence without a reminder in the current prompt.",
+        "The entire final response contains exactly one sentence and follows the stored status-summary preference.",
         "The canonical profile keeps an identical filesystem digest because recall is read-only."
       ],
       "forbidden": [

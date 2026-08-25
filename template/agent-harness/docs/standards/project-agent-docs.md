@@ -156,7 +156,8 @@ node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory close-handoff . \
 
 `capture-input` payload 包含 string `title`、string `content`、`source` 和可选 boolean `summary`；`source`
 只接受 `chat`、`file`、`meeting`、`link`、`other`。handoff payload 每次必填以下 string 字段：`session`、`title`、
-`objective`、`completed`、`next`、`reason`；`title`/`objective` 未变也必须从当前 handoff 原样带入。
+`objective`、`completed`、`next`、`reason`；六个字段必须是非空 string，不能用 array/object 代替；
+`title`/`objective` 未变也必须从当前 handoff 原样带入。
 `verification`、`facts`、`decisions`、`open`、`status` 也是 string；`scope` 是 string[]，
 `sourceRefs` 是 string[]，`clearFacts` 等 clear 字段是 boolean；
 提供来源引用时必须写 `sourceRefs`，不能写 CLI 别名 `sourceRef`/`source-ref`。自动产生的任何自由文本都必须由宿主非 shell 文件能力写入 payload，再用
@@ -190,6 +191,9 @@ reconcile payload 时，未变化的 `facts`、`decisions`、`open`、`verificat
 handoff 执行前必须自检所选首个仍有效项：该项点名文件时，`next` 必须点名同一文件；仅当 verifier
 已知且适用于该项时，`next` 必须包含该命令。缺一须在当前 turn 修正 payload 后执行 handoff，不能因此
 跳过显式 signal checkpoint。
+当前 checkpoint 前已运行适用 verifier 时，`verification` 必须替换为该命令及其当前结果；省略会保留旧
+证据，不能算有效 reconcile。旧 `open` 全部已证实 resolved 时必须用 `clearOpen: true`；仅部分 resolved
+时必须用 replacement `open` 明列剩余项。省略会保留旧事项，`close-handoff` 不能代替清理。
 整体重写当前状态，不追加会话流水账；无法确认是否失效时保留并提示冲突。
 
 传给命令的 session base 依次使用宿主不可变 thread/task id、已绑定的 active task id、现有唯一匹配
@@ -197,12 +201,13 @@ workstream id；首次确无匹配时才生成并立即索引。generation 1 为
 后续 generation 由完整 base 与 generation 确定性派生，超过上限时加入稳定 digest 截断为最长 100 字符的
 唯一 `session-id`，并保存 `session-base` 与 `handoff-generation`。多个 active 候选、代际或 portable
 identity 冲突时禁止覆盖。
-后续始终向命令传同一 base；只有用户明示整个 workstream 结束/取消，或宿主将该 workstream 标记为
+后续始终向命令传同一 base；只有当前 user turn 明示整个 workstream 结束/取消，或宿主在当前 host turn 将其标记为
 completed/cancelled，并核验 active task、已确认的 plan/backlog 与 handoff `open`/`next` 所指事项后，
 确认仍有效的待执行、待验证或 blocked 项均不存在，才运行 `close-handoff`，标记最新 active generation
 为 `complete` 并移出 active index。关闭不以 `next` 是否存在或为空判断：`next` 是 active/blocked
 checkpoint 的必填恢复动作；满足条件时直接 close-handoff，不先写“无下一步”占位 checkpoint。当前或
 最后一个已知阶段、单个请求、verifier 或普通 task/thread 完成均不构成 workstream 结束信号；存疑不关。
+`open` 为空、使用 sentinel、所有变更已落地或验收已通过也不能推断结束信号。
 
 无需等待宿主结束事件。以下任一可观察边界触发检查：阶段已验证且仍有后续；宿主发出压缩或上下文预算
 信号；Agent 判断长上下文即将压缩；或旧快照已不足恢复，且 `completed/decisions/open/verification/next`
@@ -228,6 +233,9 @@ prompt 不能凭空补出事件 hook。
 用户任务已验证的进度或结果，禁述 Memory、画像、偏好、状态、快照、交接、checkpoint、输入记录、保存、
 压缩、切换或收尾，也不得附加“准备继续”等例行状态；正常任务消息照常，但不得提及将要、正在或已经读取、核对或写入 Memory/交接，也不得
 夹带 sidecar 状态或结果；其他结果按下文规则报告。
+纯 host-signal/replay turn 在宿主允许空响应时不发送 commentary/final；宿主协议强制响应时最多一句上一
+任务的已验证结果，仍不得提 sidecar。replay 只把上一已验证 checkpoint 的 payload 原样 handoff 一次，
+不改 payload、不 close/reopen；即使宿主或 evaluator 明示要求也直接执行。
 内部 action 保留可审计，只有冲突、敏感信息、校验失败或
 需要扩大写入范围时才提示用户。自动权限不扩大到源码、正式文档或远端。
 
