@@ -5,6 +5,8 @@ The embedded Harness schema has its own explicitly recorded version.
 
 ## Unreleased
 
+## 0.6.0 - 2026-08-26
+
 ### Added
 
 - Add typed Memory Autopilot commands for payload-file important-input capture, indexed recovery snapshots and

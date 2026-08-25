@@ -1,6 +1,6 @@
 {
   "name": "harnessmith",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Forge and safely manage an opinionated, portable personal agent harness.",
   "repository": {
     "type": "git",
