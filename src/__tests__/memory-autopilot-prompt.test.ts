@@ -67,17 +67,20 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
     agents,
     /明示画像控制.*(?:直跑|直接执行).*CLI.*--json.*不查.*docs.*skill.*首条(?:消息)?.*结果.*纠正=.*遗忘=.*暂停\/恢复=/s,
   );
-  assert.match(agents, /跨任务稳定偏好.*角色.*工作方式.*明示(?:改|修改)画像/s);
+  assert.match(agents, /跨任务稳定偏好.*角色.*工作方式.*明示画像控制/s);
   assert.match(agents, /(?:explicit\/high.*静默|静默.*explicit\/high).*reconcile/s);
   assert.match(agents, /(?:本次或本项目|单次).*信号.*项目 Memory/s);
   assert.match(
     agents,
     /autopilot enabled.*才.*静默.*explicit\/high.*reconcile.*跨任务稳定偏好.*角色.*工作方式/s,
   );
-  assert.match(agents, /明示(?:改|修改)画像.*userDirected:true.*单次执行.*不 resume/s);
+  assert.match(
+    agents,
+    /明示画像控制.*纠正=reconcile-profile.*paused 也可.*payload 必加.*userDirected:true.*单次执行.*不 resume/s,
+  );
   assert.doesNotMatch(
     agents,
-    /(?:旧画像纠正|明示(?:改|修改)画像).*autopilot.*(?:未暂停|enabled).*才.*reconcile/s,
+    /(?:旧画像纠正|明示(?:改|修改)画像|明示画像控制).*autopilot.*(?:未暂停|enabled).*才.*(?:直跑|reconcile)/s,
   );
   assert.match(
     agents,

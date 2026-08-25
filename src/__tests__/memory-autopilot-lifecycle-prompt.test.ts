@@ -32,6 +32,6 @@ test('memory autopilot maps lifecycle signals to one quiet action', () => {
   );
   assert.match(
     agents,
-    /paused.*普通偏好.*不写画像.*仅.*明示改画像.*userDirected:true.*单次执行.*不 resume/s,
+    /paused.*普通偏好.*不写画像.*明示画像控制.*纠正=reconcile-profile.*paused 也可.*payload 必加.*userDirected:true.*单次执行.*不 resume/s,
   );
 });
