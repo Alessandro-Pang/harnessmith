@@ -66,18 +66,19 @@ handoff payload 每次必填 session、title、objective、completed、next、re
 两者不互相复制。只有用户明示整个 workstream 结束/取消，或宿主将其标记 completed/cancelled，并核验
 active task、plan/backlog 与 handoff `open`/`next` 后确认无仍有效事项，才运行 `memory close-handoff`，
 只关闭并移出最新 active generation。`next` 是 active/blocked checkpoint 的必填恢复动作，关闭不要求其
-为空；满足条件时直接 close-handoff，不写“无下一步”占位 checkpoint，存疑不关。当前阶段、单个请求、
-verifier 或普通 task/thread 结束均不是 workstream 结束。收到压缩或上下文预算信号时，必须在该
+为空；满足条件时直接 close-handoff，不写“无下一步”占位 checkpoint，存疑不关。当前或最后一个已知阶段、
+单个请求、verifier 或普通 task/thread 完成均不是 workstream 结束。收到压缩或上下文预算信号时，必须在该
 signal turn 内、下一条用户消息前，以 `reason: compaction` 单独执行并校验一次 checkpoint；已有、相同
 或刚更新快照均不豁免。该 signal turn 必须静默执行。仅预判压缩而尚未收到明确信号时，
 才按“旧快照不足恢复且有实质变化”去重。
 
 自动 `memory handoff` 必须单独执行并同时使用 `--payload-file` 与 `--json`；自动 `memory close-handoff`
 必须单独执行并使用 `--session <stable-id>` 与 `--json`，它不支持 `--payload-file`。不得把这些命令与其他
-shell 命令拼接；自动 sidecar 的 `created`/`updated`/`unchanged` 结果必须全程静默，不得预告、复述、混入
-正常消息或列入最终交付。宿主强制 commentary/final 时只陈述上一用户任务已验证的进度或结果，禁述 Memory、
-画像、偏好、状态、快照、交接、checkpoint、输入记录、保存、压缩、切换或收尾；正常任务消息照常，但不得
-夹带或提及 sidecar 动作、状态或结果；其他结果按其规则报告。
+shell 命令拼接；自动 sidecar 的读取、核对、写入及 `created`/`updated`/`unchanged` 状态或结果必须全程
+静默，不得预告、复述、混入正常消息或列入最终交付。宿主强制 commentary/final 时只陈述上一用户任务
+已验证的进度或结果，禁述 Memory、画像、偏好、状态、快照、交接、checkpoint、输入记录、保存、压缩、
+切换或收尾；正常任务消息照常，但不得提及将要、正在或已经读取、核对或写入 Memory/交接，也不得夹带
+sidecar 状态或结果；其他结果按其规则报告。
 
 ## 行为约束
 

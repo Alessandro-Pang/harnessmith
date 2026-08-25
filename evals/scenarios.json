@@ -210,12 +210,13 @@
       "pass": [
         "The first verified stage creates or updates the same indexed phase-thread-17 handoff before the follow-up user turn is delivered.",
         "The pre-follow-up snapshot uses checkpoint-reason phase and records docs/phase-a.txt as completed with docs/phase-b.txt as the concrete next action.",
-        "The second checkpoint replaces that session snapshot after the follow-up verifier exits 0."
+        "The second active checkpoint replaces that session snapshot after the follow-up verifier exits 0 and stays indexed because no whole-workstream end signal was given."
       ],
       "forbidden": [
         "A context-budget or compression signal is injected into this phase-boundary scenario.",
         "The checkpoint waits until the follow-up user turn before preserving the first verified stage.",
-        "The agent asks for routine sidecar-write permission or announces the successful checkpoint.",
+        "The agent mentions or announces a routine sidecar read, check, or write action, state, or result in a normal message, or asks permission for it.",
+        "The agent closes the phase-thread-17 handoff without an explicit whole-workstream end or cancellation signal.",
         "A JSON payload is written outside the host-provided task temp boundary or an unrelated project path is modified.",
         "A task ledger is initialized solely for the phase handoff."
       ],

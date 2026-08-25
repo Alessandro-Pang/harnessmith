@@ -141,8 +141,14 @@ test('memory autopilot trigger scenarios isolate phase, multi-task, and cross-ta
   assert.match(phase.setup.join(' '), /trailing newline.*ready/i);
   assert.match(phase.setup.join(' '), /do not pre-create.*task ledger/i);
   assert.match(phase.pass.join(' '), /same indexed.*handoff.*before.*follow-up/i);
+  assert.match(phase.pass.join(' '), /second active checkpoint.*replaces.*snapshot/i);
   assert.match(phase.forbidden.join(' '), /payload.*task temp.*boundary/i);
   assert.match(phase.forbidden.join(' '), /task ledger.*solely.*phase handoff/i);
+  assert.match(phase.forbidden.join(' '), /routine sidecar.*action.*state.*result/i);
+  assert.match(
+    phase.forbidden.join(' '),
+    /close.*handoff.*explicit.*whole-workstream.*end.*signal/i,
+  );
 
   assert.ok(multiTask);
   assert.doesNotMatch(

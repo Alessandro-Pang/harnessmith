@@ -61,7 +61,8 @@ updated: 2026-08-26
 任务跨会话、验证阶段仍有后续、宿主压缩信号、Agent 判断上下文即将压缩，或当前 handoff 已不足恢复时，
 Memory Autopilot 原位更新 session；仍有效状态保留，只有已证实 resolved/superseded 内容才清理，模糊状态
 保留。关闭采用双闩：只有用户明示整个 workstream 结束/取消或宿主标记 completed/cancelled，并核验 active
-task、plan/backlog 与 handoff 后确认无有效事项才 close；`next` 不要求其为空，存疑不关。每次 checkpoint
+task、plan/backlog 与 handoff 后确认无有效事项才 close；`next` 不要求其为空，存疑不关。当前或最后一个
+已知阶段、请求、verifier、task 完成都不算 workstream 结束信号。每次 checkpoint
 提交完整 reconcile 后的累计 `completed`；`next` 取首个仍有效未完成项并点名文件、命令或动作，已知 verifier
 时一并写明。确无有效待办且因缺少结束信号不能 close 时，才用固定 sentinel“等待用户给出范围”，不得覆盖
 已知 `open`、plan/backlog 或 `next`。自动自由文本只经安全 `--payload-file`，不得 shell

@@ -192,8 +192,8 @@ identity 冲突时禁止覆盖。
 completed/cancelled，并核验 active task、已确认的 plan/backlog 与 handoff `open`/`next` 所指事项后，
 确认仍有效的待执行、待验证或 blocked 项均不存在，才运行 `close-handoff`，标记最新 active generation
 为 `complete` 并移出 active index。关闭不以 `next` 是否存在或为空判断：`next` 是 active/blocked
-checkpoint 的必填恢复动作；满足条件时直接 close-handoff，不先写“无下一步”占位 checkpoint。单个请求、
-阶段、verifier 或普通 task/thread 结束均不构成 workstream 结束信号；存疑不关。
+checkpoint 的必填恢复动作；满足条件时直接 close-handoff，不先写“无下一步”占位 checkpoint。当前或
+最后一个已知阶段、单个请求、verifier 或普通 task/thread 完成均不构成 workstream 结束信号；存疑不关。
 
 无需等待宿主结束事件。以下任一可观察边界触发检查：阶段已验证且仍有后续；宿主发出压缩或上下文预算
 信号；Agent 判断长上下文即将压缩；或旧快照已不足恢复，且 `completed/decisions/open/verification/next`
@@ -214,10 +214,11 @@ prompt 不能凭空补出事件 hook。
 收到宿主压缩或上下文预算信号时，必须在该 signal turn 内、下一条用户消息前，以 `reason: compaction`
 执行并校验一次 checkpoint；已有、相同或刚更新快照均不豁免。仅预判压缩而尚未收到明确信号时，
 才按“旧快照不足恢复且有实质变化”去重；该预判路径中，快照相同或只有措辞变化时不写。
-该 signal turn 必须静默执行。自动 sidecar 的 `created`/`updated`/`unchanged` 结果必须全程静默，不得预告、
-复述、混入正常消息或列入最终交付；宿主强制 commentary/final 时只陈述上一用户任务已验证的进度或结果，
-禁述 Memory、画像、偏好、状态、快照、交接、checkpoint、输入记录、保存、压缩、切换或收尾；正常任务消息
-照常，但不得夹带或提及 sidecar 动作、状态或结果；其他结果按下文规则报告。
+该 signal turn 必须静默执行。自动 sidecar 的读取、核对、写入及 `created`/`updated`/`unchanged` 状态或结果
+必须全程静默，不得预告、复述、混入正常消息或列入最终交付；宿主强制 commentary/final 时只陈述上一
+用户任务已验证的进度或结果，禁述 Memory、画像、偏好、状态、快照、交接、checkpoint、输入记录、保存、
+压缩、切换或收尾；正常任务消息照常，但不得提及将要、正在或已经读取、核对或写入 Memory/交接，也不得
+夹带 sidecar 状态或结果；其他结果按下文规则报告。
 内部 action 保留可审计，只有冲突、敏感信息、校验失败或
 需要扩大写入范围时才提示用户。自动权限不扩大到源码、正式文档或远端。
 
