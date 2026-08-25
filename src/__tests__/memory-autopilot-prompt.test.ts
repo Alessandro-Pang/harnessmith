@@ -195,6 +195,11 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   assert.match(agents, /宿主强制.*最多一句上一已验结果.*强制消息禁述.*继续.*持久化/s);
   assert.match(agents, /用户指定\/关键 verifier.*单跑.*&&.*后续退出码.*不替代/s);
   assert.match(agents, /不以.*删(?:除)?断言.*篡改 verifier.*降(?:低)?门槛.*通过/s);
+  const taskRouteLine = agents
+    .split('\n')
+    .find((line) => line.includes('修改/诊断/评审/设计/发布'));
+  assert.ok(taskRouteLine);
+  assert.match(taskRouteLine, /开始前须先读 playbooks\/ 中恰好一个命中正文/);
   const agentLines = agents.trimEnd().split('\n');
   assert.ok(agentLines.length <= 60, `template/AGENTS.md has ${agentLines.length} lines`);
   assert.ok(Buffer.byteLength(agents) <= 6_600, 'template/AGENTS.md exceeds 6600 bytes');
