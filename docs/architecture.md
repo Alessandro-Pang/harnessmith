@@ -22,7 +22,8 @@ Pack/Registry、自动规则提升或多 Agent Runtime。
 
 Host Eval gate 会校验维护者提交记录的 package version、候选 tarball SHA-256、完整 scenario contract、
 behavior fingerprint、freshness、脱敏 artifact digest、工具行为、文件差异、逐项 pass 断言、禁止行为
-断言和 verdict，并要求 Codex、Cursor、Claude Code 覆盖完整场景矩阵。
+断言和 verdict，并要求当前 release policy 中的必需宿主覆盖完整场景矩阵。当前必需宿主为 Codex；
+Cursor 与 Claude Code 保留为受支持的可选证据。
 The gate does not launch or authenticate to any third-party host. 真实宿主执行、脱敏和证据采集仍由明确
 授权的维护者或 CI runner 完成。因此 gate
 通过只表示“maintainer-attested structure 内部一致且绑定当前候选包”；本地记录和摘要可由仓库写入者
