@@ -5,6 +5,13 @@ The embedded Harness schema has its own explicitly recorded version.
 
 ## Unreleased
 
+## 0.5.1 - 2026-08-25
+
+### Changed
+
+- Reuse fresh Host Eval evidence across metadata-only releases when behavior and scenario fingerprints remain
+  identical, while preserving exact candidate attestation and scoped invalidation.
+
 ## 0.5.0 - 2026-08-24
 
 ### Added

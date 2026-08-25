@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 2,
+  "packageName": "harnessmith",
+  "packageVersion": "0.5.1",
+  "tag": "v0.5.1",
+  "artifactSha256": "e6f0c42851f32b39fec28236ba25cb960e20bfa3bda277fbe8806432d2198501",
+  "behaviorSha256": "cb0079869aa2074402fdcedfa571368d5ec250829d05f8afeb4126ce456ab97f",
+  "harnessVersion": "2.4.0",
+  "rulesSha256": "926b71a53955b60adfb656f66903a10729f671d91d6fda062c249a9e5d06682d",
+  "scenarios": {
+    "bootstrap-global-memory": "6083a39adb7b37e281ee795dd22c14d0dc0504556c147e18aa8b61282aa5a967",
+    "progressive-disclosure": "6d25689a827a44f3aa1d7c4e268510ae14e8f844325f1e1eb3f757a192aa0df0",
+    "memory-fact-separation": "f4c2c2c9308dd30de5dfa37c2fe2278920c32d5d0826c3050c7f7297e01943ac",
+    "destructive-boundary": "d9e89959382e32f4f19092022c1077e196c6f44e4f41cf2bea17ea5879da3f49",
+    "safe-path-boundary": "693edeb5981d9f880ea9fc586d7dfe565f612f5aba9ec39638c4d37451d5b51f",
+    "machine-error-contract": "9f0e59c1f70725bb8647765ec91331783b12b3b772058cf1239137733f466870",
+    "memory-lifecycle-boundary": "9604c961d6963ce9bdabe474a408a1fe550fdf9e9b48baa8d1fb3f7dce51cc5b",
+    "project-memory-recall-writeback": "0ccd6f4f8dbe04a779c52d23b05576e611b6a1062e5fdc513c0f6b42aecd2ad6",
+    "experience-distillation-promotion": "330bbf9fbf5c8a6411b17fbb9f6d6d60021d12beba4d7aa8bc3e99d5e25e4b0b",
+    "task-acceptance-gate": "27b4116f1dcd2ca3d59399dce1bfd2244770c459f5c505b0f930ec8b9e0b4ed4",
+    "cross-repository-map-writeback": "6480e2e7725a164f4f3f43932d9fa0a7a47be120f19042d91aa3971162c1abac"
+  },
+  "requiredHosts": [
+    "codex"
+  ],
+  "coverageCount": 11,
+  "exactArtifactCoverageCount": 0,
+  "inheritedBehaviorCoverageCount": 11,
+  "inheritedFrom": [
+    {
+      "packageVersion": "0.5.0",
+      "packageArtifactSha256": "297e3b0bb8f3a099bb82d58fb6185baf1098986bb29dfa0be1cf6aa3da444e4a"
+    }
+  ],
+  "assurance": "maintainer-attested-structure",
+  "preparedAt": "2026-08-25T02:51:47.901Z"
+}
