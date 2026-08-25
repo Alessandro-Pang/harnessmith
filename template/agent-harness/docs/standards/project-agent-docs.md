@@ -2,7 +2,7 @@
 title: Project Memory Standard
 type: harness-standard
 status: active
-updated: 2026-08-25
+updated: 2026-08-26
 ---
 
 # 项目 `.agent-docs`：纯记忆层
@@ -183,9 +183,12 @@ workstream id；首次确无匹配时才生成并立即索引。generation 1 为
 后续 generation 由完整 base 与 generation 确定性派生，超过上限时加入稳定 digest 截断为最长 100 字符的
 唯一 `session-id`，并保存 `session-base` 与 `handoff-generation`。多个 active 候选、代际或 portable
 identity 冲突时禁止覆盖。
-后续始终向命令传同一 base；只有收到用户或宿主明确结束信号且确认无后续时才运行 `close-handoff`，标记
-最新 active generation 为 `complete` 并移出 active index。不得把“当前一步已完成”自行解释为整个
-workstream 已结束。
+后续始终向命令传同一 base；只有用户明示整个 workstream 结束/取消，或宿主将该 workstream 标记为
+completed/cancelled，并核验 active task、已确认的 plan/backlog 与 handoff `open`/`next` 所指事项后，
+确认仍有效的待执行、待验证或 blocked 项均不存在，才运行 `close-handoff`，标记最新 active generation
+为 `complete` 并移出 active index。关闭不以 `next` 是否存在或为空判断：`next` 是 active/blocked
+checkpoint 的必填恢复动作；满足条件时直接 close-handoff，不先写“无下一步”占位 checkpoint。单个请求、
+阶段、verifier 或普通 task/thread 结束均不构成 workstream 结束信号；存疑不关。
 
 无需等待宿主结束事件。以下任一可观察边界触发检查：阶段已验证且仍有后续；宿主发出压缩或上下文预算
 信号；Agent 判断长上下文即将压缩；或旧快照已不足恢复，且 `completed/decisions/open/verification/next`

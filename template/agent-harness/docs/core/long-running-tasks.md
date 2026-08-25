@@ -2,7 +2,7 @@
 title: Long-running Task Protocol
 type: harness-core
 status: active
-updated: 2026-08-25
+updated: 2026-08-26
 ---
 
 # Long-running Task Protocol
@@ -60,9 +60,12 @@ latest generation 已 complete 或 archived 且同一 base 出现新任务时，
 只有已证实 resolved/superseded 才用 clear 删除。
 `completed` 与 `next` 每次都提交完整 reconcile 后的当前状态，`next` 必须指出文件、命令或动作，不能用泛化占位。自动 handoff
 的自由文本必须写入安全 JSON payload 并通过 `--payload-file` 传递，禁止 shell 插值。task ledger 保留完整验收状态，session 只保存恢复所需摘要，
-两者不互相复制。只有收到用户或宿主明确结束信号且最终无后续时才运行 `memory close-handoff`，只关闭并
-移出最新 active generation；不得把当前阶段或单个请求完成推断为整个 workstream 已结束。收到压缩或
-上下文预算信号时，即使现有快照刚更新，仍以 `reason: compaction` 单独执行并校验一次 checkpoint。
+两者不互相复制。只有用户明示整个 workstream 结束/取消，或宿主将其标记 completed/cancelled，并核验
+active task、plan/backlog 与 handoff `open`/`next` 后确认无仍有效事项，才运行 `memory close-handoff`，
+只关闭并移出最新 active generation。`next` 是 active/blocked checkpoint 的必填恢复动作，关闭不要求其
+为空；满足条件时直接 close-handoff，不写“无下一步”占位 checkpoint，存疑不关。当前阶段、单个请求、
+verifier 或普通 task/thread 结束均不是 workstream 结束。收到压缩或上下文预算信号时，即使现有快照刚
+更新，仍以 `reason: compaction` 单独执行并校验一次 checkpoint。
 
 自动 `memory handoff` 必须单独执行并同时使用 `--payload-file` 与 `--json`；自动 `memory close-handoff`
 必须单独执行并使用 `--session <stable-id>` 与 `--json`，它不支持 `--payload-file`。不得把这些命令与其他

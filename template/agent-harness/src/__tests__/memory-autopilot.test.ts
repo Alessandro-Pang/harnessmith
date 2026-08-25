@@ -314,7 +314,9 @@ test('Closing a handoff completes the document and the same base continues in a 
   );
 
   assert.equal(result.action, 'updated');
-  assert.match(readFileSync(first.path, 'utf8'), /^status: complete$/m);
+  const completed = readFileSync(first.path, 'utf8');
+  assert.match(completed, /^status: complete$/m);
+  assert.match(completed, /# 下一步\n\nClose the snapshot\./);
   assert.match(readFileSync(second.path, 'utf8'), /^status: active$/m);
   const core = readFileSync(join(project, '.agent-docs', 'core.md'), 'utf8');
   assert.doesNotMatch(core, new RegExp(`${first.reference}(?:\\s|$)`));

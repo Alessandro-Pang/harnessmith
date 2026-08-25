@@ -24,6 +24,10 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
     join(root, 'template', 'agent-harness', 'docs', 'core', 'harness-cli-architecture.md'),
     'utf8',
   );
+  const operatingModel = readFileSync(
+    join(root, 'template', 'agent-harness', 'docs', 'core', 'operating-model.md'),
+    'utf8',
+  );
   const readme = readFileSync(join(root, 'README.md'), 'utf8');
   const english = readFileSync(join(root, 'README.en.md'), 'utf8');
   const autopilotBlock = projectMemory.match(
@@ -64,14 +68,14 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   assert.match(agents, /新 payload.*未变.*显式原样重放除外/s);
   assert.match(agents, /完整.*completed.*具体.*next.*文件.*命令.*动作/s);
   assert.match(agents, /(?:只有|仅).*resolved.*superseded.*清理.*模糊.*保留/s);
-  assert.match(agents, /宿主压缩(?:或预算|\/预算)?信号.*Agent 判断(?:上下文)?即将压缩/s);
+  assert.match(agents, /宿主压缩(?:或预算|\/预算)?信号.*新快照.*reason=compaction.*预判压缩/s);
   assert.match(agents, /同一会话连续完成多项任务\/决策/);
   assert.match(agents, /capture-input.*handoff.*reconcile-profile.*--payload-file.*--json/s);
   assert.match(agents, /close-handoff.*--session.*--json.*不支持.*--payload-file/s);
   assert.match(agents, /payload.*宿主(?:提供的)?任务临时目录/s);
   assert.match(
     agents,
-    /(?:单步|当前请求).*完成.*不算.*结束.*仅.*用户\/宿主.*明确结束.*active handoff.*open\/next.*close-handoff/s,
+    /本轮完成.*并非.*结束.*仅.*用户明示.*或宿主标记.*workstream.*结束\/取消.*无有效后续.*close-handoff.*存疑不关/s,
   );
   assert.match(agents, /压缩.*信号.*快照.*(?:仍|须|必须).*checkpoint/s);
   assert.match(
@@ -157,7 +161,7 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
     projectMemory,
     /capture-input.*handoff.*reconcile-profile.*--payload-file.*--json.*close-handoff.*--session.*--json.*不支持.*--payload-file/s,
   );
-  assert.match(projectMemory, /明确结束信号.*close-handoff/s);
+  assert.match(projectMemory, /用户明示.*宿主.*completed\/cancelled.*close-handoff/s);
   assert.match(projectMemory, /压缩.*信号.*即使.*快照.*仍.*checkpoint/s);
   assert.match(
     projectMemory,
@@ -180,8 +184,10 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   assert.match(projectMemory, /`next`.*具体.*文件.*命令.*动作/s);
   assert.match(
     projectMemory,
-    /只有收到用户或宿主明确结束信号.*无后续.*close-handoff.*不得把.*当前一步.*整个.*workstream.*结束/s,
+    /用户明示.*workstream.*结束\/取消.*宿主.*workstream.*completed\/cancelled.*核验.*active task.*plan\/backlog.*`open`\/`next`.*有效.*不存在.*才.*close-handoff/s,
   );
+  assert.match(projectMemory, /关闭不以.*`next`.*存在.*为空.*必填恢复动作/s);
+  assert.match(projectMemory, /不先写.*无下一步.*占位 checkpoint.*普通 task\/thread.*不构成/s);
   assert.match(projectMemory, /`source`.*`chat`.*`file`.*`meeting`.*`link`.*`other`/s);
   assert.match(
     projectMemory,
@@ -213,6 +219,10 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
     /memory handoff.*--payload-file.*--json.*close-handoff.*--session.*--json/s,
   );
   assert.match(longRunning, /生成新 reconcile payload.*未变化.*显式原样重放除外/s);
+  assert.match(
+    longRunning,
+    /用户明示.*workstream.*结束\/取消.*宿主.*completed\/cancelled.*核验.*open.*next.*有效.*才.*close-handoff.*`next`.*不要求.*为空.*存疑不关/s,
+  );
   assert.match(profile, /自动.*自由文本.*--payload-file.*shell.*插值/s);
   assert.match(profile, /暂停.*更正.*userDirected.*paused/s);
   assert.match(profile, /纠正.*(?:忘记|遗忘).*暂停.*恢复.*单句.*报告.*查看.*完整回答/s);
@@ -232,6 +242,14 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   assert.doesNotMatch(
     architecture,
     /`completed\/decisions\/open\/verification\/next`\s*省略字段.*表示保留/s,
+  );
+  assert.match(
+    architecture,
+    /关闭.*用户明示.*workstream.*结束\/取消.*宿主标记.*completed\/cancelled.*核验.*无有效.*`next`.*必填.*不要求.*为空.*存疑不关/s,
+  );
+  assert.match(
+    operatingModel,
+    /关闭.*用户明示.*workstream.*结束\/取消.*宿主标记.*completed\/cancelled.*核验.*无有效.*`next`.*不要求.*为空.*存疑不关/s,
   );
   assert.match(readme, /capture-input --payload-file/);
   assert.match(english, /capture-input --payload-file/);

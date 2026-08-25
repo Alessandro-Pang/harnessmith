@@ -43,7 +43,7 @@
 - 写前读 handoff/active task；提交完整累计 completed 和具体 next（文件/命令/动作）；新 payload 未变 facts/decisions/open/verification/scope/sourceRefs 省略、不改写；显式原样重放除外；仅证实 resolved/superseded 才清理，模糊保留。
 - workstream plan/backlog 已核验具体后续阶段，阶段完成并验证即“仍有后续”；即使本轮未授权，最终答复前必须静默写 reason=phase handoff 并校验，不得等下条用户消息。
 - 同一会话连续完成多项任务/决策时，第二个独立任务验证后，最终答复前 reason=multi-task 累计写入，后续原位更新；优先级 compaction > multi-task > phase。
-- 宿主压缩/预算信号即使快照新也须 reason=compaction checkpoint；Agent 判断即将压缩/旧快照不足恢复且实质变化时更新；其余无变化不写。当前请求完成不算结束；仅用户/宿主明确结束且 active handoff 无 open/next 才 close-handoff。
+- 宿主压缩/预算信号有新快照仍须 reason=compaction checkpoint；预判压缩/旧快照不足恢复且实质变化才更新；否则不写。本轮完成并非结束；仅用户明示或宿主标记 workstream 结束/取消且无有效后续才 close-handoff，存疑不关。
 - created/updated/unchanged 静默，proposed/blocked 简短告知；用户明确画像纠正/遗忘、autopilot 暂停/恢复：首个用户可见消息仅报最终结果/阻塞，禁“我会…”；默认单句，当前格式优先。paused 普通偏好照做，不报画像/持久化；查看画像详答；敏感/冲突/越界提示。
 - 写前确认目标；不覆盖用户改动，不用 destructive Git 清场，不泄露 secret/token/cookie/私钥等凭据。
 

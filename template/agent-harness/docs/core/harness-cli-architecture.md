@@ -2,7 +2,7 @@
 title: Harness CLI Architecture
 type: harness-core
 status: active
-updated: 2026-08-25
+updated: 2026-08-26
 ---
 
 # Harness CLI Architecture
@@ -117,9 +117,11 @@ secret scan、共享锁、原子写、托管 Memory 校验和失败回滚；`cor
 prompt、skill、规则或源码，这些变化仍需明确授权、评审和验证。
 
 Prompt 优先复用宿主不可变 thread/task id，并在阶段已验证且仍有后续、宿主发出压缩/预算信号，或旧
-快照已不足恢复且关键状态发生实质变化时调用；仅已证实 resolved/superseded 内容可清理，模糊内容保留；
-无变化不写，无后续则 close。宿主事件 hook 尚未提供，因此“每次宿主会话结束必定执行”仍不是 Runtime
-的机械保证，prompt/单元测试和 scenario contract 也不能替代真实 Host Eval；没有绑定候选包的 passing
+快照已不足恢复且关键状态发生实质变化时调用；仅已证实 resolved/superseded 内容可清理，模糊内容保留，
+无变化不写。关闭采用双闩：只有用户明示整个 workstream 结束/取消或宿主标记 completed/cancelled，并核验
+active task、plan/backlog 与 handoff 后确认无有效事项才 close；`next` 是 checkpoint 必填恢复动作，关闭
+不要求其为空，存疑不关。宿主事件 hook 尚未提供，因此“每次宿主会话结束必定执行”仍不是 Runtime 的
+机械保证，prompt/单元测试和 scenario contract 也不能替代真实 Host Eval；没有绑定候选包的 passing
 record 时不得声称 Host 行为已经通过。
 `.agent-docs/host-evals/` 刻意排除在 Memory 扫描之外，由 `pnpm run eval:validate` 单独执行 schema、
 artifact digest 与高置信 secret gate。

@@ -2,7 +2,7 @@
 title: Agent Operating Model
 type: harness-core
 status: active
-updated: 2026-08-25
+updated: 2026-08-26
 ---
 
 # Agent Operating Model
@@ -60,6 +60,8 @@ updated: 2026-08-25
 
 任务跨会话、验证阶段仍有后续、宿主压缩信号、Agent 判断上下文即将压缩，或当前 handoff 已不足恢复时，
 Memory Autopilot 原位更新 session；仍有效状态保留，只有已证实 resolved/superseded 内容才清理，模糊状态
-保留，无后续时 close。每次 checkpoint 提交完整 reconcile 后的累计 `completed` 与具体 `next`。自动
-自由文本只经安全 `--payload-file`，不得 shell 插值。新 distilled 未经 typed 流程或当前授权只形成
-proposal；长期事实仍提升到 `docs/`、ADR、测试、schema、lint 或 CI。
+保留。关闭采用双闩：只有用户明示整个 workstream 结束/取消或宿主标记 completed/cancelled，并核验 active
+task、plan/backlog 与 handoff 后确认无有效事项才 close；`next` 不要求其为空，存疑不关。每次 checkpoint
+提交完整 reconcile 后的累计 `completed` 与具体 `next`。自动自由文本只经安全 `--payload-file`，不得 shell
+插值。新 distilled 未经 typed 流程或当前授权只形成 proposal；长期事实仍提升到 `docs/`、ADR、测试、
+schema、lint 或 CI。
