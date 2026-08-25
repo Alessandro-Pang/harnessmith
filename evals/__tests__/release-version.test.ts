@@ -157,13 +157,13 @@ test('release finalization leaves no attestation when unexpected worktree change
   });
   const runner = (_executable: string, args: string[]) => ({
     status: 0,
-    stdout: args[0] === 'status' ? ' M package.json\n?? unexpected.txt\n' : '',
+    stdout: args[0] === 'status' ? ' M CHANGELOG.md\n?? unexpected.txt\n' : '',
     stderr: '',
   });
 
   assert.throws(
     () => finalizeReleaseVersion(runner, fixture),
-    /unexpected release worktree change/i,
+    /Unexpected release worktree change: unexpected\.txt/,
   );
   assert.equal(existsSync(join(fixture, 'release-attestation.json')), false);
 });

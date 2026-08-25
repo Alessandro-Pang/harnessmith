@@ -92,7 +92,7 @@ export function finalizeReleaseVersion(
   verifyReleaseAttestation(attestation, attestationSubject(prepared.artifactPath, tag, root));
   const allowed = new Set<string>(releaseFiles);
   const status = checked('Git status', ['status', '--porcelain'], root, runner);
-  for (const line of status.trim().split('\n').filter(Boolean)) {
+  for (const line of status.split('\n').filter(Boolean)) {
     const path = line.slice(3);
     if (!allowed.has(path)) throw new Error(`Unexpected release worktree change: ${path}`);
   }
