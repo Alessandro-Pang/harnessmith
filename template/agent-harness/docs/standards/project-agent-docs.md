@@ -137,20 +137,26 @@ schema-version: 1
 
 ```bash
 node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory capture-input . \
-  --payload-file /absolute/path/to/capture-input.json
+  --payload-file /absolute/path/to/capture-input.json --json
 
 node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory handoff . \
-  --payload-file /absolute/path/to/handoff.json
+  --payload-file /absolute/path/to/handoff.json --json
 
 node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory close-handoff . \
-  --session "<stable-id>"
+  --session "<stable-id>" --json
 ```
 
-`capture-input` payload 包含 `title`、`content`、`source` 和可选 `summary`；`handoff` payload 包含
-`session`、`title`、`objective`、`completed`、可选 `facts/decisions/open/verification`、`next`、`reason`、scope、
-source refs 与显式 clear/status。自动产生的任何自由文本都必须由宿主非 shell 文件能力写入 payload，再用
+`capture-input` payload 包含 string `title`、string `content`、`source` 和可选 boolean `summary`；`source`
+只接受 `chat`、`file`、`meeting`、`link`、`other`。`handoff` 中 `completed` 是 string，`verification`
+是 string；`session`、`title`、`objective`、`facts`、`decisions`、`open`、`next`、`reason`、`status`
+也都是 string；`scope` 是 string[]，`sourceRefs` 是 string[]，`clearFacts` 等 clear 字段是 boolean；JSON payload 必须写
+`sourceRefs`，不能写 CLI 别名 `sourceRef`/`source-ref`。自动产生的任何自由文本都必须由宿主非 shell 文件能力写入 payload，再用
 `--payload-file` 传递；禁止把用户原文、摘要或 Agent 生成文本做 shell 插值。可靠摘要在 payload 中设置
 `summary: true`；否则内容按 verbatim 保存。payload 临时文件不得包含 secret，并按宿主安全机制清理。
+自动 `capture-input`、`handoff`、`reconcile-profile` 必须作为单独进程执行，使用 `--payload-file` 与
+`--json`；`close-handoff` 必须单独使用 `--session <stable-id>` 与 `--json`，不支持 `--payload-file`。
+不得与其他 shell 命令组合，也不得把后续验证绑到同一 shell 状态。从独立进程的 stdout 解析 JSON result，
+再单独校验索引；不得用重定向或 `tee` 把执行与验证重新耦合。
 
 命令会生成 schema-valid 文档、精确更新 `core.md`、执行托管 Memory 校验并在失败时回滚。重复输入按
 verbatim 内容以原始文本、来源和模式的完整 digest 保持逐字节身份；可靠摘要先规范化再计算 digest，
@@ -159,7 +165,7 @@ verbatim 内容以原始文本、来源和模式的完整 digest 保持逐字节
 active/blocked generation；最新 generation 已 complete 或 archived 时，新任务创建下一 generation，旧 episode
 保持不变。
 
-写 handoff 前必须读取 `core.md` 指向的当前 handoff 和 active task，并与当前已验证事实 reconcile。
+写 handoff 前必须读取 `core.md` 指向的当前 handoff 和 active task（若存在），并与当前已验证事实 reconcile。
 仍然有效且影响恢复的事实必须保留；只有已由当前事实或用户意图证实为 `resolved`/`superseded` 的内容
 才能删除，相关性或状态模糊时必须保留。
 省略 `facts`、`decisions`、`verification`、`open`、`scope` 或 `source-ref` 表示保留现值；使用对应
@@ -172,16 +178,29 @@ workstream id；首次确无匹配时才生成并立即索引。generation 1 为
 后续 generation 由完整 base 与 generation 确定性派生，超过上限时加入稳定 digest 截断为最长 100 字符的
 唯一 `session-id`，并保存 `session-base` 与 `handoff-generation`。多个 active 候选、代际或 portable
 identity 冲突时禁止覆盖。
-后续始终向命令传同一 base；工作明确结束且无后续时运行 `close-handoff`，标记最新 active generation 为
-`complete` 并移出 active index。
+后续始终向命令传同一 base；只有收到用户或宿主明确结束信号且确认无后续时才运行 `close-handoff`，标记
+最新 active generation 为 `complete` 并移出 active index。不得把“当前一步已完成”自行解释为整个
+workstream 已结束。
 
 无需等待宿主结束事件。以下任一可观察边界触发检查：阶段已验证且仍有后续；宿主发出压缩或上下文预算
 信号；Agent 判断长上下文即将压缩；或旧快照已不足恢复，且 `completed/decisions/open/verification/next`
 中至少一项发生实质变化。
+阶段已验证且仍有后续时，最终答复前必须以 `reason: phase` 完成 handoff 写入与校验；这是阶段完成门禁，
+不得留到下一条用户消息。同一 open thread 完成第二个独立任务并验证后，最终答复前必须以
+`reason: multi-task` 累计写入；后续任务原位更新同一 session。reason 优先级为
+`compaction > multi-task > phase`，而不是等全部对话结束。
+同一 host thread 转向不相关目标时仍沿用该会话 handoff；明确 pivot 足以证明旧内容的恢复相关性已
+`resolved`/`superseded`，须重写 `objective` 并清理不再影响恢复的旧内容，不追加逐轮或全文历史。
+这类不相关目标 pivot 中，`title`、`objective`、`next` 必须替换；`scope`、`sourceRefs`、`verification`
+必须替换或用对应 `clear` 清空；`facts`、`decisions`、`open` 只保留仍与当前恢复相关的内容；`completed`
+保持紧凑的 session 累计。旧事实可保留为历史上成立，但不能继续占用当前恢复字段。
 能观察到压缩边界时，必须先 reconcile、写入并校验当前压缩快照，再继续处理压缩；宿主未暴露信号时，
 prompt 不能凭空补出事件 hook。
-快照相同或只有措辞变化时不写。例行成功不询问、不发过程通知；内部 action 保留可审计，只有冲突、
-敏感信息、校验失败或需要扩大写入范围时才提示用户。自动权限不扩大到源码、正式文档或远端。
+收到宿主压缩或上下文预算信号时，即使已有快照刚更新，仍必须以 `reason: compaction` 执行并校验一次
+checkpoint；这是可恢复性边界，不按普通“无实质变化”去重。其他快照相同或只有措辞变化时不写。
+例行成功不询问、不发过程通知，也不得在过程消息或最终答复中提及 Memory、handoff 或 checkpoint；静默执行
+不得预告 Memory 写入或动作，只有实际失败后才报告。内部 action 保留可审计，只有冲突、敏感信息、校验失败或
+需要扩大写入范围时才提示用户。自动权限不扩大到源码、正式文档或远端。
 
 ## 沉淀闭环
 

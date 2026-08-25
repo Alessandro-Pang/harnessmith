@@ -43,10 +43,13 @@ node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs task close --project /absolu
 
 ## 阶段与压缩检查点
 
-长任务不等待宿主会话结束事件。每个阶段完成、已验证且仍有后续时，先写 task checkpoint，再用 `memory handoff`
-更新可恢复快照；发现上下文接近宿主限制、收到压缩信号或继续累积会使早期信息难以恢复时，在压缩前
-执行 handoff。同一会话连续完成多项任务或形成多项决策，导致旧快照不足恢复且关键信息实质变化时
-也应更新，不等用户提醒；快照相同或只有措辞变化时不写。
+长任务不等待宿主会话结束事件。每个阶段完成、已验证且仍有后续时，最终答复前若已有 active task ledger，
+先写 task checkpoint；没有 ledger 时不得仅为 handoff 临时初始化 task，直接以 `reason: phase` 用
+`memory handoff` 更新并校验可恢复快照，不得留到下一条用户消息。同一 open thread
+完成第二个独立任务并验证后，最终答复前以 `reason: multi-task` 累计写入，后续任务原位更新；发现上下文接近
+宿主限制或收到压缩信号时，压缩前必须以 `reason: compaction` 完成 handoff。reason 优先级为
+`compaction > multi-task > phase`；
+快照相同或只有措辞变化时不写。
 
 同一 session/workstream 使用稳定 base；最新 generation 为 active/blocked 时原位更新该 episode，
 latest generation 已 complete 或 archived 且同一 base 出现新任务时，确定性创建下一 generation 并保留旧 episode。
@@ -54,7 +57,13 @@ latest generation 已 complete 或 archived 且同一 base 出现新任务时，
 `verification`、`open`、scope 和 source refs 省略时保留，只有已证实 resolved/superseded 的可选区块才用
 clear 指令删除，模糊时保留。`completed` 与 `next` 每次都提交完整 reconcile 后的当前状态。自动 handoff
 的自由文本必须写入安全 JSON payload 并通过 `--payload-file` 传递，禁止 shell 插值。task ledger 保留完整验收状态，session 只保存恢复所需摘要，
-两者不互相复制。最终无后续时运行 `memory close-handoff`，只关闭并移出最新 active generation。
+两者不互相复制。只有收到用户或宿主明确结束信号且最终无后续时才运行 `memory close-handoff`，只关闭并
+移出最新 active generation；不得把当前阶段或单个请求完成推断为整个 workstream 已结束。收到压缩或
+上下文预算信号时，即使现有快照刚更新，仍以 `reason: compaction` 单独执行并校验一次 checkpoint。
+
+自动 `memory handoff` 必须单独执行并同时使用 `--payload-file` 与 `--json`；自动 `memory close-handoff`
+必须单独执行并使用 `--session <stable-id>` 与 `--json`，它不支持 `--payload-file`。不得把这些命令与其他
+shell 命令拼接；例行成功保持静默，不宣布或预告 handoff/checkpoint，只有实际失败后才报告。
 
 ## 行为约束
 

@@ -83,8 +83,9 @@ paused。用户要求恢复自动维护时才 `resume`；精确删除条目始�
 
 ## Agent 维护时机
 
-每个新宿主 task/thread 首次工作前有界读取一次 canonical `profile.md`，即使当前请求没有重复偏好；同一
-task/thread 不重复读取，文件缺失时继续。正文最多 32 条使该启动读取保持有界；读取本身不授权写入，
+每个新宿主 task/thread 首次工作前的首个只读动作是有界读取一次 canonical
+`{{HARNESS_MEMORY_HOME}}/profile.md`（即唯一 `profile.md`），即使当前请求没有重复偏好；不得先运行项目发现命令或读取项目文件，
+同一 task/thread 不重复读取，文件缺失时继续。正文最多 32 条使该启动读取保持有界；读取本身不授权写入，
 也不触发其他全局 Memory 的递归加载。
 
 安装初始化的全局 Memory root 使用 local-safe Autopilot。只有用户明确表达为跨任务默认的稳定偏好、
@@ -92,7 +93,7 @@ task/thread 不重复读取，文件缺失时继续。正文最多 32 条使该�
 
 ```bash
 node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory reconcile-profile \
-  --payload-file /absolute/path/to/profile-reconcile.json
+  --payload-file /absolute/path/to/profile-reconcile.json --json
 
 node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory forget-profile \
   --key "<stable-key>"
@@ -104,7 +105,10 @@ node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory profile-autopilot res
 本次任务或本项目偏好只留在项目 `input`/`handoff`，不能提升为全局画像。Runtime 尚不能绑定多条独立
 观察证据，因此 `observed`/`inferred` 只保留为候选，不自动落盘。命令原位替换同 key 并在失败时回滚；
 没有新信息时不改写。自动产生的 conclusion 等自由文本必须由非 shell 文件能力写入 JSON payload，并用
-`--payload-file` 传递；禁止把不可信文本做 shell 插值。`profile-autopilot: paused` 会机械拒绝自动 reconcile；
+`--payload-file` 传递；禁止把不可信文本做 shell 插值。reconcile payload 只接受 `key`、`conclusion`、
+`evidence`、`confidence` 与可选 `userDirected`，日期由 CLI 维护，不得自行加入 `date` 或其他字段。自动
+`reconcile-profile` 必须单独执行并带 `--payload-file` 与 `--json`，不得与验证命令拼接。
+`profile-autopilot: paused` 会机械拒绝自动 reconcile；
 仅当用户明确要求修改画像本身时，payload 才设置 `userDirected: true` 绕过当次拒绝，不会恢复 autopilot。
 暂停不阻止精确遗忘，恢复自动维护必须由用户明确要求。例行 `created/updated/unchanged` 不发过程通知；用户要求查看、
 纠正、忘记或暂停时，该操作本身是交付物，简短报告结果或阻塞。

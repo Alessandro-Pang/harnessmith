@@ -60,6 +60,12 @@ test('behavior prompts do not manufacture authorization or ambiguous execution m
   assert.match(relationshipMap.prompt, /do not modify .*repository source files/i);
   assert.match(relationshipMap.pass.join(' '), /canonical YAML map.*generated Markdown view/i);
   assert.match(relationshipMap.forbidden.join(' '), /wait.*additional authorization/i);
+
+  const taskAcceptance = scenarios.get('task-acceptance-gate');
+  assert.ok(taskAcceptance);
+  assert.match(taskAcceptance.prompt, /package\.json parses/i);
+  assert.match(taskAcceptance.prompt, /add\(2,\s*3\).*?-1/i);
+  assert.match(taskAcceptance.prompt, /fresh.*mechanical.*evidence/i);
 });
 
 test('memory autopilot evaluation measures discovery without lexical or semantic trigger hints', () => {
@@ -90,6 +96,11 @@ test('memory autopilot evaluation measures discovery without lexical or semantic
   assert.match(scenario.prompt, /For all future tasks.*one sentence/i);
   assert.match(scenario.setup.join(' '), /verify-autopilot\.mjs/i);
   assert.match(scenario.setup.join(' '), /context_budget_remaining=8%/i);
+  assert.match(
+    scenario.pass.join(' '),
+    /evaluator-owned pre-compression signal.*before.*follow-up/i,
+  );
+  assert.match(scenario.pass.join(' '), /native compaction-event availability.*separate evidence/i);
   assert.match(scenario.setup.join(' '), /exact follow-up user turn/i);
   assert.match(scenario.setup.join(' '), /Pause automatic profile updates/i);
   assert.match(scenario.pass.join(' '), /omitted.*decisions.*preserved/i);
@@ -119,7 +130,11 @@ test('memory autopilot trigger scenarios isolate phase, multi-task, and cross-ta
   assert.ok(phase);
   assert.doesNotMatch(`${phase.prompt} ${phase.setup.join(' ')}`, /context[_ -]?budget|compress/i);
   assert.match(phase.setup.join(' '), /verified stage.*follow-up work remains/i);
+  assert.match(phase.setup.join(' '), /trailing newline.*ready/i);
+  assert.match(phase.setup.join(' '), /do not pre-create.*task ledger/i);
   assert.match(phase.pass.join(' '), /same indexed.*handoff.*before.*follow-up/i);
+  assert.match(phase.forbidden.join(' '), /payload.*task temp.*boundary/i);
+  assert.match(phase.forbidden.join(' '), /task ledger.*solely.*phase handoff/i);
 
   assert.ok(multiTask);
   assert.doesNotMatch(
@@ -127,8 +142,13 @@ test('memory autopilot trigger scenarios isolate phase, multi-task, and cross-ta
     /context[_ -]?budget|compress/i,
   );
   assert.match(multiTask.setup.join(' '), /three exact user turns/i);
+  assert.match(
+    multiTask.setup.join(' '),
+    /workstream plan.*item-a.*item-b.*item-c.*before the first turn/i,
+  );
   assert.match(multiTask.pass.join(' '), /same session document.*multi-task/i);
   assert.match(multiTask.pass.join(' '), /completed.*three verified tasks/i);
+  assert.match(multiTask.forbidden.join(' '), /payload.*task temp.*boundary/i);
 
   assert.ok(profileRecall);
   assert.doesNotMatch(
@@ -136,8 +156,10 @@ test('memory autopilot trigger scenarios isolate phase, multi-task, and cross-ta
     /remember|memory|profile|preference|one[- ]sentence|status summar/i,
   );
   assert.match(profileRecall.setup.join(' '), /fresh host thread.*canonical profile/i);
+  assert.match(profileRecall.setup.join(' '), /entire final response.*exactly one sentence/i);
+  assert.match(profileRecall.setup.join(' '), /unrelated global Memory.*sentinel/i);
   assert.match(profileRecall.pass.join(' '), /reads.*profile\.md.*before.*project work/i);
-  assert.match(profileRecall.pass.join(' '), /one-sentence status summary/i);
+  assert.match(profileRecall.pass.join(' '), /entire final response.*exactly one sentence/i);
   assert.match(profileRecall.forbidden.join(' '), /prompt repeats.*preference/i);
 });
 
