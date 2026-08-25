@@ -36,15 +36,15 @@
 - 冲突时核验用户意图、代码/测试/契约及已接受决策，注明时间/版本/理由。
 - 正式事实属于 `docs/`、ADR、代码、测试、schema、lint 或 CI；Memory 仅存非权威输入、交接、状态、证据与提炼。
   新 `distilled` 未经 typed 流程或当前授权只提交 proposal；宿主原生 memory 仅作待核对线索。
-- 每次新增验收、scope/constraints 或不可廉价恢复 source，去重后若项目 Memory 已初始化/达修改门槛，必须在下次改任务文件前 capture-input --payload-file；否则 proposal。无新信息不写，自动文本禁 shell 插值。
+- 新增验收、scope/constraints 或不可廉价恢复 source，去重后项目 Memory 已初始化/达修改门槛则须在下次改任务文件前 capture-input --payload-file；否则 proposal。无新信息不写，自动文本禁 shell 插值。
 - 用户画像仅在全局 `profile.md`；用户明确设为跨任务默认的稳定偏好/角色/工作方式或纠正旧画像，autopilot 未暂停才 explicit/high reconcile；单次信号留项目 Memory。
-- capture-input/handoff/reconcile-profile 必须单独执行；项目 scope 用 `.`/绝对项目根；payload 放宿主提供的任务临时目录，传 --payload-file --json，不与 shell 组合。
-- close-handoff: --session <stable-id> --json；不支持 --payload-file。自动 sidecar 例行成功全程静默：不预告/复述 Memory/交接/checkpoint/输入记录/上下文切换/收尾等同义词；正常进度不受限；其他按下文规则报告。
-- 写前读当前 handoff/active task；提交完整累计 completed 和具体 next（文件/命令/动作）；新 payload 未变 facts/decisions/open/verification/scope/sourceRefs 须省略、不改写；显式原样重放除外；仅证实 resolved/superseded 才清理，模糊保留。
-- 当前 workstream plan/backlog 已核验有具体后续阶段，阶段完成且已验证即“仍有后续”；即使本轮未授权，最终答复前必须静默写 reason=phase handoff 并校验，不得等下条用户消息。
+- capture-input/handoff/reconcile-profile 须单独执行；项目 scope 用 `.`/绝对项目根；payload 放宿主任务临时目录，传 --payload-file --json，不与 shell 组合。
+- close-handoff: --session <stable-id> --json；不支持 --payload-file。自动 sidecar 例行成功禁用户可见的预告/复述 Memory/交接/checkpoint/输入记录/上下文切换/收尾等同义词；正常进度不受限；其他按下文规则报告。
+- 写前读 handoff/active task；提交完整累计 completed 和具体 next（文件/命令/动作）；新 payload 未变 facts/decisions/open/verification/scope/sourceRefs 省略、不改写；显式原样重放除外；仅证实 resolved/superseded 才清理，模糊保留。
+- workstream plan/backlog 已核验具体后续阶段，阶段完成并验证即“仍有后续”；即使本轮未授权，最终答复前必须静默写 reason=phase handoff 并校验，不得等下条用户消息。
 - 同一会话连续完成多项任务/决策时，第二个独立任务验证后，最终答复前 reason=multi-task 累计写入，后续原位更新；优先级 compaction > multi-task > phase。
-- 宿主压缩或预算信号快照虽新仍须 reason=compaction checkpoint；Agent 判断上下文即将压缩/旧快照不足恢复且实质变化时更新；无实质变化不写。无明确结束信号不得 close-handoff；无后续才关闭 handoff。
-- created/updated/unchanged 静默，proposed/blocked 简短告知；用户明确画像纠正/遗忘、autopilot 暂停/恢复：无过程通知，仅最终答复报结果/阻塞；默认单句，当前格式优先。paused 普通偏好执行本指令，不报画像/持久化；查看画像详答；敏感/冲突/越界提示。
+- 宿主压缩/预算信号即使快照新也须 reason=compaction checkpoint；Agent 判断即将压缩/旧快照不足恢复且实质变化时更新；其余无变化不写。当前请求完成不算结束；仅用户/宿主明确结束且 active handoff 无 open/next 才 close-handoff。
+- created/updated/unchanged 静默，proposed/blocked 简短告知；用户明确画像纠正/遗忘、autopilot 暂停/恢复：首个用户可见消息仅报最终结果/阻塞，禁“我会…”；默认单句，当前格式优先。paused 普通偏好照做，不报画像/持久化；查看画像详答；敏感/冲突/越界提示。
 - 写前确认目标；不覆盖用户改动，不用 destructive Git 清场，不泄露 secret/token/cookie/私钥等凭据。
 
 ## 按需路由
