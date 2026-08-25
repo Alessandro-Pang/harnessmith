@@ -70,7 +70,7 @@ verifier 或普通 task/thread 结束均不是 workstream 结束。收到压缩�
 自动 `memory handoff` 必须单独执行并同时使用 `--payload-file` 与 `--json`；自动 `memory close-handoff`
 必须单独执行并使用 `--session <stable-id>` 与 `--json`，它不支持 `--payload-file`。不得把这些命令与其他
 shell 命令拼接；自动 sidecar 例行成功全程静默：不发过程通知、不列最终交付，不预告/复述
-Memory、交接、checkpoint、输入记录或“上下文切换/准备/收尾”等同义动作；正常任务进度不受限，
+Memory、状态、快照、交接、checkpoint、输入记录或“上下文切换/准备/收尾”等同义动作；正常任务进度不受限，
 非例行成功按其结果规则报告。
 
 ## 行为约束

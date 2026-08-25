@@ -2,7 +2,7 @@
 title: Compact User Profile Memory
 type: harness-standard
 status: active
-updated: 2026-08-25
+updated: 2026-08-26
 ---
 
 # 紧凑用户画像记忆
@@ -91,15 +91,18 @@ paused。用户要求恢复自动维护时才 `resume`；精确删除条目始�
 安装初始化的全局 Memory root 使用 local-safe Autopilot。只有用户明确表达为跨任务默认的稳定偏好、
 角色、工作方式，或明确纠正旧画像时，才以 `explicit/high` 自动原位更新，无需再说“请记住”：
 
+这里的 Harness 画像控制不是宿主产品设置；用户明示纠正、遗忘、暂停或恢复时直接执行下列本地命令，
+不路由产品文档或 skill。
+
 ```bash
 node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory reconcile-profile \
   --payload-file /absolute/path/to/profile-reconcile.json --json
 
 node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory forget-profile \
-  --key "<stable-key>"
+  --key "<stable-key>" --json
 
-node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory profile-autopilot pause
-node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory profile-autopilot resume
+node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory profile-autopilot pause --json
+node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory profile-autopilot resume --json
 ```
 
 本次任务或本项目偏好只留在项目 `input`/`handoff`，不能提升为全局画像。Runtime 尚不能绑定多条独立
@@ -108,6 +111,7 @@ node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory profile-autopilot res
 `--payload-file` 传递；禁止把不可信文本做 shell 插值。reconcile payload 只接受 `key`、`conclusion`、
 `evidence`、`confidence` 与可选 `userDirected`，日期由 CLI 维护，不得自行加入 `date` 或其他字段。自动
 `reconcile-profile` 必须单独执行并带 `--payload-file` 与 `--json`，不得与验证命令拼接。
+`forget-profile` 与 `profile-autopilot` 也必须单独执行并带 `--json`。
 `profile-autopilot: paused` 会机械拒绝自动 reconcile；
 仅当用户明确要求修改画像本身时，payload 才设置 `userDirected: true` 绕过当次拒绝，不会恢复 autopilot。
 暂停不阻止精确遗忘，恢复自动维护必须由用户明确要求。例行 `created/updated/unchanged` 不发过程通知；用户要求

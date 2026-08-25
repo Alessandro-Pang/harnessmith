@@ -102,12 +102,20 @@ test('memory autopilot evaluation measures discovery without lexical or semantic
   );
   assert.match(scenario.pass.join(' '), /native compaction-event availability.*separate evidence/i);
   assert.match(scenario.setup.join(' '), /exact follow-up user turn/i);
-  assert.match(scenario.setup.join(' '), /Pause automatic profile updates/i);
+  assert.match(scenario.setup.join(' '), /Pause this local Harness profile autopilot/i);
   assert.match(scenario.pass.join(' '), /omitted.*decisions.*preserved/i);
   assert.match(scenario.pass.join(' '), /resolved.*open.*cleared.*verification.*updated/i);
   assert.match(scenario.pass.join(' '), /closed.*active index/i);
   assert.match(scenario.pass.join(' '), /paused.*profile.*unchanged.*forget/i);
+  assert.match(
+    scenario.pass.join(' '),
+    /standalone machine-readable Harness CLI invocations.*exact reconciled key/i,
+  );
   assert.match(scenario.forbidden.join(' '), /commentary.*final response/i);
+  assert.match(
+    scenario.forbidden.join(' '),
+    /explicit local Harness.*host product documentation.*documentation skill.*web search/i,
+  );
   assert.match(scenario.automatedChecks.join(' '), /Closing a handoff/i);
   assert.match(scenario.automatedChecks.join(' '), /profile autopilot can be paused/i);
 });
