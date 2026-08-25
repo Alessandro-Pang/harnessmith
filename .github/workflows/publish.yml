@@ -1,0 +1,52 @@
+name: Publish npm package
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: npm-publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24.12.0
+          registry-url: https://registry.npmjs.org/
+          package-manager-cache: false
+      - name: Use an OIDC-capable npm CLI
+        run: npm install --global npm@11.6.2
+      - name: Verify signed tag and main ancestry
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag_object=$(git rev-parse "${GITHUB_REF_NAME}^{tag}")
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/git/tags/${tag_object}" --jq '.verification.verified')" = true
+          git fetch origin main
+          git merge-base --is-ancestor "${GITHUB_SHA}" origin/main
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm run preflight
+      - run: pnpm run test:coverage
+      - run: pnpm run sbom:check
+      - name: Rebuild and verify the attested candidate
+        run: |
+          mkdir .release-ci
+          npm pack --json --ignore-scripts --pack-destination .release-ci
+          node --import tsx scripts/release-version.ts ci-verify --artifact .release-ci/harnessmith-*.tgz --tag "${GITHUB_REF_NAME}"
+      - name: Publish through npm Trusted Publishing
+        env:
+          HARNESS_RELEASE_WORKFLOW: '1'
+        run: npm publish .release-ci/harnessmith-*.tgz --access public --registry=https://registry.npmjs.org/

@@ -3,6 +3,8 @@
 All notable changes are documented here. The project follows Semantic Versioning for the npm package.
 The embedded Harness schema has its own explicitly recorded version.
 
+## Unreleased
+
 ## 0.5.0 - 2026-08-24
 
 ### Added

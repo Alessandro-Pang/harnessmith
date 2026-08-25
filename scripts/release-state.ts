@@ -1,0 +1,139 @@
+import { chmodSync, existsSync, lstatSync, mkdirSync, readFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import writeFileAtomic from 'write-file-atomic';
+import { repositoryRoot, requiredEvaluationAdapters } from './eval-fingerprint.js';
+import { readNpmPackageTarball } from './npm-tarball.js';
+
+export interface ReleaseState {
+  schemaVersion: 2;
+  status: 'prepared' | 'published';
+  artifactPath: string;
+  artifactSha256: string;
+  packageVersion: string;
+  preparedAt: string;
+  publishedAt?: string;
+  evaluation: {
+    assurance: 'maintainer-attested-structure';
+    coverageCount: number;
+    packageArtifactSha256: string;
+    harnessVersion: string;
+    rulesSha256: string;
+    scenarios: Record<string, string>;
+    requiredHosts: string[];
+  };
+}
+
+export function releaseStateDirectory(configured?: string): string {
+  const directory = resolve(repositoryRoot, configured ?? '.release');
+  if (existsSync(directory)) {
+    const stat = lstatSync(directory);
+    if (!stat.isDirectory() || stat.isSymbolicLink()) {
+      throw new Error(`Release state directory must be a real directory: ${directory}`);
+    }
+  } else {
+    mkdirSync(directory, { mode: 0o700, recursive: true });
+  }
+  chmodSync(directory, 0o700);
+  return directory;
+}
+
+function statePath(directory: string): string {
+  return join(directory, 'release-state.json');
+}
+
+const sha256Pattern = /^[a-f0-9]{64}$/u;
+
+function isStringRecord(value: unknown): value is Record<string, string> {
+  return (
+    !!value &&
+    typeof value === 'object' &&
+    !Array.isArray(value) &&
+    Object.keys(value).length > 0 &&
+    Object.values(value).every((entry) => typeof entry === 'string' && sha256Pattern.test(entry))
+  );
+}
+
+function hasValidEvaluation(value: unknown, artifactSha256: unknown): boolean {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const evaluation = value as Partial<ReleaseState['evaluation']>;
+  return (
+    evaluation.assurance === 'maintainer-attested-structure' &&
+    Number.isSafeInteger(evaluation.coverageCount) &&
+    Number(evaluation.coverageCount) > 0 &&
+    typeof evaluation.packageArtifactSha256 === 'string' &&
+    sha256Pattern.test(evaluation.packageArtifactSha256) &&
+    evaluation.packageArtifactSha256 === artifactSha256 &&
+    typeof evaluation.harnessVersion === 'string' &&
+    evaluation.harnessVersion.length > 0 &&
+    typeof evaluation.rulesSha256 === 'string' &&
+    sha256Pattern.test(evaluation.rulesSha256) &&
+    isStringRecord(evaluation.scenarios) &&
+    Array.isArray(evaluation.requiredHosts) &&
+    JSON.stringify(evaluation.requiredHosts) === JSON.stringify(requiredEvaluationAdapters) &&
+    Number(evaluation.coverageCount) >=
+      evaluation.requiredHosts.length * Object.keys(evaluation.scenarios).length
+  );
+}
+
+export function readReleaseState(directory: string): ReleaseState | undefined {
+  const path = statePath(directory);
+  if (!existsSync(path)) return undefined;
+  const stat = lstatSync(path);
+  if (!stat.isFile() || stat.isSymbolicLink()) {
+    throw new Error(`Release state must be a regular file: ${path}`);
+  }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(readFileSync(path, 'utf8'));
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`Invalid release state: ${message}`);
+  }
+  if (
+    !parsed ||
+    typeof parsed !== 'object' ||
+    (parsed as Partial<ReleaseState>).schemaVersion !== 2 ||
+    !['prepared', 'published'].includes(String((parsed as Partial<ReleaseState>).status)) ||
+    typeof (parsed as Partial<ReleaseState>).artifactPath !== 'string' ||
+    typeof (parsed as Partial<ReleaseState>).artifactSha256 !== 'string' ||
+    !sha256Pattern.test(String((parsed as Partial<ReleaseState>).artifactSha256)) ||
+    typeof (parsed as Partial<ReleaseState>).packageVersion !== 'string' ||
+    typeof (parsed as Partial<ReleaseState>).preparedAt !== 'string' ||
+    !hasValidEvaluation(
+      (parsed as Partial<ReleaseState>).evaluation,
+      (parsed as Partial<ReleaseState>).artifactSha256,
+    )
+  ) {
+    throw new Error(`Invalid release state structure: ${path}`);
+  }
+  return parsed as ReleaseState;
+}
+
+export function writeReleaseState(directory: string, state: ReleaseState): void {
+  const target = statePath(directory);
+  writeFileAtomic.sync(target, `${JSON.stringify(state, null, 2)}\n`, { mode: 0o600 });
+  chmodSync(target, 0o600);
+}
+
+export function checkedPreparedState(directory: string, state: ReleaseState): ReleaseState {
+  if (state.status === 'published') {
+    throw new Error(
+      `Release ${state.packageVersion} is already recorded as published; provide a new candidate to prepare another release`,
+    );
+  }
+  const artifact = resolve(state.artifactPath);
+  if (dirname(artifact) !== directory) {
+    throw new Error(`Prepared release artifact escaped its state directory: ${artifact}`);
+  }
+  if (!existsSync(artifact)) throw new Error(`Prepared release artifact is missing: ${artifact}`);
+  let actual: string;
+  try {
+    actual = readNpmPackageTarball(artifact).sha256;
+  } catch {
+    throw new Error(`Prepared release artifact changed after checks: ${artifact}`);
+  }
+  if (actual !== state.artifactSha256) {
+    throw new Error(`Prepared release artifact changed after checks: ${artifact}`);
+  }
+  return { ...state, artifactPath: artifact };
+}

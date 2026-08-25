@@ -10,3 +10,6 @@ coverage/
 
 # Local Agent working documents
 /.agent-docs/
+
+# Resumable local release snapshot and state
+/.release/

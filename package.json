@@ -72,9 +72,11 @@
     "quality:dead-code": "knip --reporter compact",
     "quality:secrets": "secretlint --no-color \"src/**/*\" \"scripts/**/*\" \"template/**/*\" \"evals/**/*\" \"docs/**/*\" \".github/**/*\" \".husky/**/*\" \"*.md\" \"*.txt\" \"*.json\" \"*.yaml\" \"*.yml\" \"*.ts\" \"*.mjs\"",
     "release:check": "pnpm run preflight && pnpm run test:coverage && pnpm run sbom:check && pnpm run eval:gate",
+    "release": "node --import tsx scripts/release-version.ts",
+    "release:prepare": "node --import tsx scripts/release-publish.ts --prepare-only",
     "release:publish": "node --import tsx scripts/release-publish.ts",
     "prepack": "pnpm run preflight",
-    "prepublishOnly": "pnpm run release:check"
+    "prepublishOnly": "node --import tsx scripts/release-publish.ts guard"
   },
   "engines": {
     "node": ">=24.12.0"

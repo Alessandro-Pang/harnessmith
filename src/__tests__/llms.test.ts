@@ -114,13 +114,20 @@ test('routed prompts keep profile, memory, and authoritative-document writes beh
   assert.match(change, /达到项目记忆写入阈值且已获相应授权/);
 });
 
-test('release documentation describes the immutable snapshot that is actually checked and published', () => {
+test('release documentation describes the resumable immutable snapshot workflow', () => {
   const releasing = readFileSync(join(root, 'RELEASING.md'), 'utf8');
   const evaluations = readFileSync(join(root, 'evals', 'README.md'), 'utf8');
 
   assert.match(releasing, /read-only private snapshot/);
-  assert.match(releasing, /checks and publishes that same snapshot/);
-  assert.doesNotMatch(releasing, /invokes `npm publish` for that same path/);
+  assert.match(releasing, /rebuilds the deterministic candidate/);
+  assert.match(releasing, /publishes that exact file/);
+  assert.match(releasing, /pnpm run release:prepare/);
+  assert.match(releasing, /resume/i);
+  assert.match(releasing, /does not rerun.*release checks/i);
+  assert.match(releasing, /Trusted Publishing/);
+  assert.match(releasing, /npm run release -- patch/);
+  assert.match(releasing, /npm run release -- finalize/);
+  assert.match(releasing, /git push --atomic origin main refs\/tags\/v/);
   assert.match(evaluations, /Fingerprint that exact tarball/);
   assert.doesNotMatch(
     evaluations,

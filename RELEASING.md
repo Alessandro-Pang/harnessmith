@@ -8,32 +8,27 @@ Publishing is a maintainer-authorized external write. Never publish only because
 2. Add `repository`, `homepage`, and `bugs` URLs to `package.json` using the real public location. Do not use
    placeholder URLs.
 3. Enable private security advisories and required CI checks.
-4. Configure npm authentication or trusted publishing and require two-factor authentication.
+4. Configure npm Trusted Publishing for GitHub Actions with owner `Alessandro-Pang`, repository
+   `harnessmith`, workflow `publish.yml`, environment `npm`, and the `npm publish` action. Protect the
+   `npm` GitHub Environment and release tags with the repository rules appropriate for maintainers.
 
-## Release checklist
+## Tag-triggered release
 
-1. Confirm the working tree contains only intended changes.
-2. Update `CHANGELOG.md` and remove the `Unreleased` label for the target version.
-3. Keep the npm version and embedded Harness version independent and explain changes to each.
-4. Run the strict type check and regenerate both published runtime directories:
+1. Commit all product changes first, leave release notes under `## Unreleased`, check out `main`, and start
+   the local version transaction with one of:
 
    ```bash
-   pnpm install --frozen-lockfile --ignore-scripts
-   pnpm run preflight
-   pnpm run test:coverage
-   npm pack --dry-run
-   npm pack --pack-destination /absolute/path/to/release-candidate
-   pnpm audit --prod --audit-level=high
-   pnpm run sbom
-   pnpm run sbom:check
+   npm run release -- patch
+   npm run release -- minor
+   npm run release -- major
    ```
 
-   `npm pack` and `npm publish --dry-run` verify the npm distribution boundary. Dependency installation,
-   auditing, and the CycloneDX SBOM run from the frozen pnpm checkout. `sbom` uses the pinned generator and
-   records a digest of `package.json` plus `pnpm-lock.yaml`; `sbom:check` and `release:check` reject a stale
-   document. Verify the generator recognized the committed lockfile and record it with the release evidence.
+   This requires a clean `main`, calls `npm version` without creating a commit or tag, promotes the
+   `Unreleased` changelog section, regenerates the SBOM, runs preflight, and writes the exact reproducible npm
+   candidate under ignored `.release/` state. A failure restores the versioned source files instead of leaving
+   a half-bumped release.
 
-5. Bind the release checks to that exact candidate, install the same file in a temporary home, and exercise
+2. Bind the release checks to the printed candidate, install the same file in a temporary home, and exercise
    install, status, restore, uninstall, personal overlay initialization, global and project memory, task
    completion, and multi-Agent rollback:
 
@@ -41,7 +36,7 @@ Publishing is a maintainer-authorized external write. Never publish only because
    export HARNESS_RELEASE_ARTIFACT=/absolute/path/to/release-candidate/harnessmith-x.y.z.tgz
    ```
 
-6. Run every scenario in `evals/scenarios.json` against every real host required by the checked-in release
+3. Run every scenario in `evals/scenarios.json` against every real host required by the checked-in release
    policy. The current required host is Codex; Cursor and Claude Code remain supported optional evidence.
    Preserve only redacted
    transcripts and local evidence artifacts, set `recordType: host-evaluation`, and bind the records to the
@@ -52,23 +47,41 @@ Publishing is a maintainer-authorized external write. Never publish only because
    export HARNESS_EVAL_RUNS_DIR="$PWD/.agent-docs/host-evals/runs"
    pnpm run eval:validate
    pnpm run eval:gate
-   pnpm run release:publish --dry-run
+   pnpm run release:prepare
+   npm run release -- finalize
    ```
 
-   `release:publish` copies `HARNESS_RELEASE_ARTIFACT` to a read-only private snapshot, runs `release:check`
-   against that snapshot, verifies its digest did not change, and checks and publishes that same snapshot.
-   Publishing an existing tarball does not reliably invoke that tarball's `prepublishOnly`, so the supported
-   release workflow performs this gate explicitly; `prepublishOnly` remains a secondary guard for worktree publication.
+   `release:prepare` copies `HARNESS_RELEASE_ARTIFACT` to a read-only private snapshot under ignored local
+   `.release/` state, runs `release:check` against that snapshot, and preserves the verified digest and compact
+   Host matrix summary. `finalize` verifies that state, writes the bounded `release-attestation.json`, creates a
+   Conventional Commit, and creates a signed `vX.Y.Z` tag. It does not push or publish.
    `release:check` invokes the same gate and fails when fresh, passing, maintainer-attested real-host records
    are absent from any required-host-by-scenario cell. The result is a **maintainer-attested structure** check: local
    artifacts and digests cannot authenticate their provenance or prove that a real Host behaved as claimed.
    `run.example.json`, schema validation alone, and local unit tests cannot satisfy it; trusted proof requires
    external CI/attestation and evidence review.
-7. Verify actual CI runs on every supported operating system and Node.js version. Workflow configuration
+4. Review the release commit and tag locally, then push the exact pair only with explicit authorization:
+
+   ```bash
+   git push --atomic origin main refs/tags/vX.Y.Z
+   ```
+
+5. `.github/workflows/publish.yml` triggers only on version tags. It verifies GitHub's signed-tag result,
+   requires the tag commit to be reachable from `origin/main`, rebuilds the deterministic candidate, compares
+   it to the committed attestation, and publishes that exact file through npm Trusted Publishing. The workflow
+   has `id-token: write`, no npm token, and uses the protected `npm` Environment. GitHub OIDC publication of
+   this public package produces provenance automatically.
+6. Verify actual CI runs on every supported operating system and Node.js version. Workflow configuration
    alone is not evidence that the matrix passed.
-8. Commit with a Conventional Commit and create a signed version tag only after explicit maintainer approval.
-   When trusted publishing or another supported public CI identity is configured, publish the immutable snapshot
-   with `pnpm run release:publish --provenance`; otherwise omit `--provenance` and record that no publisher
-   attestation was produced. Never infer publishing authorization from a passing gate.
-9. Verify the npm package page, executable, README links, tarball contents, SBOM, provenance statement, and
+7. Verify the npm package page, executable, README links, tarball contents, SBOM, provenance statement, and
    clean-room installation.
+
+The committed attestation is intentionally a small maintainer assertion, not raw Host evidence. Redacted
+transcripts remain outside Git history. The signed tag and candidate digest make the assertion tamper-evident,
+but they cannot independently prove that a third-party Host produced the reviewed artifacts.
+
+## Local fallback
+
+If Trusted Publishing is unavailable, `pnpm run release:publish` still resumes the prepared local snapshot after
+an authentication failure and does not rerun the release checks. Direct worktree `npm publish` remains blocked.
+The fallback is not the normal release path and does not replace registry clean-room verification.

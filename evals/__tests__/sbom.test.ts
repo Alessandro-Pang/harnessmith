@@ -104,12 +104,14 @@ test('SBOM generation does not expose module injection or credential-like enviro
 test('release contract runs the SBOM freshness gate', () => {
   const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
   const releasing = readFileSync(join(root, 'RELEASING.md'), 'utf8');
+  const workflow = readFileSync(join(root, '.github', 'workflows', 'publish.yml'), 'utf8');
 
   assert.match(manifest.scripts.sbom, /scripts\/sbom\.ts generate/);
   assert.match(manifest.scripts['sbom:check'], /scripts\/sbom\.ts check/);
   assert.match(manifest.scripts['release:check'], /pnpm run sbom:check/);
-  assert.match(releasing, /pnpm run sbom\n/);
-  assert.match(releasing, /pnpm run sbom:check/);
-  assert.match(releasing, /pnpm run release:publish --provenance/);
-  assert.doesNotMatch(releasing, /release:publish -- --(?:dry-run|provenance)/);
+  assert.match(manifest.scripts.release, /scripts\/release-version\.ts/);
+  assert.match(releasing, /regenerates the SBOM/);
+  assert.match(workflow, /pnpm run sbom:check/);
+  assert.match(workflow, /npm publish \.release-ci\/harnessmith-\*\.tgz/);
+  assert.doesNotMatch(workflow, /NODE_AUTH_TOKEN|NPM_TOKEN|secrets\./);
 });
