@@ -53,7 +53,7 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   );
   assert.match(agents, /全局.*core\.md.*命中/s);
   assert.match(agents, /新.*distilled.*proposal/s);
-  assert.match(agents, /created\/updated\/unchanged.*静默.*proposed\/blocked.*简报/s);
+  assert.match(agents, /自动 reconcile.*全程静默.*proposed\/blocked.*简报/s);
   assert.match(
     agents,
     /Harness 画像明示纠正.*遗忘.*autopilot.*暂停.*恢复.*直接执行.*CLI.*--json.*不查.*产品文档.*skill.*首条消息.*结果/s,
@@ -62,6 +62,7 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
     agents,
     /用户.*(?:明确声明|明确设为).*跨任务默认.*稳定偏好.*角色.*工作方式.*纠正旧画像/s,
   );
+  assert.match(agents, /explicit\/high.*静默 reconcile/s);
   assert.match(agents, /(?:本次或本项目|单次).*信号.*项目 Memory/s);
   assert.match(agents, /完整累计.*completed.*具体.*next/);
   assert.match(
@@ -83,7 +84,7 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   assert.match(agents, /压缩.*信号.*快照.*(?:仍|须|必须).*checkpoint/s);
   assert.match(
     agents,
-    /自动 sidecar.*例行成功.*不对用户预告.*Memory.*状态.*快照.*交接.*输入记录.*正常.*进度.*不受限.*其他.*下文.*报告/s,
+    /自动 sidecar.*例行成功.*不对用户预告.*Memory.*画像.*偏好.*状态.*快照.*交接.*输入记录.*正常.*进度.*不受限.*其他.*下文.*报告/s,
   );
   assert.match(agents, /自动 sidecar.*不对用户.*上下文切换.*收尾.*表述.*正常.*进度.*不受限/s);
   assert.match(
@@ -98,7 +99,7 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   assert.match(agents, /项目.*scope.*用.*`\.`.*绝对项目根/s);
   assert.match(
     agents,
-    /新增.*验收.*scope\/constraints.*去重后.*(?:下次|下一次)(?:改|修改).*任务文件前.*capture-input/s,
+    /验收\/scope\/constraints.*变化.*不可廉价恢复.*项目 Memory.*已有\/任务应初始化.*去重后须先.*capture-input.*再作任务改动/s,
   );
   assert.match(agents, /workstream.*plan\/backlog.*已核验.*具体后续阶段/s);
   assert.match(agents, /高损失.*不可推断/);
@@ -107,14 +108,14 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
     agents,
     /Harness 画像明示纠正.*遗忘.*暂停.*恢复.*直接执行.*CLI.*--json.*不查.*产品文档.*skill.*首条消息.*仅.*结果.*阻塞.*禁预告.*单句\/格式优先/s,
   );
-  assert.match(agents, /paused.*普通偏好.*(?:执行.*指令|照做).*不报.*画像.*持久化/s);
+  assert.match(agents, /paused.*偏好.*(?:执行.*指令|照做).*不报.*画像.*持久化/s);
   assert.match(
     agents,
     /第二个.*独立.*验证.*最终答复前.*reason.*multi-task.*后续.*原位更新.*compaction.*multi-task.*phase/s,
   );
   assert.match(
     agents,
-    /自动 sidecar.*不对用户预告.*Memory.*状态.*快照.*(?:交接|handoff).*输入记录/s,
+    /自动 sidecar.*不对用户预告.*Memory.*画像.*偏好.*状态.*快照.*(?:交接|handoff).*输入记录/s,
   );
   assert.match(agents, /用户指定.*verifier.*单独执行.*&&.*后续(?:命令)?退出码.*不得.*替代/s);
   assert.match(agents, /不以.*删除断言.*篡改 verifier.*降低门槛.*通过/s);
@@ -230,6 +231,10 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
     /forget-profile.*--key.*--json.*profile-autopilot pause --json.*resume --json/s,
   );
   assert.match(profile, /暂停.*更正.*userDirected.*paused/s);
+  assert.match(
+    profile,
+    /自动 reconcile.*created\/updated\/unchanged.*不预告\/复述.*画像.*偏好.*proposed\/blocked.*简报/s,
+  );
   assert.match(profile, /纠正.*(?:忘记|遗忘).*暂停.*恢复.*单句.*报告.*查看.*完整回答/s);
   assert.match(
     profile,
