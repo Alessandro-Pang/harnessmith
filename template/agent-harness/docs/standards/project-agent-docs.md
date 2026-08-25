@@ -177,8 +177,9 @@ reconcile payload 时，未变化的 `facts`、`decisions`、`open`、`verificat
 必须省略、不得顺手改写，显式原样重放除外；使用对应
 `--clear-*` 才删除。省略 `status` 同样保留 active/blocked 生命周期，只有显式 `--status active`
 才解除 blocked。`completed` 与 `next` 不支持省略 patch，每次 checkpoint 必须提交完整 reconcile 后的累计
-`completed` 与具体 `next`；`next` 取首个仍有效的未完成项，并点名具体文件、命令或动作；已知 verifier
-时一并写明，不能使用“处理下一请求”等泛化占位。只有确无仍有效待办、且缺少结束信号而不能 close 时，
+`completed` 与具体 `next`；`next` 优先从当前 `open`、active task、plan/backlog 取首个仍有效的未完成项，
+并点名具体文件、命令或动作；已知 verifier 时一并写明。旧 `next` 空泛或与更具体的已知项冲突时视为
+无效，必须替换，不能使用“处理下一请求”等泛化占位。只有确无仍有效待办、且缺少结束信号而不能 close 时，
 `next` 才可使用固定 sentinel“等待用户给出范围”；它表示静默等待后续 scope，不要求主动询问用户，
 也不得覆盖任何已知 `open`、plan/backlog 或 `next`。
 整体重写当前状态，不追加会话流水账；无法确认是否失效时保留并提示冲突。

@@ -58,8 +58,9 @@ latest generation 已 complete 或 archived 且同一 base 出现新任务时，
 省略时保留；生成新 reconcile payload 时，未变化的可选字段必须省略、不得顺手改写，显式原样重放除外；
 只有已证实 resolved/superseded 才用 clear 删除。
 handoff payload 每次必填 session、title、objective、completed、next、reason；title/objective 未变也必须从
-当前 handoff 原样带入。`completed` 与 `next` 每次都提交完整 reconcile 后的当前状态，`next` 必须指出
-首个仍有效的未完成项，点名具体文件、命令或动作；已知 verifier 时一并写明，不能写“处理下一请求”等泛化占位。
+当前 handoff 原样带入。`completed` 与 `next` 每次都提交完整 reconcile 后的当前状态，`next` 优先从当前
+`open`、active task、plan/backlog 取首个仍有效的未完成项，点名具体文件、命令或动作；已知 verifier 时
+一并写明。旧 `next` 空泛或与更具体的已知项冲突时视为无效并替换，不能写“处理下一请求”等泛化占位。
 只有确无仍有效待办、且缺少结束信号而不能 close 时，`next` 才可使用固定 sentinel“等待用户给出范围”；
 它表示静默等待后续 scope，不要求主动询问用户，也不得覆盖任何已知 `open`、plan/backlog 或 `next`。自动 handoff
 的自由文本必须写入安全 JSON payload 并通过 `--payload-file` 传递，禁止 shell 插值。task ledger 保留完整验收状态，session 只保存恢复所需摘要，

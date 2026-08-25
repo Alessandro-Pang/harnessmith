@@ -36,17 +36,18 @@
 - 冲突时核验用户意图、代码/测试/契约/已接受决策，注明时间/版本/理由。
 - 正式事实属 `docs/`/ADR/代码/测试/schema/lint/CI；Memory 仅存非权威输入/交接/状态/证据/提炼。
   新 `distilled` 无 typed 流程/当前授权只提 proposal；宿主原生 memory 仅作待核对线索。
-- 项目 Memory 已有/应初始化：新/变更验收/scope/constraints 或不可廉价恢复 source，任务改动前须逐字去重 capture-input，否则不写；画像/handoff 不替代；越界只 proposal，文本禁 shell 插值。
-- 用户画像仅在全局 `profile.md`；用户明确设为跨任务默认稳定偏好/角色/工作方式或纠正旧画像，autopilot 未暂停才 explicit/high 静默 reconcile；单次信号留项目 Memory。
-- capture-input/handoff/reconcile-profile 须单独执行；项目 scope 用 `.`/绝对项目根；payload 放宿主任务临时目录，传 --payload-file --json，不与 shell 组合。
-- close-handoff --session <stable-id> --json，不支持 --payload-file；例行 Memory/交接 sidecar 读/核对/写、状态/结果禁出现在正常消息；宿主强制消息仅述上一任务已验证结果，禁述画像/偏好/快照/输入记录/保存/压缩/切换/收尾。
-- 写前读 handoff/active task；handoff payload 每次必含 session/title/objective/completed/next/reason；未变 title/objective 从当前 handoff 原样带入；
-  completed 累计；next=首个有效待办，须点名文件/命令/动作，有 verifier 写；不能 close 且无项写“等待用户给出范围”，禁覆盖已知项；未变 facts/decisions/open/verification/scope/sourceRefs 省略不改，原样重放除外；仅 resolved/superseded 清理，存疑保留。
-- workstream plan/backlog 已核验具体后续阶段；阶段完成并验证且仍有后续，本轮未授权也须最终答复前静默写/校验 reason=phase handoff，不等下条用户消息。
-- 同一会话完成多项任务/决策：第二个独立任务验证后，最终答复前累计写 reason=multi-task，后续原位更新；优先级 compaction > multi-task > phase。
-- 宿主压缩/预算 signal：本 signal turn、下条用户消息前须静默单独执行并校验 reason=compaction handoff，已有/相同/刚更新均不豁免；仅预判压缩在旧快照不足恢复且有实质变化时更新。阶段/请求/verifier/task 完成≠workstream 结束；仅用户明示/宿主标记结束/取消且无有效后续才 close-handoff，存疑不关。
-- Harness 画像明示纠正=reconcile-profile --payload-file <path> --json，遗忘=forget-profile --key <profile exact key> --json，autopilot 暂停/恢复=profile-autopilot pause|resume --json；均为 memory 子命令；
-  直接执行 CLI --json，不查产品文档/skill/help；禁预告，首条消息仅结果/阻塞，单句/格式优先。自动 reconcile 全程静默，proposed/blocked 简报；paused 偏好照做、不报持久化；敏感/冲突/越界提示。
+- 项目 Memory 已有/应初始化：新/变更验收/scope/constraints 或不可廉价恢复 source，任务改动前须逐字去重 capture-input，否则不写；画像/handoff 不替代；越界只 proposal；禁 shell 插值。
+- 用户画像仅存全局 `profile.md`；autopilot enabled 才静默 explicit/high reconcile 跨任务稳定偏好/角色/工作方式；明示改画像即使 paused 也 userDirected:true 执行一次不恢复；单次信号留项目 Memory。
+- capture-input/handoff/reconcile-profile 各自单独执行 --payload-file <宿主任务临时文件> --json；capture-input={title,content,source:chat|file|meeting|link|other}；
+  reconcile-profile={key,conclusion,evidence:explicit,confidence:high}；scope=`.`/绝对根；禁 shell 插值。
+- close-handoff 单独执行 --session <stable-id> --json（无 payload）；例行 sidecar 读/核对/写及状态/结果禁入正常消息；强制消息只述已验任务结果，禁述 Memory/画像/偏好/快照/输入/保存/压缩/收尾。
+- 写前读 handoff/active task；payload 必含 session/title/objective/completed/next/reason；未变 title/objective 从当前 handoff 原样带入；
+  completed 累计；next=首个有效 open/active-task/plan/backlog；已知文件/命令/动作/verifier 必写；空泛旧值无效；不能 close 且无项写“等待用户给出范围”，禁覆盖已知项；未变 facts/decisions/open/verification/scope/sourceRefs 省略不改，原样重放除外；仅 resolved/superseded 清理，存疑保留。
+- workstream plan/backlog 有已核验后续阶段；阶段验证完成且仍有后续，本轮未授权也须最终答复前静默写/校验 reason=phase handoff，不等下条消息。
+- 同一会话多项任务/决策：第2个独立任务验证后，最终答复前累计写 reason=multi-task，后续原位更新；优先级 compaction>multi-task>phase。
+- 宿主压缩/预算 signal：本 turn、下条消息前静默执行/校验 reason=compaction handoff；已有/相同/刚更新均不豁免。预判压缩仅在旧快照不足恢复且实质变化时更新。阶段/请求/verifier/task 完成≠workstream 结束；用户明示/宿主标记结束或取消且无有效后续才 close-handoff；存疑不关。
+- memory 画像命令：纠正=reconcile-profile --payload-file <path> --json；遗忘=forget-profile --key <exact-key> --json；暂停/恢复=profile-autopilot pause|resume --json；
+  直跑 CLI --json，不查产品 docs/skill/help；禁预告，首条仅结果/阻塞，单句/格式优先。auto reconcile 静默；proposed/blocked 报；paused 偏好照做不报持久化；敏感/冲突/越界提示。
 - 写前确认目标；不覆盖用户改动，不用 destructive Git 清场，不泄露 secret/token/cookie/私钥。
 
 ## 按需路由
