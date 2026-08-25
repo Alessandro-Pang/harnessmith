@@ -14,7 +14,8 @@ setup, observable pass conditions, forbidden conditions, and local regression ch
 
 - host product/version and model/model version;
 - package version, exact candidate tarball, embedded Harness, complete scenario contract
-  (`id`/`prompt`/`setup`/`pass`/`forbidden`), and distributed rule fingerprints;
+  (`id`/`prompt`/`setup`/`pass`/`forbidden`), distributed rule fingerprints, and the derived
+  `behaviorSha256` used for bounded evidence inheritance;
 - start and finish timestamps plus `evaluatedAt`, when the maintainer completed evidence review;
 - a redacted transcript artifact and SHA-256 digest;
 - ordered tool actions, including approval and outcome;
@@ -52,7 +53,8 @@ deliberate: copying or renaming it cannot satisfy the validator or release gate.
    resource limits, and reads package/Harness versions, distributed rules, and scenario contracts from the
    archive itself. It also rejects a stale or spliced candidate when those packaged release contracts differ
    from the current release worktree. Gating fails closed when `HARNESS_RELEASE_ARTIFACT` (or the equivalent
-   `--package-artifact PATH`) is absent, invalid, changed, or differs from the digest recorded by a run.
+   `--package-artifact PATH`) is absent, invalid, or changed. The exact artifact digest remains the publication
+   subject; Host behavior evidence has a separate fingerprint lifecycle described below.
 3. Install that exact tarball in the disposable host, then run the unmodified scenario prompt. Capture the
    actual host/model versions, sanitized transcript, ordered tool actions, filesystem diff, forbidden-action
    observations, and verdict.
@@ -69,11 +71,10 @@ deliberate: copying or renaming it cannot satisfy the validator or release gate.
 
 `eval:validate` reads only files named `run.json`; adjacent JSON may be an evidence artifact. It checks schema,
 scenario identity, evidence references, containment, artifact digests, and high-confidence secret patterns.
-`eval:gate` additionally requires the exact candidate tarball digest, current package/Harness/scenario/rule
-fingerprints, a passing verdict, every required scenario assertion and forbidden-action assertion to pass,
-and a fresh
-complete required-host × scenario matrix. The default freshness window is 30 days; use `--max-age-days` only when the
-release policy explicitly chooses another bounded window.
+`eval:gate` additionally verifies the exact candidate tarball, then requires compatible
+Harness/rule/scenario fingerprints, a passing verdict, every required scenario assertion and forbidden-action
+assertion to pass, and a fresh complete required-host × scenario matrix. The default freshness window is 30
+days; use `--max-age-days` only when the release policy explicitly chooses another bounded window.
 
 When a host/scenario cell contains multiple valid records, only the record with the latest `evaluatedAt` is
 eligible for coverage. A tie at the latest timestamp is ambiguous and fails closed; an older passing record
@@ -85,8 +86,27 @@ personal/project rule templates. The fingerprint output lists package-relative p
 changing packaged executable behavior invalidates prior host records even if a maintainer forgets to bump a
 version string.
 
-The gate intentionally fails when records are absent, stale, inconclusive, failed, tied to another package or
-behavior contract, or missing any scenario cell for a host required by the checked-in release policy. The
+## Risk-based inheritance
+
+The artifact and behavior identities intentionally serve different purposes:
+
+- `packageArtifactSha256` identifies the exact npm tarball and changes on every metadata-only release;
+- `behaviorSha256` is domain-separated from the artifact digest and covers the distributed executable and rule
+  surface represented by `rulesSha256`;
+- `scenarioSha256` independently identifies each Host scenario contract.
+
+A metadata-only release may inherit fresh passing Host records when the embedded Harness version,
+`rulesSha256`, and that cell's `scenarioSha256` are unchanged. A rule, runtime, template, schema, adapter, or
+safety-boundary change alters the rule fingerprint and invalidates the complete matrix. A changed scenario
+invalidates only that scenario; unaffected cells remain reusable. SemVer alone never determines reuse.
+
+Gate output separates `exactArtifactCoverageCount` from `inheritedBehaviorCoverageCount` and lists every
+source package version and artifact digest under `inheritedFrom`. Release state and the signed release
+attestation preserve that inheritance trail. Historical records whose scenario fingerprint no longer matches
+may remain in the evidence directory, but they are not eligible for current coverage.
+
+The gate intentionally fails when records are absent, stale, inconclusive, failed, tied to another behavior
+contract, or missing any scenario cell for a host required by the checked-in release policy. The
 current required host is Codex; Cursor and Claude Code can still be validated and retained as optional evidence.
 The gate never launches, authenticates to,
 or spends money on a third-party host. External host execution and evidence capture remain explicit

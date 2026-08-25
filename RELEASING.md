@@ -36,9 +36,11 @@ Publishing is a maintainer-authorized external write. Never publish only because
    export HARNESS_RELEASE_ARTIFACT=/absolute/path/to/release-candidate/harnessmith-x.y.z.tgz
    ```
 
-3. Run every scenario in `evals/scenarios.json` against every real host required by the checked-in release
-   policy. The current required host is Codex; Cursor and Claude Code remain supported optional evidence.
-   Preserve only redacted
+3. For a changed behavior fingerprint, run every affected scenario in `evals/scenarios.json` against every
+   real host required by the checked-in release policy. The current required host is Codex; Cursor and Claude
+   Code remain supported optional evidence. A rules/runtime/safety-boundary change invalidates the complete
+   matrix; a scenario-only change invalidates that scenario. A metadata-only release may reuse fresh compatible
+   records. Preserve only redacted
    transcripts and local evidence artifacts, set `recordType: host-evaluation`, and bind the records to the
    candidate tarball and complete scenario fingerprints printed by `pnpm run eval:fingerprint`. Record one
    evidence-backed `pass-N` and `forbidden-N` assertion for every corresponding ordered condition. Then run:
@@ -52,11 +54,14 @@ Publishing is a maintainer-authorized external write. Never publish only because
    ```
 
    `release:prepare` copies `HARNESS_RELEASE_ARTIFACT` to a read-only private snapshot under ignored local
-   `.release/` state, runs `release:check` against that snapshot, and preserves the verified digest and compact
-   Host matrix summary. `finalize` verifies that state, writes the bounded `release-attestation.json`, creates a
+   `.release/` state, runs `release:check` against that exact candidate tarball, and preserves the verified
+   artifact digest, behavior fingerprint, and compact Host matrix summary. When compatible evidence is reused,
+   the state records a Host Eval inheritance source version and artifact digest. `finalize` verifies that state,
+   writes the bounded `release-attestation.json`, creates a
    Conventional Commit, and creates a signed `vX.Y.Z` tag. It does not push or publish.
    `release:check` invokes the same gate and fails when fresh, passing, maintainer-attested real-host records
-   are absent from any required-host-by-scenario cell. The result is a **maintainer-attested structure** check: local
+   with compatible behavior are absent from any required-host-by-scenario cell. The result is a
+   **maintainer-attested structure** check: local
    artifacts and digests cannot authenticate their provenance or prove that a real Host behaved as claimed.
    `run.example.json`, schema validation alone, and local unit tests cannot satisfy it; trusted proof requires
    external CI/attestation and evidence review.

@@ -175,6 +175,7 @@ export function evaluationFingerprint(packageArtifactPath = releaseArtifactPath(
     packageVersion: packageManifest.version,
     harnessVersion: harnessManifest.harnessVersion,
     packageArtifactSha256: tarball.sha256,
+    behaviorSha256: sha256(JSON.stringify({ schemaVersion: 1, rulesSha256: rules.rulesSha256 })),
     ...rules,
     scenarios: scenarioFingerprints(scenarioCatalog(requiredFile(tarball, 'evals/scenarios.json'))),
   };

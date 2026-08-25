@@ -34,6 +34,7 @@ let fingerprintCache:
       packageVersion: string;
       harnessVersion: string;
       packageArtifactSha256: string;
+      behaviorSha256: string;
       rulesSha256: string;
       scenarios: Record<string, string>;
     }

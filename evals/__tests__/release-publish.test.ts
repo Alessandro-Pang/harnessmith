@@ -7,7 +7,38 @@ import {
   releaseCandidate,
   releasePublishGuard,
 } from '../../scripts/release-publish.js';
-import { candidateArtifact, digest, temporaryDirectory } from './run-fixture.js';
+import {
+  candidateArtifact,
+  currentFingerprint,
+  digest,
+  temporaryDirectory,
+} from './run-fixture.js';
+
+const inheritedSource = {
+  packageVersion: '0.5.0',
+  packageArtifactSha256: 'f'.repeat(64),
+};
+
+function evaluationGate() {
+  const fingerprint = currentFingerprint();
+  return {
+    valid: true as const,
+    assurance: 'maintainer-attested-structure' as const,
+    packageArtifactSha256: digest(readFileSync(candidateArtifact)),
+    behaviorSha256: fingerprint.behaviorSha256,
+    coverageCount: 11,
+    exactArtifactCoverageCount: 0,
+    inheritedBehaviorCoverageCount: 11,
+    inheritedFrom: [inheritedSource],
+    hosts: ['codex'],
+    scenarios: Array.from({ length: 11 }, (_value, index) => `scenario-${index + 1}`),
+    maxAgeDays: 30,
+  };
+}
+
+function release(args: string[], runner: ReleaseRunner): void {
+  releaseCandidate(args, runner, evaluationGate);
+}
 
 test('release publish workflow checks and publishes the same candidate tarball', () => {
   const stateDirectory = temporaryDirectory();
@@ -17,7 +48,7 @@ test('release publish workflow checks and publishes the same candidate tarball',
     return { status: 0, signal: null, error: undefined };
   };
 
-  releaseCandidate(
+  release(
     ['--package-artifact', candidateArtifact, '--state-dir', stateDirectory, '--dry-run'],
     runner,
   );
@@ -39,7 +70,7 @@ test('release publish accepts standard equals-style CLI options', () => {
     return { status: 0, signal: null, error: undefined };
   };
 
-  releaseCandidate(
+  release(
     [
       `--package-artifact=${candidateArtifact}`,
       `--state-dir=${stateDirectory}`,
@@ -62,11 +93,7 @@ test('release publish workflow stops before npm when release checks fail', () =>
   };
 
   assert.throws(
-    () =>
-      releaseCandidate(
-        ['--package-artifact', candidateArtifact, '--state-dir', stateDirectory],
-        runner,
-      ),
+    () => release(['--package-artifact', candidateArtifact, '--state-dir', stateDirectory], runner),
     /release checks failed/i,
   );
   assert.equal(calls.length, 1);
@@ -79,7 +106,7 @@ test('release publish workflow rejects arguments that could replace the exact pa
 
   assert.throws(
     () =>
-      releaseCandidate(
+      release(
         ['--package-artifact', candidateArtifact, '--state-dir', stateDirectory, 'another.tgz'],
         runner,
       ),
@@ -108,10 +135,7 @@ test('release publish keeps one immutable candidate after checks and publishes t
     return { status: 0, signal: null, error: undefined };
   };
 
-  releaseCandidate(
-    ['--package-artifact', artifact, '--state-dir', stateDirectory, '--dry-run'],
-    runner,
-  );
+  release(['--package-artifact', artifact, '--state-dir', stateDirectory, '--dry-run'], runner);
 
   assert.notEqual(stagedPath, artifact);
   assert.equal(publishedDigest, expectedDigest);
@@ -131,7 +155,7 @@ test('release publish preserves a checked snapshot and resumes without rerunning
 
   assert.throws(
     () =>
-      releaseCandidate(
+      release(
         ['--package-artifact', candidateArtifact, '--state-dir', stateDirectory],
         firstRunner,
       ),
@@ -146,7 +170,7 @@ test('release publish preserves a checked snapshot and resumes without rerunning
     retryCalls.push(args);
     return { status: 0, signal: null, error: undefined };
   };
-  releaseCandidate(['--state-dir', stateDirectory], retryRunner);
+  release(['--state-dir', stateDirectory], retryRunner);
 
   assert.deepEqual(retryCalls, [['publish', stagedPath]]);
   assert.equal(existsSync(stagedPath), true);
@@ -160,17 +184,21 @@ test('release prepare checks a persistent snapshot without contacting npm', () =
     return { status: 0, signal: null, error: undefined };
   };
 
-  releaseCandidate(
+  release(
     ['--package-artifact', candidateArtifact, '--state-dir', stateDirectory, '--prepare-only'],
     runner,
   );
 
   assert.deepEqual(calls, [['run', 'release:check']]);
   const state = JSON.parse(readFileSync(join(stateDirectory, 'release-state.json'), 'utf8'));
-  assert.equal(state.schemaVersion, 2);
+  assert.equal(state.schemaVersion, 3);
   assert.equal(state.evaluation.assurance, 'maintainer-attested-structure');
   assert.equal(state.evaluation.coverageCount, 11);
   assert.equal(state.evaluation.packageArtifactSha256, state.artifactSha256);
+  assert.equal(state.evaluation.behaviorSha256, currentFingerprint().behaviorSha256);
+  assert.equal(state.evaluation.exactArtifactCoverageCount, 0);
+  assert.equal(state.evaluation.inheritedBehaviorCoverageCount, 11);
+  assert.deepEqual(state.evaluation.inheritedFrom, [inheritedSource]);
 });
 
 test('release resume rejects a prepared snapshot whose bytes changed', () => {
@@ -180,7 +208,7 @@ test('release resume rejects a prepared snapshot whose bytes changed', () => {
     if (args[0] === 'run') stagedPath = options.env.HARNESS_RELEASE_ARTIFACT ?? '';
     return { status: 0, signal: null, error: undefined };
   };
-  releaseCandidate(
+  release(
     ['--package-artifact', candidateArtifact, '--state-dir', stateDirectory, '--prepare-only'],
     runner,
   );
@@ -188,7 +216,7 @@ test('release resume rejects a prepared snapshot whose bytes changed', () => {
   writeFileSync(stagedPath, 'tampered');
 
   assert.throws(
-    () => releaseCandidate(['--state-dir', stateDirectory], runner),
+    () => release(['--state-dir', stateDirectory], runner),
     /prepared release artifact changed/i,
   );
 });
@@ -196,7 +224,7 @@ test('release resume rejects a prepared snapshot whose bytes changed', () => {
 test('release resume rejects malformed evaluation evidence in persisted state', () => {
   const stateDirectory = temporaryDirectory();
   const runner: ReleaseRunner = () => ({ status: 0, signal: null, error: undefined });
-  releaseCandidate(
+  release(
     ['--package-artifact', candidateArtifact, '--state-dir', stateDirectory, '--prepare-only'],
     runner,
   );
@@ -207,7 +235,7 @@ test('release resume rejects malformed evaluation evidence in persisted state', 
   writeFileSync(path, `${JSON.stringify(state, null, 2)}\n`);
 
   assert.throws(
-    () => releaseCandidate(['--state-dir', stateDirectory], runner),
+    () => release(['--state-dir', stateDirectory], runner),
     /invalid release state structure/i,
   );
 });

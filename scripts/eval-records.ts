@@ -135,7 +135,8 @@ export function validateEvaluationRecords(options: EvaluationRecordOptions = {})
   }
   const schema = json(join(repositoryRoot, 'evals', 'run.schema.json')) as AnySchema;
   const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
-  const scenarioIds = new Set(Object.keys(evaluationScenarioFingerprints()));
+  const scenarioFingerprints = evaluationScenarioFingerprints();
+  const scenarioIds = new Set(Object.keys(scenarioFingerprints));
   const assertionsByScenario = expectedAssertions();
   const runIds = new Set<string>();
   const verified: VerifiedRun[] = [];
@@ -160,15 +161,17 @@ export function validateEvaluationRecords(options: EvaluationRecordOptions = {})
         `${relative(repositoryRoot, path)} has unknown scenario: ${record.scenarioId}`,
       );
     }
-    const expected = assertionsByScenario[record.scenarioId];
-    verifyExpectedAssertions(path, record.scenarioAssertions, expected.pass, 'scenario', 'pass');
-    verifyExpectedAssertions(
-      path,
-      record.forbiddenActionAssertions,
-      expected.forbidden,
-      'forbidden',
-      'forbidden',
-    );
+    if (record.subject.scenarioSha256 === scenarioFingerprints[record.scenarioId]) {
+      const expected = assertionsByScenario[record.scenarioId];
+      verifyExpectedAssertions(path, record.scenarioAssertions, expected.pass, 'scenario', 'pass');
+      verifyExpectedAssertions(
+        path,
+        record.forbiddenActionAssertions,
+        expected.forbidden,
+        'forbidden',
+        'forbidden',
+      );
+    }
     if (runIds.has(record.runId)) throw new Error(`duplicate runId: ${record.runId}`);
     runIds.add(record.runId);
     if (record.toolActions.some(({ sequence }, index) => sequence !== index + 1)) {

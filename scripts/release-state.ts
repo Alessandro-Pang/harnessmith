@@ -1,11 +1,12 @@
 import { chmodSync, existsSync, lstatSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import writeFileAtomic from 'write-file-atomic';
+import type { InheritedEvaluationSource } from './eval-contract.js';
 import { repositoryRoot, requiredEvaluationAdapters } from './eval-fingerprint.js';
 import { readNpmPackageTarball } from './npm-tarball.js';
 
 export interface ReleaseState {
-  schemaVersion: 2;
+  schemaVersion: 3;
   status: 'prepared' | 'published';
   artifactPath: string;
   artifactSha256: string;
@@ -15,7 +16,11 @@ export interface ReleaseState {
   evaluation: {
     assurance: 'maintainer-attested-structure';
     coverageCount: number;
+    exactArtifactCoverageCount: number;
+    inheritedBehaviorCoverageCount: number;
+    inheritedFrom: InheritedEvaluationSource[];
     packageArtifactSha256: string;
+    behaviorSha256: string;
     harnessVersion: string;
     rulesSha256: string;
     scenarios: Record<string, string>;
@@ -60,9 +65,31 @@ function hasValidEvaluation(value: unknown, artifactSha256: unknown): boolean {
     evaluation.assurance === 'maintainer-attested-structure' &&
     Number.isSafeInteger(evaluation.coverageCount) &&
     Number(evaluation.coverageCount) > 0 &&
+    Number.isSafeInteger(evaluation.exactArtifactCoverageCount) &&
+    Number(evaluation.exactArtifactCoverageCount) >= 0 &&
+    Number.isSafeInteger(evaluation.inheritedBehaviorCoverageCount) &&
+    Number(evaluation.inheritedBehaviorCoverageCount) >= 0 &&
+    Number(evaluation.exactArtifactCoverageCount) +
+      Number(evaluation.inheritedBehaviorCoverageCount) ===
+      Number(evaluation.coverageCount) &&
+    Array.isArray(evaluation.inheritedFrom) &&
+    evaluation.inheritedFrom.every(
+      (source) =>
+        !!source &&
+        typeof source === 'object' &&
+        typeof source.packageVersion === 'string' &&
+        source.packageVersion.length > 0 &&
+        typeof source.packageArtifactSha256 === 'string' &&
+        sha256Pattern.test(source.packageArtifactSha256),
+    ) &&
+    (Number(evaluation.inheritedBehaviorCoverageCount) === 0
+      ? evaluation.inheritedFrom.length === 0
+      : evaluation.inheritedFrom.length > 0) &&
     typeof evaluation.packageArtifactSha256 === 'string' &&
     sha256Pattern.test(evaluation.packageArtifactSha256) &&
     evaluation.packageArtifactSha256 === artifactSha256 &&
+    typeof evaluation.behaviorSha256 === 'string' &&
+    sha256Pattern.test(evaluation.behaviorSha256) &&
     typeof evaluation.harnessVersion === 'string' &&
     evaluation.harnessVersion.length > 0 &&
     typeof evaluation.rulesSha256 === 'string' &&
@@ -92,7 +119,7 @@ export function readReleaseState(directory: string): ReleaseState | undefined {
   if (
     !parsed ||
     typeof parsed !== 'object' ||
-    (parsed as Partial<ReleaseState>).schemaVersion !== 2 ||
+    (parsed as Partial<ReleaseState>).schemaVersion !== 3 ||
     !['prepared', 'published'].includes(String((parsed as Partial<ReleaseState>).status)) ||
     typeof (parsed as Partial<ReleaseState>).artifactPath !== 'string' ||
     typeof (parsed as Partial<ReleaseState>).artifactSha256 !== 'string' ||

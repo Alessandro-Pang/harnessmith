@@ -67,6 +67,7 @@ function attestationSubject(artifact: string, tag: string, root: string): Releas
     packageVersion: fingerprint.packageVersion,
     tag,
     artifactSha256: fingerprint.packageArtifactSha256,
+    behaviorSha256: fingerprint.behaviorSha256,
     harnessVersion: fingerprint.harnessVersion,
     rulesSha256: fingerprint.rulesSha256,
     scenarios: fingerprint.scenarios,

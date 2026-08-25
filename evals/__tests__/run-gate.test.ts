@@ -29,6 +29,8 @@ test('fingerprint binds the candidate package and every complete scenario contra
   assert.equal(output.packageVersion, packageManifest.version);
   assert.equal(output.harnessVersion, harnessManifest.harnessVersion);
   assert.equal(output.packageArtifactSha256, digest(readFileSync(candidateArtifact)));
+  assert.match(output.behaviorSha256, /^[a-f0-9]{64}$/);
+  assert.notEqual(output.behaviorSha256, output.packageArtifactSha256);
   assert.match(output.rulesSha256, /^[a-f0-9]{64}$/);
   for (const source of [
     'dist/adapters.js',
@@ -314,7 +316,11 @@ test('release gate emits machine-readable success only for the complete fresh ho
     valid: true,
     assurance: 'maintainer-attested-structure',
     packageArtifactSha256: currentFingerprint().packageArtifactSha256,
+    behaviorSha256: currentFingerprint().behaviorSha256,
     coverageCount: adapters.length * scenarioIds.length,
+    exactArtifactCoverageCount: adapters.length * scenarioIds.length,
+    inheritedBehaviorCoverageCount: 0,
+    inheritedFrom: [],
     hosts: adapters,
     scenarios: scenarioIds,
     maxAgeDays: 30,
@@ -360,19 +366,6 @@ test('release gate rejects records captured against a different rule fingerprint
 
   assert.equal(result.status, 1);
   assert.match(result.stderr, /subject-drift rulesSha256 codex\/progressive-disclosure/);
-});
-
-test('release gate rejects records captured against a different candidate package artifact', () => {
-  const runsDirectory = temporaryDirectory();
-  const path = writeRun(runsDirectory);
-  const record = JSON.parse(readFileSync(path, 'utf8'));
-  record.subject.packageArtifactSha256 = 'f'.repeat(64);
-  writeFileSync(path, `${JSON.stringify(record, null, 2)}\n`);
-
-  const result = run(['gate', '--runs-dir', runsDirectory]);
-
-  assert.equal(result.status, 1);
-  assert.match(result.stderr, /subject-drift packageArtifactSha256 codex\/progressive-disclosure/);
 });
 
 test('evaluation schema supports every adapter while release coverage uses the explicit host policy', async () => {
@@ -428,6 +421,9 @@ test('evaluation and release docs distinguish contracts from real fresh host evi
     'current required host is Codex',
     'maintainer-attested structure',
     'cannot prove that a real Host produced the submitted artifacts',
+    'behaviorSha256',
+    'metadata-only release',
+    'invalidates only that scenario',
   ]) {
     assert.ok(evalReadme.includes(required), `evals/README.md is missing ${required}`);
   }
@@ -436,6 +432,8 @@ test('evaluation and release docs distinguish contracts from real fresh host evi
   assert.match(releasing, /HARNESS_RELEASE_ARTIFACT/);
   assert.match(releasing, /maintainer-attested structure/i);
   assert.match(releasing, /current required host is Codex/i);
+  assert.match(releasing, /Host Eval inheritance/i);
+  assert.match(releasing, /exact candidate tarball/i);
   assert.match(architecture, /executable release gate/i);
   assert.match(architecture, /does not launch.*third-party host/i);
 });

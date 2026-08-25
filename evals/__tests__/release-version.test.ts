@@ -69,16 +69,20 @@ test('release attestation rejects a candidate digest that differs from local gat
     () =>
       verifyReleaseAttestation(
         {
-          schemaVersion: 1,
+          schemaVersion: 2,
           packageName: 'harnessmith',
           packageVersion: '0.5.0',
           tag: 'v0.5.0',
           artifactSha256: 'a'.repeat(64),
+          behaviorSha256: 'd'.repeat(64),
           harnessVersion: '2.4.0',
           rulesSha256: 'b'.repeat(64),
           scenarios: {},
           requiredHosts: ['codex'],
           coverageCount: 11,
+          exactArtifactCoverageCount: 0,
+          inheritedBehaviorCoverageCount: 11,
+          inheritedFrom: [{ packageVersion: '0.4.1', packageArtifactSha256: 'e'.repeat(64) }],
           assurance: 'maintainer-attested-structure',
           preparedAt: '2026-08-24T12:00:00.000Z',
         },
@@ -87,6 +91,7 @@ test('release attestation rejects a candidate digest that differs from local gat
           packageVersion: '0.5.0',
           tag: 'v0.5.0',
           artifactSha256: 'c'.repeat(64),
+          behaviorSha256: 'd'.repeat(64),
           harnessVersion: '2.4.0',
           rulesSha256: 'b'.repeat(64),
           scenarios: {},
@@ -130,7 +135,7 @@ test('release finalization leaves no attestation when unexpected worktree change
   copyFileSync(candidateArtifact, artifact);
   chmodSync(artifact, 0o400);
   writeReleaseState(directory, {
-    schemaVersion: 2,
+    schemaVersion: 3,
     status: 'prepared',
     artifactPath: artifact,
     artifactSha256: fingerprint.packageArtifactSha256,
@@ -139,7 +144,11 @@ test('release finalization leaves no attestation when unexpected worktree change
     evaluation: {
       assurance: 'maintainer-attested-structure',
       coverageCount: Object.keys(fingerprint.scenarios).length,
+      exactArtifactCoverageCount: 0,
+      inheritedBehaviorCoverageCount: Object.keys(fingerprint.scenarios).length,
+      inheritedFrom: [{ packageVersion: '0.5.0', packageArtifactSha256: 'f'.repeat(64) }],
       packageArtifactSha256: fingerprint.packageArtifactSha256,
+      behaviorSha256: fingerprint.behaviorSha256,
       harnessVersion: fingerprint.harnessVersion,
       rulesSha256: fingerprint.rulesSha256,
       scenarios: fingerprint.scenarios,
