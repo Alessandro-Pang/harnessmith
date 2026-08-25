@@ -1,5 +1,13 @@
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import {
+  copyFileSync,
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Command } from 'commander';
@@ -84,21 +92,31 @@ function generatorEnvironment(): NodeJS.ProcessEnv {
 
 function generate(root: string, output: string): void {
   const pnpm = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
-  const result = execaSync(
-    pnpm,
-    [
-      'dlx',
-      '@cyclonedx/cdxgen@12.8.2',
-      '-t',
-      'js',
-      '--no-install-deps',
-      '--fail-on-error',
-      '-o',
-      output,
-      root,
-    ],
-    { env: generatorEnvironment(), extendEnv: false, reject: false, stdio: 'inherit' },
-  );
+  const sourceRoot = mkdtempSync(join(tmpdir(), 'harnessmith-sbom-source-'));
+  const result = (() => {
+    try {
+      for (const name of ['package.json', 'pnpm-lock.yaml']) {
+        copyFileSync(join(root, name), join(sourceRoot, name));
+      }
+      return execaSync(
+        pnpm,
+        [
+          'dlx',
+          '@cyclonedx/cdxgen@12.8.2',
+          '-t',
+          'js',
+          '--no-install-deps',
+          '--fail-on-error',
+          '-o',
+          output,
+          sourceRoot,
+        ],
+        { env: generatorEnvironment(), extendEnv: false, reject: false, stdio: 'inherit' },
+      );
+    } finally {
+      rmSync(sourceRoot, { recursive: true, force: true });
+    }
+  })();
   if (result.failed) throw new Error(`SBOM generation failed with exit ${String(result.exitCode)}`);
   stamp(root, output);
   check(root, output);

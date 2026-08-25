@@ -1,6 +1,14 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -33,12 +41,17 @@ function run(args: string[], env: NodeJS.ProcessEnv = process.env) {
 function fakePnpm(bin: string, envRecord: string): void {
   mkdirSync(bin);
   const source = `
-import { writeFileSync } from 'node:fs';
+import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 const args = process.argv.slice(2);
+const sourceRoot = args.at(-1);
 writeFileSync(${JSON.stringify(envRecord)}, JSON.stringify({
   nodePath: process.env.NODE_PATH,
   apiKey: process.env.GPUGEEK_API_KEY,
   session: process.env.__MISE_SESSION,
+  sourceRoot,
+  sourceFiles: readdirSync(sourceRoot).sort(),
+  packageJson: readFileSync(sourceRoot + '/package.json', 'utf8'),
+  pnpmLock: readFileSync(sourceRoot + '/pnpm-lock.yaml', 'utf8'),
 }));
 const output = args[args.indexOf('-o') + 1];
 writeFileSync(output, JSON.stringify({ bomFormat: 'CycloneDX', metadata: { properties: [] } }));
@@ -98,7 +111,36 @@ test('SBOM generation does not expose module injection or credential-like enviro
   });
 
   assert.equal(generate.status, 0, generate.stderr);
-  assert.deepEqual(JSON.parse(readFileSync(envRecord, 'utf8')), {});
+  const record = JSON.parse(readFileSync(envRecord, 'utf8'));
+  assert.equal(record.nodePath, undefined);
+  assert.equal(record.apiKey, undefined);
+  assert.equal(record.session, undefined);
+});
+
+test('SBOM generation scans only staged package and lockfile inputs', () => {
+  const { project, sbom } = fixture();
+  const bin = join(project, 'bin');
+  const envRecord = join(project, 'generator-inputs.json');
+  const ignoredCleanroom = join(project, '.release', 'cleanroom');
+  mkdirSync(ignoredCleanroom, { recursive: true });
+  writeFileSync(
+    join(ignoredCleanroom, 'package-lock.json'),
+    '{"name":"must-not-enter-the-sbom"}\n',
+  );
+  fakePnpm(bin, envRecord);
+
+  const generate = run(['generate', '--root', project, '--output', sbom], {
+    ...process.env,
+    PATH: bin,
+  });
+
+  assert.equal(generate.status, 0, generate.stderr);
+  const record = JSON.parse(readFileSync(envRecord, 'utf8'));
+  assert.notEqual(record.sourceRoot, project);
+  assert.deepEqual(record.sourceFiles, ['package.json', 'pnpm-lock.yaml']);
+  assert.equal(record.packageJson, readFileSync(join(project, 'package.json'), 'utf8'));
+  assert.equal(record.pnpmLock, readFileSync(join(project, 'pnpm-lock.yaml'), 'utf8'));
+  assert.equal(existsSync(record.sourceRoot), false);
 });
 
 test('release contract runs the SBOM freshness gate', () => {
