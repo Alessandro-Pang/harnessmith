@@ -85,9 +85,11 @@ node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs init project /absolute/proje
 
 已有 `.agent-docs/` 时，启动不能只知道目录存在，也不能递归加载全部历史：
 
-1. 运行 `node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory list . --json` 获取版本化的名称、
+1. 先确认绝对项目根并执行 `test -d "<project-root>/.agent-docs"` 或等价的直接文件系统检查；该目录按设计被
+   ignore，不得因 `rg`、Git 或普通索引未命中而判定不存在。存在时运行
+   `node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory list /absolute/project/root --json` 获取版本化的名称、
    类型、状态和更新时间，不读取正文。
-2. 读取 `core.md`，并用 `node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs task status --project .`
+2. 读取 `core.md`，并用 `node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs task status --project /absolute/project/root`
    检查活跃或 blocked task。
 3. 只读取与当前目标、路径或关键词匹配的引用正文；记忆结论须用当前代码、测试或正式文档复核。
 4. 若记忆已失效或互相冲突，不得继续当作当前事实。已初始化 Memory 中符合 Autopilot 边界的去重、
@@ -185,7 +187,9 @@ workstream 已结束。
 无需等待宿主结束事件。以下任一可观察边界触发检查：阶段已验证且仍有后续；宿主发出压缩或上下文预算
 信号；Agent 判断长上下文即将压缩；或旧快照已不足恢复，且 `completed/decisions/open/verification/next`
 中至少一项发生实质变化。
-阶段已验证且仍有后续时，最终答复前必须以 `reason: phase` 完成 handoff 写入与校验；这是阶段完成门禁，
+当前 workstream 的 plan/backlog 已核验有具体后续阶段即属“仍有后续”；陈旧或不相关 backlog 不触发 phase
+checkpoint。即使该阶段尚未获本轮执行授权，也只是不执行后续，
+不得跳过当前阶段 checkpoint。阶段 verifier 成功后、最终答复前必须以 `reason: phase` 完成 handoff 写入与校验；这是阶段完成门禁，
 不得留到下一条用户消息。同一 open thread 完成第二个独立任务并验证后，最终答复前必须以
 `reason: multi-task` 累计写入；后续任务原位更新同一 session。reason 优先级为
 `compaction > multi-task > phase`，而不是等全部对话结束。

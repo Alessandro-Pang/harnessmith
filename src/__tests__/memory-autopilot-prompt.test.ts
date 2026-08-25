@@ -43,6 +43,10 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
     agents,
     /新宿主.*task\/thread.*\.agent-docs.*首次(?:读写|读取或修改).*静默.*单文件.*不得跳过/s,
   );
+  assert.match(
+    agents,
+    /绝对项目根.*test -d "<project-root>\/\.agent-docs".*(?:ignore|忽略).*不得.*(?:rg|Git).*不存在/s,
+  );
   assert.match(agents, /全局.*core\.md.*命中/s);
   assert.match(agents, /新.*distilled.*proposal/s);
   assert.match(agents, /created\/updated\/unchanged.*静默.*proposed\/blocked.*简短/s);
@@ -67,6 +71,17 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
     /阶段.*已验证.*仍有后续.*最终答复前.*必须.*handoff.*校验.*不得.*下一.*用户.*消息/s,
   );
   assert.match(agents, /阶段.*已验证.*仍有后续.*reason.*phase/s);
+  assert.match(
+    agents,
+    /(?:计划|plan|backlog).*具体.*后续阶段.*仍有后续.*本轮.*未授权.*verifier.*最终答复前.*reason.*phase/s,
+  );
+  assert.match(agents, /项目.*scope.*当前.*(?:根|项目根).*(?:绝对路径|绝对.*根)/s);
+  assert.match(
+    agents,
+    /每次新增.*验收.*scope\/constraints.*去重后.*下一次修改.*任务文件前.*capture-input/s,
+  );
+  assert.match(agents, /当前 workstream.*plan\/backlog.*已核验.*具体后续阶段/s);
+  assert.match(agents, /高损失.*不可推断/);
   assert.match(
     agents,
     /第二个.*独立.*验证.*最终答复前.*reason.*multi-task.*后续.*原位更新.*compaction.*multi-task.*phase/s,
@@ -97,6 +112,11 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   assert.match(profileBlock, /reconcile-profile[\s\S]*--payload-file/);
   assert.doesNotMatch(profileBlock, /--conclusion\b/);
   assert.match(projectMemory, /自动.*自由文本.*--payload-file.*shell.*插值/s);
+  assert.match(
+    projectMemory,
+    /绝对项目根.*test -d "<project-root>\/\.agent-docs".*(?:ignore|忽略).*不得.*(?:rg|Git).*未命中.*不存在/s,
+  );
+  assert.match(projectMemory, /陈旧.*不相关.*backlog.*不触发.*phase/s);
   assert.match(
     projectMemory,
     /capture-input.*handoff.*reconcile-profile.*--payload-file.*--json.*close-handoff.*--session.*--json.*不支持.*--payload-file/s,

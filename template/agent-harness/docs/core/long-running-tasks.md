@@ -43,7 +43,9 @@ node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs task close --project /absolu
 
 ## 阶段与压缩检查点
 
-长任务不等待宿主会话结束事件。每个阶段完成、已验证且仍有后续时，最终答复前若已有 active task ledger，
+长任务不等待宿主会话结束事件。当前 workstream 的 plan/backlog 已核验有具体后续阶段即属“仍有后续”；
+陈旧或不相关 backlog 不触发 phase checkpoint。即使该阶段尚未获本轮执行授权，也只是不执行后续，不得
+跳过当前阶段 checkpoint。每个阶段完成、已验证且仍有后续时，最终答复前若已有 active task ledger，
 先写 task checkpoint；没有 ledger 时不得仅为 handoff 临时初始化 task，直接以 `reason: phase` 用
 `memory handoff` 更新并校验可恢复快照，不得留到下一条用户消息。同一 open thread
 完成第二个独立任务并验证后，最终答复前以 `reason: multi-task` 累计写入，后续任务原位更新；发现上下文接近
