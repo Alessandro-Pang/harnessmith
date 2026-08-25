@@ -151,8 +151,8 @@ node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory close-handoff . \
 `capture-input` payload 包含 string `title`、string `content`、`source` 和可选 boolean `summary`；`source`
 只接受 `chat`、`file`、`meeting`、`link`、`other`。`handoff` 中 `completed` 是 string，`verification`
 是 string；`session`、`title`、`objective`、`facts`、`decisions`、`open`、`next`、`reason`、`status`
-也都是 string；`scope` 是 string[]，`sourceRefs` 是 string[]，`clearFacts` 等 clear 字段是 boolean；JSON payload 必须写
-`sourceRefs`，不能写 CLI 别名 `sourceRef`/`source-ref`。自动产生的任何自由文本都必须由宿主非 shell 文件能力写入 payload，再用
+也都是 string；`scope` 是 string[]，`sourceRefs` 是 string[]，`clearFacts` 等 clear 字段是 boolean；
+提供来源引用时必须写 `sourceRefs`，不能写 CLI 别名 `sourceRef`/`source-ref`。自动产生的任何自由文本都必须由宿主非 shell 文件能力写入 payload，再用
 `--payload-file` 传递；禁止把用户原文、摘要或 Agent 生成文本做 shell 插值。可靠摘要在 payload 中设置
 `summary: true`；否则内容按 verbatim 保存。payload 临时文件不得包含 secret，并按宿主安全机制清理。
 自动 `capture-input`、`handoff`、`reconcile-profile` 必须作为单独进程执行，使用 `--payload-file` 与
@@ -170,10 +170,13 @@ active/blocked generation；最新 generation 已 complete 或 archived 时，�
 写 handoff 前必须读取 `core.md` 指向的当前 handoff 和 active task（若存在），并与当前已验证事实 reconcile。
 仍然有效且影响恢复的事实必须保留；只有已由当前事实或用户意图证实为 `resolved`/`superseded` 的内容
 才能删除，相关性或状态模糊时必须保留。
-省略 `facts`、`decisions`、`verification`、`open`、`scope` 或 `source-ref` 表示保留现值；使用对应
+省略 `facts`、`decisions`、`verification`、`open`、`scope` 或 `sourceRefs` 表示保留现值；生成新
+reconcile payload 时，未变化的 `facts`、`decisions`、`open`、`verification`、`scope`、`sourceRefs`
+必须省略、不得顺手改写，显式原样重放除外；使用对应
 `--clear-*` 才删除。省略 `status` 同样保留 active/blocked 生命周期，只有显式 `--status active`
 才解除 blocked。`completed` 与 `next` 不支持省略 patch，每次 checkpoint 必须提交完整 reconcile 后的累计
-`completed` 与具体 `next`。整体重写当前状态，不追加会话流水账；无法确认是否失效时保留并提示冲突。
+`completed` 与具体 `next`；`next` 必须指出文件、命令或动作，不能写“等待下一请求”等泛化占位。
+整体重写当前状态，不追加会话流水账；无法确认是否失效时保留并提示冲突。
 
 传给命令的 session base 依次使用宿主不可变 thread/task id、已绑定的 active task id、现有唯一匹配
 workstream id；首次确无匹配时才生成并立即索引。generation 1 为兼容旧文档沿用 base 作为 `session-id`；
@@ -202,8 +205,9 @@ checkpoint。即使该阶段尚未获本轮执行授权，也只是不执行后�
 prompt 不能凭空补出事件 hook。
 收到宿主压缩或上下文预算信号时，即使已有快照刚更新，仍必须以 `reason: compaction` 执行并校验一次
 checkpoint；这是可恢复性边界，不按普通“无实质变化”去重。其他快照相同或只有措辞变化时不写。
-自动 sidecar 例行成功不询问、不发过程通知、不列入最终交付，也不预告 Memory、交接、checkpoint 或输入记录；
-正常任务进度不受限，仅在实际失败后或用户明确要求时报告。内部 action 保留可审计，只有冲突、敏感信息、校验失败或
+自动 sidecar 例行成功全程静默：不询问、不发过程通知、不列入最终交付，不预告/复述 Memory、交接、checkpoint、
+输入记录或“上下文切换/准备/收尾”等同义动作；正常任务进度不受限；非例行成功按下文结果规则报告。
+内部 action 保留可审计，只有冲突、敏感信息、校验失败或
 需要扩大写入范围时才提示用户。自动权限不扩大到源码、正式文档或远端。
 
 ## 沉淀闭环

@@ -55,9 +55,10 @@ node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs task close --project /absolu
 
 同一 session/workstream 使用稳定 base；最新 generation 为 active/blocked 时原位更新该 episode，
 latest generation 已 complete 或 archived 且同一 base 出现新任务时，确定性创建下一 generation 并保留旧 episode。
-写前读取旧 handoff 与 active task；`facts`、`decisions`、
-`verification`、`open`、scope 和 source refs 省略时保留，只有已证实 resolved/superseded 的可选区块才用
-clear 指令删除，模糊时保留。`completed` 与 `next` 每次都提交完整 reconcile 后的当前状态。自动 handoff
+写前读取旧 handoff 与 active task；`facts`、`decisions`、`verification`、`open`、scope 和 source refs
+省略时保留；生成新 reconcile payload 时，未变化的可选字段必须省略、不得顺手改写，显式原样重放除外；
+只有已证实 resolved/superseded 才用 clear 删除。
+`completed` 与 `next` 每次都提交完整 reconcile 后的当前状态，`next` 必须指出文件、命令或动作，不能用泛化占位。自动 handoff
 的自由文本必须写入安全 JSON payload 并通过 `--payload-file` 传递，禁止 shell 插值。task ledger 保留完整验收状态，session 只保存恢复所需摘要，
 两者不互相复制。只有收到用户或宿主明确结束信号且最终无后续时才运行 `memory close-handoff`，只关闭并
 移出最新 active generation；不得把当前阶段或单个请求完成推断为整个 workstream 已结束。收到压缩或
@@ -65,8 +66,9 @@ clear 指令删除，模糊时保留。`completed` 与 `next` 每次都提交完
 
 自动 `memory handoff` 必须单独执行并同时使用 `--payload-file` 与 `--json`；自动 `memory close-handoff`
 必须单独执行并使用 `--session <stable-id>` 与 `--json`，它不支持 `--payload-file`。不得把这些命令与其他
-shell 命令拼接；自动 sidecar 例行成功不发过程通知、不列最终交付，也不预告 Memory/交接/checkpoint/输入记录；
-正常任务进度不受限，仅在实际失败后或用户明确要求时报告。
+shell 命令拼接；自动 sidecar 例行成功全程静默：不发过程通知、不列最终交付，不预告/复述
+Memory、交接、checkpoint、输入记录或“上下文切换/准备/收尾”等同义动作；正常任务进度不受限，
+非例行成功按其结果规则报告。
 
 ## 行为约束
 
