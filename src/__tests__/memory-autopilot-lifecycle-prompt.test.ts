@@ -47,7 +47,7 @@ test('memory autopilot maps lifecycle signals to one quiet action', () => {
   );
   assert.match(
     agents,
-    /commentary前.*各阶段依次单独执行.*静默段.*事实源.*list无有效JSON重试1次.*仍无效=inconclusive.*仅多正文.*只读&&.*禁.*;/s,
+    /commentary\/list前.*单文件独立读取.*自动 sidecar 静默输出.*再按阶段各用独立命令.*事实源.*失败不越级.*list无效JSON重试1次后=inconclusive.*仅多正文.*只读&&.*禁.*;/s,
   );
   assert.match(agents, /paused.*普通偏好.*本 task\/thread.*照做.*不写画像/s);
   assert.match(

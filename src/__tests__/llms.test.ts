@@ -149,7 +149,7 @@ test('routed prompts grant narrow local Memory Autopilot while keeping authorita
   assert.match(architecture, /host-evals.*eval:validate/s);
   assert.match(manifest, /memory-autopilot/);
   assert.match(agents, /plan\/backlog.*有后续.*阶段验证完成/s);
-  assert.match(agents, /上下文.*压缩/s);
+  assert.match(agents, /压缩\/预算.*signal/s);
   assert.match(agents, /旧快照.*不足恢复.*实质变化/s);
   assert.match(agents, /写前.*handoff.*active task/s);
   assert.match(agents, /否则不写/);

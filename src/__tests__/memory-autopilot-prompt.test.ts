@@ -53,11 +53,12 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   );
   assert.match(
     agents,
-    /\.agent-docs.*commentary前.*各阶段依次单独执行.*静默段.*list JSON.*core\.md.*task status.*maintain.*命中正文.*事实源.*list无有效JSON重试1次.*仍无效=inconclusive.*仅多正文.*只读&&.*禁.*;.*单文件必读/s,
+    /\.agent-docs.*commentary\/list前.*先单文件独立读取.*\{\{HARNESS_HOME\}\}\/agent-harness\/docs\/standards\/project-agent-docs\.md.*自动 sidecar 静默输出.*再按阶段各用独立命令.*list JSON.*core\.md.*node \{\{HARNESS_HOME\}\}\/agent-harness\/bin\/harness\.mjs task status --project <root> --json.*maintain.*命中正文.*事实源.*失败不越级.*list无效JSON重试1次后=inconclusive.*仅多正文.*只读&&.*禁.*;/s,
   );
+  assert.match(agents, /Docs=`\{\{HARNESS_HOME\}\}\/agent-harness\/docs`/);
   assert.match(
     agents,
-    /绝对项目根.*test -d "<project-root>\/\.agent-docs".*(?:ignore|忽略).*(?:不能|不得).*因.*(?:rg|Git).*不存在/s,
+    /绝对项目根.*test -d "<root>\/\.agent-docs".*(?:ignore|忽略).*不因.*(?:rg|Git).*不存在/s,
   );
   assert.match(agents, /全局.*core\.md.*命中/s);
   assert.match(agents, /新.*distilled.*proposal/s);
@@ -196,10 +197,7 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
     .find((line) => line.includes('修改/诊断/评审/设计/发布'));
   assert.ok(taskRouteLine);
   assert.match(taskRouteLine, /先读唯一命中 playbook/);
-  assert.match(
-    taskRouteLine,
-    /项目 Memory.*standards\/project-agent-docs\.md.*自动 sidecar 静默输出.*命中段/,
-  );
+  assert.match(taskRouteLine, /工具\/安全\/Git\/长任务\/CLI→core\//);
   assert.match(agents, /交付结果\/证据\/未验证\/风险；只读评估分开写未执行与未来需授权动作/);
   const agentLines = agents.trimEnd().split('\n');
   assert.ok(agentLines.length <= 60, `template/AGENTS.md has ${agentLines.length} lines`);

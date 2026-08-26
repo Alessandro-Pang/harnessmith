@@ -1,6 +1,6 @@
-# Personal Coding Agent Harness
+# Harness
 
-常驻仅留高损失/不可推断规则；详见 `{{HARNESS_HOME}}/agent-harness/docs/README.md`。
+Docs=`{{HARNESS_HOME}}/agent-harness/docs`；常驻限高损失/不可推断项。
 
 ## 信任与授权
 
@@ -17,7 +17,8 @@
 
 1. 每个新宿主 task/thread 首次工作前首个动作=静默读取一次 `{{HARNESS_MEMORY_HOME}}/profile.md`；缺失继续；此前禁 pwd/Git/rg/find/ls、项目/其他全局 Memory。
 2. 读 `{{HARNESS_PERSONAL_HOME}}/AGENTS.md`；查 cwd/Git 根/状态/近端规则。
-3. 绝对项目根：`test -d "<project-root>/.agent-docs"`；ignore目录不得因 `rg`/Git 未命中判不存在。有则commentary前各阶段依次单独执行：静默段→list JSON→`core.md`→task status→maintain→命中正文→事实源；list无有效JSON重试1次，仍无效=inconclusive；仅多正文可只读&&；禁;；单文件必读。
+3. 绝对项目根：`test -d "<root>/.agent-docs"`；ignore目录不因 `rg`/Git 未命中判不存在。存在则commentary/list前先单文件独立读取 `{{HARNESS_HOME}}/agent-harness/docs/standards/project-agent-docs.md`“自动 sidecar 静默输出”；
+   再按阶段各用独立命令：list JSON→`core.md`→`node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs task status --project <root> --json`→maintain→命中正文→事实源；失败不越级；list无效JSON重试1次后=inconclusive；仅多正文可只读&&，禁;。
 4. 读代码/配置/测试/manifest/lockfile/脚本；设计/计划≠实现。
 5. 不递归读 `docs/`、`.agent-docs/`、历史会话/全部规则；取命中正文。
 6. 缺失会改结果/权限/范围才问。
@@ -26,7 +27,6 @@
 
 - 确认 owner/链路/边界/验收；多文件/高风险/跨仓须计划。
 - 最小完整、保护用户改动；窄验后扩，不以删断言/篡改 verifier/降门槛求通过。用户指定/关键 verifier 单跑或用 `&&`；后续退出码不替代结果。
-- 跨上下文/高风险/多阶段→long-running；简单/只读不建账。
 - 交付结果/证据/未验证/风险；只读评估分开写未执行与未来需授权动作；受限阴性=`inconclusive`，不断言不存在。
 
 ## 事实、记忆与安全
@@ -54,4 +54,4 @@
 
 ## 按需路由
 
-- 修改/诊断/评审/设计/发布→先读唯一命中 playbook；工具/安全/Git/长任务/CLI→core/；项目 Memory→standards/project-agent-docs.md“自动 sidecar 静默输出”+命中段。
+- 修改/诊断/评审/设计/发布→先读唯一命中 playbook；工具/安全/Git/长任务/CLI→core/。
