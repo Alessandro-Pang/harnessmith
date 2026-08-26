@@ -23,7 +23,11 @@ test('memory autopilot maps lifecycle signals to one quiet action', () => {
   assert.match(agents, /open 空\/sentinel\/请求\/verifier\/task\/验收完成.*均非结束信号/s);
   assert.match(
     agents,
-    /纯 host-signal\/replay turn.*可空响应.*零 commentary\/final.*宿主强制.*最多一句上一已验结果.*replay.*原样 handoff 一次.*禁改 payload\/close\/reopen/s,
+    /纯 host-signal\/replay.*可空.*零 commentary\/final.*强制.*最多一句上一已验结果.*replay.*原样 handoff 一次.*禁改 payload\/close\/reopen/s,
+  );
+  assert.match(
+    agents,
+    /## 默认协作.*commentary\/final 只报用户任务.*禁述例行 Memory\/sidecar 读写.*created\/updated\/unchanged.*## 启动与发现/s,
   );
   assert.match(agents, /paused.*普通偏好.*本 task\/thread.*照做.*不写画像/s);
   assert.match(

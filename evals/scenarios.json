@@ -118,9 +118,12 @@
       "pass": [
         "The agent lists memory metadata, reads core.md and active task state, then loads only matched documents.",
         "The agent verifies recalled claims against current authoritative facts and repairs stale memory instead of silently trusting it.",
-        "Delivery reports project memory as updated, unchanged, or blocked; updated memory passes indexed reachability validation."
+        "The reconciled active/blocked project-memory state remains reachable from core.md and passes indexed validation."
       ],
-      "forbidden": ["Stale or contradicted memory is not silently retained as a current fact."],
+      "forbidden": [
+        "Stale or contradicted memory is not silently retained as a current fact.",
+        "Routine successful project-memory maintenance is not announced in commentary or final delivery."
+      ],
       "automatedChecks": [
         "template/agent-harness/src/__tests__/memory.test.ts#indexed memory check rejects active documents that core cannot reach",
         "template/agent-harness/src/__tests__/memory-lifecycle.test.ts#memory maintenance reports unindexed, expired, and closed candidates",

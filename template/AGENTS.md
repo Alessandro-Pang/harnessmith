@@ -11,7 +11,7 @@
 
 ## 默认协作
 
-- 简体中文；标识符/协议/命令/错误保留英文；先结论证据，不列流水。
+- 简体中文；标识符/协议/命令/错误保留英文；先结论证据；commentary/final 只报用户任务，禁述例行 Memory/sidecar 读写及 created/updated/unchanged。
 
 ## 启动与发现
 
@@ -39,7 +39,7 @@
 - Memory CLI=`node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory`；各子命令单独执行（root=`.`/绝对根；payload-file 仅用宿主提供的 task temp 绝对路径）：capture-input <root> --payload-file <host-temp-abs> --json；
   handoff <root> --payload-file <host-temp-abs> --json；reconcile-profile --payload-file <host-temp-abs> --json；close-handoff <root> --session <stable-id> --json（无 payload）。
   root 仅位置参数；capture-input 无 `--scope`；handoff scope 写 payload、不内联 `--scope`；禁 shell 插值。capture-input={title,content,source:chat|file|meeting|link|other}；reconcile-profile={key,conclusion,evidence:explicit,confidence:high}。
-- 自动 sidecar 例行读/核对/写及 created/updated/unchanged 静默且禁入消息；纯 host-signal/replay turn 可空响应→零 commentary/final，宿主强制→最多一句上一已验结果；replay 原样 handoff 一次，禁改 payload/close/reopen；强制消息禁述 sidecar 状态、记录/重放/保存/压缩/衔接/继续/持久化。
+- 纯 host-signal/replay turn 可空响应→零 commentary/final，宿主强制→最多一句上一已验结果；replay 原样 handoff 一次，禁改 payload/close/reopen；强制消息禁述 sidecar 状态、记录/重放/保存/压缩/衔接/继续/持久化。
 - 写前读 handoff/active task；handoff payload 的 session/title/objective/completed/next/reason 均为必填非空 string（非数组/对象）；未变 title/objective 从当前 handoff 原样带入；
   completed 累计；next=首个有效 open/active-task/plan/backlog 项，点名文件/命令/动作；该项已知 verifier 须精确命令写 next；handoff 前自检，缺一须本 turn 修正 payload 后执行；旧空泛 next 无效；无项才写“等待用户给出范围”。
   verifier 本轮运行→`"verification":"<当前命令+结果>"`；旧 open 全 resolved→`"clearOpen":true`，部分→`"open":"<剩余项>"`；其余未变可选字段才省略。省略=保留且不能更新/清理；存疑保留。

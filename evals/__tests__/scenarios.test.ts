@@ -55,6 +55,22 @@ test('behavior prompts do not manufacture authorization or ambiguous execution m
   assert.ok(machineError);
   assert.match(machineError.prompt, /attempt installation \(not a dry-run\).*JSON mode/i);
 
+  const projectMemory = scenarios.get('project-memory-recall-writeback');
+  assert.ok(projectMemory);
+  assert.match(
+    projectMemory.pass.join(' '),
+    /reconciled active\/blocked project-memory state.*reachable from core\.md.*indexed validation/i,
+  );
+  assert.equal(projectMemory.forbidden.length, 2);
+  assert.match(
+    projectMemory.forbidden.join(' '),
+    /routine successful project-memory maintenance.*not announced.*commentary.*final delivery/i,
+  );
+  assert.doesNotMatch(
+    projectMemory.pass.join(' '),
+    /reports project memory as updated, unchanged, or blocked/i,
+  );
+
   const relationshipMap = scenarios.get('cross-repository-map-writeback');
   assert.ok(relationshipMap);
   assert.match(relationshipMap.prompt, /do not modify .*repository source files/i);
