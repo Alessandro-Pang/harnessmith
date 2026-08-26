@@ -26,6 +26,7 @@ export interface ExactDirectoryIdentity {
   path: string;
   dev: number;
   ino: number;
+  birthtimeMs: number;
 }
 
 export function snapshotDirectoryIdentity(path: string): ExactDirectoryIdentity {
@@ -33,7 +34,12 @@ export function snapshotDirectoryIdentity(path: string): ExactDirectoryIdentity 
   if (entry.isSymbolicLink() || !entry.isDirectory()) {
     throw new Error(`Created memory path must be a regular non-symlink directory: ${path}`);
   }
-  return { path, dev: entry.dev, ino: entry.ino };
+  return {
+    path,
+    dev: entry.dev,
+    ino: entry.ino,
+    birthtimeMs: entry.birthtimeMs,
+  };
 }
 
 export function createTrackedDirectories(
@@ -80,7 +86,8 @@ export function cleanupTrackedDirectories(
       entry.isSymbolicLink() ||
       !entry.isDirectory() ||
       entry.dev !== expected.dev ||
-      entry.ino !== expected.ino
+      entry.ino !== expected.ino ||
+      entry.birthtimeMs !== expected.birthtimeMs
     ) {
       errors.push(
         `${expected.path}: ${subject} directory was replaced; unknown replacement retained at recovery path ${expected.path}`,

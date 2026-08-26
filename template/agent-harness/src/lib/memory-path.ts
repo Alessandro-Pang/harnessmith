@@ -1,5 +1,5 @@
 import { existsSync, lstatSync, opendirSync, realpathSync } from 'node:fs';
-import { extname, isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { extname, isAbsolute, join, posix, relative, resolve, sep } from 'node:path';
 import type { Runtime } from '../types.js';
 import { readBoundedRegularFile } from './bounded-file.js';
 import { gitRoot } from './git.js';
@@ -132,16 +132,33 @@ export function readMemoryDocument(path: string): string {
 export function memoryDocumentPath(root: string, input: string): string {
   const name = input.replace(/^memory:/, '');
   if (!name || isAbsolute(name)) throw new Error(`Invalid memory document path: ${input}`);
-  const path = resolve(root, name.endsWith('.md') ? name : `${name}.md`);
-  if (path === root || !isInside(root, path))
+  const requestedPath = resolve(root, name.endsWith('.md') ? name : `${name}.md`);
+  if (requestedPath === root || !isInside(root, requestedPath))
     throw new Error(`Memory document escapes root: ${input}`);
-  if (isExcludedMemoryArtifact(root, path)) {
+  if (isExcludedMemoryArtifact(root, requestedPath)) {
     throw new Error(`Memory document is inside an excluded artifact subtree: ${input}`);
   }
-  assertSafePath(root, path);
-  if (!existsSync(path) || !lstatSync(path).isFile()) {
+  assertSafePath(root, requestedPath);
+  const referenceName = name.endsWith('.md') ? name.slice(0, -3) : name;
+  const requestedIdentity = posix
+    .normalize(referenceName)
+    .replace(/^\.\//, '')
+    .normalize('NFC')
+    .toLowerCase();
+  const matches = managedMemoryEntries(root).filter(
+    (entry) =>
+      entry.kind === 'file' &&
+      extname(entry.path) === '.md' &&
+      memoryReference(root, entry.path).normalize('NFC').toLowerCase() === requestedIdentity,
+  );
+  if (matches.length === 0) {
     throw new Error(`Memory document does not exist: ${input}`);
   }
+  if (matches.length > 1) {
+    throw new Error(`Memory document reference is ambiguous: ${input}`);
+  }
+  const path = matches[0].path;
+  assertSafePath(root, path);
   const canonicalRoot = realpathSync.native(root);
   const canonicalReference = memoryReference(canonicalRoot, realpathSync.native(path));
   if (name !== canonicalReference && name !== `${canonicalReference}.md`) {

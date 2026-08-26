@@ -31,7 +31,7 @@ test('tracked directory cleanup reports an uninspectable recovery path', () => {
   writeFileSync(file, 'parent is a file\n');
 
   const errors = cleanupTrackedDirectories(
-    [{ path: join(file, 'child'), dev: 1, ino: 1 }],
+    [{ path: join(file, 'child'), dev: 1, ino: 1, birthtimeMs: 0 }],
     'created memory',
   );
 

@@ -11,7 +11,8 @@ export function matchesDirectoryIdentity(
     !entry.isSymbolicLink() &&
     entry.isDirectory() &&
     entry.dev === expected.dev &&
-    entry.ino === expected.ino
+    entry.ino === expected.ino &&
+    entry.birthtimeMs === expected.birthtimeMs
   );
 }
 
