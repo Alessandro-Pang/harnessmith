@@ -31,16 +31,19 @@ test('memory autopilot maps lifecycle signals to one quiet action', () => {
   );
   assert.match(
     agents,
-    /## 默认协作.*commentary\/final.*仅报任务事实.*记录交接\/保留.*主任务.*非Memory报告.*用户请求纯sidecar成功.*已处理.*禁述.*意图\/操作\/状态\/校验.*proposed\/blocked.*须报.*明示Memory报告.*可报.*## 启动与发现/s,
+    /## 默认协作.*首条commentary\/final.*只报任务事实.*恢复\/检索\/记录\/保留\/交接.*≠Memory报告.*用户纯sidecar成功.*已处理.*前述意图\/操作\/状态\/校验.*禁述.*proposed\/blocked.*须报.*明示Memory报告.*可报.*## 启动与发现/s,
   );
   assert.match(
     agents,
-    /## 默认协作.*记录交接\/保留.*主任务.*非Memory报告.*用户请求纯sidecar成功.*已处理.*禁述.*意图\/操作\/状态\/校验.*## 启动与发现/s,
+    /## 默认协作.*首条commentary\/final.*恢复\/检索\/记录\/保留\/交接.*≠Memory报告.*用户纯sidecar成功.*已处理.*前述意图\/操作\/状态\/校验.*禁述.*## 启动与发现/s,
   );
-  assert.match(agents, /记录交接\/保留.*主任务.*非Memory报告.*用户请求纯sidecar成功.*已处理/s);
+  assert.match(
+    agents,
+    /首条commentary\/final.*恢复\/检索\/记录\/保留\/交接.*≠Memory报告.*用户纯sidecar成功.*已处理/s,
+  );
   assert.match(
     projectMemory,
-    /即使用户主请求.*记录交接.*只报.*任务事实.*用户发起的纯 sidecar.*成功.*已处理.*交接入口为空.*交接已记录.*交接索引.*校验/s,
+    /首次 commentary.*只报任务事实.*项目记忆恢复\/检索.*同步保存可恢复证据.*即使用户主请求.*记录交接.*只报.*任务事实.*用户发起的纯 sidecar.*成功.*已处理.*交接入口为空.*交接已记录.*交接索引.*校验/s,
   );
   assert.match(agents, /项目 Memory 静默段.*单文件独立命令.*各步独立.*仅多正文.*只读&&.*禁.*;/s);
   assert.match(agents, /paused.*普通偏好.*本 task\/thread.*照做.*不写画像/s);
