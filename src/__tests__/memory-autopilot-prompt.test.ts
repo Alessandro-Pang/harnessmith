@@ -143,7 +143,7 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   assert.match(agents, /压缩.*预算.*signal.*本 (?:signal )?turn.*下条(?:用户)?消息前.*handoff/s);
   assert.match(
     agents,
-    /只报任务事实.*读\/写 Memory≠用户要报告.*维护过程\/结果改写亦禁述.*Memory 审计\/状态\/清单请求除外.*纯 host-signal\/replay.*可空.*零 commentary\/final.*强制.*最多一句上一已验结果.*replay.*原样 handoff 一次.*禁改 payload\/close\/reopen.*强制消息禁述.*记录\/重放\/保存\/压缩\/衔接\/继续\/持久化/s,
+    /只报任务事实.*读\/写 Memory≠索要报告.*维护过程\/结果改写亦禁述.*Memory 审计\/状态\/清单请求除外.*纯 host-signal\/replay.*可空.*零 commentary\/final.*强制.*最多一句上一已验结果.*replay.*原样 handoff 一次.*禁改 payload\/close\/reopen.*强制消息禁述.*记录\/重放\/保存\/压缩\/衔接\/继续\/持久化/s,
   );
   assert.doesNotMatch(agents, /正常任务消息不受限/);
   assert.match(
@@ -192,9 +192,9 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   );
   assert.match(
     agents,
-    /只报任务事实.*读\/写 Memory≠用户要报告.*维护过程\/结果改写亦禁述.*Memory 审计\/状态\/清单请求除外.*强制.*最多一句上一已验结果.*强制消息禁述.*sidecar 状态/s,
+    /只报任务事实.*读\/写 Memory≠索要报告.*维护过程\/结果改写亦禁述.*Memory 审计\/状态\/清单请求除外.*强制.*最多一句上一已验结果.*强制消息禁述.*sidecar 状态/s,
   );
-  assert.match(agents, /只报任务事实.*读\/写 Memory≠用户要报告.*维护过程\/结果改写亦禁述/s);
+  assert.match(agents, /只报任务事实.*读\/写 Memory≠索要报告.*维护过程\/结果改写亦禁述/s);
   assert.match(agents, /用户指定\/关键 verifier.*单跑.*&&.*后续退出码.*不替代/s);
   assert.match(agents, /不以.*删(?:除)?断言.*篡改 verifier.*降(?:低)?门槛.*通过/s);
   const taskRouteLine = agents
