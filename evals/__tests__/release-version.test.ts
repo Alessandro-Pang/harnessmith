@@ -102,6 +102,56 @@ test('release attestation rejects a candidate digest that differs from local gat
   );
 });
 
+test('release attestation preserves an explicit risk exception without claiming full coverage', async () => {
+  const { verifyReleaseAttestation } = await import('../../scripts/release-version.js');
+  const subject = {
+    packageName: 'harnessmith',
+    packageVersion: '0.6.0',
+    tag: 'v0.6.0',
+    artifactSha256: 'a'.repeat(64),
+    behaviorSha256: 'b'.repeat(64),
+    harnessVersion: '2.5.0',
+    rulesSha256: 'c'.repeat(64),
+    scenarios: { 'memory-autopilot-unprompted': 'd'.repeat(64) },
+    requiredHosts: ['codex'],
+  };
+  const attestation = {
+    schemaVersion: 3 as const,
+    ...subject,
+    coverageCount: 0,
+    exactArtifactCoverageCount: 0,
+    inheritedBehaviorCoverageCount: 0,
+    inheritedFrom: [],
+    assurance: 'maintainer-attested-risk-exception' as const,
+    riskAcceptance: {
+      schemaVersion: 1 as const,
+      acceptedAt: '2026-08-26T09:00:00.000Z',
+      authorizedBy: 'user' as const,
+      reason: 'Explicitly accepted known Host Eval risk for 0.6.0.',
+      uncoveredScenarios: ['codex/memory-autopilot-unprompted'],
+      packageVersion: '0.6.0',
+      packageArtifactSha256: 'a'.repeat(64),
+    },
+    preparedAt: '2026-08-26T09:00:00.000Z',
+  };
+
+  assert.doesNotThrow(() => verifyReleaseAttestation(attestation, subject));
+  assert.throws(
+    () =>
+      verifyReleaseAttestation(
+        {
+          ...attestation,
+          riskAcceptance: {
+            ...attestation.riskAcceptance,
+            packageArtifactSha256: 'e'.repeat(64),
+          },
+        },
+        subject,
+      ),
+    /required Host evaluation matrix/i,
+  );
+});
+
 test('tag publication workflow uses GitHub OIDC and the attested exact candidate', () => {
   const workflowPath = join(root, '.github', 'workflows', 'publish.yml');
   assert.ok(existsSync(workflowPath), 'tag publication workflow is missing');

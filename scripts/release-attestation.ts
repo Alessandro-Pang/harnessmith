@@ -1,8 +1,8 @@
 import type { InheritedEvaluationSource } from './eval-contract.js';
-import type { ReleaseState } from './release-state.js';
+import type { ReleaseRiskAcceptance, ReleaseState } from './release-state.js';
 
 export interface ReleaseAttestation {
-  schemaVersion: 2;
+  schemaVersion: 2 | 3;
   packageName: string;
   packageVersion: string;
   tag: string;
@@ -16,7 +16,8 @@ export interface ReleaseAttestation {
   exactArtifactCoverageCount: number;
   inheritedBehaviorCoverageCount: number;
   inheritedFrom: InheritedEvaluationSource[];
-  assurance: 'maintainer-attested-structure';
+  assurance: 'maintainer-attested-structure' | 'maintainer-attested-risk-exception';
+  riskAcceptance?: ReleaseRiskAcceptance;
   preparedAt: string;
 }
 
@@ -37,7 +38,7 @@ export function createReleaseAttestation(
   state: ReleaseState,
 ): ReleaseAttestation {
   return {
-    schemaVersion: 2,
+    schemaVersion: state.evaluation.riskAcceptance ? 3 : 2,
     packageName,
     packageVersion: state.packageVersion,
     tag: `v${state.packageVersion}`,
@@ -52,6 +53,7 @@ export function createReleaseAttestation(
     inheritedBehaviorCoverageCount: state.evaluation.inheritedBehaviorCoverageCount,
     inheritedFrom: state.evaluation.inheritedFrom,
     assurance: state.evaluation.assurance,
+    ...(state.evaluation.riskAcceptance ? { riskAcceptance: state.evaluation.riskAcceptance } : {}),
     preparedAt: state.preparedAt,
   };
 }
@@ -60,7 +62,9 @@ export function verifyReleaseAttestation(
   attestation: ReleaseAttestation,
   subject: ReleaseSubject,
 ): void {
-  if (attestation.schemaVersion !== 2) throw new Error('Unsupported release attestation schema');
+  if (![2, 3].includes(attestation.schemaVersion)) {
+    throw new Error('Unsupported release attestation schema');
+  }
   if (attestation.packageName !== subject.packageName) {
     throw new Error('Release attestation package name does not match the candidate');
   }
@@ -85,17 +89,43 @@ export function verifyReleaseAttestation(
   if (JSON.stringify(attestation.requiredHosts) !== JSON.stringify(subject.requiredHosts)) {
     throw new Error('Release attestation required Hosts do not match release policy');
   }
-  if (
-    attestation.assurance !== 'maintainer-attested-structure' ||
+  const coverageShapeValid =
     attestation.exactArtifactCoverageCount + attestation.inheritedBehaviorCoverageCount !==
-      attestation.coverageCount ||
-    (attestation.inheritedBehaviorCoverageCount === 0
-      ? attestation.inheritedFrom.length !== 0
-      : attestation.inheritedFrom.length === 0) ||
-    attestation.requiredHosts.length === 0 ||
-    attestation.coverageCount <
-      attestation.requiredHosts.length * Object.keys(attestation.scenarios).length
-  ) {
+    attestation.coverageCount
+      ? false
+      : (attestation.inheritedBehaviorCoverageCount === 0
+          ? attestation.inheritedFrom.length === 0
+          : attestation.inheritedFrom.length > 0) && attestation.requiredHosts.length > 0;
+  const fullCoverage =
+    attestation.assurance === 'maintainer-attested-structure' &&
+    attestation.schemaVersion === 2 &&
+    !attestation.riskAcceptance &&
+    attestation.coverageCount >=
+      attestation.requiredHosts.length * Object.keys(attestation.scenarios).length;
+  const risk = attestation.riskAcceptance;
+  const acceptedRisk =
+    attestation.assurance === 'maintainer-attested-risk-exception' &&
+    attestation.schemaVersion === 3 &&
+    risk?.schemaVersion === 1 &&
+    risk.authorizedBy === 'user' &&
+    Number.isFinite(Date.parse(risk.acceptedAt)) &&
+    risk.reason.trim().length > 0 &&
+    risk.reason.length <= 500 &&
+    risk.packageVersion === subject.packageVersion &&
+    risk.packageArtifactSha256 === subject.artifactSha256 &&
+    Array.isArray(risk.uncoveredScenarios) &&
+    risk.uncoveredScenarios.length > 0 &&
+    new Set(risk.uncoveredScenarios).size === risk.uncoveredScenarios.length &&
+    risk.uncoveredScenarios.every((entry) => {
+      const [host, scenario] = entry.split('/');
+      return (
+        /^(?:codex|cursor|claude-code)$/u.test(host) &&
+        /^[a-z0-9][a-z0-9-]*$/u.test(scenario) &&
+        subject.requiredHosts.includes(host) &&
+        Object.hasOwn(subject.scenarios, scenario)
+      );
+    });
+  if (!coverageShapeValid || (!fullCoverage && !acceptedRisk) || (fullCoverage && acceptedRisk)) {
     throw new Error('Release attestation does not cover the required Host evaluation matrix');
   }
 }

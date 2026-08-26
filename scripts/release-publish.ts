@@ -1,7 +1,6 @@
 import { chmodSync, constants, copyFileSync, existsSync, rmSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { Command, InvalidArgumentError } from 'commander';
 import { execaSync } from 'execa';
 import { type EvaluationGateResult, gateEvaluationRecords } from './eval-contract.js';
 import {
@@ -10,6 +9,9 @@ import {
   requiredEvaluationAdapters,
 } from './eval-fingerprint.js';
 import { readNpmPackageTarball } from './npm-tarball.js';
+import { type ReleaseCliOptions, releaseOptions } from './release-publish-options.js';
+import { loadReleaseRiskAcceptance } from './release-risk-acceptance.js';
+import type { ReleaseRiskAcceptance } from './release-state.js';
 import {
   checkedPreparedState,
   type ReleaseState,
@@ -52,42 +54,6 @@ const defaultRunner: ReleaseRunner = (executable, args, options) => {
   };
 };
 
-interface ReleaseCliOptions {
-  access?: string;
-  dryRun?: boolean;
-  packageArtifact?: string;
-  prepareOnly?: boolean;
-  provenance?: boolean;
-  stateDir?: string;
-  tag?: string;
-}
-
-function releaseOptions(args: string[]): ReleaseCliOptions {
-  let packageArtifactSeen = false;
-  const packageArtifact = (value: string): string => {
-    if (packageArtifactSeen) throw new InvalidArgumentError('may only be specified once');
-    packageArtifactSeen = true;
-    return value;
-  };
-  const command = new Command()
-    .name('release:publish')
-    .exitOverride()
-    .configureOutput({ writeErr: () => undefined })
-    .option('--package-artifact <path>', 'exact candidate npm tarball', packageArtifact)
-    .option('--state-dir <path>', 'persistent private release state directory')
-    .option('--prepare-only', 'run checks and preserve the verified snapshot without publishing')
-    .option('--dry-run', 'ask npm to simulate publication')
-    .option('--provenance', 'ask npm to publish provenance')
-    .option('--tag <tag>', 'npm distribution tag')
-    .option('--access <access>', 'npm access level');
-  try {
-    command.parse(args, { from: 'user' });
-  } catch (error) {
-    throw new Error(error instanceof Error ? error.message : String(error));
-  }
-  return command.opts<ReleaseCliOptions>();
-}
-
 function publishArguments(options: ReleaseCliOptions): string[] {
   return [
     ...(options.dryRun ? ['--dry-run'] : []),
@@ -116,6 +82,7 @@ function prepareRelease(
   directory: string,
   runner: ReleaseRunner,
   evaluator: ReleaseEvaluator,
+  riskAcceptancePath?: string,
 ): ReleaseState {
   const fingerprint = evaluationFingerprint(source);
   const artifact = join(
@@ -134,17 +101,30 @@ function prepareRelease(
   chmodSync(artifact, 0o400);
   const env = { ...process.env, HARNESS_RELEASE_ARTIFACT: artifact };
   const pnpm = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
-  let evaluation: EvaluationGateResult;
+  let evaluation: EvaluationGateResult | undefined;
+  let riskAcceptance: ReleaseRiskAcceptance | undefined;
   try {
-    checkedRun('Release checks', pnpm, ['run', 'release:check'], env, runner);
+    if (riskAcceptancePath) {
+      riskAcceptance = loadReleaseRiskAcceptance(
+        riskAcceptancePath,
+        fingerprint.packageVersion,
+        fingerprint.packageArtifactSha256,
+      );
+      for (const script of ['preflight', 'test:coverage', 'sbom:check']) {
+        checkedRun(`Release ${script}`, pnpm, ['run', script], env, runner);
+      }
+    } else {
+      checkedRun('Release checks', pnpm, ['run', 'release:check'], env, runner);
+      evaluation = evaluator(artifact);
+    }
     const after = readNpmPackageTarball(artifact).sha256;
     if (fingerprint.packageArtifactSha256 !== after) {
       throw new Error('Candidate package artifact changed during release checks');
     }
-    evaluation = evaluator(artifact);
     if (
-      evaluation.packageArtifactSha256 !== fingerprint.packageArtifactSha256 ||
-      evaluation.behaviorSha256 !== fingerprint.behaviorSha256
+      evaluation &&
+      (evaluation.packageArtifactSha256 !== fingerprint.packageArtifactSha256 ||
+        evaluation.behaviorSha256 !== fingerprint.behaviorSha256)
     ) {
       throw new Error('Host evaluation result does not match the prepared release candidate');
     }
@@ -154,24 +134,27 @@ function prepareRelease(
   }
   const previous = readReleaseState(directory);
   const state: ReleaseState = {
-    schemaVersion: 3,
+    schemaVersion: riskAcceptance ? 4 : 3,
     status: 'prepared',
     artifactPath: artifact,
     artifactSha256: fingerprint.packageArtifactSha256,
     packageVersion: fingerprint.packageVersion,
     preparedAt: new Date().toISOString(),
     evaluation: {
-      assurance: 'maintainer-attested-structure',
-      coverageCount: evaluation.coverageCount,
-      exactArtifactCoverageCount: evaluation.exactArtifactCoverageCount,
-      inheritedBehaviorCoverageCount: evaluation.inheritedBehaviorCoverageCount,
-      inheritedFrom: evaluation.inheritedFrom,
+      assurance: riskAcceptance
+        ? 'maintainer-attested-risk-exception'
+        : 'maintainer-attested-structure',
+      coverageCount: evaluation?.coverageCount ?? 0,
+      exactArtifactCoverageCount: evaluation?.exactArtifactCoverageCount ?? 0,
+      inheritedBehaviorCoverageCount: evaluation?.inheritedBehaviorCoverageCount ?? 0,
+      inheritedFrom: evaluation?.inheritedFrom ?? [],
       packageArtifactSha256: fingerprint.packageArtifactSha256,
       behaviorSha256: fingerprint.behaviorSha256,
       harnessVersion: fingerprint.harnessVersion,
       rulesSha256: fingerprint.rulesSha256,
       scenarios: fingerprint.scenarios,
       requiredHosts: [...requiredEvaluationAdapters],
+      ...(riskAcceptance ? { riskAcceptance } : {}),
     },
   };
   writeReleaseState(directory, state);
@@ -208,7 +191,7 @@ export function releaseCandidate(
         : releaseArtifactPath()
       : releaseArtifactPath(configuredArtifact);
   const state = source
-    ? prepareRelease(source, directory, runner, evaluator)
+    ? prepareRelease(source, directory, runner, evaluator, options.acceptEvalRisk)
     : checkedPreparedState(directory, existing as ReleaseState);
   if (options.prepareOnly) return;
 

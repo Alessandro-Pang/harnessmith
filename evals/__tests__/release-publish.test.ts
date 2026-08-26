@@ -274,6 +274,57 @@ test('release prepare checks a persistent snapshot without contacting npm', () =
   assert.deepEqual(state.evaluation.inheritedFrom, [inheritedSource]);
 });
 
+test('release prepare records an explicit eval-risk exception without claiming passing coverage', () => {
+  const stateDirectory = temporaryDirectory();
+  const acceptancePath = join(temporaryDirectory(), 'risk-acceptance.json');
+  writeFileSync(
+    acceptancePath,
+    `${JSON.stringify({
+      schemaVersion: 1,
+      acceptedAt: '2026-08-26T09:00:00.000Z',
+      authorizedBy: 'user',
+      reason: 'Explicitly accepted known Host Eval risk for 0.6.0.',
+      uncoveredScenarios: ['codex/memory-autopilot-unprompted', 'codex/memory-lifecycle-boundary'],
+    })}\n`,
+  );
+  const calls: string[][] = [];
+  const runner: ReleaseRunner = (_executable, args) => {
+    calls.push(args);
+    return { status: 0, signal: null, error: undefined };
+  };
+
+  releaseCandidate(
+    [
+      '--package-artifact',
+      candidateArtifact,
+      '--state-dir',
+      stateDirectory,
+      '--accept-eval-risk',
+      acceptancePath,
+      '--prepare-only',
+    ],
+    runner,
+    () => {
+      throw new Error('full eval gate must not be called for an explicit risk exception');
+    },
+  );
+
+  assert.deepEqual(calls, [
+    ['run', 'preflight'],
+    ['run', 'test:coverage'],
+    ['run', 'sbom:check'],
+  ]);
+  const state = JSON.parse(readFileSync(join(stateDirectory, 'release-state.json'), 'utf8'));
+  assert.equal(state.schemaVersion, 4);
+  assert.equal(state.evaluation.coverageCount, 0);
+  assert.equal(state.evaluation.exactArtifactCoverageCount, 0);
+  assert.equal(state.evaluation.inheritedBehaviorCoverageCount, 0);
+  assert.deepEqual(state.evaluation.riskAcceptance.uncoveredScenarios, [
+    'codex/memory-autopilot-unprompted',
+    'codex/memory-lifecycle-boundary',
+  ]);
+});
+
 test('release resume rejects a prepared snapshot whose bytes changed', () => {
   const stateDirectory = temporaryDirectory();
   let stagedPath = '';
