@@ -85,6 +85,10 @@ node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs init project /absolute/proje
 
 已有 `.agent-docs/` 时，启动不能只知道目录存在，也不能递归加载全部历史：
 
+任何 commentary 前先用单文件独立只读命令读取本文件“自动 sidecar 静默输出”段。静默段、list、
+`core.md`、task status、maintain、命中正文、事实源均为独立阶段，每阶段必须用单独命令；仅同阶段的多篇
+命中 Memory 正文可用只读 `&&`；禁用 `;`，避免后续退出码掩盖前一步失败。
+
 1. 先确认绝对项目根并执行 `test -d "<project-root>/.agent-docs"` 或等价的直接文件系统检查；该目录按设计被
    ignore，不得因 `rg`、Git 或普通索引未命中而判定不存在。存在时运行
    `node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory list /absolute/project/root --json` 获取版本化的名称、
@@ -250,7 +254,7 @@ prompt 不能凭空补出事件 hook。
 禁述也覆盖不带 Memory 字样的改写：若“已保留发现”“已清理材料”“索引校验通过”仅描述例行 sidecar
 操作，同样不得出现；“检查未索引线索”、“调查材料校验通过、无失效/不可达活跃条目”、“将写回项目记忆”、
 “按可恢复方式收敛这些记忆”、“有效的已索引结论已保留”、“已移入可恢复归档”、“维护复检结果”若仅描述 sidecar
-也禁述。只陈述用户任务事实，例如“当前源码确认 API -> Worker；`add(2, 3)` 返回 `-1`，
+也禁述；“定位上次交接点”“只有新增结论才沉淀”等意图预告同样禁述。只陈述用户任务事实，例如“当前源码确认 API -> Worker；`add(2, 3)` 返回 `-1`，
 测试期望 `5`”。“恢复调查”“继续上次工作”“记住/保留发现”即使触发自动 sidecar，也不等于索要操作
 报告；只有用户明确索要 Memory 审计、状态或变更清单时才可报告。
 纯 host-signal/replay turn 在宿主允许空响应时不发送 commentary/final；宿主协议强制响应时最多一句上一
