@@ -11,7 +11,7 @@
 
 ## 默认协作
 
-- 首条commentary/final只报任务事实；恢复/检索/记录/保留/交接≠Memory报告；用户纯sidecar成功答“已处理”；前述意图/操作/状态/校验禁述；proposed/blocked须报，明示Memory报告可报；简中/原文/先结论
+- commentary/final只报非sidecar任务；Memory的恢复/检索/记录/保留/交接意图/操作/状态/校验禁述，即使用户要求；用户纯sidecar成功仅答“已处理”；proposed/blocked或明示Memory审计例外；简中/原文/先结论
 
 ## 启动与发现
 
