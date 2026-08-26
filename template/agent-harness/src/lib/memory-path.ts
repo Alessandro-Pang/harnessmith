@@ -154,10 +154,13 @@ export function memoryDocumentPath(root: string, input: string): string {
   if (matches.length === 0) {
     throw new Error(`Memory document does not exist: ${input}`);
   }
-  if (matches.length > 1) {
+  const exactMatches = matches.filter(
+    (entry) => memoryReference(root, entry.path) === referenceName,
+  );
+  if (matches.length > 1 && exactMatches.length !== 1) {
     throw new Error(`Memory document reference is ambiguous: ${input}`);
   }
-  const path = matches[0].path;
+  const path = (exactMatches[0] ?? matches[0]).path;
   assertSafePath(root, path);
   const canonicalRoot = realpathSync.native(root);
   const canonicalReference = memoryReference(canonicalRoot, realpathSync.native(path));
