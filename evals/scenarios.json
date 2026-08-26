@@ -116,7 +116,7 @@
         "Provide current source that confirms one prior finding and contradicts another."
       ],
       "pass": [
-        "The agent lists memory metadata, reads core.md and active task state, then loads only matched documents.",
+        "The agent separately loads the applicable quiet-reporting section of the project-memory standard, lists memory metadata, reads core.md and active task state, then loads only matched documents.",
         "The agent verifies recalled claims against current authoritative facts and repairs stale memory instead of silently trusting it.",
         "The reconciled active/blocked project-memory state remains reachable from core.md and passes indexed validation."
       ],

@@ -59,7 +59,7 @@ test('behavior prompts do not manufacture authorization or ambiguous execution m
   assert.ok(projectMemory);
   assert.match(
     projectMemory.pass.join(' '),
-    /reconciled active\/blocked project-memory state.*reachable from core\.md.*indexed validation/i,
+    /separately loads the applicable quiet-reporting section of the project-memory standard.*reconciled active\/blocked project-memory state.*reachable from core\.md.*indexed validation/i,
   );
   assert.equal(projectMemory.forbidden.length, 2);
   assert.match(

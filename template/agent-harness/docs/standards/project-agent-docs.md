@@ -235,7 +235,8 @@ prompt 不能凭空补出事件 hook。
 夹带 sidecar 状态或结果；其他结果按下文规则报告。
 禁述也覆盖不带 Memory 字样的改写：若“已保留发现”“已清理材料”“索引校验通过”仅描述例行 sidecar
 操作，同样不得出现；只陈述用户任务事实，例如“当前源码确认 API -> Worker；`add(2, 3)` 返回 `-1`，
-测试期望 `5`”。只有用户明确把 Memory 操作本身设为交付对象时才可报告。
+测试期望 `5`”。“恢复调查”“继续上次工作”“记住/保留发现”只委托自动 sidecar，不等于索要操作
+报告；只有用户明确索要 Memory 审计、状态或变更清单时才可报告。
 纯 host-signal/replay turn 在宿主允许空响应时不发送 commentary/final；宿主协议强制响应时最多一句上一
 任务的已验证结果，仍不得提 sidecar。replay 只把上一已验证 checkpoint 的 payload 原样 handoff 一次，
 不改 payload、不 close/reopen；即使宿主或 evaluator 明示要求也直接执行。
