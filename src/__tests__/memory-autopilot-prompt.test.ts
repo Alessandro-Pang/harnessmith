@@ -143,7 +143,7 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   assert.match(agents, /压缩.*预算.*signal.*本 (?:signal )?turn.*下条(?:用户)?消息前.*handoff/s);
   assert.match(
     agents,
-    /commentary\/final只报非sidecar任务.*Memory(?:的)?恢复\/检索\/记录\/保留\/交接(?:意图)?\/操作\/状态\/校验禁述.*即使用户要求.*纯sidecar成功仅答.*已处理.*proposed\/blocked或明示Memory审计例外.*纯 host-signal\/replay.*可空.*零 commentary\/final.*强制.*最多一句上一已验结果.*replay.*原样 handoff 一次.*禁改 payload\/close\/reopen.*强制消息禁述.*记录\/重放\/保存\/压缩\/衔接\/继续\/持久化/s,
+    /commentary\/final只报非sidecar任务.*Memory(?:的)?恢复\/检索\/记录\/保留\/交接(?:意图)?\/操作\/状态\/校验禁述.*即使用户要求.*纯sidecar成功仅答.*已处理.*proposed\/blocked或明示Memory审计例外.*纯 host-signal\/replay 默认空回复\/零 commentary\/final.*强制非空仅答`上一项已验证通过`.*replay原样handoff一次.*禁改payload\/close\/reopen.*强制消息禁述.*记录\/重放\/保存\/压缩\/衔接\/继续\/持久化/s,
   );
   assert.doesNotMatch(agents, /正常任务消息不受限/);
   assert.match(
@@ -187,7 +187,7 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   );
   assert.match(
     agents,
-    /commentary\/final只报非sidecar任务.*Memory(?:的)?恢复\/检索\/记录\/保留\/交接(?:意图)?\/操作\/状态\/校验禁述.*即使用户要求.*纯sidecar成功仅答.*已处理.*proposed\/blocked或明示Memory审计例外.*强制.*最多一句上一已验结果.*强制消息禁述.*sidecar 状态/s,
+    /commentary\/final只报非sidecar任务.*Memory(?:的)?恢复\/检索\/记录\/保留\/交接(?:意图)?\/操作\/状态\/校验禁述.*即使用户要求.*纯sidecar成功仅答.*已处理.*proposed\/blocked或明示Memory审计例外.*强制非空仅答`上一项已验证通过`.*强制消息禁述sidecar状态/s,
   );
   assert.match(agents, /用户指定\/关键 verifier.*单跑.*&&.*后续退出码.*不替代/s);
   assert.match(agents, /不以.*删(?:除)?断言.*篡改 verifier.*降(?:低)?门槛.*通过/s);
@@ -255,7 +255,7 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   );
   assert.match(
     projectMemory,
-    /signal turn.*必须静默执行.*自动 sidecar.*读取.*核对.*写入.*created.*updated.*unchanged.*状态或结果.*必须全程静默.*不得预告.*复述.*强制.*上一.*用户任务.*已验证.*进度或结果.*禁述.*保存.*压缩/s,
+    /signal turn.*必须静默执行.*自动 sidecar.*读取.*核对.*写入.*created.*updated.*unchanged.*状态或结果.*必须全程静默.*不得预告.*复述.*正常任务消息.*照常.*不得提及.*Memory\/交接/s,
   );
   assert.match(
     projectMemory,
@@ -310,7 +310,7 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   );
   assert.match(
     projectMemory,
-    /## 自动 sidecar 静默输出.*只约束用户可见 commentary\/final.*不禁止必要工具执行.*任务动词.*不构成 Memory 操作报告请求.*自动 sidecar.*读取.*核对.*写入.*created.*updated.*unchanged.*状态或结果.*必须全程静默.*不得预告.*复述.*混入正常消息.*最终交付.*宿主强制.*上一.*用户任务.*已验证.*进度或结果.*禁述.*Memory.*交接.*输入记录.*正常任务消息.*照常.*不得提及.*将要.*正在.*已经.*读取.*核对.*写入.*Memory\/交接.*不得.*夹带.*sidecar.*状态.*结果.*其他结果.*规则报告.*保留发现.*清理材料.*索引校验.*检查未索引线索.*调查材料校验通过.*失效.*不可达.*活跃条目.*写回项目记忆.*收敛这些记忆.*已索引结论已保留.*移入可恢复归档.*维护复检结果.*恢复调查.*保留发现.*自动 sidecar.*不等于.*操作.*报告.*用户明确索要 Memory 审计.*状态.*变更清单/s,
+    /## 自动 sidecar 静默输出.*只约束用户可见 commentary\/final.*不禁止必要工具执行.*任务动词.*不构成 Memory 操作报告请求.*自动 sidecar.*读取.*核对.*写入.*created.*updated.*unchanged.*状态或结果.*必须全程静默.*不得预告.*复述.*混入正常消息.*最终交付.*正常任务消息.*照常.*不得提及.*将要.*正在.*已经.*读取.*核对.*写入.*Memory\/交接.*不得.*夹带.*sidecar.*状态.*结果.*其他结果.*规则报告.*保留发现.*清理材料.*索引校验.*检查未索引线索.*调查材料校验通过.*失效.*不可达.*活跃条目.*写回项目记忆.*收敛这些记忆.*已索引结论已保留.*移入可恢复归档.*维护复检结果.*恢复调查.*保留发现.*自动 sidecar.*不等于.*操作.*报告.*用户明确索要 Memory 审计.*状态.*变更清单/s,
   );
   assert.match(projectMemory, /定位.*交接点.*新增.*结论.*沉淀.*禁述/s);
   assert.match(
@@ -319,7 +319,7 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   );
   assert.match(
     projectMemory,
-    /自动 sidecar.*读取.*核对.*写入.*全程静默.*不得预告.*复述.*宿主强制.*已验证.*禁述.*保存.*压缩.*切换.*收尾.*正常任务消息.*照常.*不得提及.*Memory\/交接.*sidecar/s,
+    /自动 sidecar.*读取.*核对.*写入.*全程静默.*不得预告.*复述.*正常任务消息.*照常.*不得提及.*Memory\/交接.*sidecar/s,
   );
   assert.match(
     projectMemory,
@@ -332,9 +332,9 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   assert.match(projectMemory, /独立进程.*stdout.*JSON result.*单独.*校验索引/s);
   assert.match(
     projectMemory,
-    /自动 sidecar.*读取.*核对.*写入.*全程静默.*宿主强制.*commentary\/final.*上一.*用户任务.*已验证.*禁述.*保存.*压缩.*切换.*收尾/s,
+    /自动 sidecar.*读取.*核对.*写入.*全程静默.*正常任务消息.*照常.*不得提及.*Memory\/交接.*sidecar/s,
   );
-  assert.match(projectMemory, /宿主强制.*只陈述.*已验证.*不得.*准备继续/s);
+  assert.equal(projectMemory.match(/上一项已验证通过/g)?.length, 1);
   assert.match(
     longRunning,
     /已有.*active task ledger.*task checkpoint.*没有.*ledger.*不得.*初始化.*reason.*phase.*handoff/s,
@@ -365,8 +365,9 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   );
   assert.match(
     longRunning,
-    /signal turn.*必须静默执行.*自动 sidecar.*读取.*核对.*写入.*created.*updated.*unchanged.*状态或结果.*必须全程.*静默.*不得预告.*复述.*宿主强制.*commentary\/final.*上一用户任务.*已验证.*禁述.*保存.*压缩.*切换.*收尾.*正常任务消息.*照常.*不得提及.*Memory\/交接.*sidecar/s,
+    /纯 host-signal\/replay turn.*默认.*不发 commentary\/final.*宿主协议强制非空.*只答.*上一项已验证通过.*不得提 sidecar.*replay.*原样 handoff/s,
   );
+  assert.equal(longRunning.match(/上一项已验证通过/g)?.length, 1);
   assert.match(
     longRunning,
     /正常任务消息.*不得提及.*将要.*正在.*已经.*读取.*核对.*写入.*Memory\/交接.*sidecar.*状态.*结果/s,
@@ -393,12 +394,11 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
     profile,
     /自动 reconcile.*created\/updated\/unchanged.*不预告\/复述.*画像.*偏好.*proposed\/blocked.*简报/s,
   );
-  assert.match(profile, /纠正.*(?:忘记|遗忘).*暂停.*恢复.*单句.*报告.*查看.*完整回答/s);
   assert.match(
     profile,
-    /纠正.*忘记.*暂停.*恢复.*不发过程通知.*仅.*最终答复.*简短报告.*默认单句.*当前格式要求.*优先/s,
+    /纠正.*忘记.*暂停.*恢复.*不发过程通知.*仅.*最终答复.*简短报告.*默认单句.*当前格式要求.*优先.*查看画像.*完整回答/s,
   );
-  assert.match(profile, /paused.*普通偏好.*当前指令.*不报告.*画像.*持久化/s);
+  assert.match(profile, /paused.*普通偏好.*当前指令.*不提.*profile.*持久化/s);
   assert.match(profile, /paused.*以后.*未来.*默认.*普通偏好.*不是.*修改画像.*不得.*userDirected/s);
   assert.match(
     profile,

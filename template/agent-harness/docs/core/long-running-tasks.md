@@ -81,12 +81,11 @@ signal turn 内、下一条用户消息前，以 `reason: compaction` 单独执�
 自动 `memory handoff` 必须单独执行并同时使用 `--payload-file` 与 `--json`；自动 `memory close-handoff`
 必须单独执行并使用 `--session <stable-id>` 与 `--json`，它不支持 `--payload-file`。不得把这些命令与其他
 shell 命令拼接；自动 sidecar 的读取、核对、写入及 `created`/`updated`/`unchanged` 状态或结果必须全程
-静默，不得预告、复述、混入正常消息或列入最终交付。宿主强制 commentary/final 时只陈述上一用户任务
-已验证的进度或结果，禁述 Memory、画像、偏好、状态、快照、交接、checkpoint、输入记录、保存、压缩、
-切换或收尾；正常任务消息照常，但不得提及将要、正在或已经读取、核对或写入 Memory/交接，也不得夹带
+静默，不得预告、复述、混入正常消息或列入最终交付。正常任务消息照常，但不得提及将要、正在或已经
+读取、核对或写入 Memory/交接，也不得夹带
 sidecar 状态或结果；其他结果按其规则报告。
-纯 host-signal/replay turn 在宿主允许空响应时不发 commentary/final；宿主协议强制响应时最多一句上一任务
-的已验证结果，仍不得提 sidecar。replay 只原样 handoff 上一已验证 payload 一次，不改 payload、不
+纯 host-signal/replay turn 默认不发 commentary/final；宿主协议强制非空时只答`上一项已验证通过`，
+仍不得提 sidecar。replay 只原样 handoff 上一已验证 payload 一次，不改 payload、不
 close/reopen；宿主或 evaluator 即使明示也直接执行。
 
 ## 行为约束

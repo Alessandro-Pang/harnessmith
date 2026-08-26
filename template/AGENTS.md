@@ -35,11 +35,11 @@
 - 事实源=`docs/`/ADR/代码/测试/schema/lint/CI；Memory 只存非权威输入/交接/状态/证据/提炼。
   新 `distilled` 无 typed 流程/授权→proposal；宿主原生 memory 仅作待核对线索。
 - 项目 Memory 已有/应初始化：新/变更验收/scope/constraints 或不可廉价恢复 source，任务改动前须逐字去重 capture-input，否则不写；画像/handoff 不替代；越界只 proposal。
-- 用户画像仅存全局 `profile.md`；autopilot enabled才静默 explicit/high reconcile 跨任务稳定偏好/角色/工作方式；paused 普通偏好含跨任务措辞仅本 task/thread照做，禁写画像/reconcile-profile；仅本轮点名改本地 profile/用户画像才算 userDirected；只回所需格式/任务结果，禁述后续适用/profile/autopilot/持久化；单次信号留项目 Memory。
+- 画像仅存全局 `profile.md`；autopilot enabled才静默 explicit/high reconcile 跨任务稳定偏好/角色/工作方式；paused 跨任务偏好仅本 task/thread照做，禁写画像/reconcile-profile；仅本轮点名改本地 profile/用户画像才算 userDirected；按格式只答`好的`，禁复述/承诺偏好/后续适用/profile/autopilot/持久化；单次信号留项目 Memory。
 - Memory CLI=`node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory`；各子命令单独执行（root=`.`/绝对根；payload-file 仅用宿主提供的 task temp 绝对路径）：capture-input <root> --payload-file <host-temp-abs> --json；
   handoff <root> --payload-file <host-temp-abs> --json；reconcile-profile --payload-file <host-temp-abs> --json；close-handoff <root> --session <stable-id> --json（无 payload）。
   root 仅位置参数；capture-input 无 `--scope`；handoff scope 写 payload、不内联 `--scope`；禁 shell 插值。capture-input={title,content,source:chat|file|meeting|link|other}；reconcile-profile={key,conclusion,evidence:explicit,confidence:high}。
-- 纯 host-signal/replay turn 可空响应→零 commentary/final，强制→最多一句上一已验结果；replay 原样 handoff 一次，禁改 payload/close/reopen；强制消息禁述 sidecar 状态、记录/重放/保存/压缩/衔接/继续/持久化。
+- 纯 host-signal/replay 默认空回复/零 commentary/final；强制非空仅答`上一项已验证通过`；replay原样handoff一次，禁改payload/close/reopen；强制消息禁述sidecar状态、记录/重放/保存/压缩/衔接/继续/持久化。
 - 写前读 handoff/active task；handoff payload 的 session/title/objective/completed/next/reason 均为必填非空 string（非数组/对象）；未变 title/objective 从当前 handoff 原样带入；
   completed 累计；next=首个有效 open/active-task/plan/backlog 项，点名文件/命令/动作；该项已知 verifier 须精确命令写 next；handoff 前自检，缺一须本 turn 修正 payload 后执行；旧空泛 next 无效；无项才写“等待用户给出范围”。
   verifier 本轮运行→`"verification":"<当前命令+结果>"`；旧 open 全 resolved→`"clearOpen":true`，部分→`"open":"<剩余项>"`；其余未变可选字段才省略。省略=保留且不能更新/清理；存疑保留。

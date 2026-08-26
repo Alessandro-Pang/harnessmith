@@ -10,6 +10,10 @@ const projectMemory = readFileSync(
   join(root, 'template', 'agent-harness', 'docs', 'standards', 'project-agent-docs.md'),
   'utf8',
 );
+const userProfile = readFileSync(
+  join(root, 'template', 'agent-harness', 'docs', 'standards', 'user-profile-memory.md'),
+  'utf8',
+);
 
 test('memory autopilot maps lifecycle signals to one quiet action', () => {
   assert.match(
@@ -27,7 +31,7 @@ test('memory autopilot maps lifecycle signals to one quiet action', () => {
   assert.match(agents, /open 空\/sentinel\/请求\/verifier\/task\/验收完成.*均非结束信号/s);
   assert.match(
     agents,
-    /纯 host-signal\/replay.*可空.*零 commentary\/final.*强制.*最多一句上一已验结果.*replay.*原样 handoff 一次.*禁改 payload\/close\/reopen/s,
+    /纯 host-signal\/replay 默认空回复\/零 commentary\/final.*强制非空仅答`上一项已验证通过`.*replay原样handoff一次.*禁改payload\/close\/reopen/s,
   );
   assert.match(
     agents,
@@ -46,19 +50,28 @@ test('memory autopilot maps lifecycle signals to one quiet action', () => {
     /首次 commentary.*不得描述.*恢复、检索、记录、保留或交接.*只报非 sidecar 任务进展.*核验.*当前 API 边界.*无进展则不发.*即使用户主请求.*记录交接.*只报.*任务事实.*用户发起的纯 sidecar.*成功.*已处理.*交接入口为空.*交接已记录.*交接索引.*校验/s,
   );
   assert.match(
+    projectMemory,
+    /纯 host-signal\/replay turn.*默认.*不发送 commentary\/final.*宿主协议强制非空.*只答.*上一项已验证通过.*不得提 sidecar/s,
+  );
+  assert.match(
+    projectMemory,
+    /`reason`.*只接受.*`phase`.*`compaction`.*`multi-task`.*`manual`.*用户明示手动交接.*不命中.*前三种.*`manual`.*不得自造/s,
+  );
+  assert.match(
+    userProfile,
+    /paused.*普通偏好.*按当前格式只答`好的`.*不得复述.*确认.*承诺偏好.*适用范围.*profile.*autopilot.*持久化/s,
+  );
+  assert.match(
     agents,
     /commentary\/list前.*单文件独立读取.*自动 sidecar 静默输出.*再按阶段各用独立命令.*事实源.*失败不越级.*list无效JSON重试1次后=inconclusive.*仅多正文.*只读&&.*禁.*;/s,
   );
+  assert.match(agents, /paused.*跨任务偏好.*本 task\/thread.*照做.*禁写画像\/reconcile-profile/s);
   assert.match(
     agents,
-    /paused.*普通偏好.*跨任务措辞.*本 task\/thread.*照做.*禁写画像\/reconcile-profile/s,
+    /paused 跨任务偏好仅本 task\/thread照做.*按格式只答`好的`，禁复述\/承诺偏好\/后续适用\/profile\/autopilot\/持久化/s,
   );
   assert.match(
     agents,
-    /paused.*普通偏好.*(?:只|仅)回所需格式\/任务结果.*禁述后续适用\/profile\/autopilot\/持久化/s,
-  );
-  assert.match(
-    agents,
-    /paused.*普通偏好.*禁写画像\/reconcile-profile.*仅本轮.*点名.*本地 profile\/用户画像.*才算 userDirected.*明示画像控制.*纠正=reconcile-profile.*paused (?:也)?可.*userDirected:true.*单次.*不 resume/s,
+    /paused.*跨任务偏好.*禁写画像\/reconcile-profile.*仅本轮.*点名.*本地 profile\/用户画像.*才算 userDirected.*明示画像控制.*纠正=reconcile-profile.*paused (?:也)?可.*userDirected:true.*单次.*不 resume/s,
   );
 });

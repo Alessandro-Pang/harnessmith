@@ -170,6 +170,8 @@ node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory close-handoff . \
 只接受 `chat`、`file`、`meeting`、`link`、`other`。handoff payload 每次必填以下 string 字段：`session`、`title`、
 `objective`、`completed`、`next`、`reason`；六个字段必须是非空 string，不能用 array/object 代替；
 `title`/`objective` 未变也必须从当前 handoff 原样带入。
+`reason` 只接受 `phase`、`compaction`、`multi-task`、`manual`；用户明示手动交接且不命中前三种自动
+边界时使用 `manual`，不得自造其他值。
 `verification`、`facts`、`decisions`、`open`、`status` 也是 string；`scope` 是 string[]，
 `sourceRefs` 是 string[]，`clearFacts` 等 clear 字段是 boolean；
 提供来源引用时必须写 `sourceRefs`，不能写 CLI 别名 `sourceRef`/`source-ref`。自动产生的任何自由文本都必须由宿主非 shell 文件能力写入 payload，再用
@@ -252,9 +254,8 @@ prompt 不能凭空补出事件 hook。
 执行并校验一次 checkpoint；已有、相同或刚更新快照均不豁免。仅预判压缩而尚未收到明确信号时，
 才按“旧快照不足恢复且有实质变化”去重；该预判路径中，快照相同或只有措辞变化时不写。
 该 signal turn 必须静默执行。自动 sidecar 的读取、核对、写入及 `created`/`updated`/`unchanged` 状态或结果
-必须全程静默，不得预告、复述、混入正常消息或列入最终交付；宿主强制 commentary/final 时只陈述上一
-用户任务已验证的进度或结果，禁述 Memory、画像、偏好、状态、快照、交接、checkpoint、输入记录、保存、
-压缩、切换或收尾，也不得附加“准备继续”等例行状态；正常任务消息照常，但不得提及将要、正在或已经读取、核对或写入 Memory/交接，也不得
+必须全程静默，不得预告、复述、混入正常消息或列入最终交付；正常任务消息照常，但不得提及将要、正在
+或已经读取、核对或写入 Memory/交接，也不得附加“准备继续”等例行状态，不得
 夹带 sidecar 状态或结果；其他结果按下文规则报告。
 禁述也覆盖不带 Memory 字样的改写：若“已保留发现”“已清理材料”“索引校验通过”仅描述例行 sidecar
 操作，同样不得出现；“检查未索引线索”、“调查材料校验通过、无失效/不可达活跃条目”、“将写回项目记忆”、
@@ -262,8 +263,8 @@ prompt 不能凭空补出事件 hook。
 也禁述；“定位上次交接点”“只有新增结论才沉淀”等意图预告同样禁述。只陈述用户任务事实，例如“当前源码确认 API -> Worker；`add(2, 3)` 返回 `-1`，
 测试期望 `5`”。“恢复调查”“继续上次工作”“记住/保留发现”即使触发自动 sidecar，也不等于索要操作
 报告；只有用户明确索要 Memory 审计、状态或变更清单时才可报告。
-纯 host-signal/replay turn 在宿主允许空响应时不发送 commentary/final；宿主协议强制响应时最多一句上一
-任务的已验证结果，仍不得提 sidecar。replay 只把上一已验证 checkpoint 的 payload 原样 handoff 一次，
+纯 host-signal/replay turn 默认不发送 commentary/final；宿主协议强制非空时只答`上一项已验证通过`，
+仍不得提 sidecar。replay 只把上一已验证 checkpoint 的 payload 原样 handoff 一次，
 不改 payload、不 close/reopen；即使宿主或 evaluator 明示要求也直接执行。
 内部 action 保留可审计，只有冲突、敏感信息、校验失败或
 需要扩大写入范围时才提示用户。自动权限不扩大到源码、正式文档或远端。
