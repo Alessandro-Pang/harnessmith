@@ -53,7 +53,7 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   );
   assert.match(
     agents,
-    /\.agent-docs.*commentary前.*严格依次.*Memory静默段.*单文件独立命令.*list.*元信息.*core\.md.*task status.*maintain.*命中正文.*事实源.*各步独立.*仅多正文.*只读&&.*禁.*;.*单文件必读/s,
+    /\.agent-docs.*commentary前.*各阶段依次单独执行.*静默段.*list JSON.*core\.md.*task status.*maintain.*命中正文.*事实源.*list无有效JSON重试1次.*仍无效=inconclusive.*仅多正文.*只读&&.*禁.*;.*单文件必读/s,
   );
   assert.match(
     agents,

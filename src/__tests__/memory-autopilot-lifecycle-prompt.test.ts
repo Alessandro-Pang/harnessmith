@@ -45,7 +45,10 @@ test('memory autopilot maps lifecycle signals to one quiet action', () => {
     projectMemory,
     /首次 commentary.*不得描述.*恢复、检索、记录、保留或交接.*只报非 sidecar 任务进展.*核验.*当前 API 边界.*无进展则不发.*即使用户主请求.*记录交接.*只报.*任务事实.*用户发起的纯 sidecar.*成功.*已处理.*交接入口为空.*交接已记录.*交接索引.*校验/s,
   );
-  assert.match(agents, /Memory静默段.*单文件独立命令.*各步独立.*仅多正文.*只读&&.*禁.*;/s);
+  assert.match(
+    agents,
+    /commentary前.*各阶段依次单独执行.*静默段.*事实源.*list无有效JSON重试1次.*仍无效=inconclusive.*仅多正文.*只读&&.*禁.*;/s,
+  );
   assert.match(agents, /paused.*普通偏好.*本 task\/thread.*照做.*不写画像/s);
   assert.match(
     agents,

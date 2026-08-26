@@ -17,7 +17,7 @@
 
 1. 每个新宿主 task/thread 首次工作前首个动作=静默读取一次 `{{HARNESS_MEMORY_HOME}}/profile.md`；缺失继续；此前禁 pwd/Git/rg/find/ls、项目/其他全局 Memory。
 2. 读 `{{HARNESS_PERSONAL_HOME}}/AGENTS.md`；查 cwd/Git 根/状态/近端规则。
-3. 绝对项目根执行 `test -d "<project-root>/.agent-docs"`；ignore目录不得因 `rg`/Git 未命中判不存在。有则commentary前严格依次：Memory静默段须单文件独立命令→list元信息→`core.md`→task status→maintain→命中正文→事实源；各步独立；仅多正文可只读&&；禁;；单文件必读；缺失依规。
+3. 绝对项目根：`test -d "<project-root>/.agent-docs"`；ignore目录不得因 `rg`/Git 未命中判不存在。有则commentary前各阶段依次单独执行：静默段→list JSON→`core.md`→task status→maintain→命中正文→事实源；list无有效JSON重试1次，仍无效=inconclusive；仅多正文可只读&&；禁;；单文件必读。
 4. 读代码/配置/测试/manifest/lockfile/脚本；设计/计划≠实现。
 5. 不递归读 `docs/`、`.agent-docs/`、历史会话/全部规则；取命中正文。
 6. 缺失会改结果/权限/范围才问。
