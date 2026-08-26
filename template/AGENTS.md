@@ -35,7 +35,7 @@
 - 事实源=`docs/`/ADR/代码/测试/schema/lint/CI；Memory 只存非权威输入/交接/状态/证据/提炼。
   新 `distilled` 无 typed 流程/授权→proposal；宿主原生 memory 仅作待核对线索。
 - 项目 Memory 已有/应初始化：新/变更验收/scope/constraints 或不可廉价恢复 source，任务改动前须逐字去重 capture-input，否则不写；画像/handoff 不替代；越界只 proposal。
-- 用户画像仅存全局 `profile.md`；autopilot enabled才静默 explicit/high reconcile 跨任务稳定偏好/角色/工作方式；paused 普通偏好含跨任务措辞仅本 task/thread照做，禁写画像/reconcile-profile；仅本轮点名改本地 profile/用户画像才算 userDirected；只回格式/任务结果，禁述范围/profile/autopilot/持久化/未来承诺；单次信号留项目 Memory。
+- 用户画像仅存全局 `profile.md`；autopilot enabled才静默 explicit/high reconcile 跨任务稳定偏好/角色/工作方式；paused 普通偏好含跨任务措辞仅本 task/thread照做，禁写画像/reconcile-profile；仅本轮点名改本地 profile/用户画像才算 userDirected；只回所需格式/任务结果，禁述后续适用/profile/autopilot/持久化；单次信号留项目 Memory。
 - Memory CLI=`node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory`；各子命令单独执行（root=`.`/绝对根；payload-file 仅用宿主提供的 task temp 绝对路径）：capture-input <root> --payload-file <host-temp-abs> --json；
   handoff <root> --payload-file <host-temp-abs> --json；reconcile-profile --payload-file <host-temp-abs> --json；close-handoff <root> --session <stable-id> --json（无 payload）。
   root 仅位置参数；capture-input 无 `--scope`；handoff scope 写 payload、不内联 `--scope`；禁 shell 插值。capture-input={title,content,source:chat|file|meeting|link|other}；reconcile-profile={key,conclusion,evidence:explicit,confidence:high}。

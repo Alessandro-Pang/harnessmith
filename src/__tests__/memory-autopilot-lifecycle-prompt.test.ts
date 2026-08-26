@@ -55,7 +55,7 @@ test('memory autopilot maps lifecycle signals to one quiet action', () => {
   );
   assert.match(
     agents,
-    /paused.*普通偏好.*(?:只|仅)回格式\/任务结果.*禁述.*(?:生效)?范围\/profile\/autopilot\/持久化\/未来承诺/s,
+    /paused.*普通偏好.*(?:只|仅)回所需格式\/任务结果.*禁述后续适用\/profile\/autopilot\/持久化/s,
   );
   assert.match(
     agents,
