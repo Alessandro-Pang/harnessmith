@@ -3,10 +3,10 @@
   "packageName": "harnessmith",
   "packageVersion": "0.6.0",
   "tag": "v0.6.0",
-  "artifactSha256": "28bfb6d06b14c2365fbfe05e376d79b8d50f6e02036f06441747fb4f7d3eb622",
-  "behaviorSha256": "2bee64fd4983d121e93798cc8e1dd94d9b26601172b3ca49629ddbaa4fd1a438",
+  "artifactSha256": "9b9209b8b167905a6c4892757eb9754669032e70cbd9867f819af4ad0a9bb6ae",
+  "behaviorSha256": "1810d2897aa33ea7187fabea737154638d9ba87980b271cdee5e745f273615c7",
   "harnessVersion": "2.5.0",
-  "rulesSha256": "488d94d295e0be8bb82e9688a7dda77efda38cb35c269da41030761b5baa67da",
+  "rulesSha256": "44e22422576c2f30aa141068a435e82a06376d9af7f5cc14166901bff0035995",
   "scenarios": {
     "bootstrap-global-memory": "6083a39adb7b37e281ee795dd22c14d0dc0504556c147e18aa8b61282aa5a967",
     "progressive-disclosure": "6d25689a827a44f3aa1d7c4e268510ae14e8f844325f1e1eb3f757a192aa0df0",
@@ -46,7 +46,7 @@
       "codex/cross-repository-map-writeback"
     ],
     "packageVersion": "0.6.0",
-    "packageArtifactSha256": "28bfb6d06b14c2365fbfe05e376d79b8d50f6e02036f06441747fb4f7d3eb622"
+    "packageArtifactSha256": "9b9209b8b167905a6c4892757eb9754669032e70cbd9867f819af4ad0a9bb6ae"
   },
-  "preparedAt": "2026-08-26T09:23:40.204Z"
+  "preparedAt": "2026-08-26T09:58:31.723Z"
 }
