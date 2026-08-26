@@ -91,9 +91,13 @@ node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs init project /absolute/proje
    类型、状态和更新时间，不读取正文。
 2. 读取 `core.md`，并用 `node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs task status --project /absolute/project/root`
    检查活跃或 blocked task。
-3. 只读取与当前目标、路径或关键词匹配的引用正文；记忆结论须用当前代码、测试或正式文档复核。
-4. 若记忆已失效或互相冲突，不得继续当作当前事实。已初始化 Memory 中符合 Autopilot 边界的去重、
-   索引修复和明确纠错可原位维护；超出该边界只报告 `proposed`，写入或校验失败时报告 `blocked`。
+3. 恢复或继续任务时先运行 `memory maintain /absolute/project/root`；其候选中与当前目标、路径或关键词匹配的
+   unindexed/expired，以及 `memory list` 元信息、`core.md` 引用或检索命中的 active/blocked 正文。
+   即使未被 `core.md` 引用也不得跳过。只读这些命中文档，并用当前代码、测试或正式文档复核记忆结论。
+4. 若记忆已失效或互相冲突，不得继续当作当前事实。unindexed 仍有效则补索引；expired working 仍有效则
+   补索引并保留，仅既有 typed checkpoint 或用户明确授权时续期；无独有恢复价值才按下文窄边界归档。
+   普通 unindexed/expired 或首次 indexed 校验失败须先静默恢复并重验，不能直接降级为 `blocked`；完成候选
+   读取、reconcile 与重试后仍需用户决策，才报告 `blocked`。超出 Autopilot 边界只报告 `proposed`。
 
 ## 元信息
 
@@ -135,8 +139,12 @@ constraints，或包含不可廉价恢复 source 的输入，已初始化项目�
 ## Memory Autopilot
 
 项目 Memory 已初始化，或修改/构建任务符合初始化门槛后，Agent 对以下低风险本地 sidecar 写入
-无需逐次询问用户：重要原始输入、明确约束、未完成任务的会话交接，以及已有记忆的去重和索引修复。优先使用
-类型化命令，不自由拼接 frontmatter：
+无需逐次询问用户：重要原始输入、明确约束、未完成任务的会话交接，以及已有记忆的去重和索引修复。
+生命周期自动授权仅限普通 episode/working note；input/evidence、session-handoff 与带 `task-ledger` tag 的
+progress 均排除，后两者只走各自 typed lifecycle。候选必须已读取正文、经当前事实复核且无独有恢复价值，
+并已 contradicted/expired，才可用 `memory archive <root> <relative-name> --force` 可恢复归档；这是自动使用
+`archive --force` 的唯一例外。禁止删除、写正式文档、promote 或新建 `distilled`；任一条件存疑时只提
+proposal，确需用户决策时才 blocked。优先使用类型化命令，不自由拼接 frontmatter：
 
 ```bash
 node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory capture-input . \

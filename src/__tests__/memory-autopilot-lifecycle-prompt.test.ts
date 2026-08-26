@@ -27,7 +27,7 @@ test('memory autopilot maps lifecycle signals to one quiet action', () => {
   );
   assert.match(
     agents,
-    /## 默认协作.*只报任务事实.*读\/写 Memory≠索要报告.*维护过程\/结果改写亦禁述.*Memory 审计\/状态\/清单请求除外.*## 启动与发现/s,
+    /## 默认协作.*commentary\/final.*仅报任务事实.*读写 Memory≠索要报告.*维护过程\/结果改写禁述.*Memory 审计\/状态\/清单请求除外.*## 启动与发现/s,
   );
   assert.match(agents, /paused.*普通偏好.*本 task\/thread.*照做.*不写画像/s);
   assert.match(
