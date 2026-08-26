@@ -11,13 +11,13 @@
 
 ## 默认协作
 
-- commentary/final 从首条起只报任务事实；恢复/继续/记住及读写 Memory≠索要报告；例行成功过程/结果/改写禁述；proposed/blocked须报；明确 Memory 审计/状态/清单可报；简中，术语/错误原文；先结论证据。
+- commentary/final 首条起仅报任务事实；恢复/继续/记住/保留/写回≠报告请求；Memory 例行定位/读/核/写/归档/复检/成功结果及其改写禁述；proposed/blocked须报；明示审计/状态/清单可报；简中、术语/错误原文、结论证据先行。
 
 ## 启动与发现
 
 1. 每个新宿主 task/thread 首次工作前首个动作=静默读取一次 `{{HARNESS_MEMORY_HOME}}/profile.md`；缺失继续；此前禁 pwd/Git/rg/find/ls、项目/其他全局 Memory。
-2. 读 `{{HARNESS_PERSONAL_HOME}}/AGENTS.md`；查 cwd/Git 根/状态/近端规则；按元信息/`core.md` 取命中 Memory。
-3. 绝对项目根执行 `test -d "<project-root>/.agent-docs"`；ignore 目录不能因 `rg`/Git 未命中判不存在。存在则首次读写前静默列元信息/读 `core.md`/查活跃 task/命中正文，单文件不跳过；缺失依规；只读任务不建。
+2. 读 `{{HARNESS_PERSONAL_HOME}}/AGENTS.md`；查 cwd/Git 根/状态/近端规则。
+3. 绝对项目根执行 `test -d "<project-root>/.agent-docs"`；ignore 目录不能因 `rg`/Git 未命中判不存在。存在则首次读写前严格依次：独立读项目 Memory 静默段→list 元信息→`core.md`→task status→maintain→命中正文；单文件不跳过；缺失依规；只读任务不建。
 4. 读代码/配置/测试/manifest/lockfile/脚本；设计/计划≠实现。
 5. 不递归读 `docs/`、`.agent-docs/`、历史会话/全部规则；取命中正文。
 6. 缺失会改结果/权限/范围才问。
@@ -49,9 +49,9 @@
   close gate：当前 turn 仅用户明示整个 workstream 结束/取消或 host 标记 completed/cancelled，且 active task/plan/backlog/open/next 无有效项，才 close-handoff；否则不关。open 空/sentinel/请求/verifier/task/验收完成均非结束信号。
 - 明示画像控制直跑 CLI --json，不查产品 docs/skill/help、不预告，首条仅结果/阻塞且格式优先：
   纠正=reconcile-profile --payload-file <path> --json（paused 也可，payload 必加 `userDirected:true`，单次执行且不 resume）；遗忘=forget-profile --key <exact-key> --json；暂停/恢复=profile-autopilot pause|resume --json。
-  遗忘从已读 profile 唯一匹配 exact-key 原样执行；0/多匹配阻塞，禁猜或以“已替代/无需删除”跳过；auto reconcile 静默；proposed/blocked 报；敏感/冲突/越界提示。
+  遗忘从已读 profile 唯一匹配 exact-key 原样执行；0/多匹配阻塞，禁猜或以“已替代/无需删除”跳过；敏感/冲突/越界提示。
 - 写前确认目标；不用 destructive Git 清场；不泄露 secret/token/cookie/私钥。
 
 ## 按需路由
 
-- 修改/诊断/评审/设计/发布：须先读恰好一个命中 playbook；工具/安全/Git/长任务/CLI→core/；项目 Memory→须用单命令仅读 standards/project-agent-docs.md 命中段。
+- 修改/诊断/评审/设计/发布→先读唯一命中 playbook；工具/安全/Git/长任务/CLI→core/；项目 Memory→standards/project-agent-docs.md“自动 sidecar 静默输出”+命中段。
