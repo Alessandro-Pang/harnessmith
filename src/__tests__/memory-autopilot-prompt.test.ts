@@ -55,7 +55,7 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
     agents,
     /新宿主.*task\/thread.*\.agent-docs.*首次(?:读写|读取或修改).*静默.*单文件.*(?:不得|不)跳过/s,
   );
-  assert.match(agents, /\.agent-docs.*缺失依规.*只读任务.*不初始化/s);
+  assert.match(agents, /\.agent-docs.*缺失依规.*只读任务.*不建/s);
   assert.match(
     agents,
     /绝对项目根.*test -d "<project-root>\/\.agent-docs".*(?:ignore|忽略).*(?:不能|不得).*因.*(?:rg|Git).*不存在/s,
@@ -143,7 +143,7 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   assert.match(agents, /压缩.*预算.*signal.*本 (?:signal )?turn.*下条(?:用户)?消息前.*handoff/s);
   assert.match(
     agents,
-    /commentary\/final.*仅报任务事实.*读写 Memory≠索要报告.*维护过程\/结果改写禁述.*Memory 审计\/状态\/清单请求除外.*纯 host-signal\/replay.*可空.*零 commentary\/final.*强制.*最多一句上一已验结果.*replay.*原样 handoff 一次.*禁改 payload\/close\/reopen.*强制消息禁述.*记录\/重放\/保存\/压缩\/衔接\/继续\/持久化/s,
+    /commentary\/final.*从首条起.*只报任务事实.*恢复\/继续\/记住.*读写 Memory.*≠索要报告.*例行成功.*过程\/结果\/改写禁述.*proposed\/blocked.*须报.*明确 Memory 审计\/状态\/清单.*可报.*纯 host-signal\/replay.*可空.*零 commentary\/final.*强制.*最多一句上一已验结果.*replay.*原样 handoff 一次.*禁改 payload\/close\/reopen.*强制消息禁述.*记录\/重放\/保存\/压缩\/衔接\/继续\/持久化/s,
   );
   assert.doesNotMatch(agents, /正常任务消息不受限/);
   assert.match(
@@ -188,7 +188,7 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   );
   assert.match(
     agents,
-    /commentary\/final.*仅报任务事实.*读写 Memory≠索要报告.*维护过程\/结果改写禁述.*Memory 审计\/状态\/清单请求除外.*强制.*最多一句上一已验结果.*强制消息禁述.*sidecar 状态/s,
+    /commentary\/final.*从首条起.*只报任务事实.*恢复\/继续\/记住.*读写 Memory.*≠索要报告.*例行成功.*过程\/结果\/改写禁述.*proposed\/blocked.*须报.*明确 Memory 审计\/状态\/清单.*可报.*强制.*最多一句上一已验结果.*强制消息禁述.*sidecar 状态/s,
   );
   assert.match(agents, /用户指定\/关键 verifier.*单跑.*&&.*后续退出码.*不替代/s);
   assert.match(agents, /不以.*删(?:除)?断言.*篡改 verifier.*降(?:低)?门槛.*通过/s);
@@ -201,7 +201,7 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
     taskRouteLine,
     /项目 Memory.*须用单命令仅读 standards\/project-agent-docs\.md 命中段/,
   );
-  assert.match(agents, /交付结果\/证据\/未验证\/风险；只读评估须分开写本轮未执行与未来需授权动作/);
+  assert.match(agents, /交付结果\/证据\/未验证\/风险；只读评估分开写未执行与未来需授权动作/);
   const agentLines = agents.trimEnd().split('\n');
   assert.ok(agentLines.length <= 60, `template/AGENTS.md has ${agentLines.length} lines`);
   assert.ok(Buffer.byteLength(agents) <= 6_600, 'template/AGENTS.md exceeds 6600 bytes');
@@ -311,7 +311,7 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   );
   assert.match(
     projectMemory,
-    /自动 sidecar.*读取.*核对.*写入.*created.*updated.*unchanged.*状态或结果.*必须全程静默.*不得预告.*复述.*混入正常消息.*最终交付.*宿主强制.*上一.*用户任务.*已验证.*进度或结果.*禁述.*Memory.*交接.*输入记录.*正常任务消息.*照常.*不得提及.*将要.*正在.*已经.*读取.*核对.*写入.*Memory\/交接.*不得.*夹带.*sidecar.*状态.*结果.*其他结果.*规则报告.*保留发现.*清理材料.*索引校验.*恢复调查.*保留发现.*自动 sidecar.*不等于.*操作.*报告.*用户明确索要 Memory 审计.*状态.*变更清单/s,
+    /自动 sidecar.*读取.*核对.*写入.*created.*updated.*unchanged.*状态或结果.*必须全程静默.*不得预告.*复述.*混入正常消息.*最终交付.*宿主强制.*上一.*用户任务.*已验证.*进度或结果.*禁述.*Memory.*交接.*输入记录.*正常任务消息.*照常.*不得提及.*将要.*正在.*已经.*读取.*核对.*写入.*Memory\/交接.*不得.*夹带.*sidecar.*状态.*结果.*其他结果.*规则报告.*保留发现.*清理材料.*索引校验.*检查未索引线索.*调查材料校验通过.*失效.*不可达.*活跃条目.*恢复调查.*保留发现.*自动 sidecar.*不等于.*操作.*报告.*用户明确索要 Memory 审计.*状态.*变更清单/s,
   );
   assert.match(
     projectMemory,
