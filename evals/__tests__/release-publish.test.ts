@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { chmodSync, copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { test } from 'vitest';
+import { afterEach, beforeEach, test } from 'vitest';
 import {
   type ReleaseRunner,
   releaseCandidate,
@@ -18,6 +18,18 @@ const inheritedSource = {
   packageVersion: '0.5.0',
   packageArtifactSha256: 'f'.repeat(64),
 };
+
+let inheritedReleaseArtifact: string | undefined;
+
+beforeEach(() => {
+  inheritedReleaseArtifact = process.env.HARNESS_RELEASE_ARTIFACT;
+  delete process.env.HARNESS_RELEASE_ARTIFACT;
+});
+
+afterEach(() => {
+  if (inheritedReleaseArtifact === undefined) delete process.env.HARNESS_RELEASE_ARTIFACT;
+  else process.env.HARNESS_RELEASE_ARTIFACT = inheritedReleaseArtifact;
+});
 
 function evaluationGate() {
   const fingerprint = currentFingerprint();
