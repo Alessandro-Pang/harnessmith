@@ -1,37 +1,52 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "packageName": "harnessmith",
-  "packageVersion": "0.5.1",
-  "tag": "v0.5.1",
-  "artifactSha256": "e6f0c42851f32b39fec28236ba25cb960e20bfa3bda277fbe8806432d2198501",
-  "behaviorSha256": "cb0079869aa2074402fdcedfa571368d5ec250829d05f8afeb4126ce456ab97f",
-  "harnessVersion": "2.4.0",
-  "rulesSha256": "926b71a53955b60adfb656f66903a10729f671d91d6fda062c249a9e5d06682d",
+  "packageVersion": "0.6.0",
+  "tag": "v0.6.0",
+  "artifactSha256": "28bfb6d06b14c2365fbfe05e376d79b8d50f6e02036f06441747fb4f7d3eb622",
+  "behaviorSha256": "2bee64fd4983d121e93798cc8e1dd94d9b26601172b3ca49629ddbaa4fd1a438",
+  "harnessVersion": "2.5.0",
+  "rulesSha256": "488d94d295e0be8bb82e9688a7dda77efda38cb35c269da41030761b5baa67da",
   "scenarios": {
     "bootstrap-global-memory": "6083a39adb7b37e281ee795dd22c14d0dc0504556c147e18aa8b61282aa5a967",
     "progressive-disclosure": "6d25689a827a44f3aa1d7c4e268510ae14e8f844325f1e1eb3f757a192aa0df0",
-    "memory-fact-separation": "f4c2c2c9308dd30de5dfa37c2fe2278920c32d5d0826c3050c7f7297e01943ac",
+    "memory-fact-separation": "92ca7ba992a0427044a61f9db0a385b631a89dea6ee125a9ec05d5a6eee91a07",
     "destructive-boundary": "d9e89959382e32f4f19092022c1077e196c6f44e4f41cf2bea17ea5879da3f49",
     "safe-path-boundary": "693edeb5981d9f880ea9fc586d7dfe565f612f5aba9ec39638c4d37451d5b51f",
     "machine-error-contract": "9f0e59c1f70725bb8647765ec91331783b12b3b772058cf1239137733f466870",
     "memory-lifecycle-boundary": "9604c961d6963ce9bdabe474a408a1fe550fdf9e9b48baa8d1fb3f7dce51cc5b",
-    "project-memory-recall-writeback": "0ccd6f4f8dbe04a779c52d23b05576e611b6a1062e5fdc513c0f6b42aecd2ad6",
+    "project-memory-recall-writeback": "686e2ec0f90074b6c1e095bcd89def1a222241d3bb845d9cfbdfc2340175e5df",
     "experience-distillation-promotion": "330bbf9fbf5c8a6411b17fbb9f6d6d60021d12beba4d7aa8bc3e99d5e25e4b0b",
-    "task-acceptance-gate": "27b4116f1dcd2ca3d59399dce1bfd2244770c459f5c505b0f930ec8b9e0b4ed4",
+    "task-acceptance-gate": "9b7d9f131b7ba6fd64f08ac0ad03461733864f4aded2910c7e27236ba10c7d55",
+    "memory-autopilot-unprompted": "b0f0817afc9f367f0dac435075eaa20b208fe3e9ae639c7f3e22492e6b2897ac",
+    "memory-autopilot-phase-only": "d2f921cc843522ec5707d091d1a96f8d7a425c6cf34d6f2694364e1d8aae191a",
+    "memory-autopilot-multi-task": "bbf99b68d7b23ed4c520e5e7f137487530f9076a06729b2f7ec0fca177bb8d19",
+    "memory-profile-cross-task-recall": "4e828fc1207215d86bd80d265d412563c6d0f5aca274ba3c9e5faafb09f9aab7",
     "cross-repository-map-writeback": "6480e2e7725a164f4f3f43932d9fa0a7a47be120f19042d91aa3971162c1abac"
   },
   "requiredHosts": [
     "codex"
   ],
-  "coverageCount": 11,
+  "coverageCount": 0,
   "exactArtifactCoverageCount": 0,
-  "inheritedBehaviorCoverageCount": 11,
-  "inheritedFrom": [
-    {
-      "packageVersion": "0.5.0",
-      "packageArtifactSha256": "297e3b0bb8f3a099bb82d58fb6185baf1098986bb29dfa0be1cf6aa3da444e4a"
-    }
-  ],
-  "assurance": "maintainer-attested-structure",
-  "preparedAt": "2026-08-25T02:51:47.901Z"
+  "inheritedBehaviorCoverageCount": 0,
+  "inheritedFrom": [],
+  "assurance": "maintainer-attested-risk-exception",
+  "riskAcceptance": {
+    "schemaVersion": 1,
+    "acceptedAt": "2026-08-26T09:17:59Z",
+    "authorizedBy": "user",
+    "reason": "User explicitly accepted the known Host Eval risk and authorized bypassing the gate for release 0.6.0.",
+    "uncoveredScenarios": [
+      "codex/memory-lifecycle-boundary",
+      "codex/memory-autopilot-unprompted",
+      "codex/memory-autopilot-phase-only",
+      "codex/memory-autopilot-multi-task",
+      "codex/memory-profile-cross-task-recall",
+      "codex/cross-repository-map-writeback"
+    ],
+    "packageVersion": "0.6.0",
+    "packageArtifactSha256": "28bfb6d06b14c2365fbfe05e376d79b8d50f6e02036f06441747fb4f7d3eb622"
+  },
+  "preparedAt": "2026-08-26T09:23:40.204Z"
 }
