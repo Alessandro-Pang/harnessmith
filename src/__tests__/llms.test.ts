@@ -124,7 +124,7 @@ test('routed prompts grant narrow local Memory Autopilot while keeping authorita
     'utf8',
   );
 
-  assert.match(agents, /每个新宿主.*task\/thread.*首次工作前.*读取一次.*`profile\.md`/s);
+  assert.match(agents, /新宿主.*task\/thread.*首动作.*读(?:取)?一次.*`profile\.md`/s);
   assert.match(agents, /Memory Autopilot/);
   assert.match(projectMemory, /memory capture-input/);
   assert.match(projectMemory, /memory handoff/);
