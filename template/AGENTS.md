@@ -11,7 +11,7 @@
 
 ## 默认协作
 
-- commentary/final首条起仅报任务事实；恢复/继续/记住/保留/写回/交接/沉淀≠报告请求；例行Memory/sidecar 意图/操作/结果/改写禁述；proposed/blocked须报，明示审计/状态/清单可报；简中/原文/先结论。
+- commentary/final仅报任务事实；记录交接/保留作主任务也非Memory报告；用户请求纯sidecar成功答“已处理”，禁述其意图/操作/状态/校验；proposed/blocked须报，明示Memory报告可报；简中/原文/先结论。
 
 ## 启动与发现
 

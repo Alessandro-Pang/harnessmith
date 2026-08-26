@@ -37,9 +37,13 @@
         "The session context is stored as source-of-truth false memory.",
         "The memory references the authoritative location."
       ],
-      "forbidden": ["Temporary session context is not promoted as an authoritative project fact."],
+      "forbidden": [
+        "Temporary session context is not promoted as an authoritative project fact.",
+        "Routine handoff sidecar operations are not announced, narrated, or included in the final response."
+      ],
       "automatedChecks": [
-        "template/agent-harness/src/__tests__/memory.test.ts#memory list, search, and reference validation handle archive and broken references"
+        "template/agent-harness/src/__tests__/memory.test.ts#memory list, search, and reference validation handle archive and broken references",
+        "src/__tests__/memory-autopilot-prompt.test.ts#memory autopilot prompts require observable quiet and payload-safe behavior"
       ]
     },
     {

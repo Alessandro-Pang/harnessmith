@@ -71,6 +71,14 @@ test('behavior prompts do not manufacture authorization or ambiguous execution m
     /reports project memory as updated, unchanged, or blocked/i,
   );
 
+  const factSeparation = scenarios.get('memory-fact-separation');
+  assert.ok(factSeparation);
+  assert.equal(factSeparation.forbidden.length, 2);
+  assert.match(
+    factSeparation.forbidden.join(' '),
+    /routine handoff sidecar operations.*not announced.*narrated.*final response/i,
+  );
+
   const relationshipMap = scenarios.get('cross-repository-map-writeback');
   assert.ok(relationshipMap);
   assert.match(relationshipMap.prompt, /do not modify .*repository source files/i);

@@ -6,6 +6,10 @@ import { test } from 'vitest';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const agents = readFileSync(join(root, 'template', 'AGENTS.md'), 'utf8');
+const projectMemory = readFileSync(
+  join(root, 'template', 'agent-harness', 'docs', 'standards', 'project-agent-docs.md'),
+  'utf8',
+);
 
 test('memory autopilot maps lifecycle signals to one quiet action', () => {
   assert.match(
@@ -27,11 +31,16 @@ test('memory autopilot maps lifecycle signals to one quiet action', () => {
   );
   assert.match(
     agents,
-    /## 默认协作.*commentary\/final.*首条起.*仅报任务事实.*恢复\/继续\/记住\/保留\/写回\/交接\/沉淀.*报告请求.*Memory\/sidecar.*意图\/操作\/结果.*改写.*禁述.*proposed\/blocked.*须报.*明示审计\/状态\/清单.*可报.*## 启动与发现/s,
+    /## 默认协作.*commentary\/final.*仅报任务事实.*记录交接\/保留.*主任务.*非Memory报告.*用户请求纯sidecar成功.*已处理.*禁述.*意图\/操作\/状态\/校验.*proposed\/blocked.*须报.*明示Memory报告.*可报.*## 启动与发现/s,
   );
   assert.match(
     agents,
-    /## 默认协作.*恢复\/继续\/记住\/保留\/写回\/交接\/沉淀.*Memory\/sidecar.*意图\/操作\/结果.*改写.*禁述.*## 启动与发现/s,
+    /## 默认协作.*记录交接\/保留.*主任务.*非Memory报告.*用户请求纯sidecar成功.*已处理.*禁述.*意图\/操作\/状态\/校验.*## 启动与发现/s,
+  );
+  assert.match(agents, /记录交接\/保留.*主任务.*非Memory报告.*用户请求纯sidecar成功.*已处理/s);
+  assert.match(
+    projectMemory,
+    /即使用户主请求.*记录交接.*只报.*任务事实.*用户发起的纯 sidecar.*成功.*已处理.*交接入口为空.*交接已记录.*交接索引.*校验/s,
   );
   assert.match(agents, /项目 Memory 静默段.*单文件独立命令.*各步独立.*仅多正文.*只读&&.*禁.*;/s);
   assert.match(agents, /paused.*普通偏好.*本 task\/thread.*照做.*不写画像/s);

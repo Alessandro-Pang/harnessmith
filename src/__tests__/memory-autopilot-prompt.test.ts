@@ -142,8 +142,9 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   assert.match(agents, /压缩.*预算.*signal.*本 (?:signal )?turn.*下条(?:用户)?消息前.*handoff/s);
   assert.match(
     agents,
-    /commentary\/final.*首条起.*仅报任务事实.*恢复\/继续\/记住\/保留\/写回\/交接\/沉淀.*报告请求.*Memory\/sidecar.*意图\/操作\/结果.*改写.*禁述.*proposed\/blocked.*须报.*明示审计\/状态\/清单.*可报.*纯 host-signal\/replay.*可空.*零 commentary\/final.*强制.*最多一句上一已验结果.*replay.*原样 handoff 一次.*禁改 payload\/close\/reopen.*强制消息禁述.*记录\/重放\/保存\/压缩\/衔接\/继续\/持久化/s,
+    /commentary\/final.*仅报任务事实.*记录交接\/保留.*主任务.*非Memory报告.*用户请求纯sidecar成功.*已处理.*禁述.*意图\/操作\/状态\/校验.*proposed\/blocked.*须报.*明示Memory报告.*可报.*纯 host-signal\/replay.*可空.*零 commentary\/final.*强制.*最多一句上一已验结果.*replay.*原样 handoff 一次.*禁改 payload\/close\/reopen.*强制消息禁述.*记录\/重放\/保存\/压缩\/衔接\/继续\/持久化/s,
   );
+  assert.match(agents, /记录交接\/保留.*主任务.*非Memory报告.*用户请求纯sidecar成功.*已处理/s);
   assert.doesNotMatch(agents, /正常任务消息不受限/);
   assert.match(
     agents,
@@ -187,7 +188,7 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   );
   assert.match(
     agents,
-    /commentary\/final.*首条起.*仅报任务事实.*恢复\/继续\/记住\/保留\/写回\/交接\/沉淀.*报告请求.*Memory\/sidecar.*意图\/操作\/结果.*改写.*禁述.*proposed\/blocked.*须报.*明示审计\/状态\/清单.*可报.*强制.*最多一句上一已验结果.*强制消息禁述.*sidecar 状态/s,
+    /commentary\/final.*仅报任务事实.*记录交接\/保留.*主任务.*非Memory报告.*用户请求纯sidecar成功.*已处理.*禁述.*意图\/操作\/状态\/校验.*proposed\/blocked.*须报.*明示Memory报告.*可报.*强制.*最多一句上一已验结果.*强制消息禁述.*sidecar 状态/s,
   );
   assert.match(agents, /用户指定\/关键 verifier.*单跑.*&&.*后续退出码.*不替代/s);
   assert.match(agents, /不以.*删(?:除)?断言.*篡改 verifier.*降(?:低)?门槛.*通过/s);
