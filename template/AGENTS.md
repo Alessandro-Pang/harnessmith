@@ -13,7 +13,7 @@
 
 - commentary/final只报非sidecar任务；Memory的恢复/检索/记录/保留/交接意图/操作/状态/校验禁述，即使用户要求；用户纯sidecar成功仅答“已处理”；proposed/blocked或明示Memory审计例外；简中/原文/先结论
 
-## 启动与发现（第3步完成前禁commentary）
+## 启动与发现（先完成第3步再commentary）
 
 1. 每个新宿主 task/thread 首次工作前首个动作=静默读取一次 `{{HARNESS_MEMORY_HOME}}/profile.md`；缺失继续；此前禁 pwd/Git/rg/find/ls、项目/其他全局 Memory。
 2. 读 `{{HARNESS_PERSONAL_HOME}}/AGENTS.md`；查 cwd/Git 根/状态/近端规则。
@@ -54,4 +54,4 @@
 
 ## 按需路由
 
-- 该 docs 下：修改/诊断/评审/设计/发布→先读唯一命中 playbook；工具/安全/Git/长任务/CLI→core/。
+- Harness docs：修改/诊断/评审/设计/发布→先读唯一命中 playbook；工具/安全/Git/长任务/CLI→core/。

@@ -55,7 +55,7 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
     agents,
     /\.agent-docs.*commentary\/list前.*先单文件独立读取.*\{\{HARNESS_HOME\}\}\/agent-harness\/docs\/standards\/project-agent-docs\.md.*自动 sidecar 静默输出.*再按阶段各用独立命令.*list JSON.*core\.md.*node \{\{HARNESS_HOME\}\}\/agent-harness\/bin\/harness\.mjs task status --project <root> --json.*maintain.*命中正文.*事实源.*失败不越级.*list无效JSON重试1次后=inconclusive.*仅多正文.*只读&&.*禁.*;/s,
   );
-  assert.match(agents, /## 启动与发现（第3步完成前禁commentary）/);
+  assert.match(agents, /## 启动与发现（先完成第3步再commentary）/);
   assert.match(
     agents,
     /绝对项目根.*test -d "<root>\/\.agent-docs".*(?:ignore|忽略).*不因.*(?:rg|Git).*不存在/s,
@@ -196,7 +196,7 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
     .split('\n')
     .find((line) => line.includes('修改/诊断/评审/设计/发布'));
   assert.ok(taskRouteLine);
-  assert.match(taskRouteLine, /该 docs 下/);
+  assert.match(taskRouteLine, /Harness docs/);
   assert.match(taskRouteLine, /先读唯一命中 playbook/);
   assert.match(taskRouteLine, /工具\/安全\/Git\/长任务\/CLI→core\//);
   assert.match(agents, /交付结果\/证据\/未验证\/风险；只读评估分开写未执行与未来需授权动作/);
