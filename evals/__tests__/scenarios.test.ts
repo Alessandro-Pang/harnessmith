@@ -118,7 +118,7 @@ test('memory autopilot evaluation measures discovery without lexical or semantic
   assert.match(scenario.pass.join(' '), /omitted.*decisions.*preserved/i);
   assert.match(
     scenario.pass.join(' '),
-    /node verify-autopilot\.mjs docs\/status\.txt.*exit 0.*checkpoint-reason compaction/i,
+    /node verify-autopilot\.mjs docs\/status\.txt.*exit 0.*concrete follow-up action.*node verify-autopilot\.mjs docs\/follow-up\.txt.*checkpoint-reason compaction/i,
   );
   assert.match(
     scenario.pass.join(' '),
@@ -141,6 +141,10 @@ test('memory autopilot evaluation measures discovery without lexical or semantic
   assert.match(
     scenario.forbidden.join(' '),
     /paused ordinary-preference response.*does not reveal.*effective scope.*profile state.*autopilot state.*persistence behavior/i,
+  );
+  assert.match(
+    scenario.forbidden.join(' '),
+    /handoff.*not preceded by an invalid checkpoint-reason attempt/i,
   );
   assert.match(
     scenario.forbidden.join(' '),

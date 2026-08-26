@@ -35,17 +35,17 @@
 - 正式事实属 `docs/`/ADR/代码/测试/schema/lint/CI；Memory 只存非权威输入/交接/状态/证据/提炼。
   新 `distilled` 无 typed 流程/授权只提 proposal；宿主原生 memory 仅作待核对线索。
 - 项目 Memory 已有/应初始化：新/变更验收/scope/constraints 或不可廉价恢复 source，任务改动前须逐字去重 capture-input，否则不写；画像/handoff 不替代；越界只 proposal。
-- 用户画像仅存全局 `profile.md`；autopilot enabled 才静默 explicit/high reconcile 跨任务稳定偏好/角色/工作方式；paused 普通偏好仅本 task/thread 照做、不写画像，回复只给所需格式/任务结果，禁述生效范围/profile/autopilot/持久化；单次信号留项目 Memory。
+- 用户画像仅存全局 `profile.md`；autopilot enabled 才静默 explicit/high reconcile 跨任务稳定偏好/角色/工作方式；paused 普通偏好仅本 task/thread 照做、不写画像，仅回格式/任务结果，禁述生效范围/profile/autopilot/持久化/未来适用承诺；单次信号留项目 Memory。
 - Memory CLI=`node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory`；各子命令单独执行（root=`.`/绝对根；payload-file 仅用宿主提供的 task temp 绝对路径）：capture-input <root> --payload-file <host-temp-abs> --json；
   handoff <root> --payload-file <host-temp-abs> --json；reconcile-profile --payload-file <host-temp-abs> --json；close-handoff <root> --session <stable-id> --json（无 payload）。
   root 仅位置参数；capture-input 无 `--scope`；handoff scope 写 payload、不内联 `--scope`；禁 shell 插值。capture-input={title,content,source:chat|file|meeting|link|other}；reconcile-profile={key,conclusion,evidence:explicit,confidence:high}。
 - 自动 sidecar 例行读/核对/写及 created/updated/unchanged 静默且禁入消息；纯 host-signal/replay turn 可空响应→零 commentary/final，宿主强制→最多一句上一已验结果；replay 原样 handoff 一次，禁改 payload/close/reopen；强制消息禁述 sidecar 状态、记录/重放/保存/压缩/衔接/继续/持久化。
 - 写前读 handoff/active task；handoff payload 的 session/title/objective/completed/next/reason 均为必填非空 string（非数组/对象）；未变 title/objective 从当前 handoff 原样带入；
-  completed 累计；next=首个有效 open/active-task/plan/backlog 项，点名文件/命令/动作；仅已知且适用于该项时写 verifier；handoff 前自检，缺一须本 turn 修正 payload 后执行；旧空泛 next 无效；无项才写“等待用户给出范围”。
+  completed 累计；next=首个有效 open/active-task/plan/backlog 项，点名文件/命令/动作；该项已知 verifier 须精确命令写 next；handoff 前自检，缺一须本 turn 修正 payload 后执行；旧空泛 next 无效；无项才写“等待用户给出范围”。
   verifier 本轮运行→`"verification":"<当前命令+结果>"`；旧 open 全 resolved→`"clearOpen":true`，部分→`"open":"<剩余项>"`；其余未变可选字段才省略。省略=保留且不能更新/清理；存疑保留。
-- plan/backlog 已核验有后续：阶段验证完成后，本轮未授权也须最终答复前静默写/校验 reason=phase handoff，不等下条消息。
+- plan/backlog 已核验有后续：阶段验证完成后，本轮未授权也须最终答复前静默写/校验 handoff(reason=phase)，不等下条消息。
 - 同一会话第2个独立任务验证后，最终答复前累计写 reason=multi-task，后续原位更新；优先级 compaction>multi-task>phase。
-- 压缩/预算 signal：本 turn、下条消息前静默执行/校验 reason=compaction handoff，重复快照不豁免；预判压缩仅旧快照不足恢复且实质变化才更新。阶段/请求/verifier/task 完成≠workstream 结束；
+- 压缩/预算 signal：本 turn、下条消息前静默执行/校验 handoff(reason=compaction)，重复快照不豁免；预判压缩仅旧快照不足恢复且实质变化才更新。阶段/请求/verifier/task 完成≠workstream 结束；
   close gate：当前 turn 仅用户明示整个 workstream 结束/取消或 host 标记 completed/cancelled，且 active task/plan/backlog/open/next 无有效项，才 close-handoff；否则不关。open 空/sentinel/请求/verifier/task/验收完成均非结束信号。
 - 明示画像控制直跑 CLI --json，不查产品 docs/skill/help、不预告，首条仅结果/阻塞且格式优先：
   纠正=reconcile-profile --payload-file <path> --json（paused 也可，payload 必加 `userDirected:true`，单次执行且不 resume）；遗忘=forget-profile --key <exact-key> --json；暂停/恢复=profile-autopilot pause|resume --json。

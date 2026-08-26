@@ -84,7 +84,7 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   );
   assert.match(
     agents,
-    /completed.*累计.*next=首个有效 open\/active-task\/plan\/backlog.*点名.*文件\/命令\/动作.*仅已知且适用于该项时写 verifier.*缺一.*本 turn.*修正 payload 后执行.*旧空泛 next 无效/s,
+    /completed.*累计.*next=首个有效 open\/active-task\/plan\/backlog.*点名.*文件\/命令\/动作.*该项已知 verifier 须精确命令写 next.*缺一.*本 turn.*修正 payload 后执行.*旧空泛 next 无效/s,
   );
   assert.match(
     agents,
@@ -95,7 +95,7 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   assert.doesNotMatch(agents, /未变(?:字段)?省略/s);
   assert.match(
     agents,
-    /压缩\/预算.*signal.*本 turn.*下条消息前.*静默.*执行\/校验.*reason=compaction.*handoff.*重复快照.*不豁免.*预判压缩.*快照不足恢复.*实质变化/s,
+    /压缩\/预算.*signal.*本 turn.*下条消息前.*静默.*执行\/校验.*handoff\(reason=compaction\).*重复快照.*不豁免.*预判压缩.*快照不足恢复.*实质变化/s,
   );
   assert.match(agents, /同一会话.*第2个独立任务.*reason=multi-task/);
   assert.match(
@@ -148,7 +148,7 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   assert.doesNotMatch(agents, /正常任务消息不受限/);
   assert.match(
     agents,
-    /plan\/backlog.*已核验有后续.*阶段验证完成后.*本轮未授权也须.*最终答复前.*写\/校验.*reason=phase handoff.*不等下条(?:用户)?消息/s,
+    /plan\/backlog.*已核验有后续.*阶段验证完成后.*本轮未授权也须.*最终答复前.*写\/校验.*handoff\(reason=phase\).*不等下条(?:用户)?消息/s,
   );
   assert.match(agents, /plan\/backlog.*有后续.*阶段验证完成.*reason=phase/s);
   assert.match(
@@ -163,12 +163,12 @@ test('memory autopilot prompts require observable quiet and payload-safe behavio
   assert.match(agents, /任务改动前.*逐字.*capture-input.*画像\/handoff.*不替代/s);
   assert.match(
     agents,
-    /next=首个有效 open\/active-task\/plan\/backlog.*点名.*文件\/命令\/动作.*仅已知且适用于该项时写 verifier.*旧空泛 next 无效.*无项.*等待用户给出范围/s,
+    /next=首个有效 open\/active-task\/plan\/backlog.*点名.*文件\/命令\/动作.*该项已知 verifier 须精确命令写 next.*旧空泛 next 无效.*无项.*等待用户给出范围/s,
   );
   assert.match(agents, /handoff 前自检.*缺一.*本 turn.*修正 payload 后执行/s);
   assert.doesNotMatch(
     agents,
-    /(?:不须|无需|不必).{0,8}(?:点名|写)|允许.{0,12}处理下一请求|空泛旧值.*(?:仍有效|视为有效|允许沿用)|(?:不禁|允许).{0,8}覆盖已知项/s,
+    /(?:不须|无需|不必).{0,8}(?:点名|写)|允许.{0,12}处理下一请求|空泛旧值.*(?:仍有效|视为有效|允许沿用)|(?:不禁|允许).{0,8}覆盖已知项|reason=(?:phase|compaction) handoff/s,
   );
   assert.match(agents, /压缩\/预算.*signal.*turn.*静默.*reason=compaction.*handoff/s);
   assert.match(agents, /plan\/backlog.*已核验有后续.*阶段验证完成.*workstream.*结束/s);
