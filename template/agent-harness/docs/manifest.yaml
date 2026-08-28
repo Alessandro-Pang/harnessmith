@@ -23,7 +23,7 @@ entries:
   harness-cli-architecture:
     kind: topic
     path: core/harness-cli-architecture.md
-    triggers: [harness-cli, install, init, memory-command, memory-autopilot, capture-input, close-input, payload-file, handoff, close-handoff, reconcile-profile, forget-profile, profile-autopilot, acceptance, local-harness, harness-profile, profile-autopilot-control, doctor, health, route, explain, memory-migrate, 安装, 初始化, 记忆命令, 自动记忆, 验收, 本地-harness, harness-画像, 画像控制, 健康检查, 路由, 记忆迁移]
+    triggers: [harness-cli, install, init, memory-command, memory-autopilot, capture-input, close-input, payload-file, handoff, close-handoff, reconcile-profile, forget-profile, profile-autopilot, acceptance, local-harness, harness-profile, profile-autopilot-control, doctor, health, route, memory-migrate, 安装, 初始化, 记忆命令, 自动记忆, 验收, 本地-harness, harness-画像, 画像控制, 健康检查, 路由, 记忆迁移]
   observability:
     kind: topic
     path: core/observability.md
@@ -41,7 +41,7 @@ entries:
     kind: playbook
     priority: 50
     path: playbooks/diagnose.md
-    triggers: [debug, bug, incident, ci-failure, 排障, 调试, 缺陷, 事故, ci失败]
+    triggers: [diagnose, debug, bug, incident, ci-failure, 诊断, 排障, 调试, 缺陷, 事故, ci失败]
   review:
     kind: playbook
     priority: 50
