@@ -71,9 +71,10 @@ Agent 不应因为进入一个项目就创建 `.agent-docs/`：
 `<harness> task status --project . --json`
 `<harness> memory maintain . --json`
 `memory list` 遇到空输出或非 JSON 时原样重试一次；不得猜测 `report`、`project` 或插入 `--help`。
-`maintain` 后读取其全部 unindexed、expired 及相关 active/blocked 正文；命中正文命令完成后，事实源必须由
-新的单独命令读取，且只读 `sed -n '1,260p' docs/architecture.md`，不得合并。
-完成命中正文与事实源核对前，禁止发送任何 agent_message/commentary。
+`maintain` 后读取全部 unindexed、expired 及相关 active/blocked 正文；同阶段多篇只用只读 `&&`，禁用 `;`。
+命中正文命令完成后，事实源必须由新的单独命令只读 `sed -n '1,260p' docs/architecture.md`，不得合并。事实核对后，
+contradicted 先 `supersede` 再 `archive`，expired 且无独有价值则 `archive`；最后运行
+`<harness> memory check . --indexed --json`。完成命中正文与事实源核对前，禁止发送任何 agent_message/commentary。
 
 完整阶段如下：
 
@@ -162,6 +163,7 @@ Token、Cookie、验证码、私钥或未脱敏生产数据。
 
 自动后台 sidecar 的恢复、检索、写入、校验和维护状态保持静默，不预告、不混入普通 commentary/final，
 也不把“已保留”“已归档”“已校验”改写成用户任务结果。
+普通 commentary 不得用“值得保留”“纳入结论”或近义词披露任何后台保存意图。
 
 普通任务中的 Memory 恢复、检索、修复、归档和校验均属后台 sidecar，不得出现在 commentary/final；
 即使 Memory 支撑了结论，也只报告经事实源核对后的用户任务结果。
