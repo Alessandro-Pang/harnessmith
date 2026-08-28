@@ -8,8 +8,8 @@
 
 [English](./README.en.md) · **简体中文**
 
-Harnessmith 是一个本地优先的 Personal Coding Agent Harness initializer。它把同一套个人工作规则、
-渐进式文档、记忆协议和任务状态工具，安全地安装到 Codex、Cursor、Claude Code 与 OpenCode。
+Harnessmith 是一个本地优先、跨 Host 的 Personal Harness 分发与工作状态控制层。它把同一套个人
+工作规则、渐进式文档、记忆协议和任务状态工具，安全地安装到 Codex、Cursor、Claude Code 与 OpenCode。
 
 ```bash
 npx harnessmith
@@ -32,8 +32,14 @@ Harnessmith 将它们拆成职责清晰的四层：
 | Memory & work state | 保存非权威记忆、紧凑用户画像和可恢复的长任务状态 |
 | Installer safety | 通过预检、备份、校验、锁与回滚保护用户文件 |
 
-Harnessmith 不替代 Agent Runtime，也不接管模型循环、工具调用、sandbox 或权限审批。Markdown 规则
-属于行为引导；真正的安全强制仍由安装器、测试、CI 和宿主权限系统承担。
+| 能力状态 | 边界 |
+| --- | --- |
+| 已实现（Implemented） | 跨宿主分发、安全安装生命周期、渐进式上下文、非权威记忆、可恢复任务状态与隐私安全运行审计 |
+| 由宿主负责（Delegated to the Host） | 模型循环、工具执行、sandbox、权限审批、成本与事件流 |
+| 不支持（Unsupported） | 通用 Agent Runtime、自动改写规则、Policy Engine、Pack/Registry 与多 Agent 调度 |
+
+Markdown 规则属于行为引导；真正的安全强制仍由安装器、测试、CI 和宿主权限系统承担。
+每项公开声明的 owner、状态、实现与验证路径见[能力声明—证据矩阵](./docs/capability-evidence.yaml)。
 
 ## 30 秒开始
 
@@ -100,10 +106,18 @@ npx harnessmith uninstall --agent codex
 
 # 安装后聚合检查 Runtime、安装与全局记忆健康度
 node <harness-path>/bin/harness.mjs health --json
+
+# 由 Host 显式提交不含原始内容的运行元数据
+node <harness-path>/bin/harness.mjs audit record --payload-file /absolute/event.json --json
 ```
 
 只有项目已经执行过 `init project` 时，才应再传 `health --project <absolute-path>` 检查项目记忆；
 未初始化项目记忆不等于安装不健康。
+
+`audit record` 是 Host-neutral 的显式接入点：Harness 只保存 trace、操作、policy decision、耗时、结果、
+artifact digest，以及可选 token/成本；拒绝原始 prompt、模型输出和 tool arguments。Host 仍负责模型
+循环、工具与权限事件的产生，Harness 不会自动观察未接入的运行过程。`audit maintain` 只读报告保留
+候选，`audit archive` 默认 proposal，只有 `--apply` 才把完整日文件移入保留区。
 
 `restore` 和 `uninstall` 不会删除共享/项目 `.agent-docs` 或用户维护的 personal overlay。`--yes` 只
 关闭交互，并在没有指定 Agent 时默认选择 Codex；它**不会**自动同意文件冲突。只有审阅目标并接受

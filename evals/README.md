@@ -76,6 +76,11 @@ Harness/rule/scenario fingerprints, a passing verdict, every required scenario a
 assertion to pass, and a fresh complete required-host × scenario matrix. The default freshness window is 30
 days; use `--max-age-days` only when the release policy explicitly chooses another bounded window.
 
+On failure, human-readable output prints a `Rejected record summary` grouped by root cause and caps inline
+audit details; use `eval:gate -- --json` for the complete machine-readable failure. JSON failures use the stable
+`EVAL_COVERAGE_INCOMPLETE` code and include the missing matrix cells, rejection counts, grouped reasons, and
+all rejected record descriptions.
+
 When a host/scenario cell contains multiple valid records, only the record with the latest `evaluatedAt` is
 eligible for coverage. A tie at the latest timestamp is ambiguous and fails closed; an older passing record
 therefore cannot mask a newer failed or inconclusive evaluation.

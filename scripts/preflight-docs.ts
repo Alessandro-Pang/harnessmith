@@ -4,6 +4,7 @@ import { fdir } from 'fdir';
 import { parse } from 'yaml';
 import { parseFrontmatterDocument } from '../template/agent-harness/src/lib/frontmatter.js';
 import { markdownLinkTargets } from '../template/agent-harness/src/lib/markdown-links.js';
+import { capabilityEvidenceIssues } from './capability-evidence.js';
 
 interface ManifestEntry {
   kind?: unknown;
@@ -171,6 +172,13 @@ function checkPortableTemplate(root: string, check: Check): void {
 }
 
 export function checkDocs({ root, harnessRoot, check }: DocsContext): void {
+  const capabilityEvidencePath = join(root, 'docs', 'capability-evidence.yaml');
+  check(existsSync(capabilityEvidencePath), 'capability evidence matrix is missing');
+  if (existsSync(capabilityEvidencePath)) {
+    const evidence = parse(readFileSync(capabilityEvidencePath, 'utf8')) as unknown;
+    for (const issue of capabilityEvidenceIssues(root, evidence)) check(false, issue);
+  }
+
   const docsRoot = join(harnessRoot, 'docs');
   const manifestPath = join(docsRoot, 'manifest.yaml');
   check(existsSync(manifestPath), 'agent-harness docs manifest is missing');

@@ -3,7 +3,7 @@ import { readBoundedRegularFile } from './bounded-file.js';
 
 const maximumCommandPayloadBytes = 256 * 1024;
 
-type PayloadValueKind = 'boolean' | 'string' | 'string[]';
+type PayloadValueKind = 'boolean' | 'number' | 'string' | 'string[]';
 
 export interface CommandPayloadSchema {
   fields: Readonly<Record<string, PayloadValueKind>>;
@@ -50,7 +50,9 @@ function validateValue(command: string, key: string, value: unknown, kind: Paylo
       ? typeof value === 'string'
       : kind === 'boolean'
         ? typeof value === 'boolean'
-        : Array.isArray(value) && value.every((item) => typeof item === 'string');
+        : kind === 'number'
+          ? typeof value === 'number'
+          : Array.isArray(value) && value.every((item) => typeof item === 'string');
   if (!valid) throw new Error(`${command} payload option ${key} must be ${kind}`);
 }
 

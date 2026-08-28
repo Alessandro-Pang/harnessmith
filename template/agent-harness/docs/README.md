@@ -20,6 +20,7 @@ updated: 2026-08-28
 | 涉及权限、破坏性操作、验证范围或交付证据 | [safety and verification](core/safety-and-verification.md) |
 | 新建/检查分支，编写/校验提交信息，设计 Git 规范 | [Git conventions](core/git-conventions.md) |
 | 扩展、测试或调试 personal Harness CLI | [Harness CLI architecture](core/harness-cli-architecture.md) |
+| 接入运行审计、查看 policy decision、耗时、token 或成本 | [runtime observability](core/observability.md) |
 | 跨上下文推进、维护任务契约、验收账本或交接 | [long-running tasks](core/long-running-tasks.md) |
 | 修改或实现代码、配置、脚本 | [change playbook](playbooks/change.md) |
 | 排查故障、修复 bug、分析 CI 失败 | [diagnose playbook](playbooks/diagnose.md) |

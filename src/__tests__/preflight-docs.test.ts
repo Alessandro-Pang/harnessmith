@@ -3,6 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
+import { capabilityEvidenceIssues } from '../../scripts/capability-evidence.js';
 import {
   filesUnder,
   invalidManifestRouteMetadata,
@@ -68,5 +69,72 @@ test('docs preflight validates route kinds and requires explicit playbook priori
       },
     }),
     ['fractional', 'missing', 'unknown', 'unranked'],
+  );
+});
+
+test('capability evidence requires explicit states and code plus test evidence for implemented claims', () => {
+  const root = mkdtempSync(join(tmpdir(), 'harness-capability-evidence-'));
+  onTestFinished(() => rmSync(root, { recursive: true, force: true }));
+  mkdirSync(join(root, 'src'));
+  writeFileSync(join(root, 'src', 'feature.ts'), 'export const feature = true;\n');
+  writeFileSync(join(root, 'src', 'feature.test.ts'), "test('feature', () => true);\n");
+
+  assert.deepEqual(
+    capabilityEvidenceIssues(root, {
+      version: 1,
+      positioning: 'cross-host Personal Harness distribution and work-state control plane',
+      claims: [
+        {
+          id: 'feature',
+          status: 'implemented',
+          owner: 'Harnessmith',
+          claim: 'Feature exists.',
+          implementation: ['src/feature.ts'],
+          verification: ['src/feature.test.ts'],
+        },
+        {
+          id: 'host-loop',
+          status: 'delegated',
+          owner: 'Host runtime',
+          claim: 'The host owns the model loop.',
+          boundary: ['README.md'],
+        },
+        {
+          id: 'policy-engine',
+          status: 'unsupported',
+          owner: 'None',
+          claim: 'No policy engine is provided.',
+          boundary: ['README.md'],
+        },
+      ],
+    }),
+    [
+      'claim host-loop references missing boundary evidence: README.md',
+      'claim policy-engine references missing boundary evidence: README.md',
+    ],
+  );
+
+  assert.deepEqual(
+    capabilityEvidenceIssues(root, {
+      version: 1,
+      positioning: 'wrong scope',
+      claims: [
+        {
+          id: 'feature',
+          status: 'implemented',
+          owner: 'Harnessmith',
+          claim: 'Feature exists.',
+          implementation: ['src/missing.ts'],
+          verification: [],
+        },
+      ],
+    }),
+    [
+      'capability evidence positioning is not canonical',
+      'capability evidence is missing status: delegated',
+      'capability evidence is missing status: unsupported',
+      'implemented claim feature has no verification evidence',
+      'claim feature references missing implementation evidence: src/missing.ts',
+    ],
   );
 });

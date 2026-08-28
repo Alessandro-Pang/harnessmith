@@ -1,6 +1,7 @@
 # Harnessmith
 
-> Harnessmith installs a portable personal coding-agent harness for Codex, Cursor, Claude Code, and OpenCode.
+> Harnessmith is a cross-host Personal Harness distribution and work-state control plane for Codex, Cursor,
+> Claude Code, and OpenCode.
 > This file is an operational guide for an LLM helping a user install or initialize it.
 
 Project: https://www.npmjs.com/package/harnessmith

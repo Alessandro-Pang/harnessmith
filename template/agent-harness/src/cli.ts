@@ -9,6 +9,7 @@ import { route } from './commands/route.js';
 import { contextSearch } from './commands/search.js';
 import { validate } from './commands/validate.js';
 import { containsHighConfidenceSecret } from './lib/secret-hygiene.js';
+import { registerAuditCommands } from './program/audit.js';
 import { registerMemoryCommands } from './program/memory.js';
 import { registerRepositoryMapCommands } from './program/repository-map.js';
 import { addSearchOptions, type SearchCommandOptions } from './program/search-options.js';
@@ -104,7 +105,7 @@ function registerCoreCommands(
     .action(run(() => doctor(runtime, {}, io)));
   program
     .command('health')
-    .description('aggregate runtime, installation, and memory health')
+    .description('aggregate runtime, installation, memory, and audit health')
     .option('--project <path>', 'include project memory health')
     .option('--json', 'write a machine-readable health report')
     .action(run((options: { project?: string; json?: boolean }) => health(runtime, options, io)));
@@ -190,6 +191,7 @@ export function createHarnessProgram(runtime: Runtime = createRuntime(), outputI
 
   registerCoreCommands(program, runtime, io, run, manifest);
 
+  registerAuditCommands(program, runtime, io, run);
   registerTaskCommands(program, runtime, io, run);
   registerMemoryCommands(program, runtime, io, run);
   registerRepositoryMapCommands(program, runtime, io, run);

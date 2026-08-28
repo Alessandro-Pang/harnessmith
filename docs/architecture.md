@@ -1,12 +1,17 @@
 # Harnessmith Architecture and Enforcement Model
 
-Harnessmith 是一个本地优先、opinionated、跨 Codex、Cursor、Claude Code 和 OpenCode 的 Personal Harness
-分发与管理工具。它安全地安装和升级规则与内嵌 Harness CLI，并提供渐进式文档、项目上下文、
+Harnessmith 是一个本地优先、跨 Host 的 Personal Harness 分发与工作状态控制层，覆盖 Codex、Cursor、
+Claude Code 和 OpenCode。它安全地安装和升级规则与内嵌 Harness CLI，并提供渐进式文档、项目上下文、
 非权威记忆和带验收门禁的长任务状态。
 
-它不是宿主 Agent Runtime：不接管模型循环、工具调用、MCP 调度、sandbox、权限批准、成本预算或
-事件流。Markdown 规则属于 advisory guidance；安全强制来自安装器、schema、测试、CI 和宿主自身
-权限。
+| 能力状态 | 边界 |
+| --- | --- |
+| 已实现（Implemented） | Adapter 分发、安全安装生命周期、渐进式上下文、非权威记忆、任务状态、隐私安全运行审计和本地验证门禁 |
+| 由宿主负责（Delegated to the Host） | 模型循环、工具与 MCP 调度、sandbox、权限批准、成本预算和事件流 |
+| 不支持（Unsupported） | 通用 Agent Runtime、自动规则提升、Policy Engine、Canonical IR、Pack/Registry 和多 Agent 调度 |
+
+Markdown 规则属于 advisory guidance；安全强制来自安装器、schema、测试、CI 和宿主自身权限。
+机器校验的逐项 owner、状态与证据路径见[能力声明—证据矩阵](./capability-evidence.yaml)。
 
 ## 四个实现平面
 
@@ -14,11 +19,10 @@ Harnessmith 是一个本地优先、opinionated、跨 Codex、Cursor、Claude Co
 | --- | --- | --- |
 | Distribution | 外层 `src/` | Adapter、SafePath、staging、进程锁、备份、安装记录、restore、uninstall |
 | Guidance & Context | `template/AGENTS.md` 与 `docs/` | 高损失常驻规则、渐进披露、工具与任务路由 |
-| Work State | 内嵌 Harness Runtime | 非权威 memory、长任务 ledger、checkpoint、acceptance gate |
+| Work State | 内嵌 Harness Runtime | 非权威 memory、长任务 ledger、checkpoint、acceptance gate、Host-supplied audit metadata |
 | Verification | tests、evals、preflight、CI | schema、行为回归、包边界、跨平台矩阵、maintainer-attested record structure 校验和 executable release gate |
 
-宿主 Enforcement 是外部边界；Evolution 是后续能力。当前不实现 Policy Engine、Canonical IR、
-Pack/Registry、自动规则提升或多 Agent Runtime。
+宿主 Enforcement 是外部边界；Evolution 是后续能力。
 
 Host Eval gate 会校验维护者提交记录的 package version、候选 tarball SHA-256、完整 scenario contract、
 behavior fingerprint、freshness、脱敏 artifact digest、工具行为、文件差异、逐项 pass 断言、禁止行为
@@ -44,6 +48,18 @@ result 与 status JSON 中。
 
 Cursor 的 `always` 只用于当前高损失 personal baseline，不表示 Harnessmith 已建模所有宿主原生规则
 类型。若未来需要不同激活策略，应先增加真实宿主 Eval，再扩展 capability descriptor。
+
+## 运行审计边界
+
+内嵌 Runtime 的 `audit record` 是 Host-neutral 的显式接入点。Host、CI 或生命周期 hook 负责生成
+事件；Harness 只校验、限界、存储和汇总 trace、操作、policy decision/version、耗时、结果、artifact
+digest 与可选 token/成本。schema 拒绝原始 prompt、模型输出、tool arguments 和未知字段，活动 JSONL
+使用 SafePath、锁、原子写、regular-file 校验以及文件/总量预算。
+
+`health` 会区分“未配置”与损坏状态；`audit maintain` 只读报告保留候选；`audit archive` 默认 proposal，
+显式 `--apply` 才移动完整日文件，且不删除归档。该能力不自动捕获 Host 行为，不是权限强制器、项目事实
+源、签名证明或远程 attestation。模型循环、工具执行、sandbox、权限事件、稳定 session-end hook 和事件
+真实性仍由宿主负责。
 
 ## 安装安全边界
 

@@ -3,6 +3,7 @@ import {
   releaseArtifactPath,
   requiredEvaluationAdapters,
 } from './eval-fingerprint.js';
+import { EvaluationGateError, rejectionSummary } from './eval-gate-failure.js';
 import {
   type EvaluationRecordOptions,
   latestEvaluationRecords,
@@ -156,13 +157,24 @@ export function gateEvaluationRecords(options: EvaluationGateOptions = {}): Eval
       .filter((key) => !coverage.covered.has(key)),
   );
   if (missing.length > 0) {
-    const rejectedRecords =
-      coverage.rejected.length > 0
-        ? `\nRejected records:\n- ${coverage.rejected.join('\n- ')}`
-        : '';
-    throw new Error(
-      `Missing fresh passing host evaluation coverage:\n- ${missing.join('\n- ')}${rejectedRecords}`,
-    );
+    throw new EvaluationGateError({
+      version: 1,
+      valid: false,
+      assurance: 'maintainer-attested-structure',
+      packageArtifactSha256: current.packageArtifactSha256,
+      behaviorSha256: current.behaviorSha256,
+      maxAgeDays,
+      error: {
+        code: 'EVAL_COVERAGE_INCOMPLETE',
+        message: 'Missing fresh passing host evaluation coverage',
+      },
+      missing,
+      rejected: {
+        count: coverage.rejected.length,
+        byReason: rejectionSummary(coverage.rejected),
+        records: coverage.rejected,
+      },
+    });
   }
   return {
     valid: true,

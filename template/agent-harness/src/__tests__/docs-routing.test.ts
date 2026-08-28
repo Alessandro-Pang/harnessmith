@@ -93,3 +93,11 @@ test('debugging a long-running handoff chooses diagnose and loads only supportin
     ['operating-model', 'harness-cli-architecture', 'long-running-tasks', 'project-agent-docs'],
   );
 });
+
+test('runtime audit, policy decision, and token cost queries route to observability guidance', () => {
+  const report = routeDocumentation(docsRoot, ['查看运行审计、policy decision 和 token 成本']);
+  assert.deepEqual(
+    report.topics.map(({ name }) => name),
+    ['observability'],
+  );
+});

@@ -8,9 +8,9 @@
 
 **English** · [简体中文](./README.md)
 
-Harnessmith is a local-first initializer for a personal coding-agent harness. It safely installs the same
-working rules, progressive documentation, memory protocol, and task-state tools across Codex, Cursor,
-Claude Code, and OpenCode.
+Harnessmith is a local-first, cross-host Personal Harness distribution and work-state control plane. It safely
+installs the same working rules, progressive documentation, memory protocol, and task-state tools across Codex,
+Cursor, Claude Code, and OpenCode.
 
 ```bash
 npx harnessmith
@@ -34,9 +34,16 @@ Harnessmith separates those concerns into four layers:
 | Memory & work state | Non-authoritative memory, a compact user profile, and resumable task state |
 | Installer safety | Preflight, backups, validation, locks, and rollback |
 
-Harnessmith does not replace the host Agent Runtime or control the model loop, tools, sandbox, or permission
-prompts. Markdown instructions are guidance; enforcement remains with the installer, tests, CI, and the host
-permission system.
+| Capability state | Boundary |
+| --- | --- |
+| Implemented | Cross-host distribution, safe installation lifecycle, progressive context, non-authoritative memory, resumable task state, and privacy-safe runtime audit |
+| Delegated to the Host | Model loop, tool execution, sandbox, permission prompts, cost controls, and event streams |
+| Unsupported | A general Agent Runtime, automatic rule rewriting, Policy Engine, Pack/Registry, and multi-agent orchestration |
+
+Markdown instructions are guidance; enforcement remains with the installer, tests, CI, and the host permission
+system.
+See the [capability claim-evidence matrix](./docs/capability-evidence.yaml) for each claim's owner, state,
+implementation, and verification paths.
 
 ## Start in 30 seconds
 
@@ -104,10 +111,19 @@ npx harnessmith uninstall --agent codex
 
 # Aggregate runtime, installation, and global-memory health after installation
 node <harness-path>/bin/harness.mjs health --json
+
+# Let a Host explicitly submit runtime metadata without raw content
+node <harness-path>/bin/harness.mjs audit record --payload-file /absolute/event.json --json
 ```
 
 Pass `health --project <absolute-path>` only after that project's memory has been initialized with
 `init project`; an uninitialized project-memory root is not an unhealthy installation.
+
+`audit record` is a Host-neutral explicit ingestion point. Harness stores only trace, operation, policy decision,
+duration, outcome, artifact digests, and optional token/cost metadata; it rejects the raw prompt, model output,
+and tool arguments. The Host still owns production of model-loop, tool, and permission events, and Harness does
+not observe an unintegrated runtime automatically. `audit maintain` reports retention candidates without writing;
+`audit archive` is proposal-first and moves complete daily files into retained storage only with `--apply`.
 
 `restore` and `uninstall` preserve shared/project `.agent-docs` and the user-owned personal overlay.
 `--yes` disables interaction and selects Codex when no agent was provided; it does **not** authorize file

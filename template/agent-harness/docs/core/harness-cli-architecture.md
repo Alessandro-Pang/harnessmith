@@ -61,13 +61,19 @@ frontmatter，Ajv 负责 JSON Schema，`write-file-atomic` 负责原子写。路
 结构和项目接入。宿主安装、规则文件
 映射、staging、备份和回滚属于外层 adapter，不进入通用 Harness 命令层。
 
-`health --json` 聚合 Runtime、安装、全局记忆和可选项目记忆；warning 不等于失败，任一 failed check
+`health --json` 聚合 Runtime、安装、全局记忆、运行审计和可选项目记忆；未配置审计不是故障，warning 不等于失败，任一 failed check
 使退出码非零。`route` 与 `explain` 只读取 manifest trigger 并返回名称、路径和 matched triggers，不
 加载文档正文。`search` 与 `memory search` 的结果数/行长限制和扫描预算彼此独立；扫描默认最多深入
 8 层、访问 5000 个目录条目、进入 1000 个目录、访问 1000 个普通文件、读取单文件 1 MiB、
 总计 8 MiB，并运行 2 秒；读取前先 stat。JSON 结果除
 source、trust、path、line 和结果 `truncated` 外，还携带 `scanTruncated`、`scanLimits`、`scanStats`
 和至多 50 条结构化跳过详情；超出的详情数仍在统计中可见。项目 docs 与记忆默认标为 untrusted。
+
+`audit record` 是 Host-neutral 的显式事件接入点，不是自动 Host hook。它只接受 payload-file 中的
+固定元数据字段，拒绝原始 prompt、输出、tool arguments 和未知字段；`list`/`summary` 有读取预算，
+`maintain` 只读报告保留候选，`archive` 默认 proposal、显式 `--apply` 才移动完整日文件。事件放在
+可变 `state/audit/`，不参与 managed checksum，也不作为 Memory、项目事实或权限强制来源。完整契约见
+[runtime observability](observability.md)。
 
 `health` 的 installation check 先验证 Runtime 身份：managed 分发必须存在合法且与当前 Runtime
 完全一致的 `install-context.json`，随后再核验 installation record 与全部 managed checksum；缺失或

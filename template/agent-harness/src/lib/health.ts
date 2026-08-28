@@ -3,20 +3,19 @@ import { join, resolve, sep } from 'node:path';
 import { calendarDate, managedOutputWithinHome } from '../runtime.js';
 import { errorMessage, type Io, type Runtime } from '../types.js';
 import { digestPath } from './files.js';
+import { auditHealth } from './health-audit.js';
 import {
   installationIdentityHealth,
   type ManagedInstallRecord,
   runtimeHealth,
 } from './health-runtime.js';
+import type { HealthCheck, HealthReport } from './health-types.js';
 import type { MemoryRootKind } from './memory-autopilot-document-rules.js';
 import { memoryMaintenanceReport, memoryMaintenanceWarnings } from './memory-maintenance.js';
 import { resolveMemoryRoot } from './memory-path.js';
 import { validateMemoryRoot } from './memory-validation.js';
 import { projectSnapshot } from './project.js';
 
-type HealthStatus = 'passed' | 'warning' | 'failed';
-type HealthCheck = { id: string; status: HealthStatus; message: string; details?: string[] };
-export type HealthReport = { version: 1; healthy: boolean; checks: HealthCheck[] };
 function managedInstallationHealth(runtime: Runtime): HealthCheck {
   const recordPath = join(runtime.harnessHome, '.harnessmith', 'install.json');
   if (!existsSync(recordPath)) {
@@ -236,6 +235,7 @@ export function createHealthReport(runtime: Runtime, project?: string): HealthRe
       ['README.md', 'core.md', 'profile.md'],
       'global',
     ),
+    auditHealth(runtime),
   ];
   if (project) {
     const snapshot = projectSnapshot(project);

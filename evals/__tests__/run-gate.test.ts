@@ -424,6 +424,8 @@ test('evaluation and release docs distinguish contracts from real fresh host evi
     'behaviorSha256',
     'metadata-only release',
     'invalidates only that scenario',
+    'EVAL_COVERAGE_INCOMPLETE',
+    'Rejected record summary',
   ]) {
     assert.ok(evalReadme.includes(required), `evals/README.md is missing ${required}`);
   }

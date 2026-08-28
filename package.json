@@ -1,7 +1,7 @@
 {
   "name": "harnessmith",
   "version": "0.7.0",
-  "description": "Forge and safely manage an opinionated, portable personal agent harness.",
+  "description": "Distribute and safely manage a cross-host personal harness and durable work state.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Alessandro-Pang/harnessmith.git"
@@ -53,6 +53,7 @@
     "test:unit": "vitest run",
     "test:harness": "vitest run template/agent-harness/src/__tests__",
     "test:watch": "vitest",
+    "preeval:check": "pnpm run build:emit",
     "eval:check": "vitest run evals/__tests__",
     "eval:fingerprint": "node --import tsx scripts/eval-gate.ts fingerprint --json",
     "eval:validate": "node --import tsx scripts/eval-gate.ts validate",

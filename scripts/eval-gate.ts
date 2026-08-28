@@ -1,6 +1,7 @@
 import { Command, InvalidArgumentError } from 'commander';
 import { gateEvaluationRecords, validateEvaluationRecords } from './eval-contract.js';
 import { evaluationFingerprint, releaseArtifactPath } from './eval-fingerprint.js';
+import { EvaluationGateError } from './eval-gate-failure.js';
 
 function positiveNumber(value: string): number {
   const parsed = Number(value);
@@ -76,6 +77,10 @@ function main(): void {
 try {
   main();
 } catch (error) {
-  console.error(error instanceof Error ? error.message : String(error));
+  if (error instanceof EvaluationGateError && process.argv.includes('--json')) {
+    process.stderr.write(`${JSON.stringify(error.result)}\n`);
+  } else {
+    console.error(error instanceof Error ? error.message : String(error));
+  }
   process.exitCode = 1;
 }

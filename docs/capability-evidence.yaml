@@ -1,0 +1,109 @@
+version: 1
+positioning: cross-host Personal Harness distribution and work-state control plane
+
+# This file is the machine-checked source of truth for public capability claims.
+# "implemented" requires both implementation and executable verification paths.
+# "delegated" and "unsupported" require an explicit public boundary path.
+claims:
+  - id: cross-host-distribution
+    status: implemented
+    owner: outer installer adapters
+    claim: Distribute one Personal Harness across Codex, Cursor, Claude Code, and OpenCode.
+    implementation:
+      - src/adapters.ts
+      - src/install.ts
+    verification:
+      - src/__tests__/install.test.ts
+      - src/__tests__/adapters-opencode.test.ts
+
+  - id: safe-install-lifecycle
+    status: implemented
+    owner: outer installer lifecycle
+    claim: Preflight, lock, back up, validate, restore, and roll back managed installation paths.
+    implementation:
+      - src/safe-path.ts
+      - src/lifecycle-transaction.ts
+      - src/operation-lock.ts
+    verification:
+      - src/__tests__/lifecycle-transaction.test.ts
+      - src/__tests__/lifecycle-transaction-failures.test.ts
+
+  - id: progressive-context-routing
+    status: implemented
+    owner: embedded Harness runtime
+    claim: Route tasks to bounded, progressively disclosed guidance without loading the complete handbook.
+    implementation:
+      - template/agent-harness/src/commands/route.ts
+    verification:
+      - template/agent-harness/src/__tests__/docs-routing.test.ts
+      - template/agent-harness/src/__tests__/search-budget.test.ts
+
+  - id: durable-work-state
+    status: implemented
+    owner: embedded Harness runtime
+    claim: Maintain non-authoritative memory and resumable task state with acceptance and write-safety gates.
+    implementation:
+      - template/agent-harness/src/commands/memory.ts
+      - template/agent-harness/src/commands/task.ts
+    verification:
+      - template/agent-harness/src/__tests__/memory.test.ts
+      - template/agent-harness/src/__tests__/task.test.ts
+
+  - id: privacy-safe-runtime-audit
+    status: implemented
+    owner: embedded Harness runtime
+    claim: Accept, bound, store, query, summarize, health-check, and archive host-supplied runtime metadata without raw content.
+    implementation:
+      - template/agent-harness/src/commands/audit.ts
+      - template/agent-harness/src/lib/audit-model.ts
+      - template/agent-harness/src/lib/audit-store.ts
+    verification:
+      - template/agent-harness/src/__tests__/audit.test.ts
+
+  - id: candidate-bound-host-eval-gate
+    status: implemented
+    owner: release verification scripts
+    claim: Validate maintainer-attested Host Eval records against the exact candidate artifact and release policy.
+    implementation:
+      - scripts/eval-gate.ts
+      - scripts/eval-gate-failure.ts
+      - scripts/eval-fingerprint.ts
+    verification:
+      - evals/__tests__/gate-observability.test.ts
+      - evals/__tests__/run-gate.test.ts
+      - evals/__tests__/fingerprint-tarball.test.ts
+
+  - id: model-loop-tools-and-permissions
+    status: delegated
+    owner: host Agent Runtime
+    claim: The host owns the model loop, tool execution, sandbox, permission prompts, cost controls, and events.
+    boundary:
+      - README.md
+      - README.en.md
+      - docs/architecture.md
+      - template/agent-harness/docs/core/observability.md
+
+  - id: trusted-host-execution-attestation
+    status: delegated
+    owner: maintainer CI or external attestation service
+    claim: Trusted proof that a real third-party Host produced an Eval record must come from outside the repository.
+    boundary:
+      - docs/architecture.md
+
+  - id: general-agent-runtime
+    status: unsupported
+    owner: none
+    claim: Harnessmith is not a general Agent Runtime or a multi-agent orchestrator.
+    boundary:
+      - README.md
+      - README.en.md
+      - docs/architecture.md
+
+  - id: autonomous-rule-evolution
+    status: unsupported
+    owner: none
+    claim: Harnessmith does not autonomously rewrite, promote, or publish rules, prompts, skills, or source code.
+    boundary:
+      - README.md
+      - README.en.md
+      - docs/architecture.md

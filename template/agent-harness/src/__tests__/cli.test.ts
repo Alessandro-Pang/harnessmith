@@ -306,7 +306,7 @@ test('Harness health aggregates runtime, installation, and memory checks as JSON
   assert.equal(report.healthy, true);
   assert.deepEqual(
     report.checks.map((check: { id: string }) => check.id),
-    ['runtime', 'installation', 'global-memory', 'project-memory'],
+    ['runtime', 'installation', 'global-memory', 'audit', 'project-memory'],
   );
 
   rmSync(join(project, '.agent-docs', '.ignore'));

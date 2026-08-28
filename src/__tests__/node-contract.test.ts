@@ -66,6 +66,15 @@ test('release verification reuses one quality build and one covered unit-test ru
   assert.doesNotMatch(workflow, /- run: pnpm run test:coverage\n/);
 });
 
+test('eval checks build their fingerprint inputs in a clean checkout', () => {
+  const packageManifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as {
+    scripts: Record<string, string>;
+  };
+
+  assert.equal(packageManifest.scripts['preeval:check'], 'pnpm run build:emit');
+  assert.equal(packageManifest.scripts['eval:check'], 'vitest run evals/__tests__');
+});
+
 test('npm package includes runtime guidance and eval contracts without source-only material', () => {
   const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as {
     files: string[];
