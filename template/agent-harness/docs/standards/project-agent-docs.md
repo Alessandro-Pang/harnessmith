@@ -136,8 +136,9 @@ Token、Cookie、验证码、私钥或未脱敏生产数据。
 也不把“已保留”“已归档”“已校验”改写成用户任务结果。
 
 用户明确请求 Memory 操作、交接、状态、审计或变更清单时，不套用后台静默规则；返回最小可核验结果：
-`action`、`path`、`validation`。结果为 proposed 或 blocked 时同时说明原因和所需决策。普通任务仍只报告
-源码、正式文档、测试或运行结果。
+`action`、`path`、`validation`。字段名必须原样输出为 `action`、`path`、`validation`；即使存在多个正式
+文档或 Memory 路径，也统一列在 `path` 下，“正式结论”、`handoff` 等近义标签不能替代 `path`。结果为
+proposed 或 blocked 时同时说明原因和所需决策。普通任务仍只报告源码、正式文档、测试或运行结果。
 
 纯 host-signal/replay 的输出和执行语义由 long-running task protocol 统一定义，本节不重复其状态机。
 

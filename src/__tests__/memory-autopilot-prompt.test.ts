@@ -64,6 +64,8 @@ test('background sidecars stay quiet while explicit Memory requests remain audit
   assert.match(agents, /明确.*Memory.*action.*path.*validation/s);
   assert.match(projectMemory, /自动后台.*静默/s);
   assert.match(projectMemory, /用户明确请求.*action.*path.*validation/s);
+  assert.match(projectMemory, /字段名.*原样.*action.*path.*validation/s);
+  assert.match(projectMemory, /正式结论.*handoff.*不能替代.*path/s);
 });
 
 test('documentation states the real host-hook and source-of-truth boundaries', () => {
