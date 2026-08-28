@@ -62,7 +62,7 @@ export function writeRun(
     outcome = 'passed',
     runId = `${adapter}-${scenarioId}`,
   }: {
-    adapter?: 'codex' | 'cursor' | 'claude' | 'opencode';
+    adapter?: 'codex' | 'cursor' | 'claude' | 'opencode' | 'deepseek';
     scenarioId?: string;
     finishedAt?: string;
     evaluatedAt?: string;

@@ -5,6 +5,12 @@ The embedded Harness schema has its own explicitly recorded version.
 
 ## Unreleased
 
+### Added
+
+- Add a DeepSeek Harness (`dsh`) host Adapter that installs the shared Personal Harness into
+  `$DSH_HOME/AGENTS.md` (default `~/.dsh/AGENTS.md`), following the official
+  `@deepseek-ai/dsh-agent-instructions` user-global baseline contract.
+
 ## 0.7.1 - 2026-08-28
 
 ### Added

@@ -122,6 +122,16 @@ export function createAdapter(
     const agentHome = canonicalPath(env.OPENCODE_CONFIG_DIR || join(configRoot, 'opencode'));
     return globalMarkdownAdapter(name, 'OpenCode', agentHome);
   }
+  if (name === 'deepseek') {
+    // Official DeepSeek Harness (dsh) home: $DSH_HOME, default ~/.dsh.
+    // Empty/whitespace DSH_HOME is treated as unset (upstream resolveDshHome).
+    // User-global instructions: $DSH_HOME/AGENTS.md via @deepseek-ai/dsh-agent-instructions.
+    const configured = env.DSH_HOME;
+    const agentHome = canonicalPath(
+      configured !== undefined && configured.trim().length > 0 ? configured : join(home, '.dsh'),
+    );
+    return globalMarkdownAdapter(name, 'DeepSeek Harness', agentHome);
+  }
   if (name === 'cursor') {
     const root = projectRoot(project);
     const agentHome = join(root, '.cursor');

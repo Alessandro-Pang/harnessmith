@@ -19,21 +19,27 @@ import { onTestFinished, test } from 'vitest';
 const packageRoot = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const cli = join(packageRoot, 'bin', 'harnessmith.mjs');
 
+function testEnv(root: string, overrides: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv {
+  return {
+    ...process.env,
+    HOME: root,
+    CODEX_HOME: join(root, 'codex-home'),
+    CLAUDE_CONFIG_DIR: join(root, 'claude-home'),
+    OPENCODE_CONFIG_DIR: join(root, 'opencode-home'),
+    DSH_HOME: join(root, 'dsh-home'),
+    HARNESS_MEMORY_HOME: join(root, 'agent-docs'),
+    HARNESS_PERSONAL_HOME: join(root, 'personal-harness'),
+    HARNESS_REPOSITORY_ROOT: join(root, 'repos'),
+    HARNESS_OWNER: 'package-test',
+    ...overrides,
+  };
+}
+
 function execute(root: string, args: string[]): string {
   const result = spawnSync(process.execPath, [cli, ...args], {
     cwd: root,
     encoding: 'utf8',
-    env: {
-      ...process.env,
-      HOME: root,
-      CODEX_HOME: join(root, 'codex-home'),
-      CLAUDE_CONFIG_DIR: join(root, 'claude-home'),
-      OPENCODE_CONFIG_DIR: join(root, 'opencode-home'),
-      HARNESS_MEMORY_HOME: join(root, 'agent-docs'),
-      HARNESS_PERSONAL_HOME: join(root, 'personal-harness'),
-      HARNESS_REPOSITORY_ROOT: join(root, 'repos'),
-      HARNESS_OWNER: 'package-test',
-    },
+    env: testEnv(root),
   });
   assert.equal(result.status, 0, `${args.join(' ')}\n${result.stdout}\n${result.stderr}`);
   return result.stdout;
@@ -43,18 +49,7 @@ function executeResult(root: string, args: string[], envOverrides: NodeJS.Proces
   return spawnSync(process.execPath, [cli, ...args], {
     cwd: root,
     encoding: 'utf8',
-    env: {
-      ...process.env,
-      HOME: root,
-      CODEX_HOME: join(root, 'codex-home'),
-      CLAUDE_CONFIG_DIR: join(root, 'claude-home'),
-      OPENCODE_CONFIG_DIR: join(root, 'opencode-home'),
-      HARNESS_MEMORY_HOME: join(root, 'agent-docs'),
-      HARNESS_PERSONAL_HOME: join(root, 'personal-harness'),
-      HARNESS_REPOSITORY_ROOT: join(root, 'repos'),
-      HARNESS_OWNER: 'package-test',
-      ...envOverrides,
-    },
+    env: testEnv(root, envOverrides),
   });
 }
 
@@ -254,10 +249,12 @@ test('dry-run reports destinations without creating agent homes', () => {
   assert.match(output, /"adapter":"cursor"/);
   assert.match(output, /"adapter":"claude"/);
   assert.match(output, /"adapter":"opencode"/);
+  assert.match(output, /"adapter":"deepseek"/);
   assert.match(output, /"action":"create"/);
   assert.equal(existsSync(join(root, 'codex-home')), false);
   assert.equal(existsSync(join(root, 'claude-home')), false);
   assert.equal(existsSync(join(root, 'opencode-home')), false);
+  assert.equal(existsSync(join(root, 'dsh-home')), false);
   assert.equal(existsSync(join(root, 'project', '.cursor')), false);
 });
 
@@ -280,7 +277,7 @@ test('json mode emits parseable automation output without terminal decoration', 
     .map((line) => JSON.parse(line));
   assert.deepEqual(
     plans.map(({ adapter }) => adapter),
-    ['codex', 'cursor', 'claude', 'opencode'],
+    ['codex', 'cursor', 'claude', 'opencode', 'deepseek'],
   );
   assert.equal(plans[0].capabilities.scope, 'global');
   assert.equal(plans[1].capabilities.scope, 'project');

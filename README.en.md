@@ -10,7 +10,7 @@
 
 Harnessmith is a local-first, cross-host Personal Harness distribution and work-state control plane. It safely
 installs the same working rules, progressive documentation, memory protocol, and task-state tools across Codex,
-Cursor, Claude Code, and OpenCode.
+Cursor, Claude Code, OpenCode, and DeepSeek Harness.
 
 ```bash
 npx harnessmith
@@ -81,6 +81,7 @@ After installation, Harnessmith initializes:
 | Codex | `$CODEX_HOME/AGENTS.md` | `$CODEX_HOME/agent-harness` | Global |
 | Claude Code | `$CLAUDE_CONFIG_DIR/CLAUDE.md`, with `AGENTS.md` retained | `$CLAUDE_CONFIG_DIR/agent-harness` | Global |
 | OpenCode | `$OPENCODE_CONFIG_DIR/AGENTS.md`; otherwise `${XDG_CONFIG_HOME:-~/.config}/opencode/AGENTS.md` | `agent-harness` under that config root | Global |
+| DeepSeek Harness | `$DSH_HOME/AGENTS.md`; otherwise `~/.dsh/AGENTS.md` when unset or blank | `$DSH_HOME/agent-harness` | Global |
 | Cursor | `<project>/.cursor/rules/agent-harness.mdc` | `<project>/.cursor/agent-harness` | Project |
 
 Cursor file-based rules are project-scoped. Pass `--project` for the intended repository. Harnessmith adds
@@ -92,7 +93,7 @@ overwrites the team's entire `.cursor/` directory.
 ```bash
 # Install one or several agents
 npx harnessmith install --agent codex
-npx harnessmith --agent codex,cursor,claude,opencode --project /absolute/path/to/repository
+npx harnessmith --agent codex,cursor,claude,opencode,deepseek --project /absolute/path/to/repository
 
 # Emit stable JSON Lines for automation
 npx harnessmith --agent all --project . --dry-run --json
@@ -260,7 +261,8 @@ the complete boundaries.
 <details>
 <summary><strong>Automation options and exit codes</strong></summary>
 
-`--agent` is repeatable and accepts `codex`, `cursor`, `claude`, `claude-code`, `opencode`, and `all`. Non-interactive
+`--agent` is repeatable and accepts `codex`, `cursor`, `claude`, `claude-code`, `opencode`, `deepseek`
+(aliases `dsh`, `deepseek-harness`), and `all`. Non-interactive
 calls should select agents explicitly and use `--json` when a stable machine protocol is required.
 
 `capabilities` is a read-only command that neither resolves installation paths nor writes files. Dry-run,
@@ -288,6 +290,7 @@ JSON failures are emitted as one stderr object containing `version`, `error.code
 | `CODEX_HOME` | Codex installation target | `~/.codex` |
 | `CLAUDE_CONFIG_DIR` | Claude Code installation target | `~/.claude` |
 | `OPENCODE_CONFIG_DIR` | OpenCode config and installation target | `${XDG_CONFIG_HOME:-~/.config}/opencode` |
+| `DSH_HOME` | DeepSeek Harness installation target | `~/.dsh` |
 | `HARNESS_MEMORY_HOME` | Cross-project personal memory | `~/.agent-docs` |
 | `HARNESS_PERSONAL_HOME` | User-owned rules and repository map | `~/.agent-harness` |
 | `HARNESS_REPOSITORY_ROOT` | Repository collection root | `~/git-repo` |

@@ -1,7 +1,7 @@
 # Harnessmith Architecture and Enforcement Model
 
 Harnessmith 是一个本地优先、跨 Host 的 Personal Harness 分发与工作状态控制层，覆盖 Codex、Cursor、
-Claude Code 和 OpenCode。它安全地安装和升级规则与内嵌 Harness CLI，并提供渐进式文档、项目上下文、
+Claude Code、OpenCode 和 DeepSeek Harness。它安全地安装和升级规则与内嵌 Harness CLI，并提供渐进式文档、项目上下文、
 非权威记忆和带验收门禁的长任务状态。
 
 | 能力状态 | 边界 |
@@ -27,7 +27,7 @@ Markdown 规则属于 advisory guidance；安全强制来自安装器、schema�
 Host Eval gate 会校验维护者提交记录的 package version、候选 tarball SHA-256、完整 scenario contract、
 behavior fingerprint、freshness、脱敏 artifact digest、工具行为、文件差异、逐项 pass 断言、禁止行为
 断言和 verdict，并要求当前 release policy 中的必需宿主覆盖完整场景矩阵。当前必需宿主为 Codex；
-Cursor、Claude Code 与 OpenCode 保留为受支持的可选证据。
+Cursor、Claude Code、OpenCode 与 DeepSeek Harness 保留为受支持的可选证据。
 The gate does not launch or authenticate to any third-party host. 真实宿主执行、脱敏和证据采集仍由明确
 授权的维护者或 CI runner 完成。因此 gate
 通过只表示“maintainer-attested structure 内部一致且绑定当前候选包”；本地记录和摘要可由仓库写入者
@@ -44,10 +44,32 @@ result 与 status JSON 中。
 | Codex | global | Markdown | host-default | advisory | host-owned |
 | Claude Code | global | Markdown | host-default | advisory | host-owned |
 | OpenCode | global | Markdown | host-default | advisory | host-owned |
+| DeepSeek Harness | global | Markdown | host-default | advisory | host-owned |
 | Cursor | project | MDC | always | advisory | host-owned |
 
 Cursor 的 `always` 只用于当前高损失 personal baseline，不表示 Harnessmith 已建模所有宿主原生规则
 类型。若未来需要不同激活策略，应先增加真实宿主 Eval，再扩展 capability descriptor。
+
+### DeepSeek Harness 契约来源与验证边界
+
+产品身份：官方 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（CLI `dsh` /
+`@deepseek-ai/dsh`）。配置根为 `$DSH_HOME`（默认 `~/.dsh`）；空或仅空白的 `DSH_HOME` 按上游
+`resolveDshHome` 视为未设置。
+
+官方规则加载契约来自 `@deepseek-ai/dsh-agent-instructions`：用户全局基线固定为
+`$DSH_HOME/AGENTS.md`（无 local overlay）。因此 DeepSeek Adapter 复用 global Markdown Adapter，
+只管理该 `AGENTS.md` 与同根下的 `agent-harness/`、`.harnessmith/`。Harnessmith **不**写入
+`cordis.patch.yml`、`settings.yaml`、`.credentials.yaml`，也 **不**挂载 Cordis 插件。
+
+| 状态 | DeepSeek 边界 |
+| --- | --- |
+| 已实现（Implemented） | Adapter 路径解析、`install --dry-run` / `install` / `status` / `restore` / `uninstall`、SafePath、锁、备份与回滚 |
+| 已在真实宿主验证（Verified on Host） | 尚未提交 maintainer-attested DeepSeek Host Eval 记录；发布门禁仍只要求 Codex |
+| 由宿主负责（Delegated to the Host） | `dsh` 模型循环、工具/权限、profile/bundle 组合、会话存储与凭证 |
+
+真实 Host Eval 计划（可选证据，不阻断当前 release policy）：在隔离 `$DSH_HOME` 下安装候选包，启动
+`dsh`/`npx @deepseek-ai/dsh`，按 `evals/scenarios.json` 跑通场景并写入脱敏 `run.json`；验证宿主确实把
+`$DSH_HOME/AGENTS.md` 注入会话 baseline，且 Harness CLI 健康检查通过。
 
 ## 运行审计边界
 
@@ -94,5 +116,5 @@ Node.js 无法提供跨平台 `openat(O_NOFOLLOW)` 等同语义，因此 TOCTOU 
 
 源码与测试达到 Alpha 质量不等于已发布。首次公开发布至少需要：P0 安全回归、`preflight`、覆盖率、
 tarball dry-run、依赖审计、真实 CI 记录、当前 release policy 要求的真实宿主 Eval 证据，
-以及正式 Git commit/tag baseline。当前必需宿主为 Codex；Cursor、Claude Code 与 OpenCode 是受支持但非发布
+以及正式 Git commit/tag baseline。当前必需宿主为 Codex；Cursor、Claude Code、OpenCode 与 DeepSeek Harness 是受支持但非发布
 阻断的可选证据。仓库没有真实运行记录时只能报告“已配置”或“本地通过”，不能报告“跨平台已验证”。

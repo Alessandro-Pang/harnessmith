@@ -18,7 +18,9 @@ test('llms.txt exposes a complete non-interactive install protocol', () => {
     'Cursor',
     'Claude Code',
     'OpenCode',
+    'DeepSeek Harness',
     'OPENCODE_CONFIG_DIR',
+    'DSH_HOME',
     '.backup-<timestamp>',
     '--force',
     'conflict',
@@ -271,10 +273,10 @@ test('distributed Harness template contains no host product identity', () => {
       if (entry.isDirectory()) pending.push(path);
       else if (entry.isFile()) {
         const content = readFileSync(path, 'utf8');
-        assert.doesNotMatch(content, /\b(codex|cursor|claude)\b/i, path);
+        assert.doesNotMatch(content, /\b(codex|cursor|claude|opencode|deepseek)\b/i, path);
         assert.doesNotMatch(
           content,
-          /CODEX_HOME|CLAUDE_CONFIG_DIR|DP_REPO_ROOT|dp-repository/i,
+          /CODEX_HOME|CLAUDE_CONFIG_DIR|OPENCODE_CONFIG_DIR|DSH_HOME|DP_REPO_ROOT|dp-repository/i,
           path,
         );
       }
