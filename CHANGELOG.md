@@ -5,6 +5,8 @@ The embedded Harness schema has its own explicitly recorded version.
 
 ## Unreleased
 
+## 0.7.1 - 2026-08-28
+
 ### Added
 
 - Add a privacy-safe Runtime Audit surface for Host-supplied metadata, including bounded record, query, summary,

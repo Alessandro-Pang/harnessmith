@@ -1,12 +1,12 @@
 {
   "schemaVersion": 3,
   "packageName": "harnessmith",
-  "packageVersion": "0.7.0",
-  "tag": "v0.7.0",
-  "artifactSha256": "dcf3ed31a05888391430affbbb3369969aad403735550f87ef69dc4dd9771667",
-  "behaviorSha256": "03de503d87ca71e27cb793121de216051fab9b05bb8e044d71456afa711cc456",
-  "harnessVersion": "2.5.0",
-  "rulesSha256": "b507edaa9bfa42b9c39a3fd5911861013e183e44c3b8d9a9543837b74e51582d",
+  "packageVersion": "0.7.1",
+  "tag": "v0.7.1",
+  "artifactSha256": "aaf3b05fb80a1fc57bc0e2c78a50ee3563e64d34e19b2ee0eebb76c482fba8b1",
+  "behaviorSha256": "8ec0c55e46a2866a480eeb303ec59d1d26f4857cbc0c2a03e0446ee785120799",
+  "harnessVersion": "2.6.0",
+  "rulesSha256": "9bf65b4dfdc867a5d80b802d561478977276888d68091c3d988453f8069c605b",
   "scenarios": {
     "bootstrap-global-memory": "6083a39adb7b37e281ee795dd22c14d0dc0504556c147e18aa8b61282aa5a967",
     "progressive-disclosure": "6d25689a827a44f3aa1d7c4e268510ae14e8f844325f1e1eb3f757a192aa0df0",
@@ -34,9 +34,9 @@
   "assurance": "maintainer-attested-risk-exception",
   "riskAcceptance": {
     "schemaVersion": 1,
-    "acceptedAt": "2026-08-28T03:33:23Z",
+    "acceptedAt": "2026-08-28T06:38:50Z",
     "authorizedBy": "user",
-    "reason": "User explicitly accepted the known Host Eval coverage risk and authorized continuing the Harnesssmith 0.7.0 release after the gate rejected prior evidence because the OpenCode adapter changed rulesSha256.",
+    "reason": "User explicitly accepted the Harnesssmith 0.7.1 Host Eval coverage risk and authorized continuing publication after the gate rejected all historical Codex records because the rebuilt candidate changed harnessVersion and rulesSha256.",
     "uncoveredScenarios": [
       "codex/bootstrap-global-memory",
       "codex/progressive-disclosure",
@@ -54,8 +54,8 @@
       "codex/memory-profile-cross-task-recall",
       "codex/cross-repository-map-writeback"
     ],
-    "packageVersion": "0.7.0",
-    "packageArtifactSha256": "dcf3ed31a05888391430affbbb3369969aad403735550f87ef69dc4dd9771667"
+    "packageVersion": "0.7.1",
+    "packageArtifactSha256": "aaf3b05fb80a1fc57bc0e2c78a50ee3563e64d34e19b2ee0eebb76c482fba8b1"
   },
-  "preparedAt": "2026-08-28T03:35:55.658Z"
+  "preparedAt": "2026-08-28T06:40:43.967Z"
 }
