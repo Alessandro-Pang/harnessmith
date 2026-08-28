@@ -225,3 +225,12 @@ test('changelog is a fixed pointer to GitHub Releases instead of an append-only 
   assert.doesNotMatch(changelog, /^## Unreleased$/m);
   assert.doesNotMatch(changelog, /^## \d+\.\d+\.\d+/m);
 });
+
+test('script coverage executes the tests for every new GitHub contract module', () => {
+  const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as {
+    scripts?: Record<string, unknown>;
+  };
+  const command = text(manifest.scripts?.['test:scripts-coverage:eval']);
+  assert.match(command, /src\/__tests__\/pr-contract\.test\.ts/);
+  assert.match(command, /src\/__tests__\/preflight-git\.test\.ts/);
+});
