@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict';
-import { chmodSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { beforeEach, onTestFinished, test, vi } from 'vitest';
 import { initGlobal } from '../commands/init.js';
 import { memoryMigrate } from '../commands/memory-migration.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { assertMode, capturedIo, escapeRegExp, harnessRuntime } from './helpers/harness.js';
 
 const validationControl = vi.hoisted(() => ({
   enabled: false,
@@ -72,7 +72,7 @@ test('migration post-validation failure restores exact bytes and private mode', 
     /rolled back/i,
   );
   assert.equal(readFileSync(profile, 'utf8'), before);
-  assert.equal(statSync(profile).mode & 0o777, 0o600);
+  assertMode(profile, 0o600);
 });
 
 test('migration rollback preserves a validator-time concurrent replacement', () => {
@@ -98,10 +98,10 @@ test('migration rollback preserves a validator-time concurrent replacement', () 
         { apply: true },
         capturedIo(),
       ),
-    new RegExp(`rollback was incomplete.*recovery path ${profile}`, 'i'),
+    new RegExp(`rollback was incomplete.*recovery path ${escapeRegExp(profile)}`, 'i'),
   );
   assert.equal(readFileSync(profile, 'utf8'), concurrent);
-  assert.equal(statSync(profile).mode & 0o777, 0o640);
+  assertMode(profile, 0o640);
 });
 
 test('migration apply refuses a replacement written during proposal validation', () => {
@@ -131,5 +131,5 @@ test('migration apply refuses a replacement written during proposal validation',
     /source changed after proposal validation.*concurrent content retained/i,
   );
   assert.equal(readFileSync(profile, 'utf8'), concurrent);
-  assert.equal(statSync(profile).mode & 0o777, 0o640);
+  assertMode(profile, 0o640);
 });
