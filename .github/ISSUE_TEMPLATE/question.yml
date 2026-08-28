@@ -1,0 +1,37 @@
+name: '💬 Question / 使用问题'
+description: Ask about using or contributing to Harnesssmith / 咨询 Harnesssmith 使用或贡献问题
+title: '[Question]: '
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search the README, documentation, and existing issues first. Do not include secrets, private paths, or personal memory content.
+        请先搜索 README、项目文档和已有 Issue。不要提交凭据、私有路径或个人记忆内容。
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Question / 问题
+      description: Ask one focused question. / 请聚焦描述一个问题。
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context and Goal / 背景与目标
+      description: What are you trying to accomplish, and what have you tried? / 你希望完成什么，已经尝试过哪些方法？
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Topic / 主题
+      options:
+        - Installation or Upgrade / 安装或升级
+        - Host Adapter / 宿主适配器
+        - Memory or Task State / 记忆或任务状态
+        - Audit or Health / 审计或健康检查
+        - Contribution or Release / 贡献或发布
+        - Other / 其他

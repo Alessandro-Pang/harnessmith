@@ -1,0 +1,67 @@
+name: '🐞 Bug Report / 缺陷报告'
+description: Report a reproducible Harnessmith problem / 报告可复现的 Harnesssmith 问题
+title: '[Bug]: '
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search existing issues first. For security vulnerabilities, use [Private Vulnerability Reporting](https://github.com/Alessandro-Pang/harnessmith/security/advisories/new) instead of a public issue.
+        请先搜索已有 Issue。安全漏洞请通过[私有安全公告](https://github.com/Alessandro-Pang/harnessmith/security/advisories/new)报告，不要公开提交。
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Problem Description / 问题描述
+      description: What happened, and which Harnesssmith behavior is incorrect? / 实际发生了什么，哪项 Harnesssmith 行为不符合预期？
+      placeholder: Provide a clear and concise description. / 请清晰、简洁地描述问题。
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal Reproduction / 最小复现
+      description: Provide exact commands and the smallest safe reproduction. Do not include secrets or personal memory content. / 请提供准确命令和最小安全复现，不要包含凭据或个人记忆正文。
+      placeholder: |
+        1. Run / 执行：npx harnessmith ...
+        2. Inspect / 检查：...
+        3. Observe / 结果：...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior / 预期行为
+      description: What should have happened? / 正确结果应该是什么？
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Redacted Output / 脱敏输出
+      description: Paste only relevant output, with tokens, usernames, home paths, private repositories, and memory content redacted. / 仅粘贴相关输出，并对 token、用户名、Home 路径、私有仓库和记忆内容进行脱敏。
+      render: shell
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment / 运行环境
+      description: Provide what you know; use “unknown” when unavailable. / 请填写已知信息，不清楚的项目可写“未知”。
+      placeholder: |
+        Harnesssmith version / 版本：
+        Host: Codex / Cursor / Claude Code / OpenCode / installer only
+        Scope / 范围：global / project
+        OS：
+        Node.js / pnpm：
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Submission Checklist / 提交检查
+      options:
+        - label: This is safe to report publicly, and secrets, private paths, and personal memory content are redacted. / 此问题适合公开报告，且凭据、私有路径和个人记忆内容均已脱敏。
+          required: true

@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: '🔒 Security Vulnerability / 安全漏洞'
+    url: https://github.com/Alessandro-Pang/harnessmith/security/advisories/new
+    about: Report path escape, unsafe overwrite, secret disclosure, or recovery bypass privately / 私下报告路径逃逸、不安全覆盖、敏感信息泄露或恢复绕过问题

@@ -1,0 +1,40 @@
+name: '📚 Documentation Feedback / 文档反馈'
+description: Report unclear, missing, or outdated documentation / 报告不清晰、缺失或过时的文档
+title: '[Docs]: '
+body:
+  - type: input
+    id: page
+    attributes:
+      label: Related Page or File / 相关页面或文件
+      description: Link the page or provide its repository path. / 请提供页面链接或仓库内路径。
+      placeholder: README.md or https://github.com/Alessandro-Pang/harnessmith/...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Feedback Type / 反馈类型
+      options:
+        - Unclear explanation / 说明不清
+        - Missing information / 信息缺失
+        - Outdated or inconsistent content / 内容过时或不一致
+        - Broken link or command / 链接或命令失效
+        - Translation issue / 翻译问题
+        - Other / 其他
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Feedback / 反馈内容
+      description: Explain what is wrong and what would make the documentation more useful. / 请说明当前问题，以及怎样修改会更有帮助。
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Reader Context / 阅读场景
+      description: What were you trying to install, understand, or verify? / 你当时希望安装、理解或验证什么？

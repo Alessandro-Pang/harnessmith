@@ -5,6 +5,11 @@ The embedded Harness schema has its own explicitly recorded version.
 
 ## Unreleased
 
+### Added
+
+- Add concise bilingual GitHub Issue forms and a pull request template tailored to Harnessmith's support,
+  safety, and verification boundaries.
+
 ## 0.7.0 - 2026-08-28
 
 ### Added

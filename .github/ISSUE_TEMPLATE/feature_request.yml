@@ -1,0 +1,43 @@
+name: '💡 Feature Request / 功能建议'
+description: Propose a focused Harnesssmith capability / 提议一项聚焦的 Harnesssmith 能力
+title: '[Feature]: '
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Tell us which Harnesssmith workflow you want to improve and the outcome you need.
+        请告诉我们你希望改进哪个 Harnesssmith 工作流，以及期望获得什么结果。
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or Motivation / 问题与动机
+      description: What workflow is difficult today, and who is affected? / 当前什么工作流存在困难，影响哪些用户？
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed Capability / 建议能力
+      description: What would a useful solution look like? / 一个有用的解决方案应当是什么样？
+    validations:
+      required: true
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Capability Area / 能力领域
+      options:
+        - Installer or Adapter / 安装器或适配器
+        - Guidance or Progressive Docs / 规则或渐进式文档
+        - Memory or Work State / 记忆或工作状态
+        - Runtime Audit or Health / 运行审计或健康检查
+        - Verification or Release / 验证或发布
+        - Other / 其他
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered / 已考虑的替代方案
+      description: What workarounds or smaller alternatives have you tried? / 你尝试过哪些替代方案或更小范围的做法？
