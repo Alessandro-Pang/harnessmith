@@ -16,8 +16,8 @@
 1. 新宿主 task/thread 的首个动作是静默读取一次 canonical 用户画像
    `{{HARNESS_MEMORY_HOME}}/profile.md`；缺失则继续。
 2. 读取 `{{HARNESS_PERSONAL_HOME}}/AGENTS.md`，再确认 cwd、Git 根、工作树状态和就近项目规则。
-3. 用目录检查确认项目根是否已有 `.agent-docs/`；存在时，先读取
-   `{{HARNESS_HOME}}/agent-harness/docs/standards/project-agent-docs.md`，再执行其中的有界发现流程。
+3. 用目录检查确认项目根是否已有 `.agent-docs/`；发现 `.agent-docs/` 后的首个 Memory 命令必须只读
+   `{{HARNESS_HOME}}/agent-harness/docs/standards/project-agent-docs.md` 的“输出可见性”段，不得合并其它读取；再执行其中的有界发现流程。
    只读取索引命中正文，随后核对代码、配置、测试、manifest、lockfile 和脚本等事实源。
 4. 对修改、诊断、评审、设计、发布、工具、安全、Git、长任务或 CLI 请求，先读取
    `{{HARNESS_HOME}}/agent-harness/docs/README.md` 并运行文档路由。加载至多一个 `primaryPlaybook` 和完成
@@ -39,7 +39,7 @@
 - `docs/`、ADR、代码、测试、schema、lint 和 CI 是事实源；Memory 只保存非权威输入、状态、证据和
   可追溯提炼。宿主原生 memory 仅作待核对线索。
 - 项目 Memory 的资格、发现、写入、Task/Handoff、画像和 CLI 细节以路由命中的专题文档为准，入口层不复制其协议。
-- 自动后台 sidecar 操作保持静默，不进入普通 commentary/final。
+- 自动后台 sidecar 保持静默；普通任务中的 Memory 恢复、检索、修复、归档和校验不得出现在 commentary/final，只报告用户任务结果。
 - 用户明确请求 Memory 操作、交接、状态或审计时，返回最小可核验结果：`action`、`path`、`validation`；proposed 或 blocked 时说明原因。
 
 ## 安全
