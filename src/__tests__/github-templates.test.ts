@@ -20,6 +20,26 @@ interface IssueForm {
   }>;
 }
 
+interface Workflow {
+  on?: Record<string, unknown>;
+  permissions?: Record<string, unknown>;
+  jobs?: Record<
+    string,
+    {
+      name?: unknown;
+      needs?: unknown;
+      if?: unknown;
+      permissions?: Record<string, unknown>;
+      steps?: Array<{
+        name?: unknown;
+        uses?: unknown;
+        run?: unknown;
+        with?: Record<string, unknown>;
+      }>;
+    }
+  >;
+}
+
 function issueForm(name: string): IssueForm {
   return parse(readFileSync(join(issueRoot, name), 'utf8')) as IssueForm;
 }
@@ -137,4 +157,80 @@ test('pull request template is bilingual and requires scope, verification, and s
   assert.match(template, /Host-neutral|宿主中立/i);
   assert.doesNotMatch(template, /^## Type of Change \/ 变更类型$/m);
   assert.ok((template.match(/^- \[ \]/gm) ?? []).length <= 4, 'PR checklist exceeds four items');
+});
+
+test('pull request metadata is checked from the trusted default branch', () => {
+  const workflow = parse(
+    readFileSync(join(root, '.github', 'workflows', 'pr-contract.yml'), 'utf8'),
+  ) as Workflow;
+  assert.ok(workflow.on?.pull_request_target, 'PR contract must run with trusted base-branch code');
+  assert.equal(workflow.permissions?.contents, 'read');
+  const job = workflow.jobs?.contract;
+  assert.equal(job?.name, 'PR Contract');
+  const checkout = job?.steps?.find(({ uses }) => text(uses).startsWith('actions/checkout@'));
+  assert.equal(checkout?.with?.ref, '$' + '{{ github.event.repository.default_branch }}');
+  assert.ok(
+    job?.steps?.some(({ run }) => text(run).includes('scripts/pr-contract.ts')),
+    'PR contract workflow must execute the repository validator',
+  );
+});
+
+test('CI exposes one stable aggregate check for branch protection', () => {
+  const workflow = parse(
+    readFileSync(join(root, '.github', 'workflows', 'ci.yml'), 'utf8'),
+  ) as Workflow;
+  const required = workflow.jobs?.required;
+  assert.equal(required?.name, 'CI Required');
+  assert.deepEqual(required?.needs, ['test', 'coverage']);
+  assert.equal(required?.if, '$' + '{{ always() }}');
+  const gate = required?.steps?.map(({ run }) => text(run)).join('\n') ?? '';
+  assert.match(gate, /needs\.test\.result/);
+  assert.match(gate, /needs\.coverage\.result/);
+});
+
+test('release notes are categorized and only created after npm publication is verified', () => {
+  const releaseConfig = parse(readFileSync(join(root, '.github', 'release.yml'), 'utf8')) as {
+    changelog?: { categories?: Array<{ title?: unknown; labels?: unknown }> };
+  };
+  const categories = releaseConfig.changelog?.categories ?? [];
+  for (const label of ['enhancement', 'bug', 'documentation']) {
+    assert.ok(
+      categories.some(({ labels }) => Array.isArray(labels) && labels.includes(label)),
+      `release notes are missing the ${label} category`,
+    );
+  }
+
+  const workflow = parse(
+    readFileSync(join(root, '.github', 'workflows', 'publish.yml'), 'utf8'),
+  ) as Workflow;
+  const publishSteps = workflow.jobs?.publish?.steps ?? [];
+  assert.ok(
+    publishSteps.some(({ name, run }) =>
+      /Verify npm publication/i.test(`${text(name)} ${text(run)}`),
+    ),
+    'publish job must verify the package is visible in npm',
+  );
+  const release = workflow.jobs?.release;
+  assert.equal(release?.needs, 'publish');
+  assert.equal(release?.permissions?.contents, 'write');
+  assert.ok(
+    release?.steps?.some(({ run }) => text(run).includes('gh release create')),
+    'release job must create the GitHub Release',
+  );
+});
+
+test('changelog is a fixed pointer to GitHub Releases instead of an append-only history', () => {
+  const changelog = readFileSync(join(root, 'CHANGELOG.md'), 'utf8');
+  assert.match(changelog, /github\.com\/Alessandro-Pang\/harnessmith\/releases/);
+  assert.doesNotMatch(changelog, /^## Unreleased$/m);
+  assert.doesNotMatch(changelog, /^## \d+\.\d+\.\d+/m);
+});
+
+test('script coverage executes the tests for every new GitHub contract module', () => {
+  const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as {
+    scripts?: Record<string, unknown>;
+  };
+  const command = text(manifest.scripts?.['test:scripts-coverage:eval']);
+  assert.match(command, /src\/__tests__\/pr-contract\.test\.ts/);
+  assert.match(command, /src\/__tests__\/preflight-git\.test\.ts/);
 });

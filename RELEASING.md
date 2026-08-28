@@ -14,8 +14,8 @@ Publishing is a maintainer-authorized external write. Never publish only because
 
 ## Tag-triggered release
 
-1. Commit all product changes first, leave release notes under `## Unreleased`, check out `main`, and start
-   the local version transaction with one of:
+1. Commit all product changes first, ensure every merged PR has the correct Issue link and release-note label,
+   check out `main`, and start the local version transaction with one of:
 
    ```bash
    npm run release -- patch
@@ -23,8 +23,8 @@ Publishing is a maintainer-authorized external write. Never publish only because
    npm run release -- major
    ```
 
-   This requires a clean `main`, calls `npm version` without creating a commit or tag, promotes the
-   `Unreleased` changelog section, runs preflight, and writes the exact reproducible npm
+   This requires a clean `main`, calls `npm version` without creating a commit or tag, runs preflight, and
+   writes the exact reproducible npm
    candidate under ignored `.release/` state. A failure restores the versioned source files instead of leaving
    a half-bumped release.
 
@@ -75,9 +75,12 @@ Publishing is a maintainer-authorized external write. Never publish only because
 
 5. `.github/workflows/publish.yml` triggers only on version tags. It verifies GitHub's signed-tag result,
    requires the tag commit to be reachable from `origin/main`, rebuilds the deterministic candidate, compares
-   it to the committed attestation, and publishes that exact file through npm Trusted Publishing. The workflow
-   has `id-token: write`, no npm token, and uses the protected `npm` Environment. GitHub OIDC publication of
-   this public package produces provenance automatically.
+   it to the committed attestation, and publishes that exact file through npm Trusted Publishing. After npm
+   confirms the published version is visible, a separate least-privilege job creates the GitHub Release from
+   merged PR labels and descriptions. The publish job has `id-token: write`, no npm token, and uses the protected
+   `npm` Environment; only the final release job receives `contents: write`. GitHub OIDC publication of this
+   public package produces provenance automatically. If GitHub Release creation fails after npm succeeds, rerun
+   only the release job or create the release for the same verified tag; never republish the package.
 6. Verify actual CI runs on every supported operating system and Node.js version. Workflow configuration
    alone is not evidence that the matrix passed.
 7. Verify the npm package page, executable, README links, tarball contents, provenance statement, and

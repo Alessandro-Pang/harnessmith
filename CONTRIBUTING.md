@@ -45,7 +45,20 @@ host-neutrality test passing.
   only by the embedded runtime belong in `devDependencies` and must be bundled; Agent homes must not need a
   second package installation.
 
+## Issue-to-release workflow
+
+1. Start with one focused Issue containing the problem, scope, acceptance criteria, and relevant boundaries.
+2. Create an Issue-linked branch named `<type>/<issue>-<slug>`, for example
+   `feat/12-indexed-doc-search` or `fix/15-clean-temp-files`. `gh issue develop 12 --checkout
+   --name feat/12-indexed-doc-search` creates and links it in one step.
+3. Use Conventional Commits and open a Draft PR early. Keep `Closes #<issue>` in the PR body, complete every
+   template section, and ensure the closing Issue number matches the branch.
+4. Apply `enhancement`, `bug`, or `documentation` as appropriate; use `skip-changelog` only for changes that
+   should not appear in generated release notes. Move the PR out of Draft after focused and full verification.
+5. Squash-merge only after `PR Contract`, `CI Required`, review conversations, and acceptance criteria pass.
+   The linked Issue closes through the PR keyword. Tagged publication verifies npm first, then creates the
+   GitHub Release; `CHANGELOG.md` remains a fixed pointer rather than accumulating release history.
+
 Commitlint enforces Conventional Commits through the Husky `commit-msg` hook. The `pre-commit` hook checks
-staged code and documentation; `pre-push` runs the full `pnpm run preflight`. New branches should match
-`(feature|hotfix|refactor)/YYYYMMDD_<feature-name>`; preflight allows the long-lived `main`, `master`, and
-`develop` branches and validates every other named branch against that pattern.
+staged code and documentation; `pre-push` runs the full `pnpm run preflight`. Preflight accepts long-lived
+branches, Dependabot branches, and the Issue-linked branch contract above.

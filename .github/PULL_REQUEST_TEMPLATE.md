@@ -7,6 +7,7 @@
 ## Related Issue / 关联 Issue
 
 <!-- Use "Closes #123" when appropriate. / 如适用，请使用 "Closes #123"。 -->
+<!-- Branch: <type>/<issue>-<slug>; the issue numbers must match. / 分支：<type>/<issue>-<slug>；Issue 编号必须一致。 -->
 
 ## Verification / 验证
 
