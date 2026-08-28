@@ -1,6 +1,7 @@
 import type { Io } from '../types.js';
 import { type FrontmatterResult, parseFrontmatterDocument } from './frontmatter.js';
 import type { MemoryRootKind } from './memory-autopilot-document-rules.js';
+import { reportMemoryDiagnostic } from './memory-diagnostic.js';
 import { validateMemoryDocumentRules } from './memory-document-rules.js';
 import {
   type HandoffGenerationState,
@@ -13,9 +14,9 @@ import {
   managedMemoryEntries,
   markdownFiles,
   maximumMemoryDocumentBytes,
-  memoryDocumentPath,
   readMemoryDocument,
 } from './memory-path.js';
+import { validateMemoryReferences } from './memory-reference-validation.js';
 import { sanitizeDiagnosticText, validatePortableMemoryPaths } from './memory-root-path-rules.js';
 import { containsHighConfidenceSecret, secretTextFiles } from './secret-hygiene.js';
 import { canonicalTaskLedgerId } from './task-ledger-memory.js';
@@ -32,7 +33,8 @@ function redactingIo(io: Io): Io {
   };
   return {
     log: (message: unknown = '') => io.log(safeMessage(message)),
-    error: (message: unknown = '') => io.error(safeMessage(message)),
+    error: (message: unknown = '', ...optional: unknown[]) =>
+      io.error(safeMessage(message), ...optional),
   };
 }
 
@@ -162,7 +164,11 @@ function validateRootDocument(
     if (typeof digest === 'string' && digest) {
       const existing = state.inputIdentities.get(digest);
       if (existing) {
-        io.error(`Duplicate input identity ${digest}: ${existing} and ${path}`);
+        reportMemoryDiagnostic(
+          io,
+          'input-identity',
+          `Duplicate input identity ${digest}: ${existing} and ${path}`,
+        );
         failures += 1;
       } else state.inputIdentities.set(digest, path);
     }
@@ -172,26 +178,6 @@ function validateRootDocument(
   }
   for (const reference of metadataReferences(frontmatter.metadata)) {
     state.references.add(reference.slice('memory:'.length));
-  }
-  return failures;
-}
-
-function validateReferences(root: string, references: Set<string>, io: Io): number {
-  let failures = 0;
-  for (const name of references) {
-    try {
-      memoryDocumentPath(root, name);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      io.error(
-        message.includes('does not exist')
-          ? `Broken memory reference: memory:${name}`
-          : message.includes('escapes root')
-            ? `Memory reference escapes root: memory:${name}`
-            : `Invalid memory reference memory:${name}: ${message}`,
-      );
-      failures += 1;
-    }
   }
   return failures;
 }
@@ -243,7 +229,7 @@ export function validateMemoryRoot(
     safeIo.error(`Memory contains high-confidence secret material: ${path}`);
     failures += 1;
   }
-  failures += validateReferences(root, state.references, safeIo);
+  failures += validateMemoryReferences(root, state.references, entries, safeIo);
   if (failures > 0) throw new Error(`Memory check failed: ${failures} issue(s)`);
   if (!quietSuccess) safeIo.log(`Memory check passed: ${root}`);
 }

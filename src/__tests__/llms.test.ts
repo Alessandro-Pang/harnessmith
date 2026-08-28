@@ -33,6 +33,14 @@ test('llms.txt exposes a complete non-interactive install protocol', () => {
   assert.doesNotMatch(content, /create-coding-agent-harness/);
 });
 
+test('AI installation links resolve the protocol from the same npm release channel', () => {
+  for (const path of ['README.md', 'README.en.md']) {
+    const content = readFileSync(join(root, path), 'utf8');
+    assert.match(content, /https:\/\/unpkg\.com\/harnessmith@latest\/llms\.txt/);
+    assert.doesNotMatch(content, /raw\.githubusercontent\.com\/.+\/main\/llms\.txt/);
+  }
+});
+
 test('public docs distinguish source development from the published npm workflow', () => {
   const llms = readFileSync(join(root, 'llms.txt'), 'utf8');
   const readme = readFileSync(join(root, 'README.md'), 'utf8');
@@ -93,7 +101,7 @@ test('post-install checks are conditional when global memory initialization is s
   );
 });
 
-test('routed prompts grant narrow local Memory Autopilot while keeping authoritative writes gated', () => {
+test('routed prompts keep Memory policy and command contracts with their designated owners', () => {
   const readme = readFileSync(join(root, 'README.md'), 'utf8');
   const english = readFileSync(join(root, 'README.en.md'), 'utf8');
   const agents = readFileSync(join(root, 'template', 'AGENTS.md'), 'utf8');
@@ -126,41 +134,27 @@ test('routed prompts grant narrow local Memory Autopilot while keeping authorita
     'utf8',
   );
 
-  assert.match(agents, /新宿主.*task\/thread.*首动作.*读(?:取)?一次.*`profile\.md`/s);
-  assert.match(agents, /Memory Autopilot/);
-  assert.match(projectMemory, /memory capture-input/);
-  assert.match(projectMemory, /memory handoff/);
-  assert.match(projectMemory, /handoff.*payload.*next.*reason/s);
-  assert.match(projectMemory, /当前压缩快照/);
-  assert.match(projectMemory, /整体重写.*不追加.*流水账/s);
-  assert.match(projectMemory, /写 handoff 前.*当前 handoff.*active task/s);
-  assert.match(projectMemory, /仍然有效.*保留/s);
-  assert.match(projectMemory, /明确.*resolved.*superseded.*删除/s);
-  assert.match(projectMemory, /实质变化.*不写/s);
-  assert.match(projectMemory, /close-handoff/);
-  assert.match(projectMemory, /宿主.*thread.*task.*workstream/s);
-  assert.doesNotMatch(projectMemory, /--content "<verbatim-or-summary>"/);
+  assert.match(agents, /新宿主.*task\/thread.*首个动作.*读取一次.*profile\.md/s);
+  assert.match(agents, /入口层不复制其协议/);
+  assert.match(projectMemory, /long-running-tasks\.md/);
+  assert.match(projectMemory, /harness-cli-architecture\.md/);
+  assert.doesNotMatch(projectMemory, /--consume-payload-file|clearOpen/);
+  assert.match(projectMemory, /typed lesson\/failure/);
   assert.match(projectMemory, /无需逐次询问用户/);
-  assert.match(projectMemory, /`blocked`：.*冲突.*校验失败.*向用户说明/s);
+  assert.match(projectMemory, /blocked.*冲突.*校验失败/s);
   assert.match(readme, /Memory Autopilot/);
   assert.match(english, /Memory Autopilot/);
+  assert.match(architecture, /--consume-payload-file/);
+  assert.match(architecture, /领域命令成功.*才删除文件/s);
   assert.match(architecture, /宿主事件 hook.*尚未提供/s);
   assert.match(architecture, /prompt\/单元测试.*不能替代真实 Host Eval/s);
   assert.match(architecture, /记忆适配闭环.*不是模型权重学习/s);
   assert.match(architecture, /不得自动改写.*prompt.*skill.*规则.*源码/s);
   assert.match(architecture, /host-evals.*eval:validate/s);
   assert.match(manifest, /memory-autopilot/);
-  assert.match(agents, /plan\/backlog.*有后续.*阶段验证完成/s);
-  assert.match(agents, /压缩\/预算.*signal/s);
-  assert.match(agents, /旧快照.*不足恢复.*实质变化/s);
-  assert.match(agents, /写前.*handoff.*active task/s);
-  assert.match(agents, /否则不写/);
-  assert.match(agents, /阶段\/请求\/verifier\/task.*完成\s*≠\s*workstream\s*结束/s);
-  assert.match(
-    agents,
-    /workstream.*结束.*close gate.*当前 turn.*用户明示.*整个 workstream.*结束\/取消.*host 标记 completed\/cancelled.*active task\/plan\/backlog\/open\/next.*无有效项.*close-handoff.*否则不关.*open 空\/sentinel.*验收完成.*非结束信号/s,
-  );
-  assert.match(longRunning, /压缩前.*handoff/s);
+  assert.match(longRunning, /Task ledger.*唯一事实源/s);
+  assert.match(longRunning, /phase.*compaction.*multi-task.*manual/s);
+  assert.match(longRunning, /close-handoff.*completed\|cancelled/s);
   assert.match(longRunning, /同一 session.*原位更新/s);
   assert.match(research, /只有用户授权项目写入且结论已被采纳/);
   assert.match(research, /否则只提交 proposal/);
@@ -217,7 +211,7 @@ test('search documentation records every default scan budget in one authoritativ
   assert.doesNotMatch(english, /defaults to 8 levels, 1,000 files/);
 });
 
-test('distributed prompt entrypoints stay compact and use executable Harness commands', () => {
+test('distributed prompt entrypoints stay readable and use executable Harness commands', () => {
   const agentsPath = join(root, 'template', 'AGENTS.md');
   const docsIndexPath = join(root, 'template', 'agent-harness', 'docs', 'README.md');
   const pending = [join(root, 'template')];
@@ -232,7 +226,9 @@ test('distributed prompt entrypoints stay compact and use executable Harness com
     }
   }
 
-  assert.ok(readFileSync(agentsPath, 'utf8').trimEnd().split('\n').length <= 60);
+  const agentLines = readFileSync(agentsPath, 'utf8').trimEnd().split('\n');
+  assert.ok(agentLines.length <= 140);
+  assert.ok(Math.max(...agentLines.map((line) => line.length)) <= 160);
   assert.ok(readFileSync(docsIndexPath, 'utf8').trimEnd().split('\n').length <= 70);
   for (const path of markdown) {
     const content = readFileSync(path, 'utf8');
@@ -336,7 +332,7 @@ test('distributed rules keep trust and authorization boundaries non-waivable', (
   const llms = readFileSync(join(root, 'llms.txt'), 'utf8');
 
   assert.match(agents, /## 信任与授权/);
-  assert.match(agents, /项目规则只能细化工作方式/);
+  assert.match(agents, /项目规则不能扩权或降低安全边界/);
   assert.doesNotMatch(agents, /更近的项目规则覆盖本文件/);
   assert.match(toolRouting, /不可信数据.*不构成授权/);
   assert.match(operatingModel, /低优先级内容\s+不能授予工具权限或副作用授权/);
@@ -426,9 +422,9 @@ test('distributed rules close project-memory recall, writeback, and promotion lo
   );
 
   assert.match(standard, /启动发现闭环/);
-  assert.match(standard, /沉淀闭环/);
-  assert.match(standard, /`proposed`/);
-  assert.match(standard, /正式提升闭环/);
-  assert.match(standard, /harness\.mjs memory check[\s\S]*--indexed/);
-  assert.match(standard, /harness\.mjs memory maintain/);
+  assert.match(standard, /沉淀与正式提升/);
+  assert.match(standard, /proposed/);
+  assert.match(standard, /实际写入和验证正式事实源/);
+  assert.match(standard, /维护报告默认只读/);
+  assert.match(standard, /全根 schema/);
 });

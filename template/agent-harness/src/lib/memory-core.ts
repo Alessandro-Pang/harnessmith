@@ -6,6 +6,7 @@ import { contentMemoryReferences } from './memory-validation.js';
 export type MemoryCoreSection =
   | 'Active Work'
   | 'Important Inputs'
+  | 'Distilled Memory'
   | 'Recent Handoffs'
   | 'User Profile';
 

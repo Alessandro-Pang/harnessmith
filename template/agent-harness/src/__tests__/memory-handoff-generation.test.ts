@@ -35,7 +35,12 @@ test('an archived handoff remains historical when its base starts the next gener
       .replace(/^session-base: .+\n/m, '')
       .replace(/^handoff-generation: 1\n/m, ''),
   );
-  memoryAutopilot.closeHandoff(runtime, project, { session: options.session }, capturedIo());
+  memoryAutopilot.closeHandoff(
+    runtime,
+    project,
+    { session: options.session, outcome: 'cancelled' },
+    capturedIo(),
+  );
   const archived = archiveMemory(runtime, project, first.reference, {}, capturedIo());
   const archivedBytes = readFileSync(archived, 'utf8');
 
@@ -62,7 +67,7 @@ test('an archived handoff remains historical when its base starts the next gener
   const closed = memoryAutopilot.closeHandoff(
     runtime,
     project,
-    { session: options.session },
+    { session: options.session, outcome: 'cancelled' },
     capturedIo(),
   );
   assert.equal(closed.path, second.path);
@@ -82,7 +87,7 @@ test('a 100-character handoff base continues with a deterministic portable gener
     reason: 'phase' as const,
   };
   const first = memoryAutopilot.captureHandoff(runtime, project, options, capturedIo());
-  memoryAutopilot.closeHandoff(runtime, project, { session }, capturedIo());
+  memoryAutopilot.closeHandoff(runtime, project, { session, outcome: 'cancelled' }, capturedIo());
 
   const second = memoryAutopilot.captureHandoff(
     runtime,
@@ -122,7 +127,12 @@ test('handoff generation identity cannot be claimed as another workstream base',
     reason: 'phase' as const,
   };
   memoryAutopilot.captureHandoff(runtime, project, options, capturedIo());
-  memoryAutopilot.closeHandoff(runtime, project, { session: options.session }, capturedIo());
+  memoryAutopilot.closeHandoff(
+    runtime,
+    project,
+    { session: options.session, outcome: 'cancelled' },
+    capturedIo(),
+  );
   const second = memoryAutopilot.captureHandoff(
     runtime,
     project,
@@ -159,7 +169,12 @@ test('memory validation rejects multiple active generations for one handoff base
     reason: 'phase' as const,
   };
   const first = memoryAutopilot.captureHandoff(runtime, project, options, capturedIo());
-  memoryAutopilot.closeHandoff(runtime, project, { session: options.session }, capturedIo());
+  memoryAutopilot.closeHandoff(
+    runtime,
+    project,
+    { session: options.session, outcome: 'cancelled' },
+    capturedIo(),
+  );
   memoryAutopilot.captureHandoff(
     runtime,
     project,

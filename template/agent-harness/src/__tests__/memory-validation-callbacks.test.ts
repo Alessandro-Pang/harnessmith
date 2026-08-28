@@ -10,6 +10,7 @@ const validationControl = vi.hoisted(() => ({
   documentFailure: undefined as unknown,
   documentLog: '',
   rootLog: '',
+  rootDiagnostic: undefined as string | undefined,
 }));
 
 vi.mock('../lib/memory-validation.js', async (importOriginal) => {
@@ -18,6 +19,12 @@ vi.mock('../lib/memory-validation.js', async (importOriginal) => {
     ...original,
     validateMemoryRoot: (...args: Parameters<typeof original.validateMemoryRoot>) => {
       if (validationControl.rootLog) args[1].log(validationControl.rootLog);
+      if (validationControl.rootDiagnostic) {
+        args[1].error('Display wording may change', {
+          memoryDiagnosticCode: validationControl.rootDiagnostic,
+        });
+        throw new Error('Memory check failed');
+      }
     },
     validateMemoryDocument: (...args: Parameters<typeof original.validateMemoryDocument>) => {
       if (validationControl.documentLog) args[3].log(validationControl.documentLog);
@@ -31,6 +38,7 @@ beforeEach(() => {
   validationControl.documentFailure = undefined;
   validationControl.documentLog = '';
   validationControl.rootLog = '';
+  validationControl.rootDiagnostic = undefined;
 });
 
 function migrationFixture() {
@@ -47,6 +55,16 @@ test('memory preflight ignores informational validator output', () => {
   validationControl.rootLog = 'Memory check passed';
 
   assert.doesNotThrow(() => validateMemoryPreflight('/virtual-memory-root', 'project'));
+});
+
+test('memory preflight classifies repairable failures by diagnostic code, not display text', () => {
+  validationControl.rootDiagnostic = 'input-identity';
+
+  assert.doesNotThrow(() =>
+    validateMemoryPreflight('/virtual-memory-root', 'project', {
+      allowInputIdentityDiagnostics: true,
+    }),
+  );
 });
 
 test('migration post-validation treats warning logs as non-blocking', () => {

@@ -1,3 +1,4 @@
+import { existsSync, lstatSync, rmSync } from 'node:fs';
 import { readBoundedRegularFile } from './bounded-file.js';
 
 const maximumCommandPayloadBytes = 256 * 1024;
@@ -13,17 +14,25 @@ export interface CommandPayloadSchema {
 
 interface CommandLineOptions {
   payloadFile?: unknown;
+  consumePayloadFile?: unknown;
   json?: unknown;
   [key: string]: unknown;
 }
 
-function readPayloadFile(input: string): unknown {
-  const { path, content } = readBoundedRegularFile(input, {
+type PayloadIdentity = ReturnType<typeof readBoundedRegularFile>['identity'];
+const payloadConsumers = new WeakMap<object, () => void>();
+
+function readPayloadFile(input: string): {
+  path: string;
+  value: unknown;
+  identity: PayloadIdentity;
+} {
+  const { path, content, identity } = readBoundedRegularFile(input, {
     maxBytes: maximumCommandPayloadBytes,
     subject: 'Command payload file',
   });
   try {
-    return JSON.parse(content) as unknown;
+    return { path, value: JSON.parse(content) as unknown, identity };
   } catch (error) {
     throw new Error(`Command payload file contains invalid JSON: ${path}`, { cause: error });
   }
@@ -49,7 +58,7 @@ function domainOptions(
   command: string,
   cli: CommandLineOptions,
   schema: CommandPayloadSchema,
-): Record<string, unknown> {
+): { values: Record<string, unknown>; payload?: { path: string; identity: PayloadIdentity } } {
   const allowed = Object.keys(schema.fields);
   const aliases = Object.entries(schema.aliases || {});
   const inline = [...allowed, ...aliases.map(([key]) => key)].filter(
@@ -63,11 +72,11 @@ function domainOptions(
       throw new Error(`${command} --payload-file cannot be combined with inline domain options`);
     }
     const parsed = readPayloadFile(cli.payloadFile);
-    if (!plainObject(parsed))
+    if (!plainObject(parsed.value))
       throw new Error(`${command} payload must be a top-level plain object`);
-    const unknown = Object.keys(parsed).filter((key) => !allowed.includes(key));
+    const unknown = Object.keys(parsed.value).filter((key) => !allowed.includes(key));
     if (unknown.length > 0) throw new Error(`${command} payload has unknown key: ${unknown[0]}`);
-    return parsed;
+    return { values: parsed.value, payload: { path: parsed.path, identity: parsed.identity } };
   }
 
   const resolved: Record<string, unknown> = {};
@@ -75,7 +84,24 @@ function domainOptions(
   for (const [source, target] of aliases) {
     if (cli[source] !== undefined) resolved[target] = cli[source];
   }
-  return resolved;
+  return { values: resolved };
+}
+
+function consumePayload(path: string, expected: PayloadIdentity): void {
+  const current = lstatSync(path);
+  if (
+    current.isSymbolicLink() ||
+    !current.isFile() ||
+    current.dev !== expected.dev ||
+    current.ino !== expected.ino ||
+    current.size !== expected.size ||
+    current.mtimeMs !== expected.mtimeMs ||
+    current.ctimeMs !== expected.ctimeMs
+  ) {
+    throw new Error(`Command payload file changed before consumption: ${path}`);
+  }
+  rmSync(path);
+  if (existsSync(path)) throw new Error(`Command payload file was not consumed: ${path}`);
 }
 
 export function resolveCommandPayload<T extends object>(
@@ -83,7 +109,7 @@ export function resolveCommandPayload<T extends object>(
   cli: CommandLineOptions,
   schema: CommandPayloadSchema,
 ): T & { json?: boolean } {
-  const resolved = domainOptions(command, cli, schema);
+  const { values: resolved, payload } = domainOptions(command, cli, schema);
   for (const [key, value] of Object.entries(resolved)) {
     validateValue(command, key, value, schema.fields[key]);
   }
@@ -98,7 +124,30 @@ export function resolveCommandPayload<T extends object>(
   if (cli.json !== undefined && typeof cli.json !== 'boolean') {
     throw new Error(`${command} --json must be boolean`);
   }
-  return { ...resolved, ...(cli.json === undefined ? {} : { json: cli.json }) } as T & {
+  if (cli.consumePayloadFile !== undefined && typeof cli.consumePayloadFile !== 'boolean') {
+    throw new Error(`${command} --consume-payload-file must be boolean`);
+  }
+  if (cli.consumePayloadFile && !payload) {
+    throw new Error(`${command} --consume-payload-file requires --payload-file`);
+  }
+  const options = { ...resolved, ...(cli.json === undefined ? {} : { json: cli.json }) } as T & {
     json?: boolean;
   };
+  if (cli.consumePayloadFile && payload) {
+    payloadConsumers.set(options, () => consumePayload(payload.path, payload.identity));
+  }
+  return options;
+}
+
+export function executeCommandPayload<T extends object, TResult>(
+  options: T,
+  operation: (resolved: T) => TResult,
+): TResult {
+  const result = operation(options);
+  const consume = payloadConsumers.get(options);
+  if (consume) {
+    consume();
+    payloadConsumers.delete(options);
+  }
+  return result;
 }

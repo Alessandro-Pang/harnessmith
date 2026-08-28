@@ -1,5 +1,10 @@
 import type { InheritedEvaluationSource } from './eval-contract.js';
-import type { ReleaseRiskAcceptance, ReleaseState } from './release-state.js';
+import {
+  evaluationMatrix,
+  type ReleaseRiskAcceptance,
+  type ReleaseState,
+  releaseRiskAcceptanceIsValid,
+} from './release-state.js';
 
 export interface ReleaseAttestation {
   schemaVersion: 2 | 3;
@@ -106,25 +111,13 @@ export function verifyReleaseAttestation(
   const acceptedRisk =
     attestation.assurance === 'maintainer-attested-risk-exception' &&
     attestation.schemaVersion === 3 &&
-    risk?.schemaVersion === 1 &&
-    risk.authorizedBy === 'user' &&
-    Number.isFinite(Date.parse(risk.acceptedAt)) &&
-    risk.reason.trim().length > 0 &&
-    risk.reason.length <= 500 &&
-    risk.packageVersion === subject.packageVersion &&
-    risk.packageArtifactSha256 === subject.artifactSha256 &&
-    Array.isArray(risk.uncoveredScenarios) &&
-    risk.uncoveredScenarios.length > 0 &&
-    new Set(risk.uncoveredScenarios).size === risk.uncoveredScenarios.length &&
-    risk.uncoveredScenarios.every((entry) => {
-      const [host, scenario] = entry.split('/');
-      return (
-        /^(?:codex|cursor|claude-code|opencode)$/u.test(host) &&
-        /^[a-z0-9][a-z0-9-]*$/u.test(scenario) &&
-        subject.requiredHosts.includes(host) &&
-        Object.hasOwn(subject.scenarios, scenario)
-      );
-    });
+    attestation.coverageCount === 0 &&
+    releaseRiskAcceptanceIsValid(
+      risk,
+      subject.artifactSha256,
+      subject.packageVersion,
+      evaluationMatrix(subject.requiredHosts, subject.scenarios),
+    );
   if (!coverageShapeValid || (!fullCoverage && !acceptedRisk) || (fullCoverage && acceptedRisk)) {
     throw new Error('Release attestation does not cover the required Host evaluation matrix');
   }

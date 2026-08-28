@@ -1,6 +1,7 @@
 import { chmodSync, existsSync, lstatSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import writeFileAtomic from 'write-file-atomic';
+import { isAgentName } from '../src/agents.js';
 import type { InheritedEvaluationSource } from './eval-contract.js';
 import { repositoryRoot, requiredEvaluationAdapters } from './eval-fingerprint.js';
 import { readNpmPackageTarball } from './npm-tarball.js';
@@ -39,6 +40,23 @@ export interface ReleaseRiskAcceptance {
   packageArtifactSha256: string;
 }
 
+export function evaluationMatrix(
+  requiredHosts: readonly string[],
+  scenarios: Readonly<Record<string, string>>,
+): string[] {
+  return requiredHosts.flatMap((host) =>
+    Object.keys(scenarios).map((scenario) => `${host}/${scenario}`),
+  );
+}
+
+function isExactStringSet(actual: readonly string[], expected: readonly string[]): boolean {
+  return (
+    actual.length === expected.length &&
+    new Set(actual).size === actual.length &&
+    actual.every((entry) => expected.includes(entry))
+  );
+}
+
 export function releaseStateDirectory(configured?: string): string {
   const directory = resolve(repositoryRoot, configured ?? '.release');
   if (existsSync(directory)) {
@@ -73,6 +91,7 @@ export function releaseRiskAcceptanceIsValid(
   value: unknown,
   artifactSha256: unknown,
   packageVersion: unknown,
+  expectedUncoveredScenarios: readonly string[],
 ): value is ReleaseRiskAcceptance {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const acceptance = value as Partial<ReleaseRiskAcceptance>;
@@ -86,12 +105,12 @@ export function releaseRiskAcceptanceIsValid(
     acceptance.reason.length <= 500 &&
     Array.isArray(acceptance.uncoveredScenarios) &&
     acceptance.uncoveredScenarios.length > 0 &&
-    new Set(acceptance.uncoveredScenarios).size === acceptance.uncoveredScenarios.length &&
-    acceptance.uncoveredScenarios.every(
-      (scenario) =>
-        typeof scenario === 'string' &&
-        /^(?:codex|cursor|claude-code|opencode)\/[a-z0-9][a-z0-9-]*$/u.test(scenario),
-    ) &&
+    isExactStringSet(acceptance.uncoveredScenarios, expectedUncoveredScenarios) &&
+    acceptance.uncoveredScenarios.every((entry) => {
+      if (typeof entry !== 'string') return false;
+      const [host, scenario, extra] = entry.split('/');
+      return !extra && isAgentName(host) && /^[a-z0-9][a-z0-9-]*$/u.test(scenario ?? '');
+    }) &&
     acceptance.packageVersion === packageVersion &&
     acceptance.packageArtifactSha256 === artifactSha256
   );
@@ -146,14 +165,13 @@ function hasValidEvaluation(
       ? !evaluation.riskAcceptance &&
         Number(evaluation.coverageCount) >=
           evaluation.requiredHosts.length * Object.keys(evaluation.scenarios).length
-      : releaseRiskAcceptanceIsValid(evaluation.riskAcceptance, artifactSha256, packageVersion) &&
-        evaluation.riskAcceptance.uncoveredScenarios.every((entry) => {
-          const [host, scenario] = entry.split('/');
-          return (
-            evaluation.requiredHosts?.includes(host) === true &&
-            Object.hasOwn(evaluation.scenarios ?? {}, scenario)
-          );
-        }))
+      : Number(evaluation.coverageCount) === 0 &&
+        releaseRiskAcceptanceIsValid(
+          evaluation.riskAcceptance,
+          artifactSha256,
+          packageVersion,
+          evaluationMatrix(evaluation.requiredHosts, evaluation.scenarios),
+        ))
   );
 }
 

@@ -9,6 +9,15 @@ export const isInside = isPathInside;
 export const maximumMemoryDocumentBytes = 2 * 1024 * 1024;
 const maximumMemoryRootBytes = 64 * 1024 * 1024;
 
+export class MemoryPathError extends Error {
+  constructor(
+    message: string,
+    readonly code: 'non-canonical-reference',
+  ) {
+    super(message);
+  }
+}
+
 const managedTreeLimits = {
   maxDepth: 64,
   maxEntries: 100_000,
@@ -129,7 +138,11 @@ export function readMemoryDocument(path: string): string {
   }).content;
 }
 
-export function memoryDocumentPath(root: string, input: string): string {
+export function memoryDocumentPath(
+  root: string,
+  input: string,
+  entries: readonly ManagedMemoryEntry[] = managedMemoryEntries(root),
+): string {
   const name = input.replace(/^memory:/, '');
   if (!name || isAbsolute(name)) throw new Error(`Invalid memory document path: ${input}`);
   const requestedPath = resolve(root, name.endsWith('.md') ? name : `${name}.md`);
@@ -145,7 +158,7 @@ export function memoryDocumentPath(root: string, input: string): string {
     .replace(/^\.\//, '')
     .normalize('NFC')
     .toLowerCase();
-  const matches = managedMemoryEntries(root).filter(
+  const matches = entries.filter(
     (entry) =>
       entry.kind === 'file' &&
       extname(entry.path) === '.md' &&
@@ -165,7 +178,10 @@ export function memoryDocumentPath(root: string, input: string): string {
   const canonicalRoot = realpathSync.native(root);
   const canonicalReference = memoryReference(canonicalRoot, realpathSync.native(path));
   if (name !== canonicalReference && name !== `${canonicalReference}.md`) {
-    throw new Error(`Memory document reference is not canonical: ${input}`);
+    throw new MemoryPathError(
+      `Memory document reference is not canonical: ${input}`,
+      'non-canonical-reference',
+    );
   }
   return path;
 }

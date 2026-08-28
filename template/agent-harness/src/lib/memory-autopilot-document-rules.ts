@@ -1,6 +1,7 @@
 import { relative, resolve, sep } from 'node:path';
 import type { Io } from '../types.js';
 import { isAtxHeading } from './markdown-heading.js';
+import { reportMemoryDiagnostic } from './memory-diagnostic.js';
 import { validateTypedHandoff } from './memory-handoff-document-rules.js';
 import { type InputSource, inputContentDigest, parseInputBody } from './memory-input.js';
 
@@ -41,7 +42,11 @@ function validateInputDigest(
     parsed.verbatim !== verbatim ||
     stored !== `sha256:${inputContentDigest(parsed.content, source as InputSource, verbatim)}`
   ) {
-    io.error(`Input content digest does not match its payload semantics: ${path}`);
+    reportMemoryDiagnostic(
+      io,
+      'input-identity',
+      `Input content digest does not match its payload semantics: ${path}`,
+    );
     return 1;
   }
   return 0;

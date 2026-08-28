@@ -4,7 +4,9 @@ import { parse } from 'yaml';
 import { isPathInside } from './safe-path.js';
 
 interface ManifestEntry {
+  kind?: unknown;
   path?: unknown;
+  priority?: unknown;
   triggers?: unknown;
 }
 
@@ -14,8 +16,10 @@ interface DocsManifest {
 }
 
 interface DocumentationRoute {
+  kind: 'playbook' | 'topic' | 'standard';
   name: string;
   path: string;
+  priority: number;
   matchedTriggers: string[];
 }
 
@@ -23,6 +27,8 @@ export interface DocumentationRouteReport {
   version: 1;
   query: string[];
   routes: DocumentationRoute[];
+  primaryPlaybook: DocumentationRoute | null;
+  topics: DocumentationRoute[];
 }
 
 function normalizedTerms(query: string[]): string[] {
@@ -48,6 +54,7 @@ function matchesRoutingTerm(trigger: string, term: string): boolean {
   const candidate = normalizeRoutingText(trigger);
   if (!candidate) return false;
   if (candidate === term) return true;
+  if (/\p{Script=Han}/u.test(candidate)) return term.includes(candidate);
   return new RegExp(
     `(?:^|[^\\p{L}\\p{N}])${escapeRegularExpression(candidate)}(?:$|[^\\p{L}\\p{N}])`,
     'u',
@@ -83,6 +90,15 @@ export function routeDocumentation(docsRoot: string, query: string[]): Documenta
     if (typeof rawEntry.path !== 'string' || rawEntry.path.trim() === '') {
       throw new Error(`Documentation manifest entry ${name} has no valid path`);
     }
+    if (!['playbook', 'topic', 'standard'].includes(String(rawEntry.kind))) {
+      throw new Error(`Documentation manifest entry ${name} has no valid kind`);
+    }
+    if (
+      rawEntry.priority !== undefined &&
+      (typeof rawEntry.priority !== 'number' || !Number.isInteger(rawEntry.priority))
+    ) {
+      throw new Error(`Documentation manifest entry ${name} has invalid priority`);
+    }
     if (
       !Array.isArray(rawEntry.triggers) ||
       rawEntry.triggers.some((item) => typeof item !== 'string')
@@ -95,11 +111,29 @@ export function routeDocumentation(docsRoot: string, query: string[]): Documenta
     );
     if (matchedTriggers.length === 0) continue;
     routes.push({
+      kind: rawEntry.kind as DocumentationRoute['kind'],
       name,
       path: routedPath(docsRoot, rawEntry.path),
+      priority: rawEntry.priority ?? 0,
       matchedTriggers,
     });
   }
 
-  return { version: 1, query: terms, routes };
+  const playbooks = routes
+    .filter(({ kind }) => kind === 'playbook')
+    .sort((left, right) => right.priority - left.priority || left.name.localeCompare(right.name));
+  const highest = playbooks[0]?.priority;
+  const highestRanked = playbooks.filter(({ priority }) => priority === highest);
+  if (highestRanked.length > 1) {
+    throw new Error(
+      `Ambiguous documentation playbooks: ${highestRanked.map(({ name }) => name).join(', ')}`,
+    );
+  }
+  return {
+    version: 1,
+    query: terms,
+    routes,
+    primaryPlaybook: playbooks[0] ?? null,
+    topics: routes.filter(({ kind }) => kind !== 'playbook'),
+  };
 }

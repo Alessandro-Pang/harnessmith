@@ -4,21 +4,12 @@ import type { Runtime } from '../types.js';
 import { parseFrontmatter, parseFrontmatterDocument } from './frontmatter.js';
 import { isAtxHeading } from './markdown-heading.js';
 import type { HandoffOptions } from './memory-handoff.js';
-import { assertHandoffSessionId, type HandoffIdentity } from './memory-handoff-identity.js';
-import { assertNoHighConfidenceSecret } from './secret-hygiene.js';
+import type { HandoffIdentity } from './memory-handoff-identity.js';
+import { canonicalHandoffSectionTitles } from './memory-handoff-options.js';
 
-const canonicalSectionTitles = [
-  '当前目标',
-  '已确认事实',
-  '已完成',
-  '关键决策',
-  '验证证据',
-  '未解决事项',
-  '下一步',
-] as const;
-const canonicalHeadingTitles = new Set<string>(canonicalSectionTitles);
+const canonicalHeadingTitles = new Set<string>(canonicalHandoffSectionTitles);
 const recognizedHeadingTitles = new Set<string>([
-  ...canonicalSectionTitles,
+  ...canonicalHandoffSectionTitles,
   '目标',
   '已完成变更',
   '未完成项与风险',
@@ -67,17 +58,6 @@ function existingOpenSection(content: string): string | undefined {
   return [...(canonical ? [canonical] : []), ...legacy].join('\n\n') || undefined;
 }
 
-function assertNoCanonicalHeading(value: string | undefined, option: string): void {
-  if (!value) return;
-  if (
-    value
-      .split(/\r?\n/)
-      .some((line) => [...canonicalHeadingTitles].some((title) => isAtxHeading(line, 1, title)))
-  ) {
-    throw new Error(`Handoff ${option} cannot contain a canonical section heading`);
-  }
-}
-
 function reconciledSection(
   current: string | undefined,
   clear: boolean | undefined,
@@ -121,61 +101,6 @@ function reconciledList(
   return [...new Set(current.map((item) => item.trim()))];
 }
 
-export function assertHandoffOptions(options: HandoffOptions): void {
-  assertNoHighConfidenceSecret(
-    [
-      options.session,
-      options.title,
-      options.objective,
-      options.completed,
-      options.facts || '',
-      options.decisions || '',
-      options.verification || '',
-      options.open || '',
-      options.next,
-      options.reason,
-      options.status,
-      ...(options.scope || []),
-      ...(options.sourceRefs || []),
-    ],
-    'Memory handoff',
-  );
-  assertHandoffSessionId(options.session);
-  for (const [name, value] of Object.entries({
-    session: options.session,
-    title: options.title,
-    objective: options.objective,
-    completed: options.completed,
-    next: options.next,
-    reason: options.reason,
-  })) {
-    if (typeof value !== 'string' || !value.trim()) throw new Error(`Handoff ${name} is required`);
-  }
-  if (/\r|\n/.test(options.title) || /\r|\n/.test(options.next)) {
-    throw new Error('Handoff title and next must each be a single line');
-  }
-  if (options.title.trim().length > 200 || options.next.trim().length > 500) {
-    throw new Error('Handoff title or next exceeds its length limit');
-  }
-  for (const [name, value] of Object.entries({
-    objective: options.objective,
-    completed: options.completed,
-    facts: options.facts,
-    decisions: options.decisions,
-    verification: options.verification,
-    open: options.open,
-    next: options.next,
-  })) {
-    assertNoCanonicalHeading(value, name);
-  }
-  if (!['phase', 'compaction', 'multi-task', 'manual'].includes(options.reason)) {
-    throw new Error(`Invalid handoff checkpoint reason: ${options.reason}`);
-  }
-  if (options.status !== undefined && !['active', 'blocked'].includes(options.status)) {
-    throw new Error(`Invalid handoff status: ${options.status}`);
-  }
-}
-
 export function reconcileHandoffOptions(options: HandoffOptions, existing: string): HandoffOptions {
   const metadata = parseFrontmatter(existing);
   const status = metadata.get('status');
@@ -184,6 +109,9 @@ export function reconcileHandoffOptions(options: HandoffOptions, existing: strin
   }
   return {
     ...options,
+    taskId:
+      options.taskId ??
+      (typeof metadata.get('task-id') === 'string' ? String(metadata.get('task-id')) : undefined),
     status:
       options.status ??
       (existing && (status === 'active' || status === 'blocked') ? status : 'active'),
@@ -246,5 +174,6 @@ export function renderHandoff(
     'session-queryable': false,
     'checkpoint-reason': options.reason,
     'snapshot-mode': 'replace',
+    ...(options.taskId ? { 'task-id': options.taskId } : {}),
   })}# 当前目标\n\n${options.objective.trim()}${optionalSection('已确认事实', options.facts)}\n\n# 已完成\n\n${options.completed.trim()}${optionalSection('关键决策', options.decisions)}${optionalSection('验证证据', options.verification)}${optionalSection('未解决事项', options.open)}\n\n# 下一步\n\n${options.next.trim()}\n`;
 }

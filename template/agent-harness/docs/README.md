@@ -2,7 +2,7 @@
 title: Personal Agent Harness Index
 type: harness-index
 status: active
-updated: 2026-08-22
+updated: 2026-08-28
 ---
 
 # Personal Agent Harness Docs
@@ -44,11 +44,12 @@ updated: 2026-08-22
 
 ## 读取原则
 
-1. 先由任务类型命中一个 playbook，再按其中链接读取最多必要的专题文档。
-2. 项目内存在更具体的 `AGENTS.md`、skill 或文档索引时，优先读取项目事实源。
-3. 检索先返回文件名、标题、元信息或命中段落；只有确认相关后才读取全文。
-4. 本目录保存跨仓、长期、个人级规则和事实导航；单次任务记忆与证据放项目 `.agent-docs/`。
-5. 规则改变时同步更新本索引和 `manifest.yaml`；不要新增没有路由入口的孤儿文档。
+1. 路由返回至多一个 `primaryPlaybook` 和零个或多个 `topics`。先加载 primary playbook，再按任务所需加载 supporting topics。
+2. 最高优先级的 playbook 有多个候选时视为歧义：停止自动选择并向用户澄清，不能靠文档顺序决定。
+3. 项目内存在更具体的 `AGENTS.md`、skill 或文档索引时，优先读取项目事实源。
+4. 检索先返回文件名、标题、元信息或命中段落；只有确认相关后才读取全文。
+5. 本目录保存跨仓、长期、个人级规则和事实导航；单次任务记忆与证据放项目 `.agent-docs/`。
+6. 规则改变时同步更新本索引和 `manifest.yaml`；不要新增没有路由入口的孤儿文档。
 
 ## 最小发现入口
 

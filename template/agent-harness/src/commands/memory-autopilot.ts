@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { parseFrontmatter, updateFrontmatter } from '../lib/frontmatter.js';
 import { escapeCoreLabel, upsertCoreReference } from '../lib/memory-core.js';
 import {
@@ -24,6 +24,7 @@ import {
 import { withProjectMemoryTransaction } from '../lib/project-memory.js';
 import { assertSafePath } from '../lib/safe-path.js';
 import { assertNoHighConfidenceSecret } from '../lib/secret-hygiene.js';
+import { readTask } from '../lib/task-store.js';
 import { assertRuntimeCanMutate, calendarDate } from '../runtime.js';
 import type { Io, Runtime } from '../types.js';
 
@@ -55,6 +56,18 @@ export function captureHandoff(
       const storedUpdated = metadata.get('updated');
       const reference = `memory:${memoryReference(memoryRoot, path)}`;
       const reconciled = reconcileHandoffOptions(options, existing);
+      if (reconciled.taskId) {
+        const task = readTask(dirname(memoryRoot), reconciled.taskId).value;
+        if (['complete', 'superseded'].includes(task.status)) {
+          throw new Error(`Cannot capture a handoff for closed task ${task.id}`);
+        }
+        if (reconciled.next.trim() !== task.nextAction.trim()) {
+          throw new Error(`Handoff next must match task ${task.id} nextAction`);
+        }
+        reconciled.sourceRefs = [
+          ...new Set([...(reconciled.sourceRefs ?? []), `task:${reconciled.taskId}`]),
+        ];
+      }
       let content = renderHandoff(
         runtime,
         reconciled,
@@ -81,7 +94,9 @@ export function captureHandoff(
       const core = upsertCoreReference(
         currentCore,
         'Recent Handoffs',
-        `- ${escapeCoreLabel(options.title.trim())}；next: ${escapeCoreLabel(options.next.trim())}；${reference}`,
+        reconciled.taskId
+          ? `- ${escapeCoreLabel(options.title.trim())}；task: ${escapeCoreLabel(reconciled.taskId)}；${reference}`
+          : `- ${escapeCoreLabel(options.title.trim())}；next: ${escapeCoreLabel(options.next.trim())}；${reference}`,
         reference,
         date,
       );
@@ -113,6 +128,10 @@ export function closeHandoff(
   assertRuntimeCanMutate(runtime);
   assertNoHighConfidenceSecret([project, options.session], 'Memory handoff close request');
   assertHandoffSessionId(options.session);
+  if (!options.outcome) throw new Error('Handoff workstream outcome is required');
+  if (!['completed', 'cancelled'].includes(options.outcome)) {
+    throw new Error(`Invalid handoff workstream outcome: ${String(options.outcome)}`);
+  }
   const memoryRoot = resolveMemoryRoot(runtime, project);
   if (!existsSync(memoryRoot)) throw new Error(`Project memory root does not exist: ${memoryRoot}`);
   return withMemoryLock(memoryRoot, () => {
@@ -127,12 +146,26 @@ export function closeHandoff(
     if (!['active', 'blocked', 'complete'].includes(status)) {
       throw new Error(`Cannot close ${status} handoff: ${options.session}`);
     }
+    const taskId = metadata.get('task-id');
+    if (typeof taskId === 'string') {
+      const task = readTask(dirname(memoryRoot), taskId).value;
+      if (!['complete', 'superseded'].includes(task.status)) {
+        throw new Error(`Cannot close handoff while task ${task.id} is ${task.status}`);
+      }
+    }
+    if (options.outcome === 'completed' && /^# 未解决事项$/mu.test(existing)) {
+      throw new Error('Cannot complete a handoff with unresolved open items');
+    }
     const reference = `memory:${memoryReference(memoryRoot, path)}`;
     const date = calendarDate(runtime);
     const content =
       status === 'complete'
         ? existing
-        : updateFrontmatter(existing, { status: 'complete', updated: date });
+        : updateFrontmatter(existing, {
+            status: 'complete',
+            updated: date,
+            'closed-outcome': options.outcome,
+          });
     const corePath = join(memoryRoot, 'core.md');
     assertSafePath(memoryRoot, corePath);
     const existingCore = readMemoryDocument(corePath);

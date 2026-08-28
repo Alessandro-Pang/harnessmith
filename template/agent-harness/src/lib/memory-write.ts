@@ -11,7 +11,7 @@ import { assertSafePath } from './safe-path.js';
 export interface MemoryWriteResult {
   version: 1;
   action: 'created' | 'updated' | 'unchanged';
-  kind: 'input' | 'episode' | 'profile';
+  kind: 'input' | 'episode' | 'profile' | 'distilled';
   path: string;
   reference: string;
 }

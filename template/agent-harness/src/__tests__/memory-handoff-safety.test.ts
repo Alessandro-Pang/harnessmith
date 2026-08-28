@@ -54,7 +54,12 @@ test('Closing a handoff removes its reference only from Recent Handoffs', () => 
     .replace(`；${first.reference}`, `；${first.reference} related ${second.reference}`);
   writeFileSync(corePath, withOtherRoutes);
 
-  memoryAutopilot.closeHandoff(runtime, project, { session: 'section-thread-1' }, capturedIo());
+  memoryAutopilot.closeHandoff(
+    runtime,
+    project,
+    { session: 'section-thread-1', outcome: 'cancelled' },
+    capturedIo(),
+  );
 
   const core = readFileSync(corePath, 'utf8');
   const activeWork = core.slice(
@@ -355,7 +360,12 @@ test('closing a handoff removes a case-folded active reference alias', () => {
   const alias = `memory:${created.reference.slice('memory:'.length).toUpperCase()}`;
   writeFileSync(corePath, readFileSync(corePath, 'utf8').replace(created.reference, alias));
 
-  memoryAutopilot.closeHandoff(runtime, project, { session: 'case-reference' }, capturedIo());
+  memoryAutopilot.closeHandoff(
+    runtime,
+    project,
+    { session: 'case-reference', outcome: 'cancelled' },
+    capturedIo(),
+  );
 
   assert.doesNotMatch(
     readFileSync(corePath, 'utf8').toLowerCase(),
@@ -382,7 +392,12 @@ test('closing a handoff removes a dot-segment active reference alias', () => {
   const alias = created.reference.replace('memory:sessions/', 'memory:./sessions/');
   writeFileSync(corePath, readFileSync(corePath, 'utf8').replace(created.reference, alias));
 
-  memoryAutopilot.closeHandoff(runtime, project, { session: 'dot-reference' }, capturedIo());
+  memoryAutopilot.closeHandoff(
+    runtime,
+    project,
+    { session: 'dot-reference', outcome: 'cancelled' },
+    capturedIo(),
+  );
 
   assert.doesNotMatch(readFileSync(corePath, 'utf8'), /memory:\.\/sessions\/.*dot-reference/);
 });

@@ -11,9 +11,10 @@ import {
 import { readNpmPackageTarball } from './npm-tarball.js';
 import { type ReleaseCliOptions, releaseOptions } from './release-publish-options.js';
 import { loadReleaseRiskAcceptance } from './release-risk-acceptance.js';
-import type { ReleaseRiskAcceptance } from './release-state.js';
 import {
   checkedPreparedState,
+  evaluationMatrix,
+  type ReleaseRiskAcceptance,
   type ReleaseState,
   readReleaseState,
   releaseStateDirectory,
@@ -109,6 +110,7 @@ function prepareRelease(
         riskAcceptancePath,
         fingerprint.packageVersion,
         fingerprint.packageArtifactSha256,
+        evaluationMatrix(requiredEvaluationAdapters, fingerprint.scenarios),
       );
       for (const script of ['preflight', 'test:coverage']) {
         checkedRun(`Release ${script}`, pnpm, ['run', script], env, runner);

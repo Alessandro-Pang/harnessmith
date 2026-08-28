@@ -1,6 +1,14 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
@@ -46,6 +54,52 @@ test('capture-input accepts payload-only options and keeps --json as an inline o
   const stored = readFileSync(result.path, 'utf8');
   assert.match(stored, /# 可靠摘要/);
   assert.ok(stored.includes(content));
+});
+
+test('payload consumption is explicit and deletes only a successfully validated payload', () => {
+  const { root, project, runtime } = fixture();
+  const consumed = payloadFile(root, 'consume-input.json', {
+    title: 'Consumed payload',
+    content: 'Delete this payload after validation.',
+    source: 'chat',
+  });
+  assert.equal(
+    runCli(
+      ['memory', 'capture-input', project, '--payload-file', consumed, '--consume-payload-file'],
+      { runtime, io: capturedIo() },
+    ),
+    0,
+  );
+  assert.equal(existsSync(consumed), false);
+
+  const invalid = payloadFile(root, 'consume-invalid.json', {
+    content: 'Missing title.',
+    source: 'chat',
+  });
+  assert.throws(
+    () =>
+      runCli(
+        ['memory', 'capture-input', project, '--payload-file', invalid, '--consume-payload-file'],
+        { runtime, io: capturedIo() },
+      ),
+    /requires.*title/i,
+  );
+  assert.equal(existsSync(invalid), true);
+
+  const rejected = payloadFile(root, 'consume-rejected.json', {
+    title: 'Rejected payload',
+    content: 'The schema is valid but the domain command rejects the source.',
+    source: 'unsupported',
+  });
+  assert.throws(
+    () =>
+      runCli(
+        ['memory', 'capture-input', project, '--payload-file', rejected, '--consume-payload-file'],
+        { runtime, io: capturedIo() },
+      ),
+    /invalid input source/i,
+  );
+  assert.equal(existsSync(rejected), true);
 });
 
 test('handoff maps payload sourceRefs into recovery metadata', () => {

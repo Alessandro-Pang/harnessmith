@@ -309,7 +309,7 @@ test('Closing a handoff completes the document and the same base continues in a 
   const result = memoryAutopilot.closeHandoff(
     runtime,
     project,
-    { session: 'thread-1', json: true },
+    { session: 'thread-1', outcome: 'cancelled', json: true },
     capturedIo(),
   );
 
@@ -361,7 +361,7 @@ test('Closing a handoff completes the document and the same base continues in a 
   const closedLatest = memoryAutopilot.closeHandoff(
     runtime,
     project,
-    { session: 'thread-1' },
+    { session: 'thread-1', outcome: 'cancelled' },
     capturedIo(),
   );
   assert.equal(closedLatest.path, continued.path);

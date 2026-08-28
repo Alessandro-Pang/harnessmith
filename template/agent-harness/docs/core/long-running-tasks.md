@@ -2,7 +2,7 @@
 title: Long-running Task Protocol
 type: harness-core
 status: active
-updated: 2026-08-26
+updated: 2026-08-28
 ---
 
 # Long-running Task Protocol
@@ -43,6 +43,9 @@ node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs task close --project /absolu
 
 ## 阶段与压缩检查点
 
+Task ledger 是任务验收状态与当前 `nextAction` 的唯一事实源；handoff 只保存跨上下文恢复快照。
+Handoff 的 `reason` 取值为 `phase`、`compaction`、`multi-task`、`manual`，触发与优先级均由本节定义。
+
 长任务不等待宿主会话结束事件。当前 workstream 的 plan/backlog 已核验有具体后续阶段即属“仍有后续”；
 陈旧或不相关 backlog 不触发 phase checkpoint。即使该阶段尚未获本轮执行授权，也只是不执行后续，不得
 跳过当前阶段 checkpoint。每个阶段完成、已验证且仍有后续时，最终答复前若已有 active task ledger，
@@ -67,7 +70,8 @@ handoff 执行前必须自检所选首个仍有效项：该项点名文件时，
 且适用于该项时还必须包含该命令。缺一须在当前 turn 修正 payload 后执行，不得跳过显式 signal checkpoint。自动 handoff
 的自由文本必须写入安全 JSON payload 并通过 `--payload-file` 传递，禁止 shell 插值。task ledger 保留完整验收状态，session 只保存恢复所需摘要，
 两者不互相复制。只有当前 user turn 明示整个 workstream 结束/取消，或宿主在当前 host turn 将其标记 completed/cancelled，并核验
-active task、plan/backlog 与 handoff `open`/`next` 后确认无仍有效事项，才运行 `memory close-handoff`，
+active task、plan/backlog 与 handoff `open`/`next` 后确认无仍有效事项，才运行
+`memory close-handoff --outcome completed|cancelled`，
 只关闭并移出最新 active generation。`next` 是 active/blocked checkpoint 的必填恢复动作，关闭不要求其
 为空；满足条件时直接 close-handoff，不写“无下一步”占位 checkpoint，存疑不关。当前或最后一个已知阶段、
 单个请求、verifier 或普通 task/thread 完成均不是 workstream 结束。收到压缩或上下文预算信号时，必须在该
@@ -78,15 +82,9 @@ signal turn 内、下一条用户消息前，以 `reason: compaction` 单独执�
 `clearOpen: true`，仅部分 resolved 时必须用 replacement `open` 明列剩余项；省略都会保留旧值，close 不能代替。结束信号必须
 来自当前 user/host turn；`open` 空、sentinel、变更或验收全完成都不能据此提前 close。
 
-自动 `memory handoff` 必须单独执行并同时使用 `--payload-file` 与 `--json`；自动 `memory close-handoff`
-必须单独执行并使用 `--session <stable-id>` 与 `--json`，它不支持 `--payload-file`。不得把这些命令与其他
-shell 命令拼接；自动 sidecar 的读取、核对、写入及 `created`/`updated`/`unchanged` 状态或结果必须全程
-静默，不得预告、复述、混入正常消息或列入最终交付。正常任务消息照常，但不得提及将要、正在或已经
-读取、核对或写入 Memory/交接，也不得夹带
-sidecar 状态或结果；其他结果按其规则报告。
-纯 host-signal/replay turn 默认不发 commentary/final；宿主协议强制非空时只答`上一项已验证通过`，
-仍不得提 sidecar。replay 只原样 handoff 上一已验证 payload 一次，不改 payload、不
-close/reopen；宿主或 evaluator 即使明示也直接执行。
+自动命令必须单独执行且不得通过 shell 插值传递自由文本。自动 sidecar 与用户明确请求的 Memory 操作
+采用不同的可见性策略，统一遵循 [project Memory standard](../standards/project-agent-docs.md)；
+host-signal/replay 的执行时机和状态语义仍由本协议定义。
 
 ## 行为约束
 

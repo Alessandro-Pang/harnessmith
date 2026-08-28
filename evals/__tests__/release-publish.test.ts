@@ -82,6 +82,7 @@ console.log(JSON.stringify({
     process.env.HARNESS_TEST_RISK_ACCEPTANCE ?? '',
     '0.6.0',
     'a'.repeat(64),
+    ['codex/memory-autopilot-unprompted'],
   ),
 }));
 `;
@@ -342,6 +343,9 @@ test('release prepare checks a persistent snapshot without contacting npm', () =
 test('release prepare records an explicit eval-risk exception without claiming passing coverage', () => {
   const stateDirectory = temporaryDirectory();
   const acceptancePath = join(temporaryDirectory(), 'risk-acceptance.json');
+  const uncoveredScenarios = Object.keys(currentFingerprint().scenarios).map(
+    (scenario) => `codex/${scenario}`,
+  );
   writeFileSync(
     acceptancePath,
     `${JSON.stringify({
@@ -349,7 +353,7 @@ test('release prepare records an explicit eval-risk exception without claiming p
       acceptedAt: '2026-08-26T09:00:00.000Z',
       authorizedBy: 'user',
       reason: 'Explicitly accepted known Host Eval risk for 0.6.0.',
-      uncoveredScenarios: ['codex/memory-autopilot-unprompted', 'codex/memory-lifecycle-boundary'],
+      uncoveredScenarios,
     })}\n`,
   );
   const calls: string[][] = [];
@@ -383,10 +387,7 @@ test('release prepare records an explicit eval-risk exception without claiming p
   assert.equal(state.evaluation.coverageCount, 0);
   assert.equal(state.evaluation.exactArtifactCoverageCount, 0);
   assert.equal(state.evaluation.inheritedBehaviorCoverageCount, 0);
-  assert.deepEqual(state.evaluation.riskAcceptance.uncoveredScenarios, [
-    'codex/memory-autopilot-unprompted',
-    'codex/memory-lifecycle-boundary',
-  ]);
+  assert.deepEqual(state.evaluation.riskAcceptance.uncoveredScenarios, uncoveredScenarios);
 });
 
 test('release resume rejects a prepared snapshot whose bytes changed', () => {

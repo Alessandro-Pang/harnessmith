@@ -1,51 +1,71 @@
 version: 1
-updated: 2026-08-25
+updated: 2026-08-28
 root: |-
   {{HARNESS_HOME}}/agent-harness/docs
 principle: progressive-disclosure
 entries:
   operating-model:
+    kind: topic
     path: core/operating-model.md
     triggers: [workflow, ambiguity, evidence, handoff, trust, authorization, prompt-injection, 工作流, 歧义, 证据, 交接, 信任, 授权, 提示词注入]
   tool-routing:
+    kind: topic
     path: core/tool-routing.md
     triggers: [mcp, browser, figma, documentation, connector, search, provenance, 工具, 浏览器, 设计稿, 文档, 连接器, 搜索, 来源]
   safety-and-verification:
+    kind: topic
     path: core/safety-and-verification.md
-    triggers: [permissions, destructive, verification, secrets, 权限, 破坏性操作, 验证, 密钥]
+    triggers: [permissions, destructive, verification, secrets, 权限, 安全, 破坏性操作, 验证, 密钥]
   git-conventions:
+    kind: topic
     path: core/git-conventions.md
     triggers: [git, branch, commit, commitlint, conventional-commits, 分支, 提交, 提交规范]
   harness-cli-architecture:
+    kind: topic
     path: core/harness-cli-architecture.md
     triggers: [harness-cli, install, init, memory-command, memory-autopilot, capture-input, payload-file, handoff, close-handoff, reconcile-profile, forget-profile, profile-autopilot, doctor, health, route, explain, memory-migrate, 安装, 初始化, 记忆命令, 自动记忆, 健康检查, 路由, 记忆迁移]
   long-running-tasks:
+    kind: topic
     path: core/long-running-tasks.md
     triggers: [long-running, multi-stage, verified-phase, phase-handoff, multi-task, checkpoint, compaction, context-budget, acceptance, resume, task-ledger, 长任务, 多阶段, 多阶段任务, 阶段交接, 阶段已验证仍有后续, 多任务, 检查点, 压缩, 上下文预算, 上下文预算信号, 验收, 恢复任务, 任务账本]
   change:
+    kind: playbook
+    priority: 40
     path: playbooks/change.md
     triggers: [implement, modify, refactor, build, 实现, 修改, 重构, 构建]
   diagnose:
+    kind: playbook
+    priority: 50
     path: playbooks/diagnose.md
-    triggers: [debug, bug, incident, ci-failure, 排障, 缺陷, 事故, ci失败]
+    triggers: [debug, bug, incident, ci-failure, 排障, 调试, 缺陷, 事故, ci失败]
   review:
+    kind: playbook
+    priority: 50
     path: playbooks/review.md
-    triggers: [review, audit, risk, 评审, 审计, 风险]
+    triggers: [review, audit, risk, 评审, 审视, 审查, 审计, 风险]
   research-and-design:
+    kind: playbook
+    priority: 30
     path: playbooks/research-and-design.md
     triggers: [research, plan, design, compare, 调研, 计划, 设计, 对比]
   release-and-external:
+    kind: playbook
+    priority: 60
     path: playbooks/release-and-external.md
     triggers: [release, migration, publish, remote-write, 发布, 迁移, 远端写入]
   repository-map:
+    kind: topic
     path: projects/repository-map.md
     triggers: [cross-repository, repository-map, repository-owner, release-order, contract, reconcile, repository-map-check, 跨仓, 仓库关系图, 仓库所有者, 发布顺序, 契约, 自动维护]
   project-agents:
+    kind: standard
     path: standards/project-agents.md
     triggers: [AGENTS.md, project-rules, 项目规则]
   project-agent-docs:
+    kind: standard
     path: standards/project-agent-docs.md
     triggers: [.agent-docs, session, evidence, handoff, multi-stage, verified-phase, phase-handoff, multi-task, compaction, context-budget, close-handoff, memory-autopilot, capture-input, payload-file, memory-list, memory-check, memory-migrate, secret-hygiene, host-evals, 项目记忆, 会话, 多阶段, 多阶段任务, 阶段交接, 阶段已验证仍有后续, 多任务, 压缩, 上下文预算, 上下文预算信号, 自动记忆, 记忆列表, 记忆检查, 记忆迁移, 凭据卫生]
   user-profile-memory:
+    kind: standard
     path: standards/user-profile-memory.md
     triggers: [user-profile, reconcile-profile, forget-profile, profile-autopilot, preference, identity, coding-style, research-interest, 用户画像, 画像合并, 画像暂停, 画像遗忘, 偏好, 身份, 编码风格, 研究兴趣]

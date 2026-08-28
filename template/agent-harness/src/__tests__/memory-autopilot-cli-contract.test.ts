@@ -131,10 +131,22 @@ test('handoff preserves omitted recovery fields, clears them explicitly, and clo
 
   const closed = capturedIo();
   assert.equal(
-    runCli(['memory', 'close-handoff', project, '--session', 'stable-workstream', '--json'], {
-      runtime,
-      io: closed,
-    }),
+    runCli(
+      [
+        'memory',
+        'close-handoff',
+        project,
+        '--session',
+        'stable-workstream',
+        '--outcome',
+        'cancelled',
+        '--json',
+      ],
+      {
+        runtime,
+        io: closed,
+      },
+    ),
     0,
   );
   assert.match(readFileSync(handoffPath, 'utf8'), /^status: complete$/m);

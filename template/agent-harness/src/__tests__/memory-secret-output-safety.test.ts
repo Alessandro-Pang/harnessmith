@@ -199,7 +199,7 @@ test('typed handoff mutations preflight invalid secret-bearing state without cha
     secret,
   );
   expectNoSecretDiagnostic(
-    (io) => closeHandoff(runtime, project, { session: options.session }, io),
+    (io) => closeHandoff(runtime, project, { session: options.session, outcome: 'cancelled' }, io),
     secret,
   );
   assert.equal(readFileSync(handoff.path, 'utf8'), tampered);
@@ -266,7 +266,8 @@ test('typed command request fields reject secrets without echoing their values',
         },
         io,
       ),
-    (io: ReturnType<typeof capturedIo>) => closeHandoff(runtime, project, { session: secret }, io),
+    (io: ReturnType<typeof capturedIo>) =>
+      closeHandoff(runtime, project, { session: secret, outcome: 'cancelled' }, io),
     (io: ReturnType<typeof capturedIo>) =>
       reconcileProfile(
         runtime,

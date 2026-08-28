@@ -10,14 +10,15 @@ import { markdownFiles, readMemoryDocument } from './memory-path.js';
 import { assertSafePath } from './safe-path.js';
 
 export {
-  assertHandoffOptions,
   reconcileHandoffOptions,
   renderHandoff,
 } from './memory-handoff-document.js';
 export { assertHandoffSessionId } from './memory-handoff-identity.js';
+export { assertHandoffOptions } from './memory-handoff-options.js';
 
 export interface HandoffOptions {
   session: string;
+  taskId?: string;
   title: string;
   objective: string;
   completed: string;
@@ -41,6 +42,7 @@ export interface HandoffOptions {
 
 export interface CloseHandoffOptions {
   session: string;
+  outcome?: 'completed' | 'cancelled';
   json?: boolean;
 }
 

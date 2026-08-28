@@ -192,7 +192,12 @@ test('closed typed handoffs retain strict identity after canonical archive', () 
     },
     capturedIo(),
   );
-  closeHandoff(runtime, project, { session: 'archived-handoff' }, capturedIo());
+  closeHandoff(
+    runtime,
+    project,
+    { session: 'archived-handoff', outcome: 'cancelled' },
+    capturedIo(),
+  );
 
   const archived = archiveMemory(runtime, project, created.reference, {}, capturedIo());
 

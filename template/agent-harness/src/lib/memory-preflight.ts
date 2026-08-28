@@ -1,4 +1,5 @@
 import type { MemoryRootKind } from './memory-autopilot-document-rules.js';
+import { type MemoryDiagnosticCode, memoryDiagnosticCode } from './memory-diagnostic.js';
 import { validateMemoryRoot } from './memory-validation.js';
 
 export function validateMemoryPreflight(
@@ -16,36 +17,36 @@ export function validateMemoryPreflight(
     allowHandoffIdentityDiagnostics?: boolean;
   } = {},
 ): void {
-  const diagnostics: string[] = [];
+  const diagnostics: Array<{ message: string; code?: MemoryDiagnosticCode }> = [];
   try {
     validateMemoryRoot(
       root,
       {
         log: () => {},
-        error: (message) => diagnostics.push(String(message)),
+        error: (message, ...optional) =>
+          diagnostics.push({
+            message: String(message),
+            code: optional.map(memoryDiagnosticCode).find(Boolean),
+          }),
       },
       { quietSuccess: true, contentOverrides, rootKind },
     );
   } catch (error) {
-    const nonCanonicalReference = (diagnostic: string) =>
-      /^Invalid memory reference memory:[^:]+: Memory document reference is not canonical: .+$/.test(
-        diagnostic,
-      );
-    const inputIdentity = (diagnostic: string) =>
-      /^(?:Input content digest does not match its payload semantics|Duplicate input identity sha256:[a-f0-9]{64}): /.test(
-        diagnostic,
-      );
-    const handoffIdentity = (diagnostic: string) =>
-      /^Invalid typed handoff canonical path: /.test(diagnostic) ||
-      /^Invalid typed handoff generation identity: /.test(diagnostic) ||
-      nonCanonicalReference(diagnostic);
-    const exclusivelyMatches = (predicate: (diagnostic: string) => boolean) =>
-      diagnostics.length > 0 && diagnostics.every(predicate);
-    const repairableReferences = exclusivelyMatches(nonCanonicalReference);
+    const exclusivelyMatches = (...codes: MemoryDiagnosticCode[]) =>
+      diagnostics.length > 0 &&
+      diagnostics.every(({ code }) => code !== undefined && codes.includes(code));
+    const repairableReferences = exclusivelyMatches('non-canonical-reference');
     if (allowNonCanonicalReferences && repairableReferences) return;
-    if (allowInputIdentityDiagnostics && exclusivelyMatches(inputIdentity)) return;
-    if (allowHandoffIdentityDiagnostics && exclusivelyMatches(handoffIdentity)) return;
-    const details = diagnostics.slice(0, 5).join('; ');
+    if (allowInputIdentityDiagnostics && exclusivelyMatches('input-identity')) return;
+    if (
+      allowHandoffIdentityDiagnostics &&
+      exclusivelyMatches('handoff-identity', 'non-canonical-reference')
+    )
+      return;
+    const details = diagnostics
+      .slice(0, 5)
+      .map(({ message }) => message)
+      .join('; ');
     throw new Error(
       `Memory preflight failed: ${error instanceof Error ? error.message : String(error)}${details ? `; ${details}` : ''}`,
       { cause: error instanceof Error ? error : undefined },

@@ -6,7 +6,9 @@ import { parseFrontmatterDocument } from '../template/agent-harness/src/lib/fron
 import { markdownLinkTargets } from '../template/agent-harness/src/lib/markdown-links.js';
 
 interface ManifestEntry {
+  kind?: unknown;
   path?: unknown;
+  priority?: unknown;
   triggers?: unknown;
 }
 
@@ -67,6 +69,25 @@ export function missingCanonicalRouteIds(manifest: unknown): string[] {
   return CANONICAL_ROUTE_IDS.filter((id) => !Object.hasOwn(routes, id));
 }
 
+export function invalidManifestRouteMetadata(manifest: unknown): string[] {
+  const entries =
+    manifest && typeof manifest === 'object' && !Array.isArray(manifest)
+      ? (manifest as DocsManifest).entries
+      : undefined;
+  if (!entries || typeof entries !== 'object' || Array.isArray(entries)) return [];
+  const kinds = new Set(['playbook', 'topic', 'standard']);
+  return Object.entries(entries as Record<string, ManifestEntry>)
+    .filter(([, entry]) => {
+      if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return true;
+      if (typeof entry.kind !== 'string' || !kinds.has(entry.kind)) return true;
+      if (entry.kind === 'playbook')
+        return !Number.isInteger(entry.priority) || (entry.priority as number) <= 0;
+      return entry.priority !== undefined && !Number.isInteger(entry.priority);
+    })
+    .map(([id]) => id)
+    .sort();
+}
+
 function manifestRoutes(docsRoot: string, manifest: DocsManifest, check: Check): Set<string> {
   check(manifest.version === 1, 'agent-harness docs manifest version must be 1');
   const validEntries =
@@ -75,10 +96,12 @@ function manifestRoutes(docsRoot: string, manifest: DocsManifest, check: Check):
     !Array.isArray(manifest.entries);
   check(validEntries, 'agent-harness docs manifest entries must be an object');
   const entries = validEntries ? (manifest.entries as Record<string, ManifestEntry>) : {};
+  const invalidMetadata = new Set(invalidManifestRouteMetadata(manifest));
   const routed = new Set<string>();
   for (const [name, entry] of Object.entries(entries)) {
     const validEntry = Boolean(entry) && typeof entry === 'object' && !Array.isArray(entry);
     check(validEntry, `docs route ${name} must be an object`);
+    check(!invalidMetadata.has(name), `docs route ${name} has invalid kind or priority`);
     const routePath = validEntry && typeof entry.path === 'string' ? entry.path.trim() : '';
     const triggers = validEntry && Array.isArray(entry.triggers) ? entry.triggers : [];
     check(Boolean(routePath), `docs route ${name} has no path`);

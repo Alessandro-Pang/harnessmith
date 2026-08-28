@@ -188,11 +188,17 @@ test('documentation routing rejects malformed and escaping manifest entries', ()
 
   writeFileSync(manifest, 'entries:\n  invalid: []\n');
   assert.throws(() => routeDocumentation(root, ['review']), /entry invalid must be an object/);
-  writeFileSync(manifest, 'entries:\n  invalid: { triggers: [review] }\n');
+  writeFileSync(manifest, 'entries:\n  invalid: { kind: topic, triggers: [review] }\n');
   assert.throws(() => routeDocumentation(root, ['review']), /has no valid path/);
-  writeFileSync(manifest, 'entries:\n  invalid: { path: guide.md, triggers: review }\n');
+  writeFileSync(
+    manifest,
+    'entries:\n  invalid: { kind: topic, path: guide.md, triggers: review }\n',
+  );
   assert.throws(() => routeDocumentation(root, ['review']), /invalid triggers/);
-  writeFileSync(manifest, 'entries:\n  invalid: { path: ../outside.md, triggers: [review] }\n');
+  writeFileSync(
+    manifest,
+    'entries:\n  invalid: { kind: topic, path: ../outside.md, triggers: [review] }\n',
+  );
   assert.throws(() => routeDocumentation(root, ['review']), /escapes docs root/);
 });
 
@@ -200,7 +206,7 @@ test('documentation routing accepts an in-root filename that starts with two dot
   const root = temporaryRoot();
   writeFileSync(
     join(root, 'manifest.yaml'),
-    'entries:\n  guide: { path: ..guide.md, triggers: [review] }\n',
+    'entries:\n  guide: { kind: topic, path: ..guide.md, triggers: [review] }\n',
   );
   writeFileSync(join(root, '..guide.md'), '# Guide\n');
 
@@ -323,6 +329,13 @@ test('memory document paths reject roots, escapes, and missing files', () => {
   assert.throws(() => memoryDocumentPath(root, ''), /Invalid memory document path/);
   assert.throws(() => memoryDocumentPath(root, '../outside'), /escapes root/);
   assert.throws(() => memoryDocumentPath(root, 'missing'), /does not exist/);
+});
+
+test('memory document lookup reuses a validated managed-entry snapshot', () => {
+  const root = temporaryRoot();
+  writeFileSync(join(root, 'note.md'), 'content');
+
+  assert.throws(() => memoryDocumentPath(root, 'note', []), /does not exist/);
 });
 
 test('task output renders JSON, lists, details, and acceptance criteria', () => {

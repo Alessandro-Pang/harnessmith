@@ -1,12 +1,26 @@
 import type { AgentName } from './types.js';
 import { HarnessmithError } from './types.js';
 
+export const supportedAgentNames = [
+  'codex',
+  'cursor',
+  'claude',
+  'opencode',
+] as const satisfies readonly AgentName[];
+
 export const supportedAgents = [
   { value: 'codex', label: 'Codex', hint: 'global configuration' },
   { value: 'cursor', label: 'Cursor', hint: 'current project' },
   { value: 'claude', label: 'Claude Code', hint: 'global configuration' },
   { value: 'opencode', label: 'OpenCode', hint: 'global configuration' },
 ];
+
+export function isAgentName(value: unknown): value is AgentName {
+  return (
+    typeof value === 'string' &&
+    supportedAgentNames.includes(value as (typeof supportedAgentNames)[number])
+  );
+}
 
 export function collectAgents(value: string, previous: string[] = []): string[] {
   return [

@@ -60,9 +60,9 @@ npx harnessmith --agent all --project /absolute/path/to/repository --dry-run
 > [!NOTE]
 > **使用 LLM 或 coding agent 安装**
 >
-> 将下面的指令直接发送给 AI。它会先读取 [llms.txt](https://raw.githubusercontent.com/Alessandro-Pang/harnessmith/refs/heads/main/llms.txt)，再按照其中的安装流程、目标核对、权限边界和失败处理规范完成安装。
+> 将下面的指令直接发送给 AI。它会先读取 npm `latest` 发布包中的 [llms.txt](https://unpkg.com/harnessmith@latest/llms.txt)，再按照同一发布通道的安装流程、目标核对、权限边界和失败处理规范完成安装。
 >
-> `请先阅读 https://raw.githubusercontent.com/Alessandro-Pang/harnessmith/refs/heads/main/llms.txt，并按照其中的协议为我安装 Harnessmith。`
+> `请先阅读 https://unpkg.com/harnessmith@latest/llms.txt，并按照其中的协议从 npm latest 通道为我安装 Harnessmith。`
 
 ## 支持的 Agent
 
@@ -159,7 +159,8 @@ active/blocked 记忆，`memory maintain` 只读报告未索引、过期 working
 task progress 和 Memory 写命令通过共享 memory-root lock 串行化。
 
 Memory Autopilot 让 Agent 在不反复打扰用户的前提下调用类型化命令：`capture-input --payload-file`
-安全保存重要输入，`handoff` / `close-handoff` 维护未完成工作，`reconcile-profile` / `forget-profile` /
+安全保存重要输入，`capture-experience` 去重维护有来源的 lesson/failure，`handoff` / `close-handoff`
+维护未完成工作，`reconcile-profile` / `forget-profile` /
 `profile-autopilot` 维护可暂停的当前画像。verbatim 输入按原始文本、来源和模式精确去重，可靠摘要按
 规范化文本去重；命令会拒绝
 高置信敏感信息、精确更新索引、校验托管 Memory 并在失败时回滚。所有自动自由文本先由非 shell 文件
@@ -170,7 +171,8 @@ Memory Autopilot 让 Agent 在不反复打扰用户的前提下调用类型化�
 这里的“学习/进化”是可审计的记忆适配，不是模型权重学习，也不允许 Agent 自动改写 prompt、skill、
 规则或源码；这些变化仍需明确授权、评审和验证。
 
-handoff 不依赖宿主结束 hook：阶段已验证且仍有后续、宿主发出上下文压缩/预算信号，或旧快照已不足
+handoff 协议不要求等待宿主结束事件，但当前没有稳定的 session-end/compaction-before hook，因此不能
+机械保证每次压缩前均已写入。阶段已验证且仍有后续、宿主发出上下文压缩/预算信号，或旧快照已不足
 恢复且 `completed/decisions/open/verification/next` 发生实质变化时触发检查。写前读取当前 handoff 与
 active task；只有已证实 resolved/superseded 的内容才清理，模糊状态保留。宿主 thread/task id 优先作为稳定
 session base；同一 workstream 原位替换最新 active generation，不累积聊天流水。工作结束且无后续时关闭并
@@ -279,7 +281,7 @@ npm pack --dry-run
 - [安全策略](./SECURITY.md)
 - [发布流程](./RELEASING.md)
 - [版本记录](./CHANGELOG.md)
-- [LLM 安装协议](https://raw.githubusercontent.com/Alessandro-Pang/harnessmith/refs/heads/main/llms.txt)
+- [LLM 安装协议（npm latest）](https://unpkg.com/harnessmith@latest/llms.txt)
 
 ---
 

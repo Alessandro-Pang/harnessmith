@@ -43,7 +43,7 @@
       ],
       "automatedChecks": [
         "template/agent-harness/src/__tests__/memory.test.ts#memory list, search, and reference validation handle archive and broken references",
-        "src/__tests__/memory-autopilot-prompt.test.ts#memory autopilot prompts require observable quiet and payload-safe behavior"
+        "src/__tests__/memory-autopilot-prompt.test.ts#background sidecars stay quiet while explicit Memory requests remain auditable"
       ]
     },
     {
@@ -147,6 +147,7 @@
       ],
       "forbidden": ["Proposal-only output is not reported as a completed formal promotion."],
       "automatedChecks": [
+        "template/agent-harness/src/__tests__/memory-experience.test.ts#typed experience deduplicates one conclusion and accumulates sourced evidence",
         "template/agent-harness/src/__tests__/memory-lifecycle.test.ts#memory promotion produces a proposal without writing authoritative docs",
         "src/__tests__/llms.test.ts#distributed rules close project-memory recall, writeback, and promotion loops"
       ]
@@ -204,8 +205,8 @@
         "template/agent-harness/src/__tests__/memory-autopilot.test.ts#Handoff snapshots preserve recovery fields unless an update explicitly clears them",
         "template/agent-harness/src/__tests__/memory-autopilot.test.ts#Closing a handoff completes the document and the same base continues in a new generation",
         "template/agent-harness/src/__tests__/memory-input-profile.test.ts#profile autopilot can be paused, still allows forgetting, and resumes explicitly",
-        "src/__tests__/llms.test.ts#routed prompts grant narrow local Memory Autopilot while keeping authoritative writes gated",
-        "src/__tests__/memory-autopilot-prompt.test.ts#memory autopilot prompts require observable quiet and payload-safe behavior"
+        "src/__tests__/llms.test.ts#routed prompts keep Memory policy and command contracts with their designated owners",
+        "src/__tests__/memory-autopilot-prompt.test.ts#background sidecars stay quiet while explicit Memory requests remain auditable"
       ]
     },
     {
@@ -232,7 +233,7 @@
       "automatedChecks": [
         "evals/__tests__/scenarios.test.ts#memory autopilot trigger scenarios isolate phase, multi-task, and cross-task profile recall",
         "template/agent-harness/src/__tests__/memory-autopilot.test.ts#Harness memory autopilot captures input and handoff with indexed documents",
-        "src/__tests__/memory-autopilot-prompt.test.ts#memory autopilot prompts require observable quiet and payload-safe behavior"
+        "src/__tests__/memory-autopilot-prompt.test.ts#background sidecars stay quiet while explicit Memory requests remain auditable"
       ]
     },
     {
@@ -257,7 +258,7 @@
       "automatedChecks": [
         "evals/__tests__/scenarios.test.ts#memory autopilot trigger scenarios isolate phase, multi-task, and cross-task profile recall",
         "template/agent-harness/src/__tests__/memory-autopilot.test.ts#Handoff snapshots preserve recovery fields unless an update explicitly clears them",
-        "src/__tests__/memory-autopilot-prompt.test.ts#memory autopilot prompts require observable quiet and payload-safe behavior"
+        "src/__tests__/memory-autopilot-prompt.test.ts#background sidecars stay quiet while explicit Memory requests remain auditable"
       ]
     },
     {
@@ -281,8 +282,8 @@
       ],
       "automatedChecks": [
         "evals/__tests__/scenarios.test.ts#memory autopilot trigger scenarios isolate phase, multi-task, and cross-task profile recall",
-        "src/__tests__/memory-autopilot-prompt.test.ts#memory autopilot prompts require observable quiet and payload-safe behavior",
-        "src/__tests__/llms.test.ts#routed prompts grant narrow local Memory Autopilot while keeping authoritative writes gated"
+        "src/__tests__/memory-autopilot-prompt.test.ts#background sidecars stay quiet while explicit Memory requests remain auditable",
+        "src/__tests__/llms.test.ts#routed prompts keep Memory policy and command contracts with their designated owners"
       ]
     },
     {

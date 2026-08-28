@@ -1,6 +1,7 @@
 import { relative, sep } from 'node:path';
 import type { Io } from '../types.js';
 import { isAtxHeading } from './markdown-heading.js';
+import { reportMemoryDiagnostic } from './memory-diagnostic.js';
 import { assertHandoffSessionId, handoffIdentityFromMetadata } from './memory-handoff-identity.js';
 
 const handoffSections = [
@@ -102,6 +103,8 @@ export function validateTypedHandoff(
       issues.push(`${heading} content`);
     }
   }
-  for (const issue of issues) io.error(`Invalid typed handoff ${issue}: ${path}`);
+  for (const issue of issues) {
+    reportMemoryDiagnostic(io, 'handoff-identity', `Invalid typed handoff ${issue}: ${path}`);
+  }
   return issues.length;
 }

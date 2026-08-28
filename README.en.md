@@ -63,9 +63,9 @@ After installation, Harnessmith initializes:
 > [!NOTE]
 > **Installing with an LLM or coding agent**
 >
-> Send the prompt below directly to your AI. It will read [llms.txt](https://raw.githubusercontent.com/Alessandro-Pang/harnessmith/refs/heads/main/llms.txt) first, then follow its installation flow, target checks, permission boundaries, and failure-handling rules.
+> Send the prompt below directly to your AI. It will read [llms.txt](https://unpkg.com/harnessmith@latest/llms.txt) from the npm `latest` package first, then follow the installation flow, target checks, permission boundaries, and failure-handling rules from that same release channel.
 >
-> `Read https://raw.githubusercontent.com/Alessandro-Pang/harnessmith/refs/heads/main/llms.txt first, then install Harnessmith for me by following its protocol.`
+> `Read https://unpkg.com/harnessmith@latest/llms.txt first, then install Harnessmith for me from the npm latest channel by following its protocol.`
 
 ## Supported agents
 
@@ -168,7 +168,8 @@ reviewed result is `ready`. Initialization, task-progress updates, and Memory wr
 shared memory-root lock.
 
 Memory Autopilot gives agents typed, low-noise writes without repeated user prompting. `capture-input --payload-file`
-safely stores important input, `handoff` / `close-handoff` maintain unfinished work, and
+safely stores important input, `capture-experience` reconciles sourced lessons and failures,
+`handoff` / `close-handoff` maintain unfinished work, and
 `reconcile-profile` / `forget-profile` / `profile-autopilot` maintain a pausable current profile. Inputs are
 deduplicated by exact text for verbatim input or normalized text for reliable summaries, plus source and mode.
 Commands reject high-confidence secrets, update
@@ -307,7 +308,7 @@ distribution manifest.
 - [Security policy](./SECURITY.md)
 - [Release process](./RELEASING.md)
 - [Changelog](./CHANGELOG.md)
-- [LLM installation protocol](https://raw.githubusercontent.com/Alessandro-Pang/harnessmith/refs/heads/main/llms.txt)
+- [LLM installation protocol (npm latest)](https://unpkg.com/harnessmith@latest/llms.txt)
 
 ---
 

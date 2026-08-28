@@ -8,8 +8,13 @@ import {
   removeProfileEntry,
   setProfileAutopilot,
 } from '../commands/memory-profile.js';
-import { type CommandPayloadSchema, resolveCommandPayload } from '../lib/command-payload.js';
+import {
+  type CommandPayloadSchema,
+  executeCommandPayload,
+  resolveCommandPayload,
+} from '../lib/command-payload.js';
 import type { Io, Runtime } from '../types.js';
+import { registerMemoryExperienceCommand } from './memory-experience.js';
 import { collect } from './task-options.js';
 import type { CommandRunner } from './types.js';
 
@@ -28,6 +33,7 @@ const inputPayloadSchema = {
 const handoffPayloadSchema = {
   fields: {
     session: 'string',
+    taskId: 'string',
     title: 'string',
     objective: 'string',
     completed: 'string',
@@ -73,6 +79,7 @@ function registerProjectAutopilotCommands(
   io: Io,
   run: CommandRunner,
 ): void {
+  registerMemoryExperienceCommand(memory, runtime, io, run);
   memory
     .command('capture-input <scope>')
     .description('capture a typed project input and index it')
@@ -82,22 +89,26 @@ function registerProjectAutopilotCommands(
     .option('--source <source>', 'chat, file, meeting, link, or other')
     .option('--summary', 'mark content as a reliable summary rather than verbatim')
     .option('--payload-file <path>', 'read domain options from a bounded JSON file')
+    .option('--consume-payload-file', 'delete the unchanged payload after schema validation')
     .option('--json', 'write a machine-readable result')
     .action(
-      run((scope: string, options) =>
-        captureInput(
-          runtime,
-          scope,
-          resolveCommandPayload<InputOptions>('memory capture-input', options, inputPayloadSchema),
-          io,
-        ),
-      ),
+      run((scope: string, options) => {
+        const payload = resolveCommandPayload<InputOptions>(
+          'memory capture-input',
+          options,
+          inputPayloadSchema,
+        );
+        return executeCommandPayload(payload, (resolved) =>
+          captureInput(runtime, scope, resolved, io),
+        );
+      }),
     );
 
   memory
     .command('handoff <scope>')
     .description('create or replace an indexed project recovery snapshot')
     .option('--session <id>', 'stable workstream identifier')
+    .option('--task-id <id>', 'task ledger that owns the current next action')
     .option('--title <title>', 'handoff title')
     .option('--objective <objective>', 'current objective')
     .option('--completed <summary>', 'completed work summary')
@@ -119,22 +130,26 @@ function registerProjectAutopilotCommands(
     .option('--clear-scope', 'remove previously captured recovery scope')
     .option('--clear-source-refs', 'remove previously captured source references')
     .option('--payload-file <path>', 'read domain options from a bounded JSON file')
+    .option('--consume-payload-file', 'delete the unchanged payload after schema validation')
     .option('--json', 'write a machine-readable result')
     .action(
-      run((scope: string, options) =>
-        captureHandoff(
-          runtime,
-          scope,
-          resolveCommandPayload<HandoffOptions>('memory handoff', options, handoffPayloadSchema),
-          io,
-        ),
-      ),
+      run((scope: string, options) => {
+        const payload = resolveCommandPayload<HandoffOptions>(
+          'memory handoff',
+          options,
+          handoffPayloadSchema,
+        );
+        return executeCommandPayload(payload, (resolved) =>
+          captureHandoff(runtime, scope, resolved, io),
+        );
+      }),
     );
 
   memory
     .command('close-handoff <scope>')
     .description('close a project recovery snapshot and remove its active index entry')
     .requiredOption('--session <id>', 'stable workstream identifier')
+    .requiredOption('--outcome <outcome>', 'completed or cancelled')
     .option('--json', 'write a machine-readable result')
     .action(run((scope: string, options) => closeHandoff(runtime, scope, options, io)));
 }
@@ -154,19 +169,19 @@ function registerProfileAutopilotCommands(
     .option('--confidence <level>', 'high')
     .option('--user-directed', 'treat this explicit write as directly requested by the user')
     .option('--payload-file <path>', 'read domain options from a bounded JSON file')
+    .option('--consume-payload-file', 'delete the unchanged payload after schema validation')
     .option('--json', 'write a machine-readable result')
     .action(
-      run((options) =>
-        reconcileProfile(
-          runtime,
-          resolveCommandPayload<ProfileOptions>(
-            'memory reconcile-profile',
-            options,
-            reconcileProfilePayloadSchema,
-          ),
-          io,
-        ),
-      ),
+      run((options) => {
+        const payload = resolveCommandPayload<ProfileOptions>(
+          'memory reconcile-profile',
+          options,
+          reconcileProfilePayloadSchema,
+        );
+        return executeCommandPayload(payload, (resolved) =>
+          reconcileProfile(runtime, resolved, io),
+        );
+      }),
     );
 
   memory
@@ -174,19 +189,19 @@ function registerProfileAutopilotCommands(
     .description('remove one canonical profile entry by exact key')
     .option('--key <key>', 'stable profile dimension key')
     .option('--payload-file <path>', 'read domain options from a bounded JSON file')
+    .option('--consume-payload-file', 'delete the unchanged payload after schema validation')
     .option('--json', 'write a machine-readable result')
     .action(
-      run((options) =>
-        removeProfileEntry(
-          runtime,
-          resolveCommandPayload<RemoveProfileOptions>(
-            'memory forget-profile',
-            options,
-            forgetProfilePayloadSchema,
-          ),
-          io,
-        ),
-      ),
+      run((options) => {
+        const payload = resolveCommandPayload<RemoveProfileOptions>(
+          'memory forget-profile',
+          options,
+          forgetProfilePayloadSchema,
+        );
+        return executeCommandPayload(payload, (resolved) =>
+          removeProfileEntry(runtime, resolved, io),
+        );
+      }),
     );
 
   memory

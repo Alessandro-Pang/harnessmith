@@ -2,7 +2,7 @@
 title: Agent Operating Model
 type: harness-core
 status: active
-updated: 2026-08-26
+updated: 2026-08-28
 ---
 
 # Agent Operating Model
@@ -58,19 +58,7 @@ updated: 2026-08-26
 完成不是“文件已修改”，而是：需求落地、相关失败路径处理、验证与风险相称、没有遗留占位、
 文档事实同步、用户改动保持完好。环境不允许验证时，精确列出未验证项和可执行命令。
 
-任务跨会话、验证阶段仍有后续、宿主压缩信号、Agent 判断上下文即将压缩，或当前 handoff 已不足恢复时，
-Memory Autopilot 原位更新 session；仍有效状态保留，只有已证实 resolved/superseded 内容才清理，模糊状态
-保留。关闭采用双闩：只有当前 user turn 明示整个 workstream 结束/取消或宿主在当前 host turn 标记 completed/cancelled，并核验 active
-task、plan/backlog 与 handoff 后确认无有效事项才 close；`next` 不要求其为空，存疑不关。当前或最后一个
-已知阶段、请求、verifier、task 完成都不算 workstream 结束信号；该信号必须来自当前 user/host turn，
-`open` 空、sentinel、变更或验收全完成也不能推断。每次 checkpoint
-提交完整 reconcile 后的累计 `completed`；`next` 优先从当前 `open`、active task、plan/backlog 取首个仍有效项，
-点名文件、命令或动作，已知 verifier 时一并写明；旧 `next` 空泛或与具体已知项冲突时视为无效并替换。
-执行 handoff 前自检所选首个仍有效项：该项点名文件时，`next` 须点名同一文件；仅当 verifier 已知且
-适用于该项时须包含该命令。缺一须在当前 turn 修正后执行，不得跳过显式 signal checkpoint。
-已运行 verifier 时 `verification` 必须更新为当前命令与结果；旧 `open` 全部 resolved 时必须用
-`clearOpen: true`，仅部分 resolved 时必须用 replacement `open` 明列剩余项；省略会保留旧值，close 不能代替。
-确无有效待办且因缺少结束信号不能 close 时，才用固定 sentinel“等待用户给出范围”，不得覆盖
-已知 `open`、plan/backlog 或 `next`。自动自由文本只经安全 `--payload-file`，不得 shell
-插值。新 distilled 未经 typed 流程或当前授权只形成 proposal；长期事实仍提升到 `docs/`、ADR、测试、
-schema、lint 或 CI。
+跨会话任务的 Task/Handoff 状态、检查点触发、reconcile、关闭门禁和宿主信号统一由
+[long-running task protocol](long-running-tasks.md) 定义；本模型只规定“请求完成”不自动等于整个
+workstream 结束。新 distilled 未经 typed 流程或当前授权只形成 proposal；长期事实仍提升到
+`docs/`、ADR、测试、schema、lint 或 CI。

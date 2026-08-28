@@ -311,7 +311,13 @@ test('handoff update and close fail closed when a managed core section is duplic
     /section must appear exactly once.*Recent Handoffs/i,
   );
   assert.throws(
-    () => closeHandoff(runtime, project, { session: 'duplicate-section' }, capturedIo()),
+    () =>
+      closeHandoff(
+        runtime,
+        project,
+        { session: 'duplicate-section', outcome: 'cancelled' },
+        capturedIo(),
+      ),
     /section must appear exactly once.*Recent Handoffs/i,
   );
   assert.equal(readFileSync(corePath, 'utf8'), duplicatedCore);

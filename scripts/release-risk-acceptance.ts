@@ -6,6 +6,7 @@ export function loadReleaseRiskAcceptance(
   path: string,
   packageVersion: string,
   packageArtifactSha256: string,
+  expectedUncoveredScenarios: readonly string[],
 ): ReleaseRiskAcceptance {
   const input = JSON.parse(readFileSync(resolve(path), 'utf8')) as Partial<
     Omit<ReleaseRiskAcceptance, 'packageVersion' | 'packageArtifactSha256'>
@@ -21,7 +22,14 @@ export function loadReleaseRiskAcceptance(
     packageVersion,
     packageArtifactSha256,
   };
-  if (!releaseRiskAcceptanceIsValid(acceptance, packageArtifactSha256, packageVersion)) {
+  if (
+    !releaseRiskAcceptanceIsValid(
+      acceptance,
+      packageArtifactSha256,
+      packageVersion,
+      expectedUncoveredScenarios,
+    )
+  ) {
     throw new Error('Invalid explicit Host Eval risk acceptance');
   }
   return acceptance;

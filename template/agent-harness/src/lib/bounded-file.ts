@@ -9,7 +9,12 @@ interface BoundedFileOptions {
 export function readBoundedRegularFile(
   input: string,
   { maxBytes, subject }: BoundedFileOptions,
-): { path: string; content: string; bytes: number } {
+): {
+  path: string;
+  content: string;
+  bytes: number;
+  identity: { dev: number; ino: number; size: number; mtimeMs: number; ctimeMs: number };
+} {
   if (!Number.isInteger(maxBytes) || maxBytes < 1) {
     throw new Error(`Invalid ${subject} byte limit: ${maxBytes}`);
   }
@@ -50,7 +55,18 @@ export function readBoundedRegularFile(
     ) {
       throw new Error(`${subject} changed while being read: ${path}`);
     }
-    return { path, content: Buffer.concat(chunks, bytes).toString('utf8'), bytes };
+    return {
+      path,
+      content: Buffer.concat(chunks, bytes).toString('utf8'),
+      bytes,
+      identity: {
+        dev: after.dev,
+        ino: after.ino,
+        size: after.size,
+        mtimeMs: after.mtimeMs,
+        ctimeMs: after.ctimeMs,
+      },
+    };
   } finally {
     closeSync(descriptor);
   }
