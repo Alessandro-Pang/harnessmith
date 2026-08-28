@@ -50,5 +50,5 @@ test('writes a readable resource summary without deleting managed resources', ()
 
   assert.match(String(log.mock.calls[0]?.[0]), /1 resource\(s\)/);
   assert.match(String(log.mock.calls[1]?.[0]), /release\/clean-room/);
-  assert.match(String(log.mock.calls[1]?.[0]), new RegExp(workspace.path));
+  assert.equal(String(log.mock.calls[1]?.[0]).includes(workspace.path), true);
 });
