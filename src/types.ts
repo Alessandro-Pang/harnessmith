@@ -1,6 +1,6 @@
 import type { Readable, Writable } from 'node:stream';
 
-export type AgentName = 'codex' | 'cursor' | 'claude' | 'opencode';
+export type AgentName = 'codex' | 'cursor' | 'claude' | 'opencode' | 'kimi';
 export type OutputAction = 'create' | 'replace-managed' | 'conflict';
 export type ManagedStatus = 'managed' | 'modified' | 'missing';
 

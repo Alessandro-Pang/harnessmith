@@ -10,6 +10,8 @@ The embedded Harness schema has its own explicitly recorded version.
 - Add typed input purpose and retention metadata, explicit verbatim/summary capture mode, a transactional
   `memory close-input` lifecycle command, and maintenance reporting for legacy, generic-action, and active
   workstream inputs.
+- Add a Kimi Code CLI adapter that installs global `AGENTS.md` and the embedded Harness under the effective
+  `KIMI_CODE_HOME`, defaulting to `~/.kimi-code`.
 
 ### Changed
 

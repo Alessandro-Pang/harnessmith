@@ -6,6 +6,7 @@ export const supportedAgentNames = [
   'cursor',
   'claude',
   'opencode',
+  'kimi',
 ] as const satisfies readonly AgentName[];
 
 export const supportedAgents = [
@@ -13,6 +14,7 @@ export const supportedAgents = [
   { value: 'cursor', label: 'Cursor', hint: 'current project' },
   { value: 'claude', label: 'Claude Code', hint: 'global configuration' },
   { value: 'opencode', label: 'OpenCode', hint: 'global configuration' },
+  { value: 'kimi', label: 'Kimi Code CLI', hint: 'global configuration' },
 ];
 
 export function isAgentName(value: unknown): value is AgentName {
@@ -38,7 +40,9 @@ export function normalizeAgents(values: string[]): AgentName[] {
     ['2', 'cursor'],
     ['3', 'claude'],
     ['4', 'opencode'],
+    ['5', 'kimi'],
     ['claude-code', 'claude'],
+    ['kimi-code', 'kimi'],
   ]);
   const expanded = values.flatMap((value) =>
     value.toLowerCase() === 'all'

@@ -8,13 +8,15 @@ claims:
   - id: cross-host-distribution
     status: implemented
     owner: outer installer adapters
-    claim: Distribute one Personal Harness across Codex, Cursor, Claude Code, and OpenCode.
+    claim: Distribute one Personal Harness across Codex, Cursor, Claude Code, OpenCode, and Kimi Code CLI.
     implementation:
       - src/adapters.ts
       - src/install.ts
     verification:
       - src/__tests__/install.test.ts
       - src/__tests__/adapters-opencode.test.ts
+      - src/__tests__/adapters-kimi.test.ts
+      - src/__tests__/install-kimi.test.ts
 
   - id: safe-install-lifecycle
     status: implemented
