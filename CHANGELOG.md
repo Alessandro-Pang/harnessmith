@@ -5,6 +5,8 @@ The embedded Harness schema has its own explicitly recorded version.
 
 ## Unreleased
 
+## 0.7.0 - 2026-08-28
+
 ### Added
 
 - Add an OpenCode adapter that installs the global `AGENTS.md` and embedded Harness under the effective
