@@ -6,10 +6,8 @@ export function issueNumberFromBranch(branch: string): string | undefined {
 }
 
 export function validBranchName(branch: string): boolean {
-  return (
-    branch === '' ||
-    ['main', 'master', 'develop'].includes(branch) ||
-    branch.startsWith('dependabot/') ||
-    issueNumberFromBranch(branch) !== undefined
-  );
+  const issueLinked = issueNumberFromBranch(branch) !== undefined;
+  const longLived = ['main', 'master', 'develop'].includes(branch);
+  const automated = branch.startsWith('dependabot/');
+  return branch === '' || longLived || automated || issueLinked;
 }

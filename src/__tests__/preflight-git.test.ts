@@ -3,7 +3,15 @@ import { test } from 'vitest';
 import { validBranchName } from '../../scripts/preflight-git.js';
 
 test('accepts issue-linked branches and long-lived branches', () => {
-  for (const branch of ['main', 'develop', 'feat/12-indexed-search', 'fix/15-clean-temp-files']) {
+  for (const branch of [
+    '',
+    'main',
+    'master',
+    'develop',
+    'dependabot/npm_and_yarn/vitest-4.1.12',
+    'feat/12-indexed-search',
+    'fix/15-clean-temp-files',
+  ]) {
     assert.equal(validBranchName(branch), true, branch);
   }
 });
