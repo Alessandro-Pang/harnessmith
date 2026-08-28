@@ -57,8 +57,52 @@ test('startup rules retain progressive project discovery without copying its com
   assert.ok(profile >= 0 && personal > profile && project > personal);
   assert.match(agents, /发现.*\.agent-docs.*首个.*Memory.*命令.*只读.*输出可见性/s);
   assert.match(agents, /不得.*合并.*其它.*读取/s);
+  assert.match(agents, /rg -n -C 12.*输出可见性.*project-agent-docs\.md/s);
+  assert.match(
+    projectMemory,
+    /metadata.*core\.md.*active\/blocked task.*维护候选.*命中正文.*事实源/s,
+  );
+  assert.match(projectMemory, /每个阶段.*单独命令.*不得.*合并/s);
+  assert.match(
+    projectMemory,
+    /memory list.*--json.*core\.md.*task status.*--project.*--json.*memory maintain.*--json/s,
+  );
+  assert.match(projectMemory, /事实源.*单独命令.*sed.*docs\/architecture/s);
+  assert.match(
+    projectMemory,
+    /contradicted.*supersede.*archive.*expired.*无独有.*archive.*indexed/s,
+  );
   assert.doesNotMatch(agents, /memory list|task status|memory maintain/);
   assert.match(agents, /命中正文.*事实源/s);
+});
+
+test('the bounded first project-memory read contains the complete executable startup contract', () => {
+  const lines = projectMemory.split('\n');
+  const anchor = lines.findIndex(
+    (line) => line.includes('已有 `.agent-docs/`') && line.includes('输出可见性'),
+  );
+  assert.ok(anchor >= 0);
+  const boundedRead = lines.slice(Math.max(0, anchor - 12), anchor + 13).join('\n');
+
+  assert.match(
+    boundedRead,
+    /memory list.*--json.*core\.md.*task status.*--project.*--json.*memory maintain.*--json/s,
+  );
+  assert.match(boundedRead, /完成.*事实源.*前.*禁止.*agent_message.*commentary/s);
+  assert.match(boundedRead, /事实源.*单独命令.*sed.*docs\/architecture/s);
+  assert.match(boundedRead, /memory list.*空输出.*原样重试一次/s);
+  assert.match(boundedRead, /maintain.*全部.*unindexed.*expired.*active\/blocked/s);
+  assert.match(boundedRead, /命中正文.*命令.*完成.*事实源.*新.*单独命令.*不得.*合并/s);
+});
+
+test('the bounded output-visibility read retains the ordinary-sidecar classifier', () => {
+  const lines = projectMemory.split('\n');
+  const anchor = lines.findIndex((line) => line.trim() === '## 输出可见性');
+  assert.ok(anchor >= 0);
+  const boundedRead = lines.slice(Math.max(0, anchor - 12), anchor + 13).join('\n');
+
+  assert.match(boundedRead, /即使触发自动 sidecar.*不等于索要操作/s);
+  assert.match(boundedRead, /prior memory.*preserve expensive finding.*后台 sidecar/s);
 });
 
 test('background sidecars stay quiet while explicit Memory requests remain auditable', () => {
@@ -73,6 +117,13 @@ test('background sidecars stay quiet while explicit Memory requests remain audit
     projectMemory,
     /普通任务.*Memory.*恢复.*检索.*修复.*归档.*校验.*不得.*commentary\/final/s,
   );
+  assert.match(agents, /普通任务.*不得.*action.*path.*validation.*\.agent-docs/s);
+  assert.match(projectMemory, /普通任务.*不得.*action.*path.*validation.*\.agent-docs/s);
+  assert.match(projectMemory, /即使触发自动 sidecar.*不等于索要操作/s);
+  assert.match(projectMemory, /prior memory.*preserve expensive finding.*后台 sidecar/s);
+  assert.match(projectMemory, /普通任务.*final.*不得.*持久保留.*已保存.*归档.*Memory.*校验/s);
+  assert.match(projectMemory, /final.*独立句.*直接陈述.*不.*结论/s);
+  assert.match(projectMemory, /final.*事实本身.*主语.*当前架构边界为.*不.*正式文档确认/s);
 });
 
 test('documentation states the real host-hook and source-of-truth boundaries', () => {
