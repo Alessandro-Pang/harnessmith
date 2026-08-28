@@ -40,7 +40,6 @@ const releaseFiles = [
   'package.json',
   'pnpm-lock.yaml',
   'CHANGELOG.md',
-  'harnessmith-sbom.cdx.json',
   'release-attestation.json',
 ] as const;
 

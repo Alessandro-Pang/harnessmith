@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { chmodSync, copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, beforeEach, test } from 'vitest';
@@ -18,6 +19,7 @@ const inheritedSource = {
   packageVersion: '0.5.0',
   packageArtifactSha256: 'f'.repeat(64),
 };
+const root = join(import.meta.dirname, '..', '..');
 
 let inheritedReleaseArtifact: string | undefined;
 
@@ -52,6 +54,57 @@ function evaluationGate() {
 function release(args: string[], runner: ReleaseRunner): void {
   releaseCandidate(args, runner, evaluationGate);
 }
+
+test('release helpers preserve exact CLI and risk-acceptance contracts in an isolated process', () => {
+  const path = join(temporaryDirectory(), 'risk-acceptance.json');
+  writeFileSync(
+    path,
+    `${JSON.stringify({
+      acceptedAt: '2026-08-26T09:00:00.000Z',
+      authorizedBy: 'user',
+      reason: 'Explicitly accepted known Host Eval risk.',
+      uncoveredScenarios: ['codex/memory-autopilot-unprompted'],
+    })}\n`,
+  );
+  const script = `
+import { releaseOptions } from './scripts/release-publish-options.ts';
+import { loadReleaseRiskAcceptance } from './scripts/release-risk-acceptance.ts';
+let duplicateError = '';
+try {
+  releaseOptions(['--package-artifact', 'first.tgz', '--package-artifact', 'second.tgz']);
+} catch (error) {
+  duplicateError = error instanceof Error ? error.message : String(error);
+}
+console.log(JSON.stringify({
+  options: releaseOptions(['--package-artifact', 'candidate.tgz', '--dry-run']),
+  duplicateError,
+  acceptance: loadReleaseRiskAcceptance(
+    process.env.HARNESS_TEST_RISK_ACCEPTANCE ?? '',
+    '0.6.0',
+    'a'.repeat(64),
+  ),
+}));
+`;
+  const result = spawnSync(process.execPath, ['--import', 'tsx', '--eval', script], {
+    cwd: root,
+    encoding: 'utf8',
+    env: { ...process.env, HARNESS_TEST_RISK_ACCEPTANCE: path },
+  });
+
+  assert.equal(result.status, 0, result.stderr);
+  const output = JSON.parse(result.stdout);
+  assert.deepEqual(output.options, { packageArtifact: 'candidate.tgz', dryRun: true });
+  assert.match(output.duplicateError, /may only be specified once/i);
+  assert.deepEqual(output.acceptance, {
+    schemaVersion: 1,
+    acceptedAt: '2026-08-26T09:00:00.000Z',
+    authorizedBy: 'user',
+    reason: 'Explicitly accepted known Host Eval risk.',
+    uncoveredScenarios: ['codex/memory-autopilot-unprompted'],
+    packageVersion: '0.6.0',
+    packageArtifactSha256: 'a'.repeat(64),
+  });
+});
 
 test('release publish workflow checks and publishes the same candidate tarball', () => {
   const stateDirectory = temporaryDirectory();
@@ -324,7 +377,6 @@ test('release prepare records an explicit eval-risk exception without claiming p
   assert.deepEqual(calls, [
     ['run', 'preflight'],
     ['run', 'test:coverage'],
-    ['run', 'sbom:check'],
   ]);
   const state = JSON.parse(readFileSync(join(stateDirectory, 'release-state.json'), 'utf8'));
   assert.equal(state.schemaVersion, 4);

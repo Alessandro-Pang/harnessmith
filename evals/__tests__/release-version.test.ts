@@ -22,7 +22,6 @@ test('release version prepare promotes Unreleased and produces an exact candidat
   writeFileSync(join(fixture, 'package.json'), '{"name":"fixture","version":"1.2.3"}\n');
   writeFileSync(join(fixture, 'pnpm-lock.yaml'), 'lockfileVersion: 9\n');
   writeFileSync(join(fixture, 'CHANGELOG.md'), '# Changelog\n\n## Unreleased\n\n- Fixed it.\n');
-  writeFileSync(join(fixture, 'harnessmith-sbom.cdx.json'), '{}\n');
   const calls: string[][] = [];
   const runner = (_executable: string, args: string[]) => {
     calls.push(args);
@@ -57,7 +56,7 @@ test('release version prepare promotes Unreleased and produces an exact candidat
   assert.ok(
     calls.some((args) => args.join(' ') === 'version patch --no-git-tag-version --ignore-scripts'),
   );
-  assert.ok(calls.some((args) => args.join(' ') === 'run sbom'));
+  assert.ok(!calls.some((args) => args.some((arg) => /sbom/i.test(arg))));
   assert.ok(calls.some((args) => args.join(' ') === 'run preflight'));
   assert.ok(calls.some((args) => args[0] === 'pack' && args.includes('--ignore-scripts')));
 });
@@ -165,7 +164,7 @@ test('tag publication workflow uses GitHub OIDC and the attested exact candidate
   assert.match(workflow, /npm publish .*\.tgz/);
   assert.match(workflow, /HARNESS_RELEASE_WORKFLOW:\s*['"]1['"]/);
   assert.match(workflow, /pnpm run test:coverage/);
-  assert.match(workflow, /pnpm run sbom:check/);
+  assert.doesNotMatch(workflow, /sbom/i);
   assert.doesNotMatch(workflow, /\+\s+--artifact/);
   assert.doesNotMatch(workflow, /NODE_AUTH_TOKEN|NPM_TOKEN|secrets\./);
 });

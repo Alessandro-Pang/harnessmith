@@ -76,6 +76,6 @@ Node.js 无法提供跨平台 `openat(O_NOFOLLOW)` 等同语义，因此 TOCTOU 
 ## 发布就绪定义
 
 源码与测试达到 Alpha 质量不等于已发布。首次公开发布至少需要：P0 安全回归、`preflight`、覆盖率、
-tarball dry-run、依赖审计、SBOM、真实 CI 记录、当前 release policy 要求的真实宿主 Eval 证据，
+tarball dry-run、依赖审计、真实 CI 记录、当前 release policy 要求的真实宿主 Eval 证据，
 以及正式 Git commit/tag baseline。当前必需宿主为 Codex；Cursor 与 Claude Code 是受支持但非发布
 阻断的可选证据。仓库没有真实运行记录时只能报告“已配置”或“本地通过”，不能报告“跨平台已验证”。

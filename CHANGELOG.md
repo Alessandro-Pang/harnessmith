@@ -5,6 +5,11 @@ The embedded Harness schema has its own explicitly recorded version.
 
 ## Unreleased
 
+### Removed
+
+- Remove the repository-maintained SBOM artifact, generator, tests, and release freshness gate; GitHub's
+  dependency graph continues to derive npm dependency data from the committed manifest and pnpm lockfile.
+
 ## 0.6.0 - 2026-08-26
 
 ### Added

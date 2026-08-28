@@ -46,12 +46,7 @@ interface VersionOptions {
   root?: string;
 }
 
-const releaseFiles = [
-  'package.json',
-  'pnpm-lock.yaml',
-  'CHANGELOG.md',
-  'harnessmith-sbom.cdx.json',
-] as const;
+const releaseFiles = ['package.json', 'pnpm-lock.yaml', 'CHANGELOG.md'] as const;
 
 function checked(
   label: string,
@@ -133,7 +128,6 @@ export function prepareReleaseVersion(
         options.now ?? new Date(),
       ),
     );
-    checked('SBOM generation', pnpm, ['run', 'sbom'], root, runner);
     checked('Release preflight', pnpm, ['run', 'preflight'], root, runner);
     const directory = join(root, '.release');
     mkdirSync(directory, { mode: 0o700, recursive: true });

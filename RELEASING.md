@@ -24,7 +24,7 @@ Publishing is a maintainer-authorized external write. Never publish only because
    ```
 
    This requires a clean `main`, calls `npm version` without creating a commit or tag, promotes the
-   `Unreleased` changelog section, regenerates the SBOM, runs preflight, and writes the exact reproducible npm
+   `Unreleased` changelog section, runs preflight, and writes the exact reproducible npm
    candidate under ignored `.release/` state. A failure restores the versioned source files instead of leaving
    a half-bumped release.
 
@@ -80,7 +80,7 @@ Publishing is a maintainer-authorized external write. Never publish only because
    this public package produces provenance automatically.
 6. Verify actual CI runs on every supported operating system and Node.js version. Workflow configuration
    alone is not evidence that the matrix passed.
-7. Verify the npm package page, executable, README links, tarball contents, SBOM, provenance statement, and
+7. Verify the npm package page, executable, README links, tarball contents, provenance statement, and
    clean-room installation.
 
 The committed attestation is intentionally a small maintainer assertion, not raw Host evidence. Redacted

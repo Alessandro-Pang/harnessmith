@@ -110,7 +110,7 @@ function prepareRelease(
         fingerprint.packageVersion,
         fingerprint.packageArtifactSha256,
       );
-      for (const script of ['preflight', 'test:coverage', 'sbom:check']) {
+      for (const script of ['preflight', 'test:coverage']) {
         checkedRun(`Release ${script}`, pnpm, ['run', script], env, runner);
       }
     } else {
