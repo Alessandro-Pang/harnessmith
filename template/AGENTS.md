@@ -16,12 +16,14 @@
 1. 新宿主 task/thread 的首个动作是静默读取一次 canonical 用户画像
    `{{HARNESS_MEMORY_HOME}}/profile.md`；缺失则继续。
 2. 读取 `{{HARNESS_PERSONAL_HOME}}/AGENTS.md`，再确认 cwd、Git 根、工作树状态和就近项目规则。
-3. 用目录检查确认项目根是否已有 `.agent-docs/`；发现 `.agent-docs/` 后的首个 Memory 命令必须只读
+3. 用目录检查确认项目根是否已有 `.agent-docs/`；发现 `.agent-docs/` 后，首个 Memory 命令必须先读取且只读取
    “输出可见性”，固定使用 `rg -n -C 12 '输出可见性' '{{HARNESS_HOME}}/agent-harness/docs/standards/project-agent-docs.md'`，不得合并其它读取。
    只读取索引命中正文，随后核对代码、配置、测试、manifest、lockfile 和脚本等事实源。
 4. 对修改、诊断、评审、设计、发布、工具、安全、Git、长任务或 CLI 请求，先读取
-   `{{HARNESS_HOME}}/agent-harness/docs/README.md` 并运行文档路由。加载至多一个 `primaryPlaybook` 和完成
-   任务所需的 `topics`；若最高优先级 playbook 存在歧义，停止选择并向用户澄清。
+   `{{HARNESS_HOME}}/agent-harness/docs/README.md` 并运行文档路由。加载至多一个 `primaryPlaybook` 和全部返回的
+   `topics`；若最高优先级 playbook 存在歧义，停止选择并向用户澄清。
+   路由查询保留用户当前原文，不得概括改写而遗漏验收、未来默认、仍有后续或 host-signal 等高损失信号。
+   本地 Harness Memory/画像控制不是宿主产品设置；只用 Harness 文档与 CLI，不加载产品文档、skill 或 web。
 5. 不递归读取整个 `docs/`、`.agent-docs/`、archive、历史会话或全部规则；只有缺失信息会改变权限、范围或结果时才询问用户。
 
 ## 工作与交付
@@ -40,6 +42,7 @@
   可追溯提炼。宿主原生 memory 仅作待核对线索。
 - 项目 Memory 的资格、发现、写入、Task/Handoff、画像和 CLI 细节以路由命中的专题文档为准，入口层不复制其协议。
 - 自动后台 sidecar 保持静默；普通任务中的 Memory 恢复、检索、修复、归档和校验不得出现在 commentary/final，只报告用户任务结果。
+- 纯 host-signal/replay turn：宿主允许空响应时不得发送 `agent_message`；强制响应时只陈述上一用户任务的验证结果，不提 sidecar 动作。
 - 普通任务不得输出 `action`、`path`、`validation` 或任何 `.agent-docs` 路径；只有用户明确请求 Memory 审计时例外。
 - 用户明确请求 Memory 操作、交接、状态或审计时，返回最小可核验结果：`action`、`path`、`validation`；proposed 或 blocked 时说明原因。
 

@@ -81,6 +81,8 @@ signal turn 内、下一条用户消息前，以 `reason: compaction` 单独执�
 已运行适用 verifier 时，`verification` 必须写入当前命令与结果；旧 `open` 全部 resolved 时必须用
 `clearOpen: true`，仅部分 resolved 时必须用 replacement `open` 明列剩余项；省略都会保留旧值，close 不能代替。结束信号必须
 来自当前 user/host turn；`open` 空、sentinel、变更或验收全完成都不能据此提前 close。
+handoff JSON payload 中旧 `open` 全部 resolved 时只接受布尔字段 `clearOpen: true`，不得使用 `clear` 数组、
+空字符串或“No known remaining”等 `open` 占位；首次 mutation 前按此精确字段生成，禁止试错后重试。
 
 自动命令必须单独执行且不得通过 shell 插值传递自由文本。自动 sidecar 与用户明确请求的 Memory 操作
 采用不同的可见性策略，统一遵循 [project Memory standard](../standards/project-agent-docs.md)；

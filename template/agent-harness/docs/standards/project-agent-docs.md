@@ -145,6 +145,10 @@ schema-version: 1
 
 输入模式必须显式选择。`verbatim` 正文只允许用户原始字节，不能加入 Agent 解释；任何补全、概括或上下文
 拼接都必须使用 `summary`，并显示为“可靠摘要”。标题可以概括，但不能用标题或摘要伪造用户原话。
+`capture-input` 的 JSON payload 字段必须严格使用 `title`、`content` 或 `contentFile`、`source`、`mode`、
+`purpose`、`retention`，以及可选的 `workstream`、`scope`、`sourceRefs`；数组字段 `sourceRefs` 必须使用复数，
+不得把 CLI 选项 `--source-ref` 写成 payload 字段 `sourceRef`，也不得试错后重试 mutation。`source` 只接受
+`chat`、`file`、`meeting`、`link`、`other`；当前用户消息固定使用 `chat`，不能写 `user` 或带前缀的变体。
 
 不应写：一次性动作授权、框架常识、容易重新搜索的事实、逐行代码摘要、正式文档的完整副本、无来源猜测，以及密码、
 Token、Cookie、验证码、私钥或未脱敏生产数据。

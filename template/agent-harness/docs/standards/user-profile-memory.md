@@ -112,6 +112,8 @@ node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory profile-autopilot res
 没有新信息时不改写。自动产生的 conclusion 等自由文本必须由非 shell 文件能力写入 JSON payload，并用
 `--payload-file` 传递；禁止把不可信文本做 shell 插值。reconcile payload 只接受 `key`、`conclusion`、
 `evidence`、`confidence` 与可选 `userDirected`，日期由 CLI 维护，不得自行加入 `date` 或其他字段。自动
+reconcile 的 `evidence` 只接受 `explicit` 或 `observed`，不得写用户原话、来源说明或其他解释文本；用户
+明确表达的偏好固定使用 `explicit` 与 `high`，不得先试错再重试 mutation。
 `reconcile-profile` 必须单独执行并带 `--payload-file` 与 `--json`，不得与验证命令拼接。
 `forget-profile` 与 `profile-autopilot` 也必须单独执行并带 `--json`。
 `profile-autopilot: paused` 会机械拒绝自动 reconcile；
