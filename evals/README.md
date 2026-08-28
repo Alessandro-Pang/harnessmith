@@ -1,8 +1,8 @@
 # Harness behavior evaluations
 
 Unit tests prove deterministic file and CLI behavior. This directory defines a separate contract for
-recording a maintainer-observed Codex, Cursor, or Claude Code run against the installed Harness. The current
-release policy requires Codex; Cursor and Claude Code records remain supported optional evidence. A schema
+recording a maintainer-observed Codex, Cursor, Claude Code, or OpenCode run against the installed Harness. The
+current release policy requires Codex; Cursor, Claude Code, and OpenCode records remain supported optional evidence. A schema
 fixture, scenario catalog, mocked transcript, or passing unit test is never real host evidence.
 
 ## Evidence contract
@@ -107,7 +107,7 @@ may remain in the evidence directory, but they are not eligible for current cove
 
 The gate intentionally fails when records are absent, stale, inconclusive, failed, tied to another behavior
 contract, or missing any scenario cell for a host required by the checked-in release policy. The
-current required host is Codex; Cursor and Claude Code can still be validated and retained as optional evidence.
+current required host is Codex; Cursor, Claude Code, and OpenCode can still be validated and retained as optional evidence.
 The gate never launches, authenticates to,
 or spends money on a third-party host. External host execution and evidence capture remain explicit
 maintainer/CI responsibilities.

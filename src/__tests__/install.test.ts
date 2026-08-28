@@ -28,6 +28,7 @@ function execute(root: string, args: string[]): string {
       HOME: root,
       CODEX_HOME: join(root, 'codex-home'),
       CLAUDE_CONFIG_DIR: join(root, 'claude-home'),
+      OPENCODE_CONFIG_DIR: join(root, 'opencode-home'),
       HARNESS_MEMORY_HOME: join(root, 'agent-docs'),
       HARNESS_PERSONAL_HOME: join(root, 'personal-harness'),
       HARNESS_REPOSITORY_ROOT: join(root, 'repos'),
@@ -47,6 +48,7 @@ function executeResult(root: string, args: string[], envOverrides: NodeJS.Proces
       HOME: root,
       CODEX_HOME: join(root, 'codex-home'),
       CLAUDE_CONFIG_DIR: join(root, 'claude-home'),
+      OPENCODE_CONFIG_DIR: join(root, 'opencode-home'),
       HARNESS_MEMORY_HOME: join(root, 'agent-docs'),
       HARNESS_PERSONAL_HOME: join(root, 'personal-harness'),
       HARNESS_REPOSITORY_ROOT: join(root, 'repos'),
@@ -251,9 +253,11 @@ test('dry-run reports destinations without creating agent homes', () => {
   assert.match(output, /"adapter":"codex"/);
   assert.match(output, /"adapter":"cursor"/);
   assert.match(output, /"adapter":"claude"/);
+  assert.match(output, /"adapter":"opencode"/);
   assert.match(output, /"action":"create"/);
   assert.equal(existsSync(join(root, 'codex-home')), false);
   assert.equal(existsSync(join(root, 'claude-home')), false);
+  assert.equal(existsSync(join(root, 'opencode-home')), false);
   assert.equal(existsSync(join(root, 'project', '.cursor')), false);
 });
 
@@ -276,7 +280,7 @@ test('json mode emits parseable automation output without terminal decoration', 
     .map((line) => JSON.parse(line));
   assert.deepEqual(
     plans.map(({ adapter }) => adapter),
-    ['codex', 'cursor', 'claude'],
+    ['codex', 'cursor', 'claude', 'opencode'],
   );
   assert.equal(plans[0].capabilities.scope, 'global');
   assert.equal(plans[1].capabilities.scope, 'project');

@@ -1,6 +1,6 @@
 # Harnessmith
 
-> Harnessmith installs a portable personal coding-agent harness for Codex, Cursor, and Claude Code.
+> Harnessmith installs a portable personal coding-agent harness for Codex, Cursor, Claude Code, and OpenCode.
 > This file is an operational guide for an LLM helping a user install or initialize it.
 
 Project: https://www.npmjs.com/package/harnessmith
@@ -37,12 +37,16 @@ use the published `npx --yes harnessmith` commands below.
   - Harness: `<project>/.cursor/agent-harness`
   - Cursor installation is project-scoped. Resolve `--project` to the intended repository; Harnessmith
     automatically uses its Git root when possible.
+- `opencode`
+  - Instructions: `$OPENCODE_CONFIG_DIR/AGENTS.md` when set
+  - Default instructions: `${XDG_CONFIG_HOME:-~/.config}/opencode/AGENTS.md`
+  - Harness: `agent-harness` under the same effective OpenCode config directory
 
 ## LLM installation protocol
 
 1. Verify the runtime with `node --version`. Stop and explain the requirement if Node.js is older than 24.12.
 2. Determine the exact agent selection from the user's request. Accepted values are `codex`, `cursor`,
-   `claude`, `claude-code`, and `all`. Never infer `all` from an ambiguous request.
+   `claude`, `claude-code`, `opencode`, and `all`. Never infer `all` from an ambiguous request.
 3. If Cursor is selected, determine the intended project path. Ask the user if more than one repository is
    plausible. Prefer an absolute path.
 4. Preview resolved destinations before writing:

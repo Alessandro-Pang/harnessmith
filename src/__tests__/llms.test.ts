@@ -17,6 +17,8 @@ test('llms.txt exposes a complete non-interactive install protocol', () => {
     'Codex',
     'Cursor',
     'Claude Code',
+    'OpenCode',
+    'OPENCODE_CONFIG_DIR',
     '.backup-<timestamp>',
     '--force',
     'conflict',

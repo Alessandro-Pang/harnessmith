@@ -6,7 +6,7 @@ import { currentFingerprint, root, run, temporaryDirectory, writeRun } from './r
 
 function writePassingMatrix(runsDirectory: string, evaluatedAt: string): void {
   const scenarioIds = Object.keys(currentFingerprint().scenarios);
-  for (const adapter of ['codex', 'cursor', 'claude'] as const) {
+  for (const adapter of ['codex', 'cursor', 'claude', 'opencode'] as const) {
     for (const scenarioId of scenarioIds) {
       writeRun(runsDirectory, {
         adapter,

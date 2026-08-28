@@ -57,6 +57,26 @@ function mdcInstructions(content: string): string {
   return `---\ndescription: Personal coding agent harness\nglobs:\nalwaysApply: true\n---\n\n<!-- managed-by: harnessmith -->\n\n${content}`;
 }
 
+function globalMarkdownAdapter(
+  name: AgentName,
+  label: string,
+  home: string,
+  instructionFiles: string[] = ['AGENTS.md'],
+): Adapter {
+  return {
+    name,
+    label,
+    home,
+    harness: join(home, 'agent-harness'),
+    record: join(home, '.harnessmith', 'install.json'),
+    capabilities: adapterCapabilities(name),
+    instructions: instructionFiles.map((file) => ({
+      path: join(home, file),
+      render: plainInstructions,
+    })),
+  };
+}
+
 function gitExcludePath(root: string): { path: string; root: string } | null {
   const commonInspection = inspectGit(root, ['rev-parse', '--git-common-dir']);
   if (!commonInspection.ok) {
@@ -91,30 +111,16 @@ export function createAdapter(
   const home = canonicalPath(env.HOME || homedir());
   if (name === 'codex') {
     const agentHome = canonicalPath(env.CODEX_HOME || join(home, '.codex'));
-    return {
-      name,
-      label: 'Codex',
-      home: agentHome,
-      harness: join(agentHome, 'agent-harness'),
-      record: join(agentHome, '.harnessmith', 'install.json'),
-      capabilities: adapterCapabilities(name),
-      instructions: [{ path: join(agentHome, 'AGENTS.md'), render: plainInstructions }],
-    };
+    return globalMarkdownAdapter(name, 'Codex', agentHome);
   }
   if (name === 'claude') {
     const agentHome = canonicalPath(env.CLAUDE_CONFIG_DIR || join(home, '.claude'));
-    return {
-      name,
-      label: 'Claude Code',
-      home: agentHome,
-      harness: join(agentHome, 'agent-harness'),
-      record: join(agentHome, '.harnessmith', 'install.json'),
-      capabilities: adapterCapabilities(name),
-      instructions: [
-        { path: join(agentHome, 'AGENTS.md'), render: plainInstructions },
-        { path: join(agentHome, 'CLAUDE.md'), render: plainInstructions },
-      ],
-    };
+    return globalMarkdownAdapter(name, 'Claude Code', agentHome, ['AGENTS.md', 'CLAUDE.md']);
+  }
+  if (name === 'opencode') {
+    const configRoot = canonicalPath(env.XDG_CONFIG_HOME || join(home, '.config'));
+    const agentHome = canonicalPath(env.OPENCODE_CONFIG_DIR || join(configRoot, 'opencode'));
+    return globalMarkdownAdapter(name, 'OpenCode', agentHome);
   }
   if (name === 'cursor') {
     const root = projectRoot(project);

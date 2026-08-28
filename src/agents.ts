@@ -5,6 +5,7 @@ export const supportedAgents = [
   { value: 'codex', label: 'Codex', hint: 'global configuration' },
   { value: 'cursor', label: 'Cursor', hint: 'current project' },
   { value: 'claude', label: 'Claude Code', hint: 'global configuration' },
+  { value: 'opencode', label: 'OpenCode', hint: 'global configuration' },
 ];
 
 export function collectAgents(value: string, previous: string[] = []): string[] {
@@ -22,6 +23,7 @@ export function normalizeAgents(values: string[]): AgentName[] {
     ['1', 'codex'],
     ['2', 'cursor'],
     ['3', 'claude'],
+    ['4', 'opencode'],
     ['claude-code', 'claude'],
   ]);
   const expanded = values.flatMap((value) =>

@@ -90,7 +90,7 @@ export function releaseRiskAcceptanceIsValid(
     acceptance.uncoveredScenarios.every(
       (scenario) =>
         typeof scenario === 'string' &&
-        /^(?:codex|cursor|claude-code)\/[a-z0-9][a-z0-9-]*$/u.test(scenario),
+        /^(?:codex|cursor|claude-code|opencode)\/[a-z0-9][a-z0-9-]*$/u.test(scenario),
     ) &&
     acceptance.packageVersion === packageVersion &&
     acceptance.packageArtifactSha256 === artifactSha256

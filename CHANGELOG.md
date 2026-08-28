@@ -5,6 +5,11 @@ The embedded Harness schema has its own explicitly recorded version.
 
 ## Unreleased
 
+### Added
+
+- Add an OpenCode adapter that installs the global `AGENTS.md` and embedded Harness under the effective
+  OpenCode config root, honoring `OPENCODE_CONFIG_DIR` and `XDG_CONFIG_HOME`.
+
 ### Changed
 
 - Avoid duplicate typecheck, build, preflight, and full unit-test execution in release verification, and keep

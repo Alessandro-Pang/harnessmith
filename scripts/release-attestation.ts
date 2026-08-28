@@ -119,7 +119,7 @@ export function verifyReleaseAttestation(
     risk.uncoveredScenarios.every((entry) => {
       const [host, scenario] = entry.split('/');
       return (
-        /^(?:codex|cursor|claude-code)$/u.test(host) &&
+        /^(?:codex|cursor|claude-code|opencode)$/u.test(host) &&
         /^[a-z0-9][a-z0-9-]*$/u.test(scenario) &&
         subject.requiredHosts.includes(host) &&
         Object.hasOwn(subject.scenarios, scenario)
