@@ -64,7 +64,18 @@ Agent 不应因为进入一个项目就创建 `.agent-docs/`：
 
 已有 `.agent-docs/` 时，任何 commentary 前先单独读取本文件的“输出可见性”段。发现 `.agent-docs/` 后的
 首个 Memory 命令必须且只能读取该段，不得与画像、个人规则、其它 Harness 文档、项目索引或正文合并；
-随后再按独立阶段执行：
+随后严格用已解析的 `<harness>` CLI 前缀和项目根 `.` 执行以下独立命令：
+
+`<harness> memory list . --json`
+`sed -n '1,260p' .agent-docs/core.md`
+`<harness> task status --project . --json`
+`<harness> memory maintain . --json`
+`memory list` 遇到空输出或非 JSON 时原样重试一次；不得猜测 `report`、`project` 或插入 `--help`。
+`maintain` 后读取其全部 unindexed、expired 及相关 active/blocked 正文；命中正文命令完成后，事实源必须由
+新的单独命令读取，且只读 `sed -n '1,260p' docs/architecture.md`，不得合并。
+完成命中正文与事实源核对前，禁止发送任何 agent_message/commentary。
+
+完整阶段如下：
 
 1. 用直接文件系统检查确认绝对项目根下的 `.agent-docs/`；不能因 Git、`rg` 或普通索引未命中而判不存在。
 2. 获取不含正文的名称、type、status、updated 列表；无效 JSON 只重试一次，之后标为 `inconclusive`。
@@ -72,8 +83,20 @@ Agent 不应因为进入一个项目就创建 `.agent-docs/`：
 4. 读取与当前目标、路径或关键词命中的 active/blocked 正文；仅同阶段多篇正文可用只读 `&&`，禁用 `;`。
 5. 用当前代码、测试、契约或正式文档复核结论；失败不越级，不递归读取 archive 或全部历史。
 
+上述顺序固定为 metadata → `core.md` → active/blocked task → 维护候选 → 命中正文 → 事实源。每个阶段
+使用单独命令，不得合并，也不得在这些阶段之间插入 `--help` 或再次路由；前一阶段未完成时不进入下一阶段。
+前四阶段不得用 `find`、`rg` 或手工 frontmatter 扫描替代 Harness 报告。
+
+维护候选中的 unindexed、expired 与 active/blocked 条目只要和当前任务相关，就都属于命中正文；全部读取后
+才能核对事实源和发送首条 commentary。
+
+事实源阶段读取正式事实后再进行其它源码检索，不得把正式事实源读取与 `rg`、文件枚举或其它检查合并在
+同一命令中。
+
 未索引或过期不等于无效。仍有恢复价值的条目先修复索引；只有已核验为 contradicted、expired 且无独有
 恢复价值的普通记忆，才可进入可恢复归档候选。
+对已核验为 contradicted 的 active/blocked 条目，必须先 `supersede` 再 `archive`；对 expired 且无独有
+恢复价值的条目执行 `archive`。修复完成后运行 `memory check <project> --indexed --json` 验证索引闭环。
 
 ## 元信息
 
@@ -134,11 +157,21 @@ Token、Cookie、验证码、私钥或未脱敏生产数据。
 
 ## 输出可见性
 
+即使触发自动 sidecar，也不等于索要操作、状态或审计。用户要求使用 `prior memory` 或
+`preserve expensive finding` 只触发后台 sidecar，不构成显式 Memory 审计请求。
+
 自动后台 sidecar 的恢复、检索、写入、校验和维护状态保持静默，不预告、不混入普通 commentary/final，
 也不把“已保留”“已归档”“已校验”改写成用户任务结果。
 
 普通任务中的 Memory 恢复、检索、修复、归档和校验均属后台 sidecar，不得出现在 commentary/final；
 即使 Memory 支撑了结论，也只报告经事实源核对后的用户任务结果。
+普通任务的 final 不得提及“持久保留”“已保存”“归档”、Memory 写入或 Memory 校验，也不得用近义表述披露
+后台 sidecar 的维护结果。
+普通任务的 final 应以独立句直接陈述经事实源核对的结论，不把“结论：”等标签和事实断言写在同一句中。
+final 应以事实本身作主语，例如“当前架构边界为 `<verified relation>`”；不要写成“正式文档确认边界为…”，
+来源另列为证据。
+普通任务不得输出 `action`、`path`、`validation` 或任何 `.agent-docs` 路径；仅当用户明确请求 Memory
+操作、交接、状态、审计或变更清单时才输出这些审计字段。
 
 用户明确请求 Memory 操作、交接、状态、审计或变更清单时，不套用后台静默规则；返回最小可核验结果：
 `action`、`path`、`validation`。字段名必须原样输出为 `action`、`path`、`validation`；即使存在多个正式
