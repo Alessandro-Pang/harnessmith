@@ -36,8 +36,9 @@ The gate does not launch or authenticate to any third-party host. 真实宿主�
 
 ## Adapter 能力契约
 
-`createAdapter()` 产生的每个 Adapter 都带有机器可读 `capabilities`，并出现在 dry-run、install
-result 与 status JSON 中。
+`src/adapter-registry.ts` 是宿主身份与 capability 的单一清单；`createAdapter()` 解析路径后挂上同一
+份 `capabilities`，并出现在 dry-run、install result 与 status JSON 中。CLI `all` 展开、交互选择、
+capabilities 输出与 Eval `host.adapter` 枚举都从该清单派生或与之对齐。
 
 | Adapter | Scope | Instruction format | Native activation | Instruction enforcement | Permissions |
 | --- | --- | --- | --- | --- | --- |

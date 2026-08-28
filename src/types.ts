@@ -1,6 +1,7 @@
 import type { Readable, Writable } from 'node:stream';
+import type { AgentName } from './adapter-registry.js';
 
-export type AgentName = 'codex' | 'cursor' | 'claude' | 'opencode';
+export type { AgentName };
 export type OutputAction = 'create' | 'replace-managed' | 'conflict';
 export type ManagedStatus = 'managed' | 'modified' | 'missing';
 

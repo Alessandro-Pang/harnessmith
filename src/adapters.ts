@@ -1,29 +1,33 @@
 import { existsSync, statSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { getAdapterDefinition, type AgentName } from './adapter-registry.js';
 import { type GitInspection, inspectGit } from './git-inspection.js';
+import {
+  instructionRenderer,
+  renderMarkdownInstructions,
+  renderMdcInstructions,
+} from './instruction-formats.js';
 import { canonicalPath, isPathInside } from './safe-path.js';
-import type { Adapter, AdapterCapabilities, AgentName } from './types.js';
+import type { Adapter, AdapterCapabilities } from './types.js';
 import { HarnessmithError } from './types.js';
 
 export { inspectGit, resolveGitExecutable } from './git-inspection.js';
+
+interface AdapterResolveContext {
+  env: NodeJS.ProcessEnv;
+  project: string;
+  userHome: string;
+}
+
+type AdapterResolver = (context: AdapterResolveContext) => Adapter;
 
 function gitInspectionError(action: string, result: Exclude<GitInspection, { ok: true }>): never {
   throw new HarnessmithError('INTEGRITY_ERROR', `Unable to ${action}: ${result.message}`, 3);
 }
 
 export function adapterCapabilities(name: AgentName): AdapterCapabilities {
-  const cursor = name === 'cursor';
-  return {
-    scope: cursor ? 'project' : 'global',
-    instructionFormat: cursor ? 'mdc' : 'markdown',
-    nativeRuleActivation: cursor ? 'always' : 'host-default',
-    enforcement: {
-      fileOwnership: 'harnessmith',
-      instructions: 'advisory',
-      permissions: 'host-owned',
-    },
-  };
+  return getAdapterDefinition(name).capabilities;
 }
 
 function projectRoot(input: string): string {
@@ -49,30 +53,23 @@ function projectRoot(input: string): string {
   return gitInspectionError('resolve the project Git root', inspection);
 }
 
-function plainInstructions(content: string): string {
-  return `<!-- managed-by: harnessmith -->\n\n${content}`;
-}
-
-function mdcInstructions(content: string): string {
-  return `---\ndescription: Personal coding agent harness\nglobs:\nalwaysApply: true\n---\n\n<!-- managed-by: harnessmith -->\n\n${content}`;
-}
-
 function globalMarkdownAdapter(
   name: AgentName,
-  label: string,
   home: string,
   instructionFiles: string[] = ['AGENTS.md'],
 ): Adapter {
+  const definition = getAdapterDefinition(name);
+  const render = instructionRenderer(definition.capabilities.instructionFormat);
   return {
     name,
-    label,
+    label: definition.label,
     home,
     harness: join(home, 'agent-harness'),
     record: join(home, '.harnessmith', 'install.json'),
-    capabilities: adapterCapabilities(name),
+    capabilities: definition.capabilities,
     instructions: instructionFiles.map((file) => ({
       path: join(home, file),
-      render: plainInstructions,
+      render,
     })),
   };
 }
@@ -101,6 +98,90 @@ function gitExcludePath(root: string): { path: string; root: string } | null {
   return { path, root: commonRoot };
 }
 
+function resolveCodexAdapter({ env, userHome }: AdapterResolveContext): Adapter {
+  const agentHome = canonicalPath(env.CODEX_HOME || join(userHome, '.codex'));
+  return globalMarkdownAdapter('codex', agentHome);
+}
+
+function resolveClaudeAdapter({ env, userHome }: AdapterResolveContext): Adapter {
+  const agentHome = canonicalPath(env.CLAUDE_CONFIG_DIR || join(userHome, '.claude'));
+  return globalMarkdownAdapter('claude', agentHome, ['AGENTS.md', 'CLAUDE.md']);
+}
+
+function resolveOpenCodeAdapter({ env, userHome }: AdapterResolveContext): Adapter {
+  const configRoot = canonicalPath(env.XDG_CONFIG_HOME || join(userHome, '.config'));
+  const agentHome = canonicalPath(env.OPENCODE_CONFIG_DIR || join(configRoot, 'opencode'));
+  return globalMarkdownAdapter('opencode', agentHome);
+}
+
+function resolveCursorAdapter({ project }: AdapterResolveContext): Adapter {
+  const definition = getAdapterDefinition('cursor');
+  const root = projectRoot(project);
+  const agentHome = join(root, '.cursor');
+  const excludePath = gitExcludePath(root);
+  return {
+    name: 'cursor',
+    label: definition.label,
+    home: agentHome,
+    project: root,
+    harness: join(agentHome, 'agent-harness'),
+    record: join(agentHome, '.harnessmith', 'install.json'),
+    capabilities: definition.capabilities,
+    instructions: [
+      { path: join(agentHome, 'AGENTS.md'), render: renderMarkdownInstructions },
+      { path: join(agentHome, 'rules', 'agent-harness.mdc'), render: renderMdcInstructions },
+    ],
+    localIgnoreFiles: [
+      ...(excludePath
+        ? [
+            {
+              path: excludePath.path,
+              root: excludePath.root,
+              preserveEmpty: true,
+              lines: [
+                '/.cursor/agent-harness/',
+                '/.cursor/AGENTS.md',
+                '/.cursor/.harnessmith/',
+                '/.cursor/.harnessmith-stage-*',
+                '/.cursor/.harnessmith-restore-*',
+                '/.cursor/.harnessmith-operation.lock',
+                '/.cursor/.ignore',
+                '/.cursor/rules/agent-harness.mdc',
+                '/.cursor/*.backup-*',
+                '/.cursor/rules/agent-harness.mdc.backup-*',
+              ],
+            },
+          ]
+        : []),
+      {
+        path: join(agentHome, '.ignore'),
+        lines: [
+          '/agent-harness/',
+          '/AGENTS.md',
+          '/.harnessmith/',
+          '/.harnessmith-stage-*',
+          '/.harnessmith-restore-*',
+          '/.harnessmith-operation.lock',
+          '/rules/agent-harness.mdc',
+          '/*.backup-*',
+          '/rules/agent-harness.mdc.backup-*',
+        ],
+      },
+    ],
+  };
+}
+
+/**
+ * Exhaustive resolver map: adding a registry entry without a path resolver fails typecheck.
+ * Host-specific paths and env vars remain here; the registry stays host-identity only.
+ */
+const adapterResolvers = {
+  codex: resolveCodexAdapter,
+  cursor: resolveCursorAdapter,
+  claude: resolveClaudeAdapter,
+  opencode: resolveOpenCodeAdapter,
+} as const satisfies Record<AgentName, AdapterResolver>;
+
 export function createAdapter(
   name: AgentName,
   {
@@ -108,74 +189,13 @@ export function createAdapter(
     project = process.cwd(),
   }: { env?: NodeJS.ProcessEnv; project?: string } = {},
 ): Adapter {
-  const home = canonicalPath(env.HOME || homedir());
-  if (name === 'codex') {
-    const agentHome = canonicalPath(env.CODEX_HOME || join(home, '.codex'));
-    return globalMarkdownAdapter(name, 'Codex', agentHome);
+  const resolver = adapterResolvers[name];
+  if (!resolver) {
+    throw new HarnessmithError('CLI_USAGE', `Unsupported agent: ${name}`, 2);
   }
-  if (name === 'claude') {
-    const agentHome = canonicalPath(env.CLAUDE_CONFIG_DIR || join(home, '.claude'));
-    return globalMarkdownAdapter(name, 'Claude Code', agentHome, ['AGENTS.md', 'CLAUDE.md']);
-  }
-  if (name === 'opencode') {
-    const configRoot = canonicalPath(env.XDG_CONFIG_HOME || join(home, '.config'));
-    const agentHome = canonicalPath(env.OPENCODE_CONFIG_DIR || join(configRoot, 'opencode'));
-    return globalMarkdownAdapter(name, 'OpenCode', agentHome);
-  }
-  if (name === 'cursor') {
-    const root = projectRoot(project);
-    const agentHome = join(root, '.cursor');
-    const excludePath = gitExcludePath(root);
-    return {
-      name,
-      label: 'Cursor',
-      home: agentHome,
-      project: root,
-      harness: join(agentHome, 'agent-harness'),
-      record: join(agentHome, '.harnessmith', 'install.json'),
-      capabilities: adapterCapabilities(name),
-      instructions: [
-        { path: join(agentHome, 'AGENTS.md'), render: plainInstructions },
-        { path: join(agentHome, 'rules', 'agent-harness.mdc'), render: mdcInstructions },
-      ],
-      localIgnoreFiles: [
-        ...(excludePath
-          ? [
-              {
-                path: excludePath.path,
-                root: excludePath.root,
-                preserveEmpty: true,
-                lines: [
-                  '/.cursor/agent-harness/',
-                  '/.cursor/AGENTS.md',
-                  '/.cursor/.harnessmith/',
-                  '/.cursor/.harnessmith-stage-*',
-                  '/.cursor/.harnessmith-restore-*',
-                  '/.cursor/.harnessmith-operation.lock',
-                  '/.cursor/.ignore',
-                  '/.cursor/rules/agent-harness.mdc',
-                  '/.cursor/*.backup-*',
-                  '/.cursor/rules/agent-harness.mdc.backup-*',
-                ],
-              },
-            ]
-          : []),
-        {
-          path: join(agentHome, '.ignore'),
-          lines: [
-            '/agent-harness/',
-            '/AGENTS.md',
-            '/.harnessmith/',
-            '/.harnessmith-stage-*',
-            '/.harnessmith-restore-*',
-            '/.harnessmith-operation.lock',
-            '/rules/agent-harness.mdc',
-            '/*.backup-*',
-            '/rules/agent-harness.mdc.backup-*',
-          ],
-        },
-      ],
-    };
-  }
-  throw new HarnessmithError('CLI_USAGE', `Unsupported agent: ${name}`, 2);
+  return resolver({
+    env,
+    project,
+    userHome: canonicalPath(env.HOME || homedir()),
+  });
 }

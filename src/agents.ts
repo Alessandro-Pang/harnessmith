@@ -1,25 +1,22 @@
-import type { AgentName } from './types.js';
+import {
+  adapterAliasMap,
+  adapterRegistry,
+  isRegisteredAgentName,
+  supportedAgentNames,
+  type AgentName,
+} from './adapter-registry.js';
 import { HarnessmithError } from './types.js';
 
-export const supportedAgentNames = [
-  'codex',
-  'cursor',
-  'claude',
-  'opencode',
-] as const satisfies readonly AgentName[];
+export { supportedAgentNames } from './adapter-registry.js';
 
-export const supportedAgents = [
-  { value: 'codex', label: 'Codex', hint: 'global configuration' },
-  { value: 'cursor', label: 'Cursor', hint: 'current project' },
-  { value: 'claude', label: 'Claude Code', hint: 'global configuration' },
-  { value: 'opencode', label: 'OpenCode', hint: 'global configuration' },
-];
+export const supportedAgents = adapterRegistry.map(({ name, label, hint }) => ({
+  value: name,
+  label,
+  hint,
+}));
 
 export function isAgentName(value: unknown): value is AgentName {
-  return (
-    typeof value === 'string' &&
-    supportedAgentNames.includes(value as (typeof supportedAgentNames)[number])
-  );
+  return isRegisteredAgentName(value);
 }
 
 export function collectAgents(value: string, previous: string[] = []): string[] {
@@ -33,20 +30,14 @@ export function collectAgents(value: string, previous: string[] = []): string[] 
 }
 
 export function normalizeAgents(values: string[]): AgentName[] {
-  const aliases = new Map<string, AgentName>([
-    ['1', 'codex'],
-    ['2', 'cursor'],
-    ['3', 'claude'],
-    ['4', 'opencode'],
-    ['claude-code', 'claude'],
-  ]);
+  const aliases = adapterAliasMap();
   const expanded = values.flatMap((value) =>
     value.toLowerCase() === 'all'
       ? supportedAgents.map(({ value: name }) => name)
       : value.split(/[\s,]+/),
   );
   const agents = [...new Set(expanded.filter(Boolean).map((value) => aliases.get(value) || value))];
-  const known = new Set(supportedAgents.map(({ value }) => value));
+  const known = new Set<string>(supportedAgentNames);
   const invalid = agents.filter((value) => !known.has(value));
   if (invalid.length > 0)
     throw new HarnessmithError('CLI_USAGE', `Unsupported agent: ${invalid.join(', ')}`, 2);

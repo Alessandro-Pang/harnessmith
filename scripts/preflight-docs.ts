@@ -2,6 +2,7 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, extname, join, relative, resolve, sep } from 'node:path';
 import { fdir } from 'fdir';
 import { parse } from 'yaml';
+import { supportedAgentNames } from '../src/agents.js';
 import { parseFrontmatterDocument } from '../template/agent-harness/src/lib/frontmatter.js';
 import { markdownLinkTargets } from '../template/agent-harness/src/lib/markdown-links.js';
 import { capabilityEvidenceIssues } from './capability-evidence.js';
@@ -163,9 +164,10 @@ function checkPortableTemplate(root: string, check: Check): void {
       );
     }
     check(
-      !/\b(?:codex|cursor|claude|opencode)\b|CODEX_HOME|CLAUDE_CONFIG_DIR|OPENCODE_CONFIG_DIR/i.test(
-        content,
-      ),
+      !new RegExp(
+        String.raw`\b(?:${supportedAgentNames.join('|')})\b|CODEX_HOME|CLAUDE_CONFIG_DIR|OPENCODE_CONFIG_DIR`,
+        'i',
+      ).test(content),
       `host-specific identity leaked into portable template: ${relative(root, path)}`,
     );
   }

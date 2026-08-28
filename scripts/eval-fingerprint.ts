@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { isDeepStrictEqual } from 'node:util';
 import type { AnySchema } from 'ajv';
 import { Ajv2020 } from 'ajv/dist/2020.js';
-import { supportedAgentNames } from '../src/agents.js';
+import { evalAdapterEnum } from '../src/adapter-registry.js';
 import type { AgentName } from '../src/types.js';
 import {
   assertCandidatePackageFiles,
@@ -19,7 +19,7 @@ import {
 } from './npm-tarball.js';
 
 export const repositoryRoot = dirname(dirname(fileURLToPath(import.meta.url)));
-export const supportedAdapters = [...supportedAgentNames] as AgentName[];
+export const supportedAdapters = evalAdapterEnum();
 export const requiredEvaluationAdapters = ['codex'] as const satisfies readonly AgentName[];
 
 type ScenarioContract = {
