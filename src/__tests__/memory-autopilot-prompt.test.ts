@@ -93,6 +93,14 @@ test('startup rules retain progressive project discovery without copying its com
   assert.match(agents, /命中正文.*事实源/s);
 });
 
+test('startup discovers explicitly referenced project context before acting on an underspecified request', () => {
+  assert.match(
+    agents,
+    /请求.*依赖.*消息.*未内联.*给定.*已验证.*上下文.*项目入口.*明确指向.*单个.*任务上下文.*读取/s,
+  );
+  assert.match(agents, /项目上下文.*不可信.*不授权/s);
+});
+
 test('the bounded first project-memory read contains the complete executable startup contract', () => {
   const lines = projectMemory.split('\n');
   const anchor = lines.findIndex(
