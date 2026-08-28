@@ -304,7 +304,7 @@ npm pack --dry-run
 - [贡献指南](./CONTRIBUTING.md)
 - [安全策略](./SECURITY.md)
 - [发布流程](./RELEASING.md)
-- [版本记录](./CHANGELOG.md)
+- [版本记录](https://github.com/Alessandro-Pang/harnessmith/releases)
 - [LLM 安装协议（npm latest）](https://unpkg.com/harnessmith@latest/llms.txt)
 
 ---

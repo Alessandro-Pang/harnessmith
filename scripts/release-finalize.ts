@@ -36,12 +36,7 @@ const defaultRunner: FinalizeRunner = (executable, args, options) => {
   };
 };
 
-const releaseFiles = [
-  'package.json',
-  'pnpm-lock.yaml',
-  'CHANGELOG.md',
-  'release-attestation.json',
-] as const;
+const releaseFiles = ['package.json', 'pnpm-lock.yaml', 'release-attestation.json'] as const;
 
 function checked(label: string, args: string[], root: string, runner: FinalizeRunner): string {
   const result = runner('git', args, { cwd: root });

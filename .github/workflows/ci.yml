@@ -37,3 +37,14 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile --ignore-scripts
       - run: pnpm run test:coverage
+
+  required:
+    name: CI Required
+    needs: [test, coverage]
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every CI job
+        run: |
+          test "${{ needs.test.result }}" = success
+          test "${{ needs.coverage.result }}" = success

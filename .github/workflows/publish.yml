@@ -48,3 +48,33 @@ jobs:
         env:
           HARNESS_RELEASE_WORKFLOW: '1'
         run: npm publish .release-ci/harnessmith-*.tgz --access public --registry=https://registry.npmjs.org/
+      - name: Verify npm publication
+        run: |
+          expected="${GITHUB_REF_NAME#v}"
+          for attempt in 1 2 3 4 5 6; do
+            actual=$(npm view "harnessmith@${expected}" version --registry=https://registry.npmjs.org/ 2>/dev/null || true)
+            if [ "${actual}" = "${expected}" ]; then
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "harnessmith@${expected} is not visible in npm" >&2
+          exit 1
+
+  release:
+    name: Create GitHub Release
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Create generated release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release create "${GITHUB_REF_NAME}"
+          --repo "${GITHUB_REPOSITORY}"
+          --verify-tag
+          --generate-notes
+          --fail-on-no-commits
+          --title "${GITHUB_REF_NAME}"

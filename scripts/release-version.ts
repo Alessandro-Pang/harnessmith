@@ -3,7 +3,6 @@ import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Command } from 'commander';
 import { execaSync } from 'execa';
-import writeFileAtomic from 'write-file-atomic';
 import { repositoryRoot } from './eval-fingerprint.js';
 import {
   finalizeReleaseVersion,
@@ -42,11 +41,10 @@ const defaultRunner: ReleaseCommandRunner = (executable, args, options) => {
 };
 
 interface VersionOptions {
-  now?: Date;
   root?: string;
 }
 
-const releaseFiles = ['package.json', 'pnpm-lock.yaml', 'CHANGELOG.md'] as const;
+const releaseFiles = ['package.json', 'pnpm-lock.yaml'] as const;
 
 function checked(
   label: string,
@@ -75,12 +73,6 @@ function assertReleaseCheckout(root: string, runner: ReleaseCommandRunner): void
   const branch = checked('Git branch', 'git', ['branch', '--show-current'], root, runner).trim();
   if (branch !== 'main')
     throw new Error(`Release versioning requires main, found ${branch || 'detached'}`);
-}
-
-function promoteChangelog(content: string, version: string, now: Date): string {
-  const marker = '## Unreleased';
-  if (!content.includes(marker)) throw new Error('CHANGELOG.md must contain an Unreleased section');
-  return content.replace(marker, `${marker}\n\n## ${version} - ${now.toISOString().slice(0, 10)}`);
 }
 
 function restoreFiles(root: string, snapshots: Map<string, string | undefined>): void {
@@ -119,15 +111,6 @@ export function prepareReleaseVersion(
       runner,
     );
     const manifest = packageManifest(root);
-    const changelogPath = join(root, 'CHANGELOG.md');
-    writeFileAtomic.sync(
-      changelogPath,
-      promoteChangelog(
-        readFileSync(changelogPath, 'utf8'),
-        manifest.version,
-        options.now ?? new Date(),
-      ),
-    );
     checked('Release preflight', pnpm, ['run', 'preflight'], root, runner);
     const directory = join(root, '.release');
     mkdirSync(directory, { mode: 0o700, recursive: true });

@@ -335,7 +335,7 @@ distribution manifest.
 - [Contributing guide](./CONTRIBUTING.md)
 - [Security policy](./SECURITY.md)
 - [Release process](./RELEASING.md)
-- [Changelog](./CHANGELOG.md)
+- [Releases](https://github.com/Alessandro-Pang/harnessmith/releases)
 - [LLM installation protocol (npm latest)](https://unpkg.com/harnessmith@latest/llms.txt)
 
 ---

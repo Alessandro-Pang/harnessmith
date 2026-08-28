@@ -14,14 +14,15 @@ import { candidateArtifact, currentFingerprint, temporaryDirectory } from './run
 const root = join(import.meta.dirname, '..', '..');
 const modulePath = join(root, 'scripts', 'release-version.ts');
 
-test('release version prepare promotes Unreleased and produces an exact candidate', async () => {
+test('release version prepare leaves the GitHub Releases pointer unchanged and produces an exact candidate', async () => {
   assert.ok(existsSync(modulePath), 'release version workflow module is missing');
   const { prepareReleaseVersion } = await import('../../scripts/release-version.js');
   const fixture = temporaryDirectory();
   mkdirSync(join(fixture, '.release'));
   writeFileSync(join(fixture, 'package.json'), '{"name":"fixture","version":"1.2.3"}\n');
   writeFileSync(join(fixture, 'pnpm-lock.yaml'), 'lockfileVersion: 9\n');
-  writeFileSync(join(fixture, 'CHANGELOG.md'), '# Changelog\n\n## Unreleased\n\n- Fixed it.\n');
+  const changelog = '# Changelog\n\nSee https://github.com/example/project/releases.\n';
+  writeFileSync(join(fixture, 'CHANGELOG.md'), changelog);
   const calls: string[][] = [];
   const runner = (_executable: string, args: string[]) => {
     calls.push(args);
@@ -44,15 +45,13 @@ test('release version prepare promotes Unreleased and produces an exact candidat
   };
 
   const result = prepareReleaseVersion(['patch'], runner, {
-    now: new Date('2026-08-24T12:00:00Z'),
     root: fixture,
   });
 
   assert.equal(result.version, '1.2.4');
   assert.equal(result.tag, 'v1.2.4');
   assert.equal(result.candidate, join(fixture, '.release', 'fixture-1.2.4.tgz'));
-  const changelog = readFileSync(join(fixture, 'CHANGELOG.md'), 'utf8');
-  assert.match(changelog, /## Unreleased\s+## 1\.2\.4 - 2026-08-24/);
+  assert.equal(readFileSync(join(fixture, 'CHANGELOG.md'), 'utf8'), changelog);
   assert.ok(
     calls.some((args) => args.join(' ') === 'version patch --no-git-tag-version --ignore-scripts'),
   );
@@ -169,7 +168,7 @@ test('tag publication workflow uses GitHub OIDC and the attested exact candidate
   assert.doesNotMatch(workflow, /NODE_AUTH_TOKEN|NPM_TOKEN|secrets\./);
 });
 
-test('release finalization leaves no attestation when unexpected worktree changes exist', async () => {
+test('release finalization rejects changelog edits because release notes live on GitHub', async () => {
   const { finalizeReleaseVersion } = await import('../../scripts/release-finalize.js');
   const { writeReleaseState } = await import('../../scripts/release-state.js');
   const fixture = temporaryDirectory();
@@ -206,13 +205,13 @@ test('release finalization leaves no attestation when unexpected worktree change
   });
   const runner = (_executable: string, args: string[]) => ({
     status: 0,
-    stdout: args[0] === 'status' ? ' M CHANGELOG.md\n?? unexpected.txt\n' : '',
+    stdout: args[0] === 'status' ? ' M CHANGELOG.md\n' : '',
     stderr: '',
   });
 
   assert.throws(
     () => finalizeReleaseVersion(runner, fixture),
-    /Unexpected release worktree change: unexpected\.txt/,
+    /Unexpected release worktree change: CHANGELOG\.md/,
   );
   assert.equal(existsSync(join(fixture, 'release-attestation.json')), false);
 });
