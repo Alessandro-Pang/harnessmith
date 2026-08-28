@@ -58,6 +58,7 @@
     "eval:fingerprint": "node --import tsx scripts/eval-gate.ts fingerprint --json",
     "eval:validate": "node --import tsx scripts/eval-gate.ts validate",
     "eval:gate": "node --import tsx scripts/eval-gate.ts gate",
+    "temp:scan": "node --import tsx scripts/temp-resources.ts --json",
     "pretest:coverage": "pnpm run build",
     "test:coverage": "pnpm run test:coverage:unit && pnpm run test:scripts-coverage",
     "test:coverage:unit": "vitest run --coverage",

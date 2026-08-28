@@ -4,6 +4,7 @@ import {
   lstatSync,
   mkdirSync,
   realpathSync,
+  rmdirSync,
   statSync,
   unlinkSync,
   writeFileSync,
@@ -14,6 +15,10 @@ import lockfile from 'proper-lockfile';
 import { errorMessage, HarnessmithError } from './types.js';
 
 const lockStaleMilliseconds = 15 * 60_000;
+
+function handoffPath(target: string, nonce: string): string {
+  return `${target}.handoff-${nonce}.json`;
+}
 
 function digest(value: string): string {
   return createHash('sha256').update(value).digest('hex');
@@ -83,7 +88,7 @@ export function withUserDataCoordinationLocks<T>(
   operation: (handoffTokens: string[]) => T,
 ): T {
   const targets = userDataCoordinationTargets(roots);
-  const releases: Array<() => void> = [];
+  const locks: Array<{ target: string; release: () => void }> = [];
   const handoffs: string[] = [];
   const tokens: string[] = [];
   let result: T | undefined;
@@ -91,15 +96,15 @@ export function withUserDataCoordinationLocks<T>(
   let operationError: unknown;
   try {
     for (const { root, target } of targets) {
-      mkdirSync(target, { recursive: true });
       try {
-        releases.push(
-          lockfile.lockSync(target, {
+        locks.push({
+          target,
+          release: lockfile.lockSync(target, {
             realpath: false,
             stale: lockStaleMilliseconds,
             retries: 0,
           }),
-        );
+        });
       } catch (error) {
         throw new HarnessmithError(
           'OPERATION_LOCKED',
@@ -111,7 +116,7 @@ export function withUserDataCoordinationLocks<T>(
     }
     for (const { key, target } of targets) {
       const nonce = randomBytes(32).toString('hex');
-      const path = join(target, `.handoff-${nonce}.json`);
+      const path = handoffPath(target, nonce);
       writeFileSync(
         path,
         `${JSON.stringify({ version: 1, key, nonce, pid: process.pid, createdAt: new Date().toISOString() })}\n`,
@@ -133,7 +138,18 @@ export function withUserDataCoordinationLocks<T>(
       if ((error as NodeJS.ErrnoException).code !== 'ENOENT') releaseErrors.push(error);
     }
   }
-  for (const release of releases.reverse()) {
+  for (const { target } of [...locks].reverse()) {
+    try {
+      rmdirSync(target);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+        releaseErrors.push(
+          new Error(`Could not remove coordination target ${target}: ${errorMessage(error)}`),
+        );
+      }
+    }
+  }
+  for (const { release } of locks.reverse()) {
     try {
       release();
     } catch (error) {

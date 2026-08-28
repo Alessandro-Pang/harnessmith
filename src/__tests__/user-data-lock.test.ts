@@ -244,6 +244,23 @@ test('outer user-data locks do not swallow a falsy thrown value', () => {
   assert.equal(completed, false);
 });
 
+test('embedded user-data locks do not swallow a falsy thrown value', () => {
+  const root = mkdtempSync(join(tmpdir(), 'harnessmith-user-data-embedded-falsy-'));
+  onTestFinished(() => rmSync(root, { recursive: true, force: true }));
+  let completed = false;
+
+  try {
+    withEmbeddedUserDataCoordinationLocks([join(root, 'memory')], [], () => {
+      throw null;
+    });
+    completed = true;
+  } catch (error) {
+    assert.equal(error, null);
+  }
+
+  assert.equal(completed, false);
+});
+
 test('outer handoff tokens let the embedded Harness inherit the same live lock', () => {
   const root = mkdtempSync(join(tmpdir(), 'harnessmith-user-data-handoff-'));
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
@@ -254,4 +271,93 @@ test('outer handoff tokens let the embedded Harness inherit the same live lock',
   );
 
   assert.equal(result, 'inherited');
+});
+
+test('outer and embedded coordination release per-root targets after success', () => {
+  const root = mkdtempSync(join(tmpdir(), 'harnessmith-user-data-clean-success-'));
+  onTestFinished(() => rmSync(root, { recursive: true, force: true }));
+  const outerRoot = join(root, 'outer-memory');
+  const embeddedRoot = join(root, 'embedded-memory');
+  const outer = userDataCoordinationTargets([outerRoot])[0];
+  const embedded = embeddedTargets([embeddedRoot])[0];
+
+  assert.equal(
+    withUserDataCoordinationLocks([outerRoot], () => 'outer'),
+    'outer',
+  );
+  assert.equal(
+    withEmbeddedUserDataCoordinationLocks([embeddedRoot], [], () => 'embedded'),
+    'embedded',
+  );
+
+  assert.equal(existsSync(outer.target), false);
+  assert.equal(existsSync(`${outer.target}.lock`), false);
+  assert.equal(existsSync(embedded.target), false);
+  assert.equal(existsSync(`${embedded.target}.lock`), false);
+});
+
+test('coordination releases per-root targets after operation failure', () => {
+  const root = mkdtempSync(join(tmpdir(), 'harnessmith-user-data-clean-failure-'));
+  onTestFinished(() => rmSync(root, { recursive: true, force: true }));
+  const outerRoot = join(root, 'outer-memory');
+  const embeddedRoot = join(root, 'embedded-memory');
+  const outer = userDataCoordinationTargets([outerRoot])[0];
+  const embedded = embeddedTargets([embeddedRoot])[0];
+
+  assert.throws(
+    () =>
+      withUserDataCoordinationLocks([outerRoot], () => {
+        throw new Error('outer operation failed');
+      }),
+    /outer operation failed/,
+  );
+  assert.throws(
+    () =>
+      withEmbeddedUserDataCoordinationLocks([embeddedRoot], [], () => {
+        throw new Error('embedded operation failed');
+      }),
+    /embedded operation failed/,
+  );
+
+  assert.equal(existsSync(outer.target), false);
+  assert.equal(existsSync(`${outer.target}.lock`), false);
+  assert.equal(existsSync(embedded.target), false);
+  assert.equal(existsSync(`${embedded.target}.lock`), false);
+});
+
+test('coordination reports the exact retained target when cleanup is unsafe', () => {
+  const root = mkdtempSync(join(tmpdir(), 'harnessmith-user-data-clean-error-'));
+  onTestFinished(() => rmSync(root, { recursive: true, force: true }));
+  const memoryRoot = join(root, 'memory');
+  const target = userDataCoordinationTargets([memoryRoot])[0].target;
+  mkdirSync(target, { recursive: true });
+  writeFileSync(join(target, 'unknown-entry'), 'do not delete');
+
+  assert.throws(
+    () => withUserDataCoordinationLocks([memoryRoot], () => 'completed'),
+    (error: unknown) => {
+      assert.match(String(error), /cleanup|release/i);
+      assert.match(String(error), new RegExp(target.replaceAll(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+      return true;
+    },
+  );
+  assert.equal(readFileSync(join(target, 'unknown-entry'), 'utf8'), 'do not delete');
+});
+
+test('repeated unique roots do not accumulate coordination target directories', () => {
+  const root = mkdtempSync(join(tmpdir(), 'harnessmith-user-data-clean-repeat-'));
+  onTestFinished(() => rmSync(root, { recursive: true, force: true }));
+  const targets = Array.from(
+    { length: 24 },
+    (_, index) => userDataCoordinationTargets([join(root, `memory-${index}`)])[0],
+  );
+
+  for (const target of targets) {
+    withUserDataCoordinationLocks([target.root], () => undefined);
+  }
+
+  assert.deepEqual(
+    targets.filter(({ target }) => existsSync(target)),
+    [],
+  );
 });

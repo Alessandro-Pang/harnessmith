@@ -1,10 +1,22 @@
 import { createHash } from 'node:crypto';
-import { existsSync, lstatSync, mkdirSync, readFileSync, realpathSync, statSync } from 'node:fs';
+import {
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  readFileSync,
+  realpathSync,
+  rmdirSync,
+  statSync,
+} from 'node:fs';
 import { homedir, userInfo } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import lockfile from 'proper-lockfile';
 
 const lockStaleMilliseconds = 15 * 60_000;
+
+function handoffPath(target: string, nonce: string): string {
+  return `${target}.handoff-${nonce}.json`;
+}
 
 function digest(value: string): string {
   return createHash('sha256').update(value).digest('hex');
@@ -85,7 +97,7 @@ function inheritedKeySet(
     const [, key, nonce] = match;
     const target = targets.find((candidate) => candidate.key === key);
     if (!target) continue;
-    const proofPath = join(target.target, `.handoff-${nonce}.json`);
+    const proofPath = handoffPath(target.target, nonce);
     const lockPath = `${target.target}.lock`;
     try {
       const proofStat = lstatSync(proofPath);
@@ -136,21 +148,22 @@ export function withUserDataCoordinationLocks<T>(
 ): T {
   const targets = userDataCoordinationTargets(roots);
   const inherited = inheritedKeySet(targets, inheritedKeys);
-  const releases: Array<() => void> = [];
+  const locks: Array<{ target: string; release: () => void }> = [];
   let result: T | undefined;
+  let operationFailed = false;
   let operationError: unknown;
   try {
     for (const { root, key, target } of targets) {
       if (inherited.has(key)) continue;
-      mkdirSync(target, { recursive: true });
       try {
-        releases.push(
-          lockfile.lockSync(target, {
+        locks.push({
+          target,
+          release: lockfile.lockSync(target, {
             realpath: false,
             stale: lockStaleMilliseconds,
             retries: 0,
           }),
-        );
+        });
       } catch (error) {
         throw new Error(`User data is being initialized by another process: ${root}`, {
           cause: error,
@@ -159,17 +172,29 @@ export function withUserDataCoordinationLocks<T>(
     }
     result = operation();
   } catch (error) {
+    operationFailed = true;
     operationError = error;
   }
   const releaseErrors: unknown[] = [];
-  for (const release of releases.reverse()) {
+  for (const { target } of [...locks].reverse()) {
+    try {
+      rmdirSync(target);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+        releaseErrors.push(
+          new Error(`Could not remove coordination target ${target}: ${String(error)}`),
+        );
+      }
+    }
+  }
+  for (const { release } of locks.reverse()) {
     try {
       release();
     } catch (error) {
       releaseErrors.push(error);
     }
   }
-  if (operationError) {
+  if (operationFailed) {
     if (releaseErrors.length > 0) {
       throw new Error(
         `User-data operation failed and lock release was incomplete: ${String(operationError)}; releases: ${releaseErrors.map(String).join('; ')}`,

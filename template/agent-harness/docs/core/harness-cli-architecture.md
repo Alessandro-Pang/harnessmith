@@ -115,6 +115,11 @@ Memory Autopilot 只有四类窄写入口：`capture-input`、`capture-experienc
 托管结果完成校验后才删除文件；schema、身份、领域写入或结果校验失败时保留文件供诊断。调用方不能把
 “已读取”或“schema 已通过”误当成消费成功，也不能用独立清理掩盖领域失败。
 
+Harnesssmith 外层临时 workspace 使用带 owner、purpose、创建时间和 lifecycle 的受管理 marker；成功与
+普通失败通过统一 disposer 清理，只有明确的 recovery 需要才保留并返回精确路径。release 候选与 Host Eval
+证据属于 workstream/evidence，不得当作匿名 `/tmp` 内容通配删除。历史维护先运行仓库的 `pnpm run
+temp:scan` dry-run；未知目录、活动 lock/proof 和 recovery 引用不进入自动删除路径。
+
 Input schema v2 要求显式 `mode: verbatim|summary`、五类 `purpose` 与 `retention: workstream|durable`；
 workstream retention 必须绑定稳定 workstream。Input 对 verbatim 绑定原始文本，对可靠摘要绑定规范化文本，
 并同时绑定来源和模式。`close-input` 原子写入完成原因和可选消费证据，并从 `core.md` 移除 active 引用；

@@ -12,6 +12,8 @@ Claude Code、OpenCode 和 Kimi Code CLI。它安全地安装和升级规则与�
 
 Markdown 规则属于 advisory guidance；安全强制来自安装器、schema、测试、CI 和宿主自身权限。
 机器校验的逐项 owner、状态与证据路径见[能力声明—证据矩阵](./capability-evidence.yaml)。
+临时 workspace、payload、release/eval 证据与历史 dry-run 的 owner 和生命周期边界见
+[Temporary Resource Lifecycle](./temporary-resources.md)。
 
 ## 四个实现平面
 

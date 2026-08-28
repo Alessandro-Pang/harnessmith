@@ -1,9 +1,9 @@
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { existsSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Argument, Command } from 'commander';
 import { execaSync } from 'execa';
+import { withTemporaryWorkspace } from '../src/temporary-resource.js';
 import { checkArchitectureImports } from './preflight-architecture.js';
 import { checkDocs } from './preflight-docs.js';
 import { checkBranch } from './preflight-git.js';
@@ -93,48 +93,48 @@ function checkCli(): void {
   check(versionContract.schemaVersion === 3, 'Harness task schema version is unsupported');
   check(versionContract.memorySchemaVersion === 1, 'Harness memory schema version is unsupported');
 
-  const temporary = mkdtempSync(join(tmpdir(), 'harnessmith-preflight-'));
-  try {
-    const env = {
-      ...process.env,
-      HOME: temporary,
-      CODEX_HOME: join(temporary, 'host'),
-      HARNESS_MEMORY_HOME: join(temporary, 'memory'),
-      HARNESS_REPOSITORY_ROOT: join(temporary, 'repositories'),
-      HARNESS_OWNER: 'preflight',
-    };
-    const preview = runNode(
-      outerCli,
-      ['install', '--agent', 'codex', '--dry-run', '--yes', '--json'],
-      env,
-    );
-    const plan = JSON.parse(preview) as { adapter?: string; outputs?: unknown[] };
-    check(plan.adapter === 'codex', 'outer CLI dry-run returned the wrong adapter plan');
-    check(Boolean(plan.outputs?.length), 'outer CLI dry-run did not return planned outputs');
-    check(
-      !existsSync(join(temporary, 'host')),
-      'outer CLI dry-run unexpectedly wrote to the host directory',
-    );
+  withTemporaryWorkspace(
+    { owner: 'preflight', purpose: 'preflight', lifecycle: 'operation' },
+    ({ path: temporary }) => {
+      const env = {
+        ...process.env,
+        HOME: temporary,
+        CODEX_HOME: join(temporary, 'host'),
+        HARNESS_MEMORY_HOME: join(temporary, 'memory'),
+        HARNESS_REPOSITORY_ROOT: join(temporary, 'repositories'),
+        HARNESS_OWNER: 'preflight',
+      };
+      const preview = runNode(
+        outerCli,
+        ['install', '--agent', 'codex', '--dry-run', '--yes', '--json'],
+        env,
+      );
+      const plan = JSON.parse(preview) as { adapter?: string; outputs?: unknown[] };
+      check(plan.adapter === 'codex', 'outer CLI dry-run returned the wrong adapter plan');
+      check(Boolean(plan.outputs?.length), 'outer CLI dry-run did not return planned outputs');
+      check(
+        !existsSync(join(temporary, 'host')),
+        'outer CLI dry-run unexpectedly wrote to the host directory',
+      );
 
-    const installed = runNode(
-      outerCli,
-      ['install', '--agent', 'codex', '--no-init-global', '--yes', '--json'],
-      env,
-    );
-    const installation = JSON.parse(installed) as { command?: string; results?: unknown[] };
-    check(installation.command === 'install', 'outer CLI install returned the wrong command');
-    check(installation.results?.length === 1, 'outer CLI install did not return one result');
-    const installedHarnessCli = join(temporary, 'host', 'agent-harness', 'bin', 'harness.mjs');
-    check(
-      !existsSync(join(temporary, 'host', 'agent-harness', 'src')),
-      'installed Harness unexpectedly contains TypeScript sources',
-    );
-    const validationOutput = runNode(installedHarnessCli, ['validate', '--json'], env);
-    const validation = JSON.parse(validationOutput) as { valid?: boolean };
-    check(validation.valid === true, 'installed Harness validation did not pass');
-  } finally {
-    rmSync(temporary, { recursive: true, force: true });
-  }
+      const installed = runNode(
+        outerCli,
+        ['install', '--agent', 'codex', '--no-init-global', '--yes', '--json'],
+        env,
+      );
+      const installation = JSON.parse(installed) as { command?: string; results?: unknown[] };
+      check(installation.command === 'install', 'outer CLI install returned the wrong command');
+      check(installation.results?.length === 1, 'outer CLI install did not return one result');
+      const installedHarnessCli = join(temporary, 'host', 'agent-harness', 'bin', 'harness.mjs');
+      check(
+        !existsSync(join(temporary, 'host', 'agent-harness', 'src')),
+        'installed Harness unexpectedly contains TypeScript sources',
+      );
+      const validationOutput = runNode(installedHarnessCli, ['validate', '--json'], env);
+      const validation = JSON.parse(validationOutput) as { valid?: boolean };
+      check(validation.valid === true, 'installed Harness validation did not pass');
+    },
+  );
 }
 
 function main(): void {

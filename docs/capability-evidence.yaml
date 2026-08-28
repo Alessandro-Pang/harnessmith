@@ -30,6 +30,19 @@ claims:
       - src/__tests__/lifecycle-transaction.test.ts
       - src/__tests__/lifecycle-transaction-failures.test.ts
 
+  - id: temporary-resource-lifecycle
+    status: implemented
+    owner: outer lifecycle and verification tooling
+    claim: Mark, dispose, retain, and dry-run report managed temporary resources without wildcard deletion.
+    implementation:
+      - src/temporary-resource.ts
+      - src/user-data-lock.ts
+      - template/agent-harness/src/lib/user-data-lock.ts
+      - scripts/temp-resources.ts
+    verification:
+      - src/__tests__/temporary-resource.test.ts
+      - src/__tests__/user-data-lock.test.ts
+
   - id: progressive-context-routing
     status: implemented
     owner: embedded Harness runtime
