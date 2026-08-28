@@ -1,5 +1,5 @@
 {
-  "harnessVersion": "2.5.0",
+  "harnessVersion": "2.6.0",
   "schemaVersion": 3,
   "memorySchemaVersion": 1,
   "node": ">=24.12.0"

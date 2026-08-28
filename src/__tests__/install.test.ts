@@ -148,7 +148,7 @@ test('installs all adapters, maps paths, and renames existing rules', () => {
       { encoding: 'utf8', env: { ...process.env, HOME: root } },
     );
     assert.equal(version.status, 0, version.stderr);
-    assert.equal(version.stdout.trim(), '2.5.0');
+    assert.equal(version.stdout.trim(), '2.6.0');
   }
 
   const claudeHarness = join(claude, 'agent-harness', 'bin', 'harness.mjs');

@@ -7,8 +7,38 @@ The embedded Harness schema has its own explicitly recorded version.
 
 ### Added
 
+- Add a privacy-safe Runtime Audit surface for Host-supplied metadata, including bounded record, query, summary,
+  health, retention reporting, and proposal-first archival without storing prompts, outputs, or tool arguments.
+- Add typed `memory capture-experience` support for sourced lesson and failure distillation, with stable identity,
+  evidence reconciliation, project indexing, validation, and optional verified payload consumption.
+- Add a machine-checked capability claim-evidence matrix covering implemented, Host-delegated, and unsupported
+  boundaries, and enforce its public positioning and evidence paths during documentation preflight.
+- Add structured Host Eval failure diagnostics with stable JSON output, bounded human summaries, rejection-reason
+  aggregation, and a self-contained `eval:check` build prerequisite.
 - Add concise bilingual GitHub Issue forms and a pull request template tailored to Harnessmith's support,
   safety, and verification boundaries.
+
+### Changed
+
+- Position Harnessmith consistently as a cross-host Personal Harness distribution and durable work-state control
+  plane, while making Host-owned model loops, tools, permissions, cost controls, and event streams explicit.
+- Make documentation routing typed and deterministic with topic, standard, and prioritized playbook entries,
+  a single primary playbook, ambiguity rejection, and natural CJK sentence matching.
+- Tighten Memory Autopilot and handoff contracts around required recovery fields, concrete next actions, current
+  verification evidence, canonical-section safety, payload-file identity, and sourced experience capture.
+- Bind Host Eval risk acceptance to the exact release candidate and complete uncovered Host/scenario matrix, carry
+  the exception into release state and attestation, and reject stale or weakened acceptance data.
+- Serve the AI installation protocol from the npm `latest` release channel so instructions and installed package
+  come from the same published version.
+
+### Fixed
+
+- Keep project-memory ignore rules inside `.agent-docs/.gitignore` and `.agent-docs/.ignore` instead of modifying
+  repository-root ignore configuration, with lifecycle, validation, and health checks aligned to that boundary.
+
+### Embedded Harness
+
+- Harness runtime advances from 2.5.0 to 2.6.0. Task schema remains at 3 and memory schema remains at 1.
 
 ## 0.7.0 - 2026-08-28
 
