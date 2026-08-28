@@ -10,9 +10,13 @@ claims:
     owner: outer installer adapters
     claim: Distribute one Personal Harness across Codex, Cursor, Claude Code, and OpenCode.
     implementation:
+      - src/adapter-registry.ts
       - src/adapters.ts
+      - src/instruction-formats.ts
       - src/install.ts
     verification:
+      - src/__tests__/adapter-registry.test.ts
+      - src/__tests__/adapter-conformance.test.ts
       - src/__tests__/install.test.ts
       - src/__tests__/adapters-opencode.test.ts
 
