@@ -1,6 +1,8 @@
-import { mkdirSync } from 'node:fs';
+import assert from 'node:assert/strict';
+import { mkdirSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { modeMatches } from '../../lib/portable-mode.js';
 import type { Io, Runtime } from '../../types.js';
 
 export const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../../../..');
@@ -24,6 +26,18 @@ export function capturedIo(): CapturedIo {
       errors.push(String(message));
     },
   };
+}
+
+export function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+export function assertMode(path: string, expected: number): void {
+  assert.equal(
+    modeMatches(statSync(path).mode, expected),
+    true,
+    `expected ${path} to have portable mode ${expected.toString(8)}`,
+  );
 }
 
 export function harnessRuntime(root: string, overrides: Partial<Runtime> = {}): Runtime {

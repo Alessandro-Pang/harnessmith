@@ -7,7 +7,6 @@ import {
   mkdtempSync,
   readFileSync,
   rmSync,
-  statSync,
   symlinkSync,
   writeFileSync,
 } from 'node:fs';
@@ -19,7 +18,7 @@ import { captureHandoff } from '../commands/memory-autopilot.js';
 import { reconcileProfile } from '../commands/memory-profile.js';
 import { writeValidated } from '../lib/memory-write.js';
 import { withUserDataCoordinationLocks } from '../lib/user-data-lock.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { assertMode, capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function temporaryRoot(prefix: string): string {
   const root = mkdtempSync(join(tmpdir(), prefix));
@@ -113,15 +112,15 @@ test('global memory initialization creates and tightens private filesystem modes
   const entries = ['README.md', 'core.md', 'profile.md'].map((name) =>
     join(runtime.memoryHome, name),
   );
-  assert.equal(statSync(runtime.memoryHome).mode & 0o777, 0o700);
-  for (const path of entries) assert.equal(statSync(path).mode & 0o777, 0o600);
+  assertMode(runtime.memoryHome, 0o700);
+  for (const path of entries) assertMode(path, 0o600);
 
   chmodSync(runtime.memoryHome, 0o755);
   for (const path of entries) chmodSync(path, 0o644);
   initGlobal(runtime, capturedIo());
 
-  assert.equal(statSync(runtime.memoryHome).mode & 0o777, 0o700);
-  for (const path of entries) assert.equal(statSync(path).mode & 0o777, 0o600);
+  assertMode(runtime.memoryHome, 0o700);
+  for (const path of entries) assertMode(path, 0o600);
 });
 
 test('failed profile reconciliation rolls back global initialization route repairs', () => {
@@ -185,7 +184,7 @@ test('validated memory writes preserve hardened modes on success and rollback', 
   chmodSync(profile, 0o600);
 
   writeValidated(runtime.memoryHome, [{ path: profile, content: original }], capturedIo());
-  assert.equal(statSync(profile).mode & 0o777, 0o600);
+  assertMode(profile, 0o600);
 
   assert.throws(
     () =>
@@ -197,7 +196,7 @@ test('validated memory writes preserve hardened modes on success and rollback', 
     /memory check failed/i,
   );
   assert.equal(readFileSync(profile, 'utf8'), original);
-  assert.equal(statSync(profile).mode & 0o777, 0o600);
+  assertMode(profile, 0o600);
 });
 
 test('project capture rejects a symlinked managed core on the unchanged fast path', () => {

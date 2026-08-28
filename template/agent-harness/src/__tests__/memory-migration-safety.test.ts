@@ -6,7 +6,6 @@ import {
   mkdtempSync,
   readFileSync,
   rmSync,
-  statSync,
   truncateSync,
   writeFileSync,
 } from 'node:fs';
@@ -16,7 +15,7 @@ import { onTestFinished, test } from 'vitest';
 import { initGlobal, initProject } from '../commands/init.js';
 import { memoryMigrate } from '../commands/memory-migration.js';
 import { maximumMemoryDocumentBytes } from '../lib/memory-path.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { assertMode, capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function fixture() {
   const root = mkdtempSync(join(tmpdir(), 'harness-memory-migration-safety-'));
@@ -71,7 +70,7 @@ test('global profile migration preserves its private file mode', () => {
   );
 
   assert.equal(report.mode, 'applied');
-  assert.equal(statSync(profile).mode & 0o777, 0o600);
+  assertMode(profile, 0o600);
   assert.match(readFileSync(profile, 'utf8'), /description: Private profile after migration/);
 });
 

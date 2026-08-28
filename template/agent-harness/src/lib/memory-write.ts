@@ -6,6 +6,7 @@ import { atomicWrite } from './files.js';
 import type { MemoryRootKind } from './memory-autopilot-document-rules.js';
 import { readMemoryDocument } from './memory-path.js';
 import { validateMemoryRoot } from './memory-validation.js';
+import { modeMatches } from './portable-mode.js';
 import { assertSafePath } from './safe-path.js';
 
 export interface MemoryWriteResult {
@@ -111,7 +112,7 @@ export function exactFileStateMatches(path: string, expected: ExactFileState): b
   try {
     const entry = lstatSync(path);
     if (!expected.exists || entry.isSymbolicLink() || !entry.isFile()) return false;
-    if ((entry.mode & 0o777) !== expected.mode) return false;
+    if (!modeMatches(entry.mode, expected.mode)) return false;
     const expectedBytes = Buffer.byteLength(expected.content);
     if (entry.size !== expectedBytes) return false;
     return (

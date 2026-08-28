@@ -56,6 +56,7 @@ test('memory titles and managed paths cannot inject forged output lines', () => 
   );
 
   rmSync(titlePath);
+  if (process.platform === 'win32') return;
   writeFileSync(join(memoryRoot, 'unsafe\nFORGED.md'), memoryDocument('Safe path title'));
   output = capturedIo();
   assert.throws(() => memoryMaintenance(runtime, project, {}, output), /memory check failed/i);

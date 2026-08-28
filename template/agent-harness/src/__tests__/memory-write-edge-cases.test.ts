@@ -25,19 +25,22 @@ test('directory snapshots reject a regular file', () => {
   assert.throws(() => snapshotDirectoryIdentity(file), /regular non-symlink directory/i);
 });
 
-test('tracked directory cleanup reports an uninspectable recovery path', () => {
-  const root = temporaryRoot('harness-memory-directory-inspection-');
-  const file = join(root, 'file.txt');
-  writeFileSync(file, 'parent is a file\n');
+test.skipIf(process.platform === 'win32')(
+  'tracked directory cleanup reports an uninspectable recovery path',
+  () => {
+    const root = temporaryRoot('harness-memory-directory-inspection-');
+    const file = join(root, 'file.txt');
+    writeFileSync(file, 'parent is a file\n');
 
-  const errors = cleanupTrackedDirectories(
-    [{ path: join(file, 'child'), dev: 1, ino: 1, birthtimeMs: 0 }],
-    'created memory',
-  );
+    const errors = cleanupTrackedDirectories(
+      [{ path: join(file, 'child'), dev: 1, ino: 1, birthtimeMs: 0 }],
+      'created memory',
+    );
 
-  assert.equal(errors.length, 1);
-  assert.match(errors[0], /directory identity check failed.*recovery path/i);
-});
+    assert.equal(errors.length, 1);
+    assert.match(errors[0], /directory identity check failed.*recovery path/i);
+  },
+);
 
 test('duplicate validated write targets roll back once to their shared snapshot', () => {
   const root = temporaryRoot('harness-memory-duplicate-write-');

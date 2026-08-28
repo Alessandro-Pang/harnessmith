@@ -16,6 +16,7 @@ import { memoryCheck } from '../commands/memory.js';
 import { checkpointTask, closeTask, initTask } from '../commands/task.js';
 import { verifyAcceptance } from '../commands/task-verification.js';
 import { contentMemoryReferences } from '../lib/memory-validation.js';
+import { modeMatches } from '../lib/portable-mode.js';
 import { writeTaskWithProgress } from '../lib/task-store.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
@@ -259,6 +260,6 @@ test('failed task progress validation restores task, progress, and core bytes an
   );
   for (const [key, path] of Object.entries(paths)) {
     assert.equal(readFileSync(path, 'utf8'), before[key]);
-    assert.equal(statSync(path).mode & 0o777, 0o600);
+    assert.equal(modeMatches(statSync(path).mode, 0o600), true);
   }
 });

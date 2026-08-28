@@ -1,13 +1,5 @@
 import assert from 'node:assert/strict';
-import {
-  chmodSync,
-  existsSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  statSync,
-  writeFileSync,
-} from 'node:fs';
+import { chmodSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { beforeEach, onTestFinished, test, vi } from 'vitest';
@@ -30,7 +22,7 @@ vi.mock('../lib/files.js', async (importOriginal) => {
 import { initGlobal } from '../commands/init.js';
 import { archiveMemory } from '../commands/memory-lifecycle.js';
 import { calendarDate } from '../runtime.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { assertMode, capturedIo, escapeRegExp, harnessRuntime } from './helpers/harness.js';
 
 beforeEach(() => {
   fault.restorePath = '';
@@ -78,11 +70,14 @@ test('archive retains its destination recovery copy when source restoration fail
 
   assert.throws(
     () => archiveMemory(runtime, 'global', 'recovery', {}, capturedIo()),
-    new RegExp(`rollback was incomplete.*recovery path ${destination} is retained`, 'i'),
+    new RegExp(
+      `rollback was incomplete.*recovery path ${escapeRegExp(destination)} is retained`,
+      'i',
+    ),
   );
   assert.equal(existsSync(source), false);
   assert.equal(existsSync(destination), true);
   assert.match(readFileSync(destination, 'utf8'), /status: archived/);
   assert.match(readFileSync(destination, 'utf8'), /Recover me\./);
-  assert.equal(statSync(destination).mode & 0o777, 0o600);
+  assertMode(destination, 0o600);
 });

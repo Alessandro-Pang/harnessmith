@@ -7,14 +7,13 @@ import {
   mkdtempSync,
   renameSync,
   rmSync,
-  statSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { initializeGlobalMemory, withGlobalMemoryTransaction } from '../lib/global-memory.js';
-import { harnessRuntime } from './helpers/harness.js';
+import { assertMode, harnessRuntime } from './helpers/harness.js';
 
 function fixture(prefix: string) {
   const root = mkdtempSync(join(tmpdir(), prefix));
@@ -51,24 +50,27 @@ test('global rollback restores the original directory mode', () => {
       }),
     /operation failed/i,
   );
-  assert.equal(statSync(runtime.memoryHome).mode & 0o777, 0o755);
+  assertMode(runtime.memoryHome, 0o755);
 });
 
-test('global rollback retains a concurrently changed directory mode', () => {
-  const { runtime } = fixture('harness-global-mode-conflict-');
-  initializeGlobalMemory(runtime);
-  chmodSync(runtime.memoryHome, 0o755);
+test.skipIf(process.platform === 'win32')(
+  'global rollback retains a concurrently changed directory mode',
+  () => {
+    const { runtime } = fixture('harness-global-mode-conflict-');
+    initializeGlobalMemory(runtime);
+    chmodSync(runtime.memoryHome, 0o755);
 
-  assert.throws(
-    () =>
-      withGlobalMemoryTransaction(runtime, () => {
-        chmodSync(runtime.memoryHome, 0o750);
-        throw new Error('operation failed');
-      }),
-    /rollback was incomplete.*unknown mode retained/i,
-  );
-  assert.equal(statSync(runtime.memoryHome).mode & 0o777, 0o750);
-});
+    assert.throws(
+      () =>
+        withGlobalMemoryTransaction(runtime, () => {
+          chmodSync(runtime.memoryHome, 0o750);
+          throw new Error('operation failed');
+        }),
+      /rollback was incomplete.*unknown mode retained/i,
+    );
+    assertMode(runtime.memoryHome, 0o750);
+  },
+);
 
 test('global rollback removes a newly created empty memory root', () => {
   const { runtime } = fixture('harness-global-new-root-cleanup-');
@@ -134,7 +136,7 @@ test('global rollback does not chmod a same-mode replacement directory', () => {
       }),
     /rollback was incomplete.*root.*replaced/i,
   );
-  assert.equal(statSync(runtime.memoryHome).mode & 0o777, 0o700);
+  assertMode(runtime.memoryHome, 0o700);
 });
 
 test('global rollback does not delete a same-mode replacement for a new root', () => {
@@ -151,5 +153,5 @@ test('global rollback does not delete a same-mode replacement for a new root', (
     /rollback was incomplete.*root.*replaced/i,
   );
   assert.equal(existsSync(runtime.memoryHome), true);
-  assert.equal(statSync(runtime.memoryHome).mode & 0o777, 0o700);
+  assertMode(runtime.memoryHome, 0o700);
 });

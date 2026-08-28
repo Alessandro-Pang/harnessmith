@@ -70,7 +70,9 @@ updated: 2026-08-26
 paused。用户要求恢复自动维护时才 `resume`；精确删除条目始终可执行，pause 不阻止 forget。
 
 全局 `.agent-docs/` 默认收紧为仅当前用户可访问：目录 `0700`，受管的 `README.md`、`core.md` 与
-`profile.md` 为 `0600`。这只是本地文件权限边界，不替代磁盘加密、备份治理或宿主访问控制。
+在可表达 POSIX mode 的平台上，`profile.md` 为 `0600`。Windows 的 Node.js 文件 API 不可靠保留
+这些 POSIX permission bits，因此事务身份只校验文件类型、非 symlink、内容和大小，访问控制继续由
+Windows ACL 与宿主负责。这些都不替代磁盘加密、备份治理或宿主访问控制。
 
 更新前必须先读取现有 `profile.md`，把新信号映射到已有稳定 key；禁止先在其他 memory 新建偏好
 摘要再复制回来。合并优先级为：用户当前明确表达 > 画像现有当前条目 > 带时间的 input/episode >
