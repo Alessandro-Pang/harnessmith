@@ -39,7 +39,7 @@
       ],
       "forbidden": [
         "Temporary session context is not promoted as an authoritative project fact.",
-        "Routine handoff sidecar operations are not announced, narrated, or included in the final response."
+        "The explicit handoff request receives the minimum action, path, and validation audit without exposing raw payloads or internal sidecar steps."
       ],
       "automatedChecks": [
         "template/agent-harness/src/__tests__/memory.test.ts#memory list, search, and reference validation handle archive and broken references",

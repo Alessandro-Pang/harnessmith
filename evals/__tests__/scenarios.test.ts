@@ -76,7 +76,7 @@ test('behavior prompts do not manufacture authorization or ambiguous execution m
   assert.equal(factSeparation.forbidden.length, 2);
   assert.match(
     factSeparation.forbidden.join(' '),
-    /routine handoff sidecar operations.*not announced.*narrated.*final response/i,
+    /explicit handoff request.*minimum action.*path.*validation audit.*raw payloads.*internal sidecar steps/i,
   );
 
   const relationshipMap = scenarios.get('cross-repository-map-writeback');
