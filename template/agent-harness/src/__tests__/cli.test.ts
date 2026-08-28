@@ -309,7 +309,7 @@ test('Harness health aggregates runtime, installation, and memory checks as JSON
     ['runtime', 'installation', 'global-memory', 'project-memory'],
   );
 
-  rmSync(join(project, '.ignore'));
+  rmSync(join(project, '.agent-docs', '.ignore'));
   const broken = capturedIo();
   assert.equal(runCli(['health', '--project', project, '--json'], { runtime, io: broken }), 1);
   const projectMemory = JSON.parse(broken.logs[0]).checks.find(

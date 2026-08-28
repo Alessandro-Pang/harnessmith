@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import lockfile from 'proper-lockfile';
@@ -15,6 +15,7 @@ function projectFixture(): { project: string; runtime: ReturnType<typeof harness
   const root = mkdtempSync(join(tmpdir(), 'harness-task-'));
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
   execFileSync('git', ['-C', root, 'init', '-q']);
+  writeFileSync(join(root, 'verification.txt'), 'verification scope\n');
   return { project: root, runtime: harnessRuntime(root) };
 }
 
@@ -126,7 +127,7 @@ test('task state transitions require valid statuses and acceptance evidence', ()
       type: 'test',
       command: process.execPath,
       args: ['-e', 'process.exit(0)'],
-      scope: ['.gitignore'],
+      scope: ['verification.txt'],
     },
     capturedIo(),
   );

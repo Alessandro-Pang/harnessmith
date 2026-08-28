@@ -13,6 +13,7 @@ function projectFixture(): { project: string; runtime: ReturnType<typeof harness
   const root = mkdtempSync(join(tmpdir(), 'harness-task-evidence-'));
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
   execFileSync('git', ['-C', root, 'init', '-q']);
+  writeFileSync(join(root, 'verification.txt'), 'verification scope\n');
   return { project: root, runtime: harnessRuntime(root) };
 }
 
@@ -39,7 +40,7 @@ function testEvidence(command = 'pnpm run test:harness', exitCode = 0): string {
   return JSON.stringify({ type: 'test', command, exitCode });
 }
 
-function verifyTest(project: string, id: string, scope = '.gitignore') {
+function verifyTest(project: string, id: string, scope = 'verification.txt') {
   return verifyAcceptance(
     {
       project,
@@ -420,6 +421,7 @@ test('workspace evidence detects staged-content drift even when status and workt
 test('non-Git tasks use null HEAD evidence without false drift failures', () => {
   const project = mkdtempSync(join(tmpdir(), 'harness-task-nongit-'));
   onTestFinished(() => rmSync(project, { recursive: true, force: true }));
+  writeFileSync(join(project, 'verification.txt'), 'verification scope\n');
   const runtime = harnessRuntime(project);
   const task = initTask(
     runtime,

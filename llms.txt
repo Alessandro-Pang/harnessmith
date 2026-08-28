@@ -113,7 +113,8 @@ node <harness-path>/bin/harness.mjs validate --project <absolute-project-path>
 ```
 
 If project-memory need is uncertain, ask the user. Do not initialize `.agent-docs` merely because the command
-exists. Initialization adds `/.agent-docs/` to both the project-root `.gitignore` and `.ignore`.
+exists. Initialization creates `.agent-docs/.gitignore` and `.agent-docs/.ignore` with `*`; it does not modify
+the project-root `.gitignore` or `.ignore`.
 
 ## Safety decisions
 
@@ -148,4 +149,5 @@ npx --yes harnessmith uninstall --agent codex
 - `<agent-home>/.harnessmith/install.json` exists and `status` reports every output as `managed`.
 - `node <harness-path>/bin/harness.mjs --version` exits successfully.
 - If shared global memory was initialized, global memory check, `doctor`, and `health --json` pass.
-- If project memory was initialized, both ignore files contain `/.agent-docs/` and project validation passes.
+- If project memory was initialized, both `.agent-docs`-local ignore files contain `*` and project validation
+  passes without requiring changes to project-root ignore files.

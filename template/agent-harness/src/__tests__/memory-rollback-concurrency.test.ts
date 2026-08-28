@@ -153,7 +153,9 @@ test('project initialization preserves an unknown validator-time replacement', (
   const project = join(root, 'project');
   mkdirSync(project);
   execFileSync('git', ['-C', project, 'init', '-q']);
-  const ignore = join(project, '.gitignore');
+  const memoryRoot = join(project, '.agent-docs');
+  mkdirSync(memoryRoot);
+  const ignore = join(memoryRoot, '.gitignore');
   const concurrent = 'concurrent ignore content\n';
   armConcurrentReplacement(ignore, concurrent);
 

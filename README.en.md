@@ -138,7 +138,7 @@ currently true about a project:
 | `~/.agent-harness` | User-maintained personal rules and repository relationships | A rule overlay, not memory; preserved across upgrades and uninstall |
 | `~/.agent-docs/profile.md` | Current identity, working style, technical background, preferences, and interests | The only current user profile inside the Harness; only cross-task `explicit/high` signals update automatically, with pause and forget controls |
 | `~/.agent-docs/core.md` and other global memory | Cross-project active topics, experience, and distilled findings | Name-level routing, sources, and context; never a second current profile |
-| `<project>/.agent-docs` | Project input, sessions, work state, evidence, distilled findings, and archive | Reviewable but non-authoritative; ignored by Git and normal indexing |
+| `<project>/.agent-docs` | Project input, sessions, work state, evidence, distilled findings, and archive | Reviewable but non-authoritative; contains local ignore files and does not modify project-root ignore configuration |
 | `docs/`, ADRs, code, tests, schemas, lint, and CI | Current project facts, accepted decisions, and executable constraints | Authoritative; stable conclusions are promoted here |
 
 Project `.agent-docs` uses a progressively disclosed minimal model:

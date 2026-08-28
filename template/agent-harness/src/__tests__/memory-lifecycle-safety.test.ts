@@ -225,6 +225,7 @@ test('completed task progress remains a strict task ledger after canonical archi
   const project = join(root, 'project');
   mkdirSync(project);
   execFileSync('git', ['-C', project, 'init', '-q']);
+  writeFileSync(join(project, 'verification.txt'), 'verification scope\n');
   const task = initTask(
     runtime,
     {
@@ -243,7 +244,7 @@ test('completed task progress remains a strict task ledger after canonical archi
       type: 'test',
       command: process.execPath,
       args: ['-e', 'process.exit(0)'],
-      scope: ['.gitignore'],
+      scope: ['verification.txt'],
     },
     capturedIo(),
   );

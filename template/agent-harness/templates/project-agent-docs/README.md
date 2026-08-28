@@ -20,7 +20,8 @@ schema-version: 1
 
 # Project Agent Memory
 
-本目录是项目本地、非权威的 Agent 记忆系统，默认被 `.gitignore` 和 `.ignore` 忽略。
+本目录是项目本地、非权威的 Agent 记忆系统。目录内的 `.gitignore` 和 `.ignore` 使用 `*` 忽略
+当前目录的全部内容；初始化不得修改宿主项目根的 ignore 文件。
 
 - 正式事实与决策：写入 `docs/`、ADR、代码、测试或 schema。
 - 用户原始输入：`inputs/`。

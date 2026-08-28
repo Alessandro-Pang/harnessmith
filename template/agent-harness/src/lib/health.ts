@@ -153,9 +153,8 @@ function projectMemoryHealth(runtime: Runtime, projectRoot: string, today: strin
   if (check.status === 'failed') return check;
   const missingIgnoreRules: string[] = [];
   for (const name of ['.gitignore', '.ignore']) {
-    const path = join(projectRoot, name);
-    const hasRule =
-      existsSync(path) && readFileSync(path, 'utf8').split(/\r?\n/).includes('/.agent-docs/');
+    const path = join(projectRoot, '.agent-docs', name);
+    const hasRule = existsSync(path) && readFileSync(path, 'utf8').split(/\r?\n/).includes('*');
     if (!hasRule) missingIgnoreRules.push(`missing project memory ignore rule: ${path}`);
   }
   if (missingIgnoreRules.length === 0) return check;

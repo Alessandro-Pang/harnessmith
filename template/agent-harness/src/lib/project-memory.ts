@@ -42,13 +42,12 @@ function ensureIgnore(
   rollbackSnapshot: FileSnapshot,
   attempted: Map<string, ExactFileState>,
 ): boolean {
-  const rule = '/.agent-docs/';
-  const heading = '# Local Agent working documents';
+  const rule = '*';
   const before = snapshot(path);
   const current = before.content;
   if (current.split(/\r?\n/).includes(rule)) return false;
-  const prefix = current.length === 0 ? '' : current.endsWith('\n') ? '\n' : '\n\n';
-  const content = `${current}${prefix}${heading}\n${rule}\n`;
+  const prefix = current.length === 0 || current.endsWith('\n') ? '' : '\n';
+  const content = `${current}${prefix}${rule}\n`;
   const candidate = { exists: true, content, mode: before.mode };
   assertExactFileState(path, before, 'Project ignore update');
   Object.assign(rollbackSnapshot, before);
@@ -145,10 +144,10 @@ export function withProjectMemoryTransaction<T>(
     throw new Error(`Project memory root collides with global memory: ${memoryRoot}`);
   }
   const memoryFiles = ['README.md', 'core.md'].map((name) => join(memoryRoot, name));
-  const ignoreFiles = [join(target, '.gitignore'), join(target, '.ignore')];
+  const ignoreFiles = [join(memoryRoot, '.gitignore'), join(memoryRoot, '.ignore')];
   assertSafePath(target, memoryRoot);
   for (const path of memoryFiles) assertSafePath(memoryRoot, path);
-  for (const path of ignoreFiles) assertSafePath(target, path);
+  for (const path of ignoreFiles) assertSafePath(memoryRoot, path);
   return withMemoryLock(memoryRoot, ({ rootExisted }) => {
     let snapshots: FileSnapshot[] = [];
     const attempted = new Map<string, ExactFileState>();

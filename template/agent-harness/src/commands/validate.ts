@@ -105,9 +105,8 @@ function validateProject(runtime: Runtime, input: string, report: ValidationRepo
     project.memory.root,
   );
   for (const name of ['.gitignore', '.ignore']) {
-    const path = join(project.root, name);
-    const ignored =
-      existsSync(path) && readFileSync(path, 'utf8').split(/\r?\n/).includes('/.agent-docs/');
+    const path = join(project.memory.root, name);
+    const ignored = existsSync(path) && readFileSync(path, 'utf8').split(/\r?\n/).includes('*');
     check(
       report,
       'project-memory-ignore',

@@ -135,21 +135,28 @@ test('personal overlay initialization rejects concurrent writers', () => {
   assert.equal(existsSync(join(runtime.personalHome, 'AGENTS.md')), false);
 });
 
-test('project initialization targets the Git root and manages both ignore files once', () => {
+test('project initialization keeps ignore rules inside the memory root', () => {
   const root = temporaryRoot();
   const project = join(root, 'project');
   const nested = join(project, 'packages', 'app');
   mkdirSync(nested, { recursive: true });
   execFileSync('git', ['-C', project, 'init', '-q']);
   writeFileSync(join(project, '.gitignore'), 'node_modules/\n');
+  writeFileSync(join(project, '.ignore'), 'generated/\n');
   const runtime = harnessRuntime(root);
 
   initProject(runtime, nested, capturedIo());
   initProject(runtime, nested, capturedIo());
-  for (const name of ['.gitignore', '.ignore']) {
-    const content = readFileSync(join(project, name), 'utf8');
-    assert.equal(content.match(/^\/\.agent-docs\/$/gm)?.length, 1);
-  }
+  assert.equal(readFileSync(join(project, '.gitignore'), 'utf8'), 'node_modules/\n');
+  assert.equal(readFileSync(join(project, '.ignore'), 'utf8'), 'generated/\n');
+  for (const name of ['.gitignore', '.ignore'])
+    assert.equal(readFileSync(join(project, '.agent-docs', name), 'utf8'), '*\n');
+  assert.equal(
+    execFileSync('git', ['-C', project, 'check-ignore', '.agent-docs/core.md'], {
+      encoding: 'utf8',
+    }).trim(),
+    '.agent-docs/core.md',
+  );
   const metadata = parseFrontmatter(readFileSync(join(project, '.agent-docs', 'core.md'), 'utf8'));
   assert.equal(metadata.get('project'), 'project');
   assert.throws(() => initProject(runtime, join(root, 'missing')), /does not exist/);

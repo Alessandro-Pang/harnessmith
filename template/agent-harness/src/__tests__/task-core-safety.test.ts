@@ -23,6 +23,7 @@ function fixture(): { project: string; runtime: ReturnType<typeof harnessRuntime
   const project = mkdtempSync(join(tmpdir(), 'harness-task-core-safety-'));
   onTestFinished(() => rmSync(project, { recursive: true, force: true }));
   execFileSync('git', ['-C', project, 'init', '-q']);
+  writeFileSync(join(project, 'verification.txt'), 'verification scope\n');
   return { project, runtime: harnessRuntime(project) };
 }
 
@@ -201,7 +202,7 @@ test('closing a task removes only its exact core token and retains prefix and si
       type: 'test',
       command: process.execPath,
       args: ['-e', 'process.exit(0)'],
-      scope: ['.gitignore'],
+      scope: ['verification.txt'],
     },
     capturedIo(),
   );

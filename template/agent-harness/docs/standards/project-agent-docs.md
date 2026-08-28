@@ -30,8 +30,8 @@ Agent 不应因为进入一个项目就创建 `.agent-docs/`：
 - 提案而不初始化：未初始化的只读项目不自动创建 `.agent-docs/`；昂贵发现只形成候选提案。
 - 询问用户：是否需要持久记忆会实质改变范围，且无法从成本、任务长度或用户意图判断。
 
-确认需要后使用 Harness 的 project init 命令。初始化必须在仓库根 `.gitignore` 和 `.ignore` 中加入
-`/.agent-docs/`：前者避免误提交，后者避免普通索引把全部历史装入上下文。
+确认需要后使用 Harness 的 project init 命令。初始化只在 `.agent-docs/` 内创建 `.gitignore` 和
+`.ignore`，两者都用 `*` 忽略当前目录全部内容；不得修改宿主项目根的 `.gitignore` 或 `.ignore`。
 
 ## 记忆模型
 

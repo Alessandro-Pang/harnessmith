@@ -37,7 +37,9 @@ function assertDanglingLink(path: string, target: string): void {
 
 test('project initialization never replaces a dangling ignore symlink', () => {
   const { project, runtime } = fixture();
-  const ignore = join(project, '.gitignore');
+  const memoryRoot = join(project, '.agent-docs');
+  mkdirSync(memoryRoot);
+  const ignore = join(memoryRoot, '.gitignore');
   symlinkSync('missing-ignore-target', ignore);
 
   assert.throws(
@@ -51,7 +53,8 @@ test('project initialization never replaces a dangling ignore symlink', () => {
     /symbolic link/i,
   );
   assertDanglingLink(ignore, 'missing-ignore-target');
-  assert.equal(existsSync(join(project, '.agent-docs')), false);
+  assert.equal(existsSync(join(memoryRoot, 'README.md')), false);
+  assert.equal(existsSync(join(memoryRoot, 'core.md')), false);
 });
 
 test('typed capture never replaces a dangling project core symlink', () => {
@@ -87,7 +90,9 @@ test('global initialization never replaces a dangling profile symlink', () => {
 
 test('snapshot failure does not leave a newly created project memory root', () => {
   const { project, runtime } = fixture();
-  const ignore = join(project, '.gitignore');
+  const memoryRoot = join(project, '.agent-docs');
+  mkdirSync(memoryRoot);
+  const ignore = join(memoryRoot, '.gitignore');
   writeFileSync(ignore, '');
   truncateSync(ignore, maximumMemoryDocumentBytes + 1);
   const before = statSync(ignore).size;
@@ -103,5 +108,6 @@ test('snapshot failure does not leave a newly created project memory root', () =
     /exceeds .* bytes/i,
   );
   assert.equal(statSync(ignore).size, before);
-  assert.equal(existsSync(join(project, '.agent-docs')), false);
+  assert.equal(existsSync(join(memoryRoot, 'README.md')), false);
+  assert.equal(existsSync(join(memoryRoot, 'core.md')), false);
 });

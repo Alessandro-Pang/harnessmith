@@ -23,6 +23,7 @@ function projectFixture(): { project: string; runtime: ReturnType<typeof harness
   const root = mkdtempSync(join(tmpdir(), 'harness-task-record-boundary-'));
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
   execFileSync('git', ['-C', root, 'init', '-q']);
+  writeFileSync(join(root, 'verification.txt'), 'verification scope\n');
   return { project: root, runtime: harnessRuntime(root) };
 }
 
@@ -35,7 +36,7 @@ function verifyTest(project: string, id: string) {
       type: 'test',
       command: process.execPath,
       args: ['-e', 'process.exit(0)'],
-      scope: ['.gitignore'],
+      scope: ['verification.txt'],
     },
     capturedIo(),
   );

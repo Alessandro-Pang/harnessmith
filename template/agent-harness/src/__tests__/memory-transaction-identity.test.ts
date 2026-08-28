@@ -229,9 +229,10 @@ test('project transaction preserves an empty memory root replacement during roll
 test('project ignore update refuses an external replacement made after its bounded read', () => {
   const { root, runtime } = fixture('harness-project-ignore-prewrite-conflict-');
   const project = join(root, 'project');
-  const ignore = join(project, '.gitignore');
+  const memoryRoot = join(project, '.agent-docs');
+  const ignore = join(memoryRoot, '.gitignore');
   const concurrent = '# external writer\n*.external\n';
-  mkdirSync(project);
+  mkdirSync(memoryRoot, { recursive: true });
   writeFileSync(ignore, '# original\n');
   boundedReplacement.path = ignore;
   boundedReplacement.content = concurrent;

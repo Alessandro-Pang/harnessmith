@@ -47,6 +47,11 @@ test('packaged Harness completes project memory and task lifecycle', () => {
   );
 
   run(process.execPath, [harness, 'init', 'project', project], { env });
+  assert.equal(existsSync(join(project, '.gitignore')), false);
+  assert.equal(existsSync(join(project, '.ignore')), false);
+  assert.equal(readFileSync(join(project, '.agent-docs', '.gitignore'), 'utf8'), '*\n');
+  assert.equal(readFileSync(join(project, '.agent-docs', '.ignore'), 'utf8'), '*\n');
+  writeFileSync(join(project, 'verification.txt'), 'verification scope\n');
   run(
     process.execPath,
     [
@@ -100,7 +105,7 @@ test('packaged Harness completes project memory and task lifecycle', () => {
       '--arg',
       'process.exit(0)',
       '--scope',
-      '.gitignore',
+      'verification.txt',
     ],
     { env },
   );

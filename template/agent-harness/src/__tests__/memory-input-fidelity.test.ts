@@ -94,7 +94,7 @@ test('content files must be bounded regular files and direct content uses the sa
   );
 });
 
-test('project memory initialization preserves existing ignore-file modes', () => {
+test('project memory initialization leaves host ignore files untouched', () => {
   const { project, runtime } = fixture('harness-input-ignore-mode-');
   const gitignore = join(project, '.gitignore');
   writeFileSync(gitignore, 'existing-rule\n');
@@ -107,7 +107,8 @@ test('project memory initialization preserves existing ignore-file modes', () =>
   });
 
   assert.equal(statSync(gitignore).mode & 0o777, 0o600);
-  assert.match(readFileSync(gitignore, 'utf8'), /\/\.agent-docs\//);
+  assert.equal(readFileSync(gitignore, 'utf8'), 'existing-rule\n');
+  assert.equal(readFileSync(join(project, '.agent-docs', '.gitignore'), 'utf8'), '*\n');
 });
 
 test('failed input capture rolls back project ignore initialization side effects', () => {
