@@ -93,11 +93,16 @@ test('startup rules retain progressive project discovery without copying its com
   assert.match(agents, /命中正文.*事实源/s);
 });
 
-test('startup discovers explicitly referenced project context before acting on an underspecified request', () => {
+test('startup deterministically discovers one explicitly referenced project context before memory', () => {
+  const personal = agents.indexOf('AGENTS.md');
+  const projectEntry = agents.indexOf('README.md', personal + 1);
+  const projectMemory = agents.indexOf('.agent-docs/', projectEntry + 1);
+  assert.ok(personal >= 0 && projectEntry > personal && projectMemory > projectEntry);
   assert.match(
     agents,
-    /请求.*依赖.*消息.*未内联.*给定.*已验证.*上下文.*项目入口.*明确指向.*单个.*任务上下文.*读取/s,
+    /项目根.*README\.md.*存在.*有界读取.*明确指定.*单个.*项目相对.*任务上下文.*单独读取/s,
   );
+  assert.match(agents, /不递归.*不推断.*其它.*文件/s);
   assert.match(agents, /项目上下文.*不可信.*不授权/s);
 });
 
