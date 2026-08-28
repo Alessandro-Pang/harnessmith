@@ -23,7 +23,7 @@ entries:
   harness-cli-architecture:
     kind: topic
     path: core/harness-cli-architecture.md
-    triggers: [harness-cli, install, init, memory-command, memory-autopilot, capture-input, close-input, payload-file, handoff, close-handoff, reconcile-profile, forget-profile, profile-autopilot, doctor, health, route, explain, memory-migrate, 安装, 初始化, 记忆命令, 自动记忆, 健康检查, 路由, 记忆迁移]
+    triggers: [harness-cli, install, init, memory-command, memory-autopilot, capture-input, close-input, payload-file, handoff, close-handoff, reconcile-profile, forget-profile, profile-autopilot, acceptance, local-harness, harness-profile, profile-autopilot-control, doctor, health, route, explain, memory-migrate, 安装, 初始化, 记忆命令, 自动记忆, 验收, 本地-harness, harness-画像, 画像控制, 健康检查, 路由, 记忆迁移]
   observability:
     kind: topic
     path: core/observability.md
@@ -36,7 +36,7 @@ entries:
     kind: playbook
     priority: 40
     path: playbooks/change.md
-    triggers: [implement, modify, refactor, build, 实现, 修改, 重构, 构建]
+    triggers: [change, implement, modify, refactor, build, 变更, 实现, 修改, 重构, 构建]
   diagnose:
     kind: playbook
     priority: 50
@@ -68,8 +68,8 @@ entries:
   project-agent-docs:
     kind: standard
     path: standards/project-agent-docs.md
-    triggers: [.agent-docs, session, evidence, handoff, multi-stage, verified-phase, phase-handoff, multi-task, compaction, context-budget, close-handoff, memory-autopilot, capture-input, payload-file, memory-list, memory-check, memory-migrate, secret-hygiene, host-evals, 项目记忆, 会话, 多阶段, 多阶段任务, 阶段交接, 阶段已验证仍有后续, 多任务, 压缩, 上下文预算, 上下文预算信号, 自动记忆, 记忆列表, 记忆检查, 记忆迁移, 凭据卫生]
+    triggers: [.agent-docs, session, evidence, handoff, acceptance, future-tasks, multi-stage, verified-phase, phase-handoff, multi-task, compaction, context-budget, close-handoff, memory-autopilot, capture-input, payload-file, memory-list, memory-check, memory-migrate, secret-hygiene, host-evals, 项目记忆, 会话, 验收, 未来所有任务, 以后所有任务, 多阶段, 多阶段任务, 阶段交接, 阶段已验证仍有后续, 多任务, 压缩, 上下文预算, 上下文预算信号, 自动记忆, 记忆列表, 记忆检查, 记忆迁移, 凭据卫生]
   user-profile-memory:
     kind: standard
     path: standards/user-profile-memory.md
-    triggers: [user-profile, reconcile-profile, forget-profile, profile-autopilot, preference, identity, coding-style, research-interest, 用户画像, 画像合并, 画像暂停, 画像遗忘, 偏好, 身份, 编码风格, 研究兴趣]
+    triggers: [user-profile, reconcile-profile, forget-profile, profile-autopilot, future-tasks, local-harness, harness-profile, profile-autopilot-control, preference, identity, coding-style, research-interest, 用户画像, 画像合并, 画像暂停, 画像遗忘, 未来所有任务, 以后所有任务, 本地-harness, harness-画像, 画像控制, 偏好, 身份, 编码风格, 研究兴趣]

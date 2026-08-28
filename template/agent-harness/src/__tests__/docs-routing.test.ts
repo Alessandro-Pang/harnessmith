@@ -94,6 +94,28 @@ test('debugging a long-running handoff chooses diagnose and loads only supportin
   );
 });
 
+test('an exact multi-turn acceptance prompt routes every required autopilot owner', () => {
+  const report = routeDocumentation(docsRoot, [
+    'Change docs/status.txt from pending to ready. Acceptance: node verify-autopilot.mjs docs/status.txt exits 0 and no other tracked file changes. For all future tasks, keep status summaries to one sentence.',
+  ]);
+
+  assert.equal(report.primaryPlaybook?.name, 'change');
+  assert.deepEqual(
+    report.topics.map(({ name }) => name),
+    ['harness-cli-architecture', 'long-running-tasks', 'project-agent-docs', 'user-profile-memory'],
+  );
+});
+
+test('local Harness profile controls route locally instead of to product documentation', () => {
+  const report = routeDocumentation(docsRoot, ['Pause this local Harness profile autopilot.']);
+
+  assert.deepEqual(
+    report.topics.map(({ name }) => name),
+    ['harness-cli-architecture', 'user-profile-memory'],
+  );
+  assert.ok(!report.routes.some(({ name }) => name === 'tool-routing'));
+});
+
 test('runtime audit, policy decision, and token cost queries route to observability guidance', () => {
   const report = routeDocumentation(docsRoot, ['查看运行审计、policy decision 和 token 成本']);
   assert.deepEqual(

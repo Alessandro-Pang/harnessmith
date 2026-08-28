@@ -13,12 +13,20 @@ const architecture = readFileSync(
   join(root, 'template', 'agent-harness', 'docs', 'core', 'harness-cli-architecture.md'),
   'utf8',
 );
+const longRunning = readFileSync(
+  join(root, 'template', 'agent-harness', 'docs', 'core', 'long-running-tasks.md'),
+  'utf8',
+);
 const operatingModel = readFileSync(
   join(root, 'template', 'agent-harness', 'docs', 'core', 'operating-model.md'),
   'utf8',
 );
 const docsIndex = readFileSync(
   join(root, 'template', 'agent-harness', 'docs', 'README.md'),
+  'utf8',
+);
+const userProfile = readFileSync(
+  join(root, 'template', 'agent-harness', 'docs', 'standards', 'user-profile-memory.md'),
   'utf8',
 );
 
@@ -45,7 +53,16 @@ test('top-level prompt is a compact bootstrap instead of a Memory CLI manual', (
 test('top-level routing uses one primary playbook plus supporting topics without category exceptions', () => {
   assert.match(agents, /primaryPlaybook/);
   assert.match(agents, /topics/);
+  assert.match(agents, /加载.*primaryPlaybook.*全部.*返回.*topics/s);
   assert.match(agents, /歧义.*停止|停止.*歧义/s);
+  assert.match(
+    agents,
+    /路由查询.*用户当前原文.*不得.*改写.*遗漏.*验收.*未来默认.*仍有后续.*host-signal/s,
+  );
+  assert.match(
+    agents,
+    /本地 Harness.*Memory.*画像控制.*不是.*宿主产品.*不加载.*产品文档.*skill.*web/s,
+  );
   assert.match(docsIndex, /primaryPlaybook/);
   assert.match(docsIndex, /topics/);
 });
@@ -130,6 +147,10 @@ test('background sidecars stay quiet while explicit Memory requests remain audit
   assert.match(projectMemory, /普通任务.*final.*不得.*持久保留.*已保存.*归档.*Memory.*校验/s);
   assert.match(projectMemory, /final.*独立句.*直接陈述.*不.*结论/s);
   assert.match(projectMemory, /final.*事实本身.*主语.*当前架构边界为.*不.*正式文档确认/s);
+  assert.match(
+    agents,
+    /纯 host-signal\/replay.*允许空响应.*不得.*agent_message.*强制响应.*上一用户任务.*验证结果.*不提.*sidecar/s,
+  );
 });
 
 test('documentation states the real host-hook and source-of-truth boundaries', () => {
@@ -153,6 +174,13 @@ test('input capture policy distinguishes durable decisions from one-shot actions
   assert.match(projectMemory, /长度.*不是|不能.*字数/s);
   assert.match(projectMemory, /workstream.*durable/s);
   assert.match(projectMemory, /verbatim.*逐字|逐字.*verbatim/s);
+  assert.match(projectMemory, /capture-input.*JSON payload.*sourceRefs.*复数.*不得.*sourceRef/s);
+  assert.match(projectMemory, /source.*只接受.*chat.*file.*meeting.*link.*other/s);
+  assert.match(userProfile, /evidence.*只接受.*explicit.*observed.*不得.*解释文本/s);
+  assert.match(
+    longRunning,
+    /JSON payload.*旧.*open.*全部.*resolved.*只接受.*clearOpen.*true.*不得.*clear.*open.*占位/s,
+  );
   assert.match(operatingModel, /一次性.*授权.*不.*捕获/s);
   assert.match(architecture, /mode.*verbatim.*summary/s);
   assert.match(architecture, /close-input.*core\.md/s);
