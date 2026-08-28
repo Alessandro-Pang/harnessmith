@@ -298,9 +298,14 @@ npm pack --dry-run
 项目使用 Biome、Markdownlint、Commitlint、Vitest、lint-staged 和 Husky。依赖安装、脚本编排与 CI
 统一使用 pnpm；`npm pack --dry-run` 仅用于验证最终 npm 分发清单。
 
+一次性 payload 在托管写入成功后应使用 `--consume-payload-file` 消费。验证或 clean-room 工作区遵循
+[临时资源生命周期契约](./docs/temporary-resources.md)；`pnpm run temp:scan` 只生成受管理资源与历史 lock
+target 的有界 dry-run 报告，不会删除未知或活动路径。
+
 ## 进一步阅读
 
 - [架构与 enforcement model](./docs/architecture.md)
+- [临时资源生命周期](./docs/temporary-resources.md)
 - [贡献指南](./CONTRIBUTING.md)
 - [安全策略](./SECURITY.md)
 - [发布流程](./RELEASING.md)

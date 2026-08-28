@@ -1,9 +1,13 @@
-import { cpSync, existsSync, mkdirSync, mkdtempSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { cpSync, existsSync, mkdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { removeExact } from './files.js';
 import type { RecordLayer } from './lifecycle-plan.js';
 import { assertSafePath, ignoreRoot } from './safe-path.js';
+import {
+  createTemporaryWorkspace,
+  disposeTemporaryWorkspace,
+  type TemporaryWorkspace,
+} from './temporary-resource.js';
 import type { Adapter } from './types.js';
 import { errorMessage } from './types.js';
 
@@ -57,8 +61,17 @@ export function mutableLifecyclePaths(adapter: Adapter, layers: RecordLayer[]): 
   return [...paths.values()];
 }
 
-function snapshotPaths(paths: MutablePath[]): { root: string; snapshots: PathSnapshot[] } {
-  const root = mkdtempSync(join(tmpdir(), 'harnesssmith-lifecycle-'));
+function snapshotPaths(paths: MutablePath[]): {
+  root: string;
+  workspace: TemporaryWorkspace;
+  snapshots: PathSnapshot[];
+} {
+  const workspace = createTemporaryWorkspace({
+    owner: 'installer',
+    purpose: 'lifecycle',
+    lifecycle: 'retained-for-recovery',
+  });
+  const root = workspace.path;
   const snapshots: PathSnapshot[] = [];
   try {
     for (const [index, { root: authorizedRoot, path }] of paths.entries()) {
@@ -71,10 +84,10 @@ function snapshotPaths(paths: MutablePath[]): { root: string; snapshots: PathSna
       cpSync(path, copy, { recursive: true, dereference: false, preserveTimestamps: true });
       snapshots.push({ root: authorizedRoot, path, copy });
     }
-    return { root, snapshots };
+    return { root, workspace, snapshots };
   } catch (error) {
     try {
-      removeExact(root);
+      disposeTemporaryWorkspace(workspace);
     } catch (cleanupError) {
       throw new LifecycleRecoveryError(
         `Lifecycle snapshot creation failed and cleanup was incomplete: ${errorMessage(error)}; cleanup: ${errorMessage(cleanupError)}`,
@@ -169,7 +182,7 @@ export function lifecycleTransaction<T>(
       );
     }
     try {
-      removeExact(transaction.root);
+      disposeTemporaryWorkspace(transaction.workspace);
     } catch (cleanupError) {
       throw new LifecycleRecoveryError(
         `Lifecycle operation failed; rollback completed but transaction cleanup was incomplete: ${errorMessage(error)}; cleanup: ${errorMessage(cleanupError)}`,
@@ -187,7 +200,7 @@ export function lifecycleTransaction<T>(
     );
   }
   try {
-    removeExact(transaction.root);
+    disposeTemporaryWorkspace(transaction.workspace);
   } catch (cleanupError) {
     throw new LifecycleRecoveryError(
       `Lifecycle operation completed but transaction cleanup was incomplete: ${errorMessage(cleanupError)}`,

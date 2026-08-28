@@ -329,9 +329,15 @@ Biome, Markdownlint, Commitlint, Vitest, lint-staged, and Husky provide the qual
 installation, script orchestration, and CI use pnpm; `npm pack --dry-run` exists only to verify the final npm
 distribution manifest.
 
+Consume one-shot payloads with `--consume-payload-file` after a managed write succeeds. Verification and
+clean-room workspaces follow the [temporary resource lifecycle](./docs/temporary-resources.md); `pnpm run
+temp:scan` emits a bounded dry-run report for managed resources and historical lock targets without deleting
+unknown or active paths.
+
 ## Read more
 
 - [Architecture and enforcement model](./docs/architecture.md)
+- [Temporary resource lifecycle](./docs/temporary-resources.md)
 - [Contributing guide](./CONTRIBUTING.md)
 - [Security policy](./SECURITY.md)
 - [Release process](./RELEASING.md)

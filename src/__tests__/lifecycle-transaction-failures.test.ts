@@ -25,6 +25,22 @@ vi.mock('../files.js', async (importOriginal) => {
   };
 });
 
+vi.mock('../temporary-resource.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../temporary-resource.js')>();
+  return {
+    ...actual,
+    disposeTemporaryWorkspace(workspace: { path: string }) {
+      if (
+        removal.failTransactionRoot &&
+        basename(workspace.path).startsWith('harnessmith-lifecycle-')
+      ) {
+        throw new Error(`injected cleanup failure: ${workspace.path}`);
+      }
+      actual.disposeTemporaryWorkspace(workspace as never);
+    },
+  };
+});
+
 import { LifecycleRecoveryError, lifecycleTransaction } from '../lifecycle-transaction.js';
 
 beforeEach(() => {
