@@ -165,17 +165,20 @@ Harnessmith 将“如何工作”“用户是谁”“之前发生了什么”�
 长任务的目标、checkpoint、验收项和下一步保存在 `working/<task-id>/task.json`，稳定事实仍必须提升到
 正式事实层。记忆支持 `active`、`blocked`、`complete`、`superseded`、`archived` 生命周期，以及
 检查、检索、替代、归档和 proposal-only 提升。`memory check --indexed` 会拒绝无法从索引到达的
-active/blocked 记忆，`memory maintain` 只读报告未索引、过期 working、可归档内容、重复 active title
-和 supersession cycle。
+active/blocked 记忆，`memory maintain` 只读报告未索引、过期 working、可归档内容、重复 active title、
+supersession cycle，以及待审阅的 legacy、通用动作和 workstream input。
 
 `memory list --json` 和 `memory check --json` 提供版本化机器契约。旧 metadata 只通过显式
 `memory migrate --set ...` 迁移：默认输出 proposal，审阅且 `ready` 后才使用 `--apply`；初始化、
 task progress 和 Memory 写命令通过共享 memory-root lock 串行化。
 
 Memory Autopilot 让 Agent 在不反复打扰用户的前提下调用类型化命令：`capture-input --payload-file`
-安全保存重要输入，`capture-experience` 去重维护有来源的 lesson/failure，`handoff` / `close-handoff`
+只保存会影响后续决策的 constraint、acceptance、source、risk-decision 或 explicit-retain，并要求显式选择
+verbatim/summary 和 workstream/durable 生命周期；`close-input` 在输入失效后将其移出 active index。
+`capture-experience` 去重维护有来源的 lesson/failure，`handoff` / `close-handoff`
 维护未完成工作，`reconcile-profile` / `forget-profile` /
-`profile-autopilot` 维护可暂停的当前画像。verbatim 输入按原始文本、来源和模式精确去重，可靠摘要按
+`profile-autopilot` 维护可暂停的当前画像。`提交`、`发布`、`继续`等一次性动作授权默认不持久化为
+Important Input，短但持续有效的禁止项不按字数过滤。verbatim 输入按原始文本、来源和模式精确去重，可靠摘要按
 规范化文本去重；命令会拒绝
 高置信敏感信息、精确更新索引、校验托管 Memory 并在失败时回滚。所有自动自由文本先由非 shell 文件
 能力写入 JSON，再经 `--payload-file` 传递，禁止把不可信文本做 shell 插值。例行自动

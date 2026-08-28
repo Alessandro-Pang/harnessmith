@@ -5,6 +5,18 @@ The embedded Harness schema has its own explicitly recorded version.
 
 ## Unreleased
 
+### Added
+
+- Add typed input purpose and retention metadata, explicit verbatim/summary capture mode, a transactional
+  `memory close-input` lifecycle command, and maintenance reporting for legacy, generic-action, and active
+  workstream inputs.
+
+### Changed
+
+- Restrict Important Input capture to durable constraints, acceptance criteria, unrecoverable sources, scoped
+  risk decisions, or explicitly retained input; keep one-shot action authorizations in the current episode or
+  handoff and require completed workstream inputs to leave the active core index.
+
 ## 0.7.1 - 2026-08-28
 
 ### Added

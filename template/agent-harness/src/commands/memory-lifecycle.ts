@@ -111,6 +111,13 @@ export function memoryMaintenance(
     }
     io.log(`Supersession cycles: ${report.supersessionCycles.length}`);
     for (const cycle of report.supersessionCycles) io.log(`  ${cycle.join(' -> ')}`);
+    io.log(`Active inputs: ${report.activeInputCount}`);
+    io.log(`Legacy inputs: ${report.legacyInputs.length}`);
+    for (const path of report.legacyInputs) io.log(`  ${path}`);
+    io.log(`Generic action inputs: ${report.genericActionInputs.length}`);
+    for (const path of report.genericActionInputs) io.log(`  ${path}`);
+    io.log(`Active workstream inputs: ${report.workstreamInputs.length}`);
+    for (const path of report.workstreamInputs) io.log(`  ${path}`);
   }
   return report;
 }

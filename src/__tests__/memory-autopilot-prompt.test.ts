@@ -13,6 +13,10 @@ const architecture = readFileSync(
   join(root, 'template', 'agent-harness', 'docs', 'core', 'harness-cli-architecture.md'),
   'utf8',
 );
+const operatingModel = readFileSync(
+  join(root, 'template', 'agent-harness', 'docs', 'core', 'operating-model.md'),
+  'utf8',
+);
 const docsIndex = readFileSync(
   join(root, 'template', 'agent-harness', 'docs', 'README.md'),
   'utf8',
@@ -66,4 +70,24 @@ test('documentation states the real host-hook and source-of-truth boundaries', (
   assert.match(projectMemory, /Memory.*非权威|非权威.*Memory/s);
   assert.match(architecture, /宿主事件 hook.*尚未提供/s);
   assert.match(architecture, /真实 Host Eval/s);
+});
+
+test('input capture policy distinguishes durable decisions from one-shot actions', () => {
+  for (const purpose of [
+    'constraint',
+    'acceptance',
+    'source',
+    'risk-decision',
+    'explicit-retain',
+  ]) {
+    assert.match(projectMemory, new RegExp(`\\b${purpose}\\b`));
+  }
+  assert.match(projectMemory, /提交.*发布.*继续.*不.*Important Inputs/s);
+  assert.match(projectMemory, /不要发布.*持续|禁止.*持续/s);
+  assert.match(projectMemory, /长度.*不是|不能.*字数/s);
+  assert.match(projectMemory, /workstream.*durable/s);
+  assert.match(projectMemory, /verbatim.*逐字|逐字.*verbatim/s);
+  assert.match(operatingModel, /一次性.*授权.*不.*捕获/s);
+  assert.match(architecture, /mode.*verbatim.*summary/s);
+  assert.match(architecture, /close-input.*core\.md/s);
 });

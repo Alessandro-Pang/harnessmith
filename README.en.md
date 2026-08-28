@@ -176,7 +176,8 @@ Long-task objectives, checkpoints, acceptance criteria, and next actions live in
 `active`, `blocked`, `complete`, `superseded`, and `archived` lifecycle states, plus validation, search,
 supersede, archive, and proposal-only promotion. `memory check --indexed` rejects active or blocked memory
 that cannot be reached from an index, while `memory maintain` reports unindexed, expired working,
-archive-ready entries, duplicate active titles, and supersession cycles without changing them.
+archive-ready entries, duplicate active titles, supersession cycles, and legacy, generic-action, or workstream
+inputs that need review without changing them.
 
 `memory list --json` and `memory check --json` expose versioned machine contracts. Legacy metadata changes only
 through explicit `memory migrate --set ...`: it emits a proposal by default and accepts `--apply` only after the
@@ -184,9 +185,13 @@ reviewed result is `ready`. Initialization, task-progress updates, and Memory wr
 shared memory-root lock.
 
 Memory Autopilot gives agents typed, low-noise writes without repeated user prompting. `capture-input --payload-file`
-safely stores important input, `capture-experience` reconciles sourced lessons and failures,
+stores only future-decision-relevant constraints, acceptance criteria, sources, risk decisions, or explicitly
+retained input, with an explicit verbatim/summary mode and workstream/durable lifecycle. `close-input` removes
+expired input from the active index. `capture-experience` reconciles sourced lessons and failures,
 `handoff` / `close-handoff` maintain unfinished work, and
-`reconcile-profile` / `forget-profile` / `profile-autopilot` maintain a pausable current profile. Inputs are
+`reconcile-profile` / `forget-profile` / `profile-autopilot` maintain a pausable current profile. One-shot actions
+such as commit, publish, or continue are not Important Inputs by default, while short durable prohibitions are not
+discarded by a length threshold. Inputs are
 deduplicated by exact text for verbatim input or normalized text for reliable summaries, plus source and mode.
 Commands reject high-confidence secrets, update
 exact index references, validate managed memory, and roll back failed writes. Every automatically generated

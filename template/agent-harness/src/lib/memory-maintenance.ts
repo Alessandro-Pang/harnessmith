@@ -1,5 +1,6 @@
 import { relative } from 'node:path';
 import { parseFrontmatterDocument } from './frontmatter.js';
+import { parseInputBody } from './memory-input.js';
 import { markdownFiles, readMemoryDocument } from './memory-path.js';
 import {
   contentMemoryReferences,
@@ -16,13 +17,38 @@ export interface MemoryMaintenanceReport {
   closed: string[];
   duplicateTitles: Array<{ title: string; paths: string[] }>;
   supersessionCycles: string[][];
+  activeInputCount: number;
+  legacyInputs: string[];
+  genericActionInputs: string[];
+  workstreamInputs: string[];
 }
 
 interface MemoryDocument {
   name: string;
   metadata: Map<string, unknown>;
   references: string[];
+  body: string;
 }
+
+interface InputDiagnostics {
+  activeInputCount: number;
+  legacyInputs: string[];
+  genericActionInputs: string[];
+  workstreamInputs: string[];
+}
+
+const genericActions = new Set([
+  '提交',
+  '发布',
+  '继续',
+  '推送',
+  '合并',
+  'commit',
+  'publish',
+  'continue',
+  'push',
+  'merge',
+]);
 
 function portablePath(root: string, path: string): string {
   return relative(root, path).replaceAll('\\', '/');
@@ -93,6 +119,31 @@ function findSupersessionCycles(documents: MemoryDocument[]): string[][] {
   return cycles;
 }
 
+function inputDiagnostics(documents: MemoryDocument[]): InputDiagnostics {
+  const result: InputDiagnostics = {
+    activeInputCount: 0,
+    legacyInputs: [],
+    genericActionInputs: [],
+    workstreamInputs: [],
+  };
+  for (const { name, metadata, body } of documents) {
+    if (
+      !['active', 'blocked'].includes(String(metadata.get('status') || '')) ||
+      metadata.get('memory-kind') !== 'input'
+    ) {
+      continue;
+    }
+    result.activeInputCount += 1;
+    if (metadata.get('input-schema-version') !== 2) result.legacyInputs.push(name);
+    if (metadata.get('retention') === 'workstream') result.workstreamInputs.push(name);
+    const parsed = parseInputBody(body);
+    if (parsed && genericActions.has(parsed.content.trim().normalize('NFKC').toLowerCase())) {
+      result.genericActionInputs.push(name);
+    }
+  }
+  return result;
+}
+
 export function memoryMaintenanceReport(root: string, today: string): MemoryMaintenanceReport {
   const files = markdownFiles(root, { archive: false });
   const documents = files.map((path) => {
@@ -105,7 +156,7 @@ export function memoryMaintenanceReport(root: string, today: string): MemoryMain
     const references = [...bodyReferences, ...metadataReferences(metadata)].map((reference) =>
       referenceIdentity(reference),
     );
-    return { name: portablePath(root, path), metadata, references };
+    return { name: portablePath(root, path), metadata, references, body: parsed.body };
   });
   const byReference = new Map(
     documents.map((document) => [referenceIdentity(document.name), document]),
@@ -143,6 +194,7 @@ export function memoryMaintenanceReport(root: string, today: string): MemoryMain
     }
     if (closedStatuses.has(status)) closed.push(name);
   }
+  const inputs = inputDiagnostics(documents);
 
   return {
     version: 1,
@@ -153,6 +205,10 @@ export function memoryMaintenanceReport(root: string, today: string): MemoryMain
     closed: closed.sort(),
     duplicateTitles: duplicateActiveTitles(documents),
     supersessionCycles: findSupersessionCycles(documents),
+    activeInputCount: inputs.activeInputCount,
+    legacyInputs: inputs.legacyInputs.sort(),
+    genericActionInputs: inputs.genericActionInputs.sort(),
+    workstreamInputs: inputs.workstreamInputs.sort(),
   };
 }
 
@@ -164,5 +220,8 @@ export function memoryMaintenanceWarnings(report: MemoryMaintenanceReport): stri
       ({ title, paths }) => `duplicate title: ${title} (${paths.join(', ')})`,
     ),
     ...report.supersessionCycles.map((cycle) => `supersession cycle: ${cycle.join(' -> ')}`),
+    ...report.legacyInputs.map((path) => `legacy input: ${path}`),
+    ...report.genericActionInputs.map((path) => `generic action input: ${path}`),
+    ...report.workstreamInputs.map((path) => `active workstream input: ${path}`),
   ];
 }

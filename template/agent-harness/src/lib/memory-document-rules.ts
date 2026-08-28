@@ -4,6 +4,7 @@ import {
   type MemoryRootKind,
   validateAutopilotDocumentRules,
 } from './memory-autopilot-document-rules.js';
+import { validateInputDocumentRules } from './memory-input-document-rules.js';
 import { containsUnsafeDisplayCharacters } from './memory-root-path-rules.js';
 import { validateTaskLedgerMemory } from './task-ledger-memory.js';
 import {
@@ -30,7 +31,6 @@ const requiredMetadata = [
 ] as const;
 const memoryKinds = new Set(['input', 'episode', 'working', 'distilled', 'evidence', 'index']);
 const memoryStatuses = new Set(['active', 'blocked', 'complete', 'superseded', 'archived']);
-const inputSources = new Set(['chat', 'file', 'meeting', 'link', 'other']);
 const arrayMetadata = ['owners', 'tags', 'scope', 'source-refs'] as const;
 const stringMetadata = ['title', 'description', 'type', 'project'] as const;
 
@@ -129,16 +129,7 @@ function validateLifecycle(path: string, metadata: Map<string, unknown>, io: Io)
     io.error(`Memory updated date precedes created date: ${path}`);
     failures += 1;
   }
-  if (metadata.get('memory-kind') === 'input') {
-    if (!inputSources.has(String(metadata.get('input-source')))) {
-      io.error(`Input memory requires a valid input-source: ${path}`);
-      failures += 1;
-    }
-    if (typeof metadata.get('verbatim') !== 'boolean') {
-      io.error(`Input memory requires boolean verbatim metadata: ${path}`);
-      failures += 1;
-    }
-  }
+  failures += validateInputDocumentRules(path, metadata, io);
   if (metadata.get('status') === 'superseded' && !metadata.has('superseded-by')) {
     io.error(`Superseded memory requires superseded-by: ${path}`);
     failures += 1;

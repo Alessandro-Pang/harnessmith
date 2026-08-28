@@ -109,7 +109,7 @@
       "forbidden": ["Proposal-only promotion does not modify authoritative project documents."],
       "automatedChecks": [
         "template/agent-harness/src/__tests__/memory-lifecycle.test.ts#memory supersede and archive maintain links and move only closed documents",
-        "template/agent-harness/src/__tests__/memory-lifecycle.test.ts#memory promotion produces a proposal without writing authoritative docs"
+        "template/agent-harness/src/__tests__/memory-promotion.test.ts#memory promotion produces a proposal without writing authoritative docs"
       ]
     },
     {
@@ -148,7 +148,7 @@
       "forbidden": ["Proposal-only output is not reported as a completed formal promotion."],
       "automatedChecks": [
         "template/agent-harness/src/__tests__/memory-experience.test.ts#typed experience deduplicates one conclusion and accumulates sourced evidence",
-        "template/agent-harness/src/__tests__/memory-lifecycle.test.ts#memory promotion produces a proposal without writing authoritative docs",
+        "template/agent-harness/src/__tests__/memory-promotion.test.ts#memory promotion produces a proposal without writing authoritative docs",
         "src/__tests__/llms.test.ts#distributed rules close project-memory recall, writeback, and promotion loops"
       ]
     },

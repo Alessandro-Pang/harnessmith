@@ -16,6 +16,7 @@ import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { memoryCheck } from '../commands/memory.js';
 import { captureInput, maximumInputContentBytes } from '../commands/memory-input.js';
+import { closeInput } from '../commands/memory-input-close.js';
 import { archiveMemory } from '../commands/memory-lifecycle.js';
 import { reconcileProfile, removeProfileEntry } from '../commands/memory-profile.js';
 import { parseFrontmatterDocument } from '../lib/frontmatter.js';
@@ -231,6 +232,30 @@ test('typed input validation requires its digest and parseable capture body', ()
   assert.match(invalidBody.errors.join('\n'), /typed input.*capture body/i);
 });
 
+test('input schema v2 requires purpose, retention, and a workstream binding when scoped', () => {
+  const { project, runtime } = fixture('harness-input-policy-schema-');
+  const created = captureInput(runtime, project, {
+    title: 'Scoped policy',
+    content: 'Keep this constraint for the current workstream.',
+    source: 'chat',
+    mode: 'verbatim',
+    purpose: 'constraint',
+    retention: 'workstream',
+    workstream: 'memory-input-quality',
+  });
+  const valid = readFileSync(created.path, 'utf8');
+
+  writeFileSync(created.path, valid.replace(/^input-purpose: .+\n/m, ''));
+  const missingPurpose = capturedIo();
+  assert.throws(() => memoryCheck(runtime, project, missingPurpose), /issue/i);
+  assert.match(missingPurpose.errors.join('\n'), /input schema v2.*purpose/i);
+
+  writeFileSync(created.path, valid.replace(/^workstream: .+\n/m, ''));
+  const missingWorkstream = capturedIo();
+  assert.throws(() => memoryCheck(runtime, project, missingWorkstream), /issue/i);
+  assert.match(missingWorkstream.errors.join('\n'), /workstream.*required/i);
+});
+
 test('repeated capture finds an archived input without reviving or reindexing it', () => {
   const { project, runtime } = fixture('harness-input-archived-identity-');
   const options = {
@@ -247,10 +272,7 @@ test('repeated capture finds an archived input without reviving or reindexing it
       .filter((line) => !line.includes(created.reference))
       .join('\n'),
   );
-  writeFileSync(
-    created.path,
-    readFileSync(created.path, 'utf8').replace(/^status: active$/m, 'status: complete'),
-  );
+  closeInput(runtime, project, created.reference, { reason: 'consumed' }, capturedIo());
   const archivedPath = archiveMemory(runtime, project, created.reference, {}, capturedIo());
   const archived = readFileSync(archivedPath, 'utf8');
   const core = readFileSync(corePath, 'utf8');

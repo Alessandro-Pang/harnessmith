@@ -23,7 +23,7 @@ entries:
   harness-cli-architecture:
     kind: topic
     path: core/harness-cli-architecture.md
-    triggers: [harness-cli, install, init, memory-command, memory-autopilot, capture-input, payload-file, handoff, close-handoff, reconcile-profile, forget-profile, profile-autopilot, doctor, health, route, explain, memory-migrate, 安装, 初始化, 记忆命令, 自动记忆, 健康检查, 路由, 记忆迁移]
+    triggers: [harness-cli, install, init, memory-command, memory-autopilot, capture-input, close-input, payload-file, handoff, close-handoff, reconcile-profile, forget-profile, profile-autopilot, doctor, health, route, explain, memory-migrate, 安装, 初始化, 记忆命令, 自动记忆, 健康检查, 路由, 记忆迁移]
   observability:
     kind: topic
     path: core/observability.md

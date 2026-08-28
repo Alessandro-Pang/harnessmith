@@ -1,15 +1,14 @@
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import lockfile from 'proper-lockfile';
 import { onTestFinished, test } from 'vitest';
-import { initGlobal, initProject } from '../commands/init.js';
-import { memoryCheck, resolveMemoryRoot } from '../commands/memory.js';
+import { initGlobal } from '../commands/init.js';
+import { memoryCheck } from '../commands/memory.js';
 import { archiveMemory, memoryMaintenance, supersedeMemory } from '../commands/memory-lifecycle.js';
 import { memoryMigrate } from '../commands/memory-migration.js';
-import { memoryPromotionProposal } from '../commands/memory-promotion.js';
+import { inputContentDigest } from '../lib/memory-input.js';
 import { memoryMaintenanceWarnings } from '../lib/memory-maintenance.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
@@ -62,6 +61,51 @@ test('memory maintenance reports unindexed, expired, and closed candidates', () 
   assert.deepEqual(report.unindexed, ['expired.md', 'orphan.md']);
   assert.deepEqual(report.expiredWorking, ['expired.md']);
   assert.deepEqual(report.closed, ['closed.md']);
+});
+
+test('memory maintenance surfaces legacy, generic-action, and workstream inputs for review', () => {
+  const root = temporaryRoot();
+  const runtime = harnessRuntime(root);
+  initGlobal(runtime, capturedIo());
+  const inputDocument = (title: string, content: string) =>
+    memoryDocument(title, `# 原始输入\n\n${content}`)
+      .replace('type: session-handoff', 'type: user-input')
+      .replace('memory-kind: episode', 'memory-kind: input')
+      .replace(
+        'schema-version: 1',
+        [
+          'input-source: chat',
+          `content-digest: sha256:${inputContentDigest(`${content}\n`, 'chat', true)}`,
+          'verbatim: true',
+          'schema-version: 1',
+        ].join('\n'),
+      );
+  writeFileSync(join(runtime.memoryHome, 'legacy-submit.md'), inputDocument('Submit', '提交'));
+  writeFileSync(
+    join(runtime.memoryHome, 'release-risk.md'),
+    inputDocument('Release risk', 'Accept the release risk.').replace(
+      'input-source: chat',
+      [
+        'input-schema-version: 2',
+        'input-source: chat',
+        'input-purpose: risk-decision',
+        'retention: workstream',
+        'workstream: release-0-7-1',
+      ].join('\n'),
+    ),
+  );
+
+  const report = memoryMaintenance(runtime, 'global', { json: true }, capturedIo());
+
+  assert.equal(report.activeInputCount, 2);
+  assert.deepEqual(report.legacyInputs, ['legacy-submit.md']);
+  assert.deepEqual(report.genericActionInputs, ['legacy-submit.md']);
+  assert.deepEqual(report.workstreamInputs, ['release-risk.md']);
+  assert.deepEqual(memoryMaintenanceWarnings(report).slice(-3), [
+    'legacy input: legacy-submit.md',
+    'generic action input: legacy-submit.md',
+    'active workstream input: release-risk.md',
+  ]);
 });
 
 test('memory maintenance reports duplicate active titles and supersession cycles', () => {
@@ -159,6 +203,52 @@ test('memory migration is proposal-only by default and preserves replaced legacy
   );
   assert.equal(applied.mode, 'applied');
   assert.match(readFileSync(source, 'utf8'), /legacy-status: Draft for Maintainer Review/);
+  memoryCheck(runtime, 'global', capturedIo());
+});
+
+test('memory migration reclassifies legacy input summaries without breaking their digest', () => {
+  const root = temporaryRoot();
+  const runtime = harnessRuntime(root);
+  initGlobal(runtime, capturedIo());
+  const source = join(runtime.memoryHome, 'legacy-input.md');
+  const summary = 'User accepted the release-scoped risk and authorized the current release.';
+  writeFileSync(
+    source,
+    memoryDocument('Legacy input', `# 原始输入\n\n${summary}`)
+      .replace('type: session-handoff', 'type: user-input')
+      .replace('memory-kind: episode', 'memory-kind: input')
+      .replace(
+        'schema-version: 1',
+        [
+          'input-source: chat',
+          `content-digest: sha256:${inputContentDigest(`${summary}\n`, 'chat', true)}`,
+          'verbatim: true',
+          'schema-version: 1',
+        ].join('\n'),
+      ),
+  );
+  const before = readFileSync(source, 'utf8');
+  const updates = JSON.stringify({
+    'input-schema-version': 2,
+    'input-purpose': 'risk-decision',
+    retention: 'workstream',
+    workstream: 'release-0-7-1',
+    verbatim: false,
+  });
+
+  const proposal = memoryMigrate(runtime, 'global', 'legacy-input', updates, {}, capturedIo());
+  assert.equal(proposal.ready, true);
+  assert.equal(readFileSync(source, 'utf8'), before);
+
+  memoryMigrate(runtime, 'global', 'legacy-input', updates, { apply: true }, capturedIo());
+  const migrated = readFileSync(source, 'utf8');
+  assert.match(migrated, /^verbatim: false$/m);
+  assert.match(migrated, /^# 可靠摘要$/m);
+  assert.doesNotMatch(migrated, /^# 原始输入$/m);
+  assert.match(
+    migrated,
+    new RegExp(`^content-digest: sha256:${inputContentDigest(summary, 'chat', false)}$`, 'm'),
+  );
   memoryCheck(runtime, 'global', capturedIo());
 });
 
@@ -324,43 +414,4 @@ test('memory archive matches complete reference tokens instead of path prefixes'
   assert.equal(existsSync(source), false);
   assert.equal(existsSync(archived), true);
   memoryCheck(runtime, 'global', capturedIo());
-});
-
-test('memory promotion produces a proposal without writing authoritative docs', () => {
-  const root = temporaryRoot();
-  const project = join(root, 'project');
-  mkdirSync(join(project, '.agent-docs', 'distilled'), { recursive: true });
-  execFileSync('git', ['-C', project, 'init', '-q']);
-  const runtime = harnessRuntime(root);
-  initProject(runtime, project, capturedIo());
-  const memory = join(project, '.agent-docs', 'distilled', 'finding.md');
-  writeFileSync(
-    memory,
-    memoryDocument('Finding').replace('memory-kind: episode', 'memory-kind: distilled'),
-  );
-  const target = join(dirname(resolveMemoryRoot(runtime, project)), 'docs', 'finding.md');
-
-  const proposal = memoryPromotionProposal(
-    runtime,
-    project,
-    'distilled/finding',
-    'docs/finding.md',
-    capturedIo(),
-  );
-
-  assert.equal(proposal.mode, 'proposal-only');
-  assert.equal(proposal.target, target);
-  assert.equal(proposal.sourceOfTruth, false);
-  assert.equal(existsSync(target), false);
-  assert.throws(
-    () =>
-      memoryPromotionProposal(
-        runtime,
-        project,
-        'distilled/finding',
-        '.agent-docs/promoted.md',
-        capturedIo(),
-      ),
-    /authoritative project path/,
-  );
 });

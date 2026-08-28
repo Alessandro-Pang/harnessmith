@@ -1,6 +1,5 @@
 import { type Command, Option } from 'commander';
 import { captureHandoff, closeHandoff, type HandoffOptions } from '../commands/memory-autopilot.js';
-import { captureInput, type InputOptions } from '../commands/memory-input.js';
 import {
   type ProfileOptions,
   type RemoveProfileOptions,
@@ -15,20 +14,9 @@ import {
 } from '../lib/command-payload.js';
 import type { Io, Runtime } from '../types.js';
 import { registerMemoryExperienceCommand } from './memory-experience.js';
+import { registerMemoryInputCommands } from './memory-input.js';
 import { collect } from './task-options.js';
 import type { CommandRunner } from './types.js';
-
-const inputPayloadSchema = {
-  fields: {
-    title: 'string',
-    content: 'string',
-    contentFile: 'string',
-    source: 'string',
-    summary: 'boolean',
-  },
-  required: ['title', 'source'],
-  exactlyOne: [['content', 'contentFile']],
-} as const satisfies CommandPayloadSchema;
 
 const handoffPayloadSchema = {
   fields: {
@@ -80,29 +68,7 @@ function registerProjectAutopilotCommands(
   run: CommandRunner,
 ): void {
   registerMemoryExperienceCommand(memory, runtime, io, run);
-  memory
-    .command('capture-input <scope>')
-    .description('capture a typed project input and index it')
-    .option('--title <title>', 'input title')
-    .option('--content <content>', 'verbatim input or reliable summary')
-    .option('--content-file <path>', 'read verbatim input or a reliable summary from a file')
-    .option('--source <source>', 'chat, file, meeting, link, or other')
-    .option('--summary', 'mark content as a reliable summary rather than verbatim')
-    .option('--payload-file <path>', 'read domain options from a bounded JSON file')
-    .option('--consume-payload-file', 'delete the unchanged payload after schema validation')
-    .option('--json', 'write a machine-readable result')
-    .action(
-      run((scope: string, options) => {
-        const payload = resolveCommandPayload<InputOptions>(
-          'memory capture-input',
-          options,
-          inputPayloadSchema,
-        );
-        return executeCommandPayload(payload, (resolved) =>
-          captureInput(runtime, scope, resolved, io),
-        );
-      }),
-    );
+  registerMemoryInputCommands(memory, runtime, io, run);
 
   memory
     .command('handoff <scope>')

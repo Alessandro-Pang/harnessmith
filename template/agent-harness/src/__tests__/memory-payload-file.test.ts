@@ -38,7 +38,9 @@ test('capture-input accepts payload-only options and keeps --json as an inline o
     title: 'Safe JSON payload',
     content,
     source: 'chat',
-    summary: true,
+    mode: 'summary',
+    purpose: 'acceptance',
+    retention: 'durable',
   });
   const io = capturedIo();
 
@@ -62,6 +64,9 @@ test('payload consumption is explicit and deletes only a successfully validated 
     title: 'Consumed payload',
     content: 'Delete this payload after validation.',
     source: 'chat',
+    mode: 'verbatim',
+    purpose: 'explicit-retain',
+    retention: 'durable',
   });
   assert.equal(
     runCli(
@@ -90,6 +95,9 @@ test('payload consumption is explicit and deletes only a successfully validated 
     title: 'Rejected payload',
     content: 'The schema is valid but the domain command rejects the source.',
     source: 'unsupported',
+    mode: 'verbatim',
+    purpose: 'explicit-retain',
+    retention: 'durable',
   });
   assert.throws(
     () =>

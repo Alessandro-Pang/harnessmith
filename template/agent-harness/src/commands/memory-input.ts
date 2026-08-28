@@ -1,7 +1,6 @@
 import { existsSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { stringify } from 'yaml';
-import { readBoundedRegularFile } from '../lib/bounded-file.js';
 import { parseFrontmatterDocument } from '../lib/frontmatter.js';
 import { escapeCoreLabel, upsertCoreReference } from '../lib/memory-core.js';
 import {
@@ -10,6 +9,13 @@ import {
   normalizedInputContent,
   parseInputBody,
 } from '../lib/memory-input.js';
+import {
+  type InputOptions,
+  inputPayload,
+  maximumInputContentBytes,
+  type ResolvedInputPolicy,
+  resolveInputPolicy,
+} from '../lib/memory-input-policy.js';
 import { markdownFiles, memoryReference, readMemoryDocument } from '../lib/memory-path.js';
 import {
   type MemoryWriteResult,
@@ -23,16 +29,7 @@ import { assertNoHighConfidenceSecret } from '../lib/secret-hygiene.js';
 import { assertRuntimeCanMutate, calendarDate } from '../runtime.js';
 import type { Io, Runtime } from '../types.js';
 
-export interface InputOptions {
-  title: string;
-  content?: string;
-  contentFile?: string;
-  source: InputSource;
-  summary?: boolean;
-  json?: boolean;
-}
-
-export const maximumInputContentBytes = 1024 * 1024;
+export { type InputOptions, maximumInputContentBytes } from '../lib/memory-input-policy.js';
 
 function frontmatter(metadata: Record<string, unknown>): string {
   return `---\n${stringify(metadata, { lineWidth: 0 })}---\n\n`;
@@ -46,22 +43,6 @@ function slug(value: string): string {
     .replace(/^-+|-+$/g, '')
     .slice(0, 48);
   return normalized || 'memory';
-}
-
-function inputPayload(options: InputOptions): string {
-  const hasContent = options.content !== undefined;
-  const hasContentFile = options.contentFile !== undefined;
-  if (hasContent === hasContentFile) {
-    throw new Error('Input capture requires exactly one of content or contentFile');
-  }
-  if (hasContent) return options.content as string;
-  if (!options.contentFile?.trim()) {
-    throw new Error('Input capture requires a non-empty contentFile path');
-  }
-  return readBoundedRegularFile(options.contentFile, {
-    maxBytes: maximumInputContentBytes,
-    subject: 'Input contentFile',
-  }).content;
 }
 
 interface ExistingInput {
@@ -138,15 +119,30 @@ function repairExistingInputIndex(
   return { version: 1, action, kind: 'input', path, reference };
 }
 
-export function captureInput(
-  runtime: Runtime,
+function prepareInput(
   project: string,
   options: InputOptions,
-  io: Io = console,
-): MemoryWriteResult {
-  assertRuntimeCanMutate(runtime);
+): {
+  policy: ResolvedInputPolicy;
+  title: string;
+  storedPayload: string;
+  summary: boolean;
+} {
+  const policy = resolveInputPolicy(options);
   assertNoHighConfidenceSecret(
-    [project, options.title, options.content, options.contentFile, options.source],
+    [
+      project,
+      options.title,
+      options.content,
+      options.contentFile,
+      options.source,
+      policy.mode,
+      policy.purpose,
+      policy.retention,
+      policy.workstream,
+      ...(options.scope || []),
+      ...(options.sourceRefs || []),
+    ],
     'Memory input request',
   );
   const payload = inputPayload(options);
@@ -164,10 +160,26 @@ export function captureInput(
   if (!['chat', 'file', 'meeting', 'link', 'other'].includes(options.source)) {
     throw new Error(`Invalid input source: ${options.source}`);
   }
-  const storedPayload = options.summary ? normalizedInputContent(payload) : payload;
+  const summary = policy.mode === 'summary';
+  return {
+    policy,
+    title,
+    storedPayload: summary ? normalizedInputContent(payload) : payload,
+    summary,
+  };
+}
+
+export function captureInput(
+  runtime: Runtime,
+  project: string,
+  options: InputOptions,
+  io: Io = console,
+): MemoryWriteResult {
+  assertRuntimeCanMutate(runtime);
+  const { policy, title, storedPayload, summary } = prepareInput(project, options);
   const date = calendarDate(runtime);
-  const digest = inputContentDigest(storedPayload, options.source, !options.summary);
-  const result = withProjectMemoryTransaction(
+  const digest = inputContentDigest(storedPayload, options.source, !summary);
+  const result = withProjectMemoryTransaction<MemoryWriteResult>(
     runtime,
     project,
     ({ memoryRoot }) => {
@@ -178,10 +190,10 @@ export function captureInput(
       const path = join(memoryRoot, 'inputs', ...date.split('-'), `${slug(title)}-${digest}.md`);
       assertSafePath(memoryRoot, path);
       const reference = `memory:${memoryReference(memoryRoot, path)}`;
-      const heading = options.summary ? '可靠摘要' : '原始输入';
+      const heading = summary ? '可靠摘要' : '原始输入';
       const content = `${frontmatter({
         title,
-        description: `${options.summary ? '用户输入可靠摘要' : '用户输入'}：${title}`,
+        description: `${summary ? '用户输入可靠摘要' : '用户输入'}：${title}`,
         type: 'user-input',
         'memory-kind': 'input',
         status: 'active',
@@ -190,13 +202,17 @@ export function captureInput(
         updated: date,
         project: basename(dirname(memoryRoot)),
         tags: ['user-input', 'autopilot'],
-        scope: [],
-        'source-refs': [],
+        scope: options.scope || [],
+        'source-refs': options.sourceRefs || [],
         'source-of-truth': false,
         'schema-version': 1,
+        'input-schema-version': 2,
         'input-source': options.source,
+        'input-purpose': policy.purpose,
+        retention: policy.retention,
+        ...(policy.workstream ? { workstream: policy.workstream } : {}),
         'content-digest': `sha256:${digest}`,
-        verbatim: !options.summary,
+        verbatim: !summary,
       })}# ${heading}\n\n${storedPayload}`;
       if (existsSync(path)) {
         throw new Error(`Input identity path already exists with different content: ${path}`);

@@ -16,13 +16,16 @@ scope: []
 source-refs: []
 source-of-truth: false
 schema-version: 1
+input-schema-version: 2
 input-source: "chat | file | meeting | link | other"
+input-purpose: "constraint | acceptance | source | risk-decision | explicit-retain"
+retention: "durable"
 verbatim: true
 ---
 
 # 原始输入
 
-<保留用户原文或附件的可靠摘要；摘要时将 verbatim 改为 false，并保留原始来源位置。>
+<verbatim 为 true 时仅保留用户原始字节；摘要改用“可靠摘要”标题并将 verbatim 改为 false。>
 
 # 适用范围与时间
 

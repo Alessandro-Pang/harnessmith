@@ -17,8 +17,10 @@ updated: 2026-08-28
 ## 2. 先判定请求类型
 
 - 回答/解释/评审/诊断/报告：只读调查并给证据；评审不默认修复，诊断不默认实施修复。
-- 只读任务不得修改项目源码、配置或正式文档。已经初始化的本地 Memory roots 是窄 sidecar：首次或变更的
-  验收、scope/constraints 或不可廉价恢复 source，必须在任何任务改动前逐字去重捕获，画像/handoff 不替代；明确用户画像信号仅在跨任务
+- 只读任务不得修改项目源码、配置或正式文档。已经初始化的本地 Memory roots 是窄 sidecar：首次或变更且
+  会影响后续决策的验收、scope/constraints 或不可廉价恢复 source，必须在任何任务改动前按 Memory 标准
+  类型化、逐字去重捕获；`提交`、`发布`、`继续`等一次性动作授权不捕获为 Important Input，画像/handoff
+  不替代；明确用户画像信号仅在跨任务
   `explicit/high` 且未暂停时自动 reconcile；未初始化的只读项目不为此创建 `.agent-docs/`。
   跨仓分析的 personal `repository-map.yaml` 同样按维护门槛默认维护，除非用户明确禁止。
 - 修改/构建：实现、验证并完成交付，不停在建议层。

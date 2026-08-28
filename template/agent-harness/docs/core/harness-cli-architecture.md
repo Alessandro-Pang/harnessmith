@@ -115,7 +115,10 @@ Memory Autopilot 只有四类窄写入口：`capture-input`、`capture-experienc
 托管结果完成校验后才删除文件；schema、身份、领域写入或结果校验失败时保留文件供诊断。调用方不能把
 “已读取”或“schema 已通过”误当成消费成功，也不能用独立清理掩盖领域失败。
 
-Input 对 verbatim 绑定原始文本，对可靠摘要绑定规范化文本，并同时绑定来源和模式；typed experience
+Input schema v2 要求显式 `mode: verbatim|summary`、五类 `purpose` 与 `retention: workstream|durable`；
+workstream retention 必须绑定稳定 workstream。Input 对 verbatim 绑定原始文本，对可靠摘要绑定规范化文本，
+并同时绑定来源和模式。`close-input` 原子写入完成原因和可选消费证据，并从 `core.md` 移除 active 引用；
+typed experience
 要求 lesson/failure、结论、证据与来源。Handoff 字段与 reconcile/close 语义以
 [long-running task protocol](long-running-tasks.md) 为准，画像命令以
 [user profile standard](../standards/user-profile-memory.md) 为准。

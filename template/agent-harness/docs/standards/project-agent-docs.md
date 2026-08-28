@@ -96,16 +96,31 @@ schema-version: 1
 ---
 ```
 
-`input` 另含来源与 verbatim 标记；episode 可含稳定 session identity。具体字段与安全输入方式以 CLI
-architecture 为准。
+新建 `input` 使用 input schema v2，另含 `input-purpose`、`retention`、来源和 verbatim 标记；
+`retention: workstream` 还必须绑定稳定 `workstream`。episode 可含稳定 session identity。具体字段与安全
+输入方式以 CLI architecture 为准。
 
 ## 写入阈值与 Autopilot
 
 应写：跨会话交接、重要原始输入、未完成工作、昂贵排查、无法从代码快速恢复的背景、需要证据链的判断，
-以及多次出现但尚不适合进入正式文档的经验。已初始化项目中，首次或变更的验收、scope、constraints 和
-不可廉价恢复 source 应在任务改动前逐字去重捕获；画像或 handoff 不能替代。
+以及多次出现但尚不适合进入正式文档的经验。用户输入只有在会影响后续决策并属于下列一种目的时，才用
+`capture-input`：`constraint`、`acceptance`、`source`、`risk-decision`、`explicit-retain`。已初始化项目中，
+首次或变更且达到该门槛的验收、scope/constraints 和不可廉价恢复 source，应在任务改动前逐字去重捕获；
+画像或 handoff 不能替代。
 
-不应写：框架常识、容易重新搜索的事实、逐行代码摘要、正式文档的完整副本、无来源猜测，以及密码、
+不因“这是新用户消息”而捕获。`提交`、`发布`、`继续`、普通确认、状态询问和当前阶段顺序属于一次性动作或
+授权，默认不进入 Important Inputs；需要恢复时写入当前 episode/handoff，动作完成后即失效，未来不得据此
+再次授权。禁止项与约束采用相反生命周期：例如“不要发布”会持续限制未来行为，直到用户撤销、workstream
+关闭或正式规则承接。输入长度不是资格标准；不能用字数门槛漏掉短但高损失的禁止项。
+
+捕获前同时选择生命周期：`workstream` 只对绑定工作流有效，工作流完成后用 `close-input` 标为 complete 并
+退出 core；`durable` 跨任务有效，进入正式 docs/ADR/测试/schema/规则后应 supersede 并指向正式来源。
+版本绑定的风险接受使用 `risk-decision + workstream`，不能无限期保持 active。
+
+输入模式必须显式选择。`verbatim` 正文只允许用户原始字节，不能加入 Agent 解释；任何补全、概括或上下文
+拼接都必须使用 `summary`，并显示为“可靠摘要”。标题可以概括，但不能用标题或摘要伪造用户原话。
+
+不应写：一次性动作授权、框架常识、容易重新搜索的事实、逐行代码摘要、正式文档的完整副本、无来源猜测，以及密码、
 Token、Cookie、验证码、私钥或未脱敏生产数据。
 
 项目 Memory 已初始化，或修改/构建任务符合初始化门槛后，重要输入、typed 经验、交接和索引修复属于
@@ -139,6 +154,7 @@ Token、Cookie、验证码、私钥或未脱敏生产数据。
 ## 维护与安全
 
 - `core.md` 只指向 active/blocked 或高价值记忆；complete/superseded 内容确认无活跃引用后再归档。
+- `memory maintain` 应报告 legacy input、仅含通用动作的 input 和仍 active 的 workstream input，供关闭或迁移审计；报告不自动删除或改写。
 - `working` 应有过期时间；过期后选择续期、提炼、提升或可恢复归档，不自动删除 input 与 evidence manifest。
 - 维护报告默认只读；迁移、替代和归档写入必须走对应 typed 命令与共享 memory-root lock。
 - Memory 扫描必须有文件数、单文件、总字节、深度和时间预算；扫描截断时，未命中只能是 `inconclusive`。

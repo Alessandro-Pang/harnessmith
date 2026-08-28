@@ -36,7 +36,12 @@ test('capture-input reads untrusted text from a file without marking a summary a
         contentFile,
         '--source',
         'chat',
-        '--summary',
+        '--mode',
+        'summary',
+        '--purpose',
+        'acceptance',
+        '--retention',
+        'durable',
         '--json',
       ],
       { runtime, io },
@@ -50,6 +55,122 @@ test('capture-input reads untrusted text from a file without marking a summary a
   assert.match(stored, /# 可靠摘要/);
   assert.ok(stored.includes(content));
   assert.equal(existsSync(marker), false);
+});
+
+test('capture-input requires an explicit mode, purpose, and retention policy', () => {
+  const { project, runtime } = fixture('harness-memory-input-policy-');
+  const missingPolicy = capturedIo();
+
+  assert.throws(
+    () =>
+      runCli(
+        [
+          'memory',
+          'capture-input',
+          project,
+          '--title',
+          'Ambiguous input',
+          '--content',
+          'Keep this input.',
+          '--source',
+          'chat',
+        ],
+        { runtime, io: missingPolicy },
+      ),
+    /mode|required/i,
+  );
+
+  const missingWorkstream = capturedIo();
+  assert.throws(
+    () =>
+      runCli(
+        [
+          'memory',
+          'capture-input',
+          project,
+          '--title',
+          'Scoped acceptance',
+          '--content',
+          'Only change the memory input lifecycle.',
+          '--source',
+          'chat',
+          '--mode',
+          'verbatim',
+          '--purpose',
+          'acceptance',
+          '--retention',
+          'workstream',
+        ],
+        { runtime, io: missingWorkstream },
+      ),
+    /workstream.*required/i,
+  );
+});
+
+test('capture-input stores typed policy metadata and close-input consumes it from core', () => {
+  const { project, runtime } = fixture('harness-memory-input-close-');
+  const createdIo = capturedIo();
+
+  assert.equal(
+    runCli(
+      [
+        'memory',
+        'capture-input',
+        project,
+        '--title',
+        'Release risk decision',
+        '--content',
+        'Accept the host evaluation risk for this release.',
+        '--source',
+        'chat',
+        '--mode',
+        'verbatim',
+        '--purpose',
+        'risk-decision',
+        '--retention',
+        'workstream',
+        '--workstream',
+        'release-0-7-1',
+        '--json',
+      ],
+      { runtime, io: createdIo },
+    ),
+    0,
+  );
+  const created = JSON.parse(createdIo.logs[0]);
+  const input = readFileSync(created.path, 'utf8');
+  assert.match(input, /^input-schema-version: 2$/m);
+  assert.match(input, /^input-purpose: risk-decision$/m);
+  assert.match(input, /^retention: workstream$/m);
+  assert.match(input, /^workstream: release-0-7-1$/m);
+  assert.match(input, /^verbatim: true$/m);
+
+  const closedIo = capturedIo();
+  assert.equal(
+    runCli(
+      [
+        'memory',
+        'close-input',
+        project,
+        created.reference,
+        '--reason',
+        'workstream-complete',
+        '--evidence-ref',
+        'release:0.7.1',
+        '--json',
+      ],
+      { runtime, io: closedIo },
+    ),
+    0,
+  );
+  const closed = readFileSync(created.path, 'utf8');
+  assert.match(closed, /^status: complete$/m);
+  assert.match(closed, /^close-reason: workstream-complete$/m);
+  assert.match(closed, /^consumed-by: release:0\.7\.1$/m);
+  assert.doesNotMatch(
+    readFileSync(join(project, '.agent-docs', 'core.md'), 'utf8'),
+    new RegExp(created.reference),
+  );
 });
 
 test('handoff preserves omitted recovery fields, clears them explicitly, and closes cleanly', () => {

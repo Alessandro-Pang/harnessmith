@@ -1,4 +1,14 @@
-import { parseFrontmatter, updateFrontmatter } from '../lib/frontmatter.js';
+import {
+  parseFrontmatter,
+  parseFrontmatterDocument,
+  updateFrontmatter,
+} from '../lib/frontmatter.js';
+import {
+  type InputSource,
+  inputContentDigest,
+  normalizedInputContent,
+  parseInputBody,
+} from '../lib/memory-input.js';
 import { snapshotMemoryFile } from '../lib/memory-lifecycle-transaction.js';
 import { withMemoryLock } from '../lib/memory-lock.js';
 import { applyMigration } from '../lib/memory-migration-apply.js';
@@ -65,6 +75,36 @@ function migrationUpdates(
   return updates;
 }
 
+function inputAwareMigration(
+  original: string,
+  current: Map<string, unknown>,
+  updates: Record<string, unknown>,
+): string {
+  if (current.get('memory-kind') !== 'input' || typeof updates.verbatim !== 'boolean') {
+    return updateFrontmatter(original, updates);
+  }
+  const originalDocument = parseFrontmatterDocument(original);
+  const parsedInput = parseInputBody(originalDocument.body);
+  if (!parsedInput) throw new Error('Input migration requires a parseable capture body');
+  const source = String(updates['input-source'] ?? current.get('input-source'));
+  if (!['chat', 'file', 'meeting', 'link', 'other'].includes(source)) {
+    throw new Error('Input migration requires a valid input-source');
+  }
+  const verbatim = updates.verbatim;
+  const storedContent = verbatim
+    ? parsedInput.content
+    : normalizedInputContent(parsedInput.content);
+  updates['content-digest'] = `sha256:${inputContentDigest(
+    storedContent,
+    source as InputSource,
+    verbatim,
+  )}`;
+  const updated = updateFrontmatter(original, updates);
+  const updatedDocument = parseFrontmatterDocument(updated);
+  const prefix = updated.slice(0, updated.length - updatedDocument.body.length);
+  return `${prefix}# ${verbatim ? '原始输入' : '可靠摘要'}\n\n${storedContent}`;
+}
+
 function migrationReport(
   runtime: Runtime,
   root: string,
@@ -88,7 +128,7 @@ function migrationReport(
     throw new Error('Invalid memory migration source frontmatter');
   }
   const proposedUpdates = migrationUpdates(runtime, current, metadataJson);
-  const content = updateFrontmatter(original, proposedUpdates);
+  const content = inputAwareMigration(original, current, proposedUpdates);
   const rootDiagnostics = (contentOverrides = new Map<string, string>()) => {
     const errors: string[] = [];
     const warnings: string[] = [];
