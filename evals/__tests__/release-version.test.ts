@@ -163,7 +163,7 @@ test('tag publication workflow uses GitHub OIDC and the attested exact candidate
   assert.match(workflow, /npm@11\.6\.2/);
   assert.match(workflow, /npm publish .*\.tgz/);
   assert.match(workflow, /HARNESS_RELEASE_WORKFLOW:\s*['"]1['"]/);
-  assert.match(workflow, /pnpm run test:coverage/);
+  assert.match(workflow, /pnpm run release:quality/);
   assert.doesNotMatch(workflow, /sbom/i);
   assert.doesNotMatch(workflow, /\+\s+--artifact/);
   assert.doesNotMatch(workflow, /NODE_AUTH_TOKEN|NPM_TOKEN|secrets\./);

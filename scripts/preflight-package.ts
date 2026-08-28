@@ -64,12 +64,29 @@ export function checkPackage(root: string, harnessRoot: string, check: Check): v
     'evals/scenarios.json',
     'evals/scenarios.schema.json',
     'evals/run.schema.json',
-    'evals/run.example.json',
-    'docs/architecture.md',
     'llms.txt',
   ]) {
     check(manifest.files?.includes(required), `npm package files is missing ${required}`);
   }
+  for (const sourceOnly of [
+    'CHANGELOG.md',
+    'CONTRIBUTING.md',
+    'RELEASING.md',
+    'docs/architecture.md',
+    'evals/README.md',
+    'evals/run.example.json',
+  ]) {
+    check(
+      !manifest.files?.includes(sourceOnly),
+      `npm package files includes source-only material ${sourceOnly}`,
+    );
+  }
+  const evalNpmIgnore = join(root, 'evals', '.npmignore');
+  check(existsSync(evalNpmIgnore), 'eval package boundary is missing .npmignore');
+  check(
+    existsSync(evalNpmIgnore) && /^README\.md$/m.test(read(evalNpmIgnore)),
+    'eval package boundary must exclude its source README',
+  );
   check(
     !manifest.files?.some(
       (path) =>

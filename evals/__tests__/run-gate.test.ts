@@ -399,7 +399,7 @@ test('declared package release workflow gates the exact tarball before publicati
   assert.match(manifest.scripts['eval:fingerprint'], /eval-gate\.ts fingerprint --json/);
   assert.match(manifest.scripts['eval:validate'], /eval-gate\.ts validate/);
   assert.match(manifest.scripts['eval:gate'], /eval-gate\.ts gate/);
-  assert.match(manifest.scripts['release:check'], /pnpm run eval:gate/);
+  assert.equal(manifest.scripts['release:check'], 'pnpm run release:quality && pnpm run eval:gate');
   assert.match(manifest.scripts['release:prepare'], /--prepare-only/);
   assert.match(manifest.scripts['release:publish'], /scripts\/release-publish\.ts/);
   assert.match(manifest.scripts.release, /scripts\/release-version\.ts/);

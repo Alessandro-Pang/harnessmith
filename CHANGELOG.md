@@ -5,6 +5,11 @@ The embedded Harness schema has its own explicitly recorded version.
 
 ## Unreleased
 
+### Changed
+
+- Avoid duplicate typecheck, build, preflight, and full unit-test execution in release verification, and keep
+  source-only contributor, release, architecture, changelog, and evaluation-example material out of the npm package.
+
 ### Removed
 
 - Remove the repository-maintained SBOM artifact, generator, tests, and release freshness gate; GitHub's

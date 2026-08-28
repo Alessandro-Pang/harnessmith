@@ -247,23 +247,6 @@ test('distributed prompt entrypoints stay compact and use executable Harness com
   }
 });
 
-test('npm package includes llms.txt', () => {
-  const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
-  for (const path of [
-    'llms.txt',
-    'README.en.md',
-    'CONTRIBUTING.md',
-    'SECURITY.md',
-    'CHANGELOG.md',
-    'RELEASING.md',
-    'evals/README.md',
-    'evals/scenarios.json',
-    'evals/scenarios.schema.json',
-  ])
-    assert.ok(manifest.files.includes(path), `npm package is missing: ${path}`);
-  assert.ok(!manifest.files.some((path: string) => path.includes('__tests__')));
-});
-
 test('npm package publishes the Harness runtime without its TypeScript sources', () => {
   const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
   for (const path of [

@@ -43,6 +43,61 @@ test('Knip owns the dependency and dead-code contract for every TypeScript sourc
   }
 });
 
+test('release verification reuses one quality build and one covered unit-test run', () => {
+  const packageManifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as {
+    scripts: Record<string, string>;
+  };
+  const workflow = readFileSync(join(root, '.github', 'workflows', 'publish.yml'), 'utf8');
+  const scripts = packageManifest.scripts;
+
+  assert.equal(scripts['build:emit'], 'tsup');
+  assert.equal(
+    scripts['preflight:quality'],
+    'pnpm run check && pnpm run build:emit && node --import tsx scripts/preflight.ts all',
+  );
+  assert.equal(scripts.preflight, 'pnpm run preflight:quality && pnpm run test:unit');
+  assert.equal(
+    scripts['release:quality'],
+    'pnpm run check && pnpm run build:emit && pnpm run test:coverage:unit && pnpm run test:scripts-coverage',
+  );
+  assert.equal(scripts['release:check'], 'pnpm run release:quality && pnpm run eval:gate');
+  assert.match(workflow, /pnpm run release:quality/);
+  assert.doesNotMatch(workflow, /- run: pnpm run preflight\n/);
+  assert.doesNotMatch(workflow, /- run: pnpm run test:coverage\n/);
+});
+
+test('npm package includes runtime guidance and eval contracts without source-only material', () => {
+  const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as {
+    files: string[];
+  };
+  for (const path of [
+    'llms.txt',
+    'README.en.md',
+    'SECURITY.md',
+    'evals/scenarios.json',
+    'evals/scenarios.schema.json',
+    'evals/run.schema.json',
+  ])
+    assert.ok(manifest.files.includes(path), `npm package is missing: ${path}`);
+  for (const path of [
+    'CONTRIBUTING.md',
+    'RELEASING.md',
+    'CHANGELOG.md',
+    'docs/architecture.md',
+    'evals/README.md',
+    'evals/run.example.json',
+  ])
+    assert.ok(!manifest.files.includes(path), `npm package includes source-only material: ${path}`);
+  assert.ok(!manifest.files.some((path) => path.includes('__tests__')));
+  const evalIgnore = join(root, 'evals', '.npmignore');
+  assert.equal(
+    existsSync(evalIgnore),
+    true,
+    'eval package boundary must exclude its source README',
+  );
+  assert.match(readFileSync(evalIgnore, 'utf8'), /^README\.md$/m);
+});
+
 test('dependencies used only by the bundled Harness stay build-time dependencies', () => {
   const packageManifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as {
     dependencies?: Record<string, string>;
