@@ -95,10 +95,10 @@ test('installs all adapters, maps paths, and renames existing rules', () => {
   const claudeRules = readFileSync(join(claude, 'CLAUDE.md'), 'utf8');
   const cursorRules = readFileSync(join(cursor, 'rules', 'agent-harness.mdc'), 'utf8');
   assert.doesNotMatch(codexRules, /\{\{HARNESS_HOME\}\}/);
-  assert.ok(codexRules.includes(`${join(root, 'agent-docs')}/profile.md`));
   const codexContext = JSON.parse(
     readFileSync(join(codex, 'agent-harness', 'install-context.json'), 'utf8'),
-  ) as { harnessHome: string };
+  ) as { harnessHome: string; memoryHome: string };
+  assert.ok(codexRules.includes(`${codexContext.memoryHome}/profile.md`));
   assert.ok(codexRules.includes(`${codexContext.harnessHome}/agent-harness`));
   assert.match(claudeRules, /宿主原生 memory 仅作待核对线索/);
   assert.match(cursorRules, /^---\ndescription: Personal coding agent harness/m);

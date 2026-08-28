@@ -1,5 +1,6 @@
 import { chmodSync, lstatSync, type Stats } from 'node:fs';
 import { cleanupTrackedDirectories, type ExactDirectoryIdentity } from './memory-write.js';
+import { modeMatches } from './portable-mode.js';
 
 type DirectoryEntry = Stats;
 
@@ -47,8 +48,8 @@ function restoreExistingRootMode(
   errors: string[],
 ): void {
   const currentMode = entry.mode & 0o777;
-  if (currentMode === rootMode) return;
-  if (currentMode !== 0o700) {
+  if (modeMatches(currentMode, rootMode)) return;
+  if (!modeMatches(currentMode, 0o700)) {
     errors.push(
       `${root}: rollback skipped because the memory root no longer matches the attempted directory mode; unknown mode retained at recovery path ${root}`,
     );
@@ -57,7 +58,10 @@ function restoreExistingRootMode(
   try {
     chmodSync(root, rootMode);
     const restored = lstatSync(root);
-    if (!matchesDirectoryIdentity(restored, rootIdentity) || (restored.mode & 0o777) !== rootMode) {
+    if (
+      !matchesDirectoryIdentity(restored, rootIdentity) ||
+      !modeMatches(restored.mode, rootMode)
+    ) {
       errors.push(
         `${root}: rollback directory mode restore was not verified; unresolved recovery path ${root}`,
       );
@@ -88,7 +92,7 @@ export function rollbackGlobalMemoryRoot({
   const entry = currentRoot(root, rootIdentity, rootExisted, errors);
   if (!entry) return errors;
   if (rootExisted) restoreExistingRootMode(root, rootMode, rootIdentity, entry, errors);
-  else if ((entry.mode & 0o777) !== 0o700) {
+  else if (!modeMatches(entry.mode, 0o700)) {
     errors.push(
       `${root}: rollback skipped because the new memory root no longer matches the attempted directory mode; unknown mode retained at recovery path ${root}`,
     );

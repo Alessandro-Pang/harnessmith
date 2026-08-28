@@ -7,7 +7,6 @@ import {
   mkdtempSync,
   readFileSync,
   rmSync,
-  statSync,
   symlinkSync,
   writeFileSync,
 } from 'node:fs';
@@ -22,7 +21,7 @@ import { reconcileProfile, removeProfileEntry } from '../commands/memory-profile
 import { parseFrontmatterDocument } from '../lib/frontmatter.js';
 import { parseInputBody } from '../lib/memory-input.js';
 import { withProjectMemoryTransaction } from '../lib/project-memory.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { assertMode, capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function fixture(prefix: string) {
   const root = mkdtempSync(join(tmpdir(), prefix));
@@ -107,7 +106,7 @@ test('project memory initialization leaves host ignore files untouched', () => {
     source: 'chat',
   });
 
-  assert.equal(statSync(gitignore).mode & 0o777, 0o600);
+  assertMode(gitignore, 0o600);
   assert.equal(readFileSync(gitignore, 'utf8'), 'existing-rule\n');
   assert.equal(readFileSync(join(project, '.agent-docs', '.gitignore'), 'utf8'), '*\n');
 });
@@ -142,8 +141,8 @@ test('failed input capture rolls back project ignore initialization side effects
   );
   assert.equal(readFileSync(gitignore, 'utf8'), baseline);
   assert.equal(readFileSync(ignore, 'utf8'), baseline);
-  assert.equal(statSync(gitignore).mode & 0o777, 0o600);
-  assert.equal(statSync(ignore).mode & 0o777, 0o640);
+  assertMode(gitignore, 0o600);
+  assertMode(ignore, 0o640);
 });
 
 test('project transaction never recursively deletes a concurrent sentinel', () => {

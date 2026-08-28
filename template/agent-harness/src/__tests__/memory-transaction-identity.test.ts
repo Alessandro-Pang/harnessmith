@@ -6,7 +6,6 @@ import {
   mkdtempSync,
   readFileSync,
   rmSync,
-  statSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -117,7 +116,7 @@ import {
 import { writeValidated } from '../lib/memory-write.js';
 import { withProjectMemoryTransaction } from '../lib/project-memory.js';
 import { calendarDate } from '../runtime.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { assertMode, capturedIo, escapeRegExp, harnessRuntime } from './helpers/harness.js';
 
 beforeEach(() => {
   directoryFault.path = '';
@@ -184,10 +183,10 @@ test('validated write refuses a target replaced after its snapshot', () => {
 
   assert.throws(
     () => writeValidated(runtime.memoryHome, [entry], capturedIo(), { rootKind: 'global' }),
-    new RegExp(`Memory write conflict.*recovery path ${profile}`, 'i'),
+    new RegExp(`Memory write conflict.*recovery path ${escapeRegExp(profile)}`, 'i'),
   );
   assert.equal(readFileSync(profile, 'utf8'), concurrent);
-  assert.equal(statSync(profile).mode & 0o777, 0o640);
+  assertMode(profile, 0o640);
 });
 
 test('validated write preserves an empty directory replaced before rollback cleanup', () => {
@@ -203,7 +202,7 @@ test('validated write preserves an empty directory replaced before rollback clea
         [{ path: join(directory, 'invalid.md'), content: 'invalid\n' }],
         capturedIo(),
       ),
-    new RegExp(`rollback was incomplete.*recovery path ${directory}`, 'i'),
+    new RegExp(`rollback was incomplete.*recovery path ${escapeRegExp(directory)}`, 'i'),
   );
   assert.equal(existsSync(directory), true);
 });
@@ -240,10 +239,10 @@ test('project ignore update refuses an external replacement made after its bound
 
   assert.throws(
     () => withProjectMemoryTransaction(runtime, project, (initialization) => initialization),
-    new RegExp(`Project ignore update conflict.*recovery path ${ignore}`, 'i'),
+    new RegExp(`Project ignore update conflict.*recovery path ${escapeRegExp(ignore)}`, 'i'),
   );
   assert.equal(readFileSync(ignore, 'utf8'), concurrent);
-  assert.equal(statSync(ignore).mode & 0o777, 0o640);
+  assertMode(ignore, 0o640);
 });
 
 test.each(['README.md', 'core.md'])(
@@ -258,10 +257,13 @@ test.each(['README.md', 'core.md'])(
 
     assert.throws(
       () => withProjectMemoryTransaction(runtime, project, (initialization) => initialization),
-      new RegExp(`Project memory initialization conflict.*recovery path ${destination}`, 'i'),
+      new RegExp(
+        `Project memory initialization conflict.*recovery path ${escapeRegExp(destination)}`,
+        'i',
+      ),
     );
     assert.match(readFileSync(destination, 'utf8'), /External writer marker/);
-    assert.equal(statSync(destination).mode & 0o777, 0o640);
+    assertMode(destination, 0o640);
   },
 );
 
@@ -285,10 +287,10 @@ test('supersede refuses a source replaced after its snapshot', () => {
         'global',
         capturedIo(),
       ),
-    new RegExp(`Memory supersede conflict.*recovery path ${source}`, 'i'),
+    new RegExp(`Memory supersede conflict.*recovery path ${escapeRegExp(source)}`, 'i'),
   );
   assert.equal(readFileSync(source, 'utf8'), concurrent);
-  assert.equal(statSync(source).mode & 0o777, 0o640);
+  assertMode(source, 0o640);
 });
 
 test('archive refuses a destination created after its missing snapshot', () => {
@@ -317,11 +319,14 @@ test('archive refuses a destination created after its missing snapshot', () => {
         'global',
         capturedIo(),
       ),
-    new RegExp(`Memory archive destination conflict.*recovery path ${destination}`, 'i'),
+    new RegExp(
+      `Memory archive destination conflict.*recovery path ${escapeRegExp(destination)}`,
+      'i',
+    ),
   );
   assert.equal(readFileSync(source, 'utf8'), original);
   assert.equal(readFileSync(destination, 'utf8'), concurrent);
-  assert.equal(statSync(destination).mode & 0o777, 0o640);
+  assertMode(destination, 0o640);
 });
 
 test('archive refuses to remove a source replaced after writing its candidate', () => {
@@ -354,10 +359,10 @@ test('archive refuses to remove a source replaced after writing its candidate', 
         'global',
         capturedIo(),
       ),
-    new RegExp(`Memory archive source conflict.*recovery path ${source}`, 'i'),
+    new RegExp(`Memory archive source conflict.*recovery path ${escapeRegExp(source)}`, 'i'),
   );
   assert.equal(readFileSync(source, 'utf8'), concurrent);
-  assert.equal(statSync(source).mode & 0o777, 0o640);
+  assertMode(source, 0o640);
   assert.equal(existsSync(destination), true);
 });
 
@@ -375,9 +380,9 @@ test('archive preserves an empty directory replaced before rollback cleanup', ()
 
   assert.throws(
     () => archiveMemory(runtime, 'global', 'archive-source', {}, capturedIo()),
-    new RegExp(`rollback was incomplete.*recovery path ${archiveMonth}`, 'i'),
+    new RegExp(`rollback was incomplete.*recovery path ${escapeRegExp(archiveMonth)}`, 'i'),
   );
   assert.equal(readFileSync(source, 'utf8'), original);
-  assert.equal(statSync(source).mode & 0o777, 0o600);
+  assertMode(source, 0o600);
   assert.equal(existsSync(archiveMonth), true);
 });

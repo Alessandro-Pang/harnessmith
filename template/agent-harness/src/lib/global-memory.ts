@@ -15,6 +15,7 @@ import {
   restoreExactFileState,
   snapshotDirectoryIdentity,
 } from './memory-write.js';
+import { modeMatches } from './portable-mode.js';
 import { assertSafePath } from './safe-path.js';
 import { readTemplate, render } from './templates.js';
 
@@ -110,7 +111,7 @@ function initializeUnlocked(
       mode: 0o600,
     } as const;
     assertExactFileState(destination, before, 'Global memory initialization');
-    if (!before.exists || before.mode !== candidate.mode) {
+    if (!before.exists || !modeMatches(before.mode, candidate.mode)) {
       attempted.set(destination, candidate);
       atomicWrite(destination, candidate.content, candidate.mode);
       assertExactFileState(destination, candidate, 'Global memory initialization result');
@@ -156,7 +157,7 @@ export function withGlobalMemoryTransaction<T>(
         if (!matchesDirectoryIdentity(rootEntry, rootIdentity)) {
           throw new Error(`Global memory root changed after snapshot: ${runtime.memoryHome}`);
         }
-        if ((rootEntry.mode & 0o777) !== 0o700) {
+        if (!modeMatches(rootEntry.mode, 0o700)) {
           chmodSync(runtime.memoryHome, 0o700);
         }
         const initialization = initializeUnlocked(runtime, paths, attempted);

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { chmodSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { beforeEach, onTestFinished, test, vi } from 'vitest';
@@ -45,7 +45,7 @@ vi.mock('../lib/memory-core.js', async (importOriginal) => {
 });
 
 import { initializeGlobalMemory } from '../lib/global-memory.js';
-import { harnessRuntime } from './helpers/harness.js';
+import { assertMode, escapeRegExp, harnessRuntime } from './helpers/harness.js';
 
 beforeEach(() => {
   concurrencyFault.profilePath = '';
@@ -66,9 +66,9 @@ test('global initialization rejects a file created after its missing snapshot', 
 
   assert.throws(
     () => initializeGlobalMemory(runtime),
-    new RegExp(`rollback was incomplete.*recovery path ${readme}`, 'i'),
+    new RegExp(`rollback was incomplete.*recovery path ${escapeRegExp(readme)}`, 'i'),
   );
-  assert.equal(statSync(readme).mode & 0o777, 0o640);
+  assertMode(readme, 0o640);
 });
 
 test('profile-route repair preserves a file replaced after its content snapshot', () => {
@@ -84,8 +84,8 @@ test('profile-route repair preserves a file replaced after its content snapshot'
 
   assert.throws(
     () => initializeGlobalMemory(runtime),
-    new RegExp(`rollback was incomplete.*recovery path ${core}`, 'i'),
+    new RegExp(`rollback was incomplete.*recovery path ${escapeRegExp(core)}`, 'i'),
   );
   assert.equal(readFileSync(core, 'utf8'), concurrent);
-  assert.equal(statSync(core).mode & 0o777, 0o640);
+  assertMode(core, 0o640);
 });

@@ -1,14 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import {
-  chmodSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  statSync,
-  writeFileSync,
-} from 'node:fs';
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { beforeEach, onTestFinished, test, vi } from 'vitest';
@@ -71,7 +63,7 @@ import { initTask } from '../commands/task.js';
 import { updateAcceptance } from '../commands/task-acceptance.js';
 import { writeValidated } from '../lib/memory-write.js';
 import { calendarDate } from '../runtime.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { assertMode, capturedIo, escapeRegExp, harnessRuntime } from './helpers/harness.js';
 
 beforeEach(() => {
   validationFault.active = false;
@@ -142,10 +134,10 @@ test('validated write preserves a concurrent replacement instead of rolling it b
         capturedIo(),
         { rootKind: 'global' },
       ),
-    new RegExp(`rollback was incomplete.*recovery path ${profile}`, 'i'),
+    new RegExp(`rollback was incomplete.*recovery path ${escapeRegExp(profile)}`, 'i'),
   );
   assert.equal(readFileSync(profile, 'utf8'), concurrent);
-  assert.equal(statSync(profile).mode & 0o777, 0o640);
+  assertMode(profile, 0o640);
 });
 
 test('project initialization preserves an unknown validator-time replacement', () => {
@@ -185,10 +177,10 @@ test('outer global transaction does not overwrite a replacement retained by inne
         },
         capturedIo(),
       ),
-    new RegExp(`rollback was incomplete.*recovery path ${profile}`, 'i'),
+    new RegExp(`rollback was incomplete.*recovery path ${escapeRegExp(profile)}`, 'i'),
   );
   assert.equal(readFileSync(profile, 'utf8'), concurrent);
-  assert.equal(statSync(profile).mode & 0o777, 0o640);
+  assertMode(profile, 0o640);
 });
 
 test('task acceptance rollback preserves a validator-time concurrent replacement', () => {
@@ -221,10 +213,10 @@ test('task acceptance rollback preserves a validator-time concurrent replacement
         },
         capturedIo(),
       ),
-    /rollback was incomplete.*recovery path .*concurrent-task-write\/task\.json/i,
+    /rollback was incomplete.*recovery path .*concurrent-task-write[\\/]task\.json/i,
   );
   assert.equal(readFileSync(taskFile, 'utf8'), concurrent);
-  assert.equal(statSync(taskFile).mode & 0o777, 0o640);
+  assertMode(taskFile, 0o640);
 });
 
 test('supersede preserves a validator-time replacement of its candidate', () => {
@@ -239,10 +231,10 @@ test('supersede preserves a validator-time replacement of its candidate', () => 
 
   assert.throws(
     () => supersedeMemory(runtime, 'global', 'source', 'replacement', capturedIo()),
-    new RegExp(`rollback was incomplete.*recovery path ${source}`, 'i'),
+    new RegExp(`rollback was incomplete.*recovery path ${escapeRegExp(source)}`, 'i'),
   );
   assert.equal(readFileSync(source, 'utf8'), concurrent);
-  assert.equal(statSync(source).mode & 0o777, 0o640);
+  assertMode(source, 0o640);
 });
 
 test('supersede reports an unresolved recovery path when restore is a no-op', () => {
@@ -258,30 +250,39 @@ test('supersede reports an unresolved recovery path when restore is a no-op', ()
 
   assert.throws(
     () => supersedeMemory(runtime, 'global', 'future', 'replacement', capturedIo()),
-    new RegExp(`rollback was incomplete.*restore was not verified.*recovery path ${source}`, 'i'),
+    new RegExp(
+      `rollback was incomplete.*restore was not verified.*recovery path ${escapeRegExp(source)}`,
+      'i',
+    ),
   );
   assert.match(readFileSync(source, 'utf8'), /status: superseded/);
-  assert.equal(statSync(source).mode & 0o777, 0o600);
+  assertMode(source, 0o600);
 });
 
-test('supersede verifies mode as well as bytes after restoring its snapshot', () => {
-  const { runtime } = fixture('harness-supersede-restore-mode-');
-  initGlobal(runtime, capturedIo());
-  const source = join(runtime.memoryHome, 'future.md');
-  const original = memoryDocument('Future').replaceAll('2026-08-19', '2099-01-01');
-  writeFileSync(source, original);
-  writeFileSync(join(runtime.memoryHome, 'replacement.md'), memoryDocument('Replacement'));
-  chmodSync(source, 0o600);
-  atomicFault.path = source;
-  atomicFault.behavior = 'wrong-mode';
+test.skipIf(process.platform === 'win32')(
+  'supersede verifies mode as well as bytes after restoring its snapshot',
+  () => {
+    const { runtime } = fixture('harness-supersede-restore-mode-');
+    initGlobal(runtime, capturedIo());
+    const source = join(runtime.memoryHome, 'future.md');
+    const original = memoryDocument('Future').replaceAll('2026-08-19', '2099-01-01');
+    writeFileSync(source, original);
+    writeFileSync(join(runtime.memoryHome, 'replacement.md'), memoryDocument('Replacement'));
+    chmodSync(source, 0o600);
+    atomicFault.path = source;
+    atomicFault.behavior = 'wrong-mode';
 
-  assert.throws(
-    () => supersedeMemory(runtime, 'global', 'future', 'replacement', capturedIo()),
-    new RegExp(`rollback was incomplete.*restore was not verified.*recovery path ${source}`, 'i'),
-  );
-  assert.equal(readFileSync(source, 'utf8'), original);
-  assert.equal(statSync(source).mode & 0o777, 0o644);
-});
+    assert.throws(
+      () => supersedeMemory(runtime, 'global', 'future', 'replacement', capturedIo()),
+      new RegExp(
+        `rollback was incomplete.*restore was not verified.*recovery path ${escapeRegExp(source)}`,
+        'i',
+      ),
+    );
+    assert.equal(readFileSync(source, 'utf8'), original);
+    assertMode(source, 0o644);
+  },
+);
 
 test('archive restores its source but preserves a concurrent destination replacement', () => {
   const { runtime } = fixture('harness-archive-destination-concurrent-');
@@ -303,10 +304,10 @@ test('archive restores its source but preserves a concurrent destination replace
 
   assert.throws(
     () => archiveMemory(runtime, 'global', 'archive-source', {}, capturedIo()),
-    new RegExp(`rollback was incomplete.*recovery path ${destination}`, 'i'),
+    new RegExp(`rollback was incomplete.*recovery path ${escapeRegExp(destination)}`, 'i'),
   );
   assert.equal(readFileSync(source, 'utf8'), original);
-  assert.equal(statSync(source).mode & 0o777, 0o600);
+  assertMode(source, 0o600);
   assert.equal(readFileSync(destination, 'utf8'), concurrent);
-  assert.equal(statSync(destination).mode & 0o777, 0o640);
+  assertMode(destination, 0o640);
 });

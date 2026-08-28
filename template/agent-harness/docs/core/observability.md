@@ -32,7 +32,8 @@ node <harness-path>/bin/harness.mjs audit summary --since 2026-08-01T00:00:00.00
 ## 存储与健康
 
 活动事件按 UTC 日期写入 `state/audit/YYYY-MM-DD.jsonl`，使用运行时锁、SafePath、regular-file 检查、
-原子写和 `0600` 权限。单文件、总字节和总事件数均有限制；读取遇到损坏、symlink 或超预算时
+原子写，并在可表达 POSIX mode 的平台使用 `0600`；Windows 依赖 ACL 与宿主访问控制，不把无法
+可靠保留的 POSIX permission bits 当作事务身份。单文件、总字节和总事件数均有限制；读取遇到损坏、symlink 或超预算时
 fail closed。`health` 中缺少审计目录表示尚未配置，不是故障；存在但不可验证的审计状态是 failed。
 
 ## 保留策略

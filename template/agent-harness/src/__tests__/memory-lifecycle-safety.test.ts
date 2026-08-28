@@ -9,7 +9,6 @@ import {
   readFileSync,
   renameSync,
   rmSync,
-  statSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -22,7 +21,7 @@ import { archiveMemory, memoryMaintenance, supersedeMemory } from '../commands/m
 import { closeTask, initTask, taskStatus } from '../commands/task.js';
 import { verifyAcceptance } from '../commands/task-verification.js';
 import { calendarDate } from '../runtime.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { assertMode, capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function fixture(): { root: string; runtime: ReturnType<typeof harnessRuntime> } {
   const root = mkdtempSync(join(tmpdir(), 'harness-memory-lifecycle-safety-'));
@@ -118,7 +117,7 @@ test('memory archive preserves a private source mode at its destination', () => 
   const archived = archiveMemory(runtime, 'global', 'private', {}, capturedIo());
 
   assert.equal(existsSync(source), false);
-  assert.equal(statSync(archived).mode & 0o777, 0o600);
+  assertMode(archived, 0o600);
 });
 
 test('memory archive rejects recursive re-archiving even with force', () => {
@@ -127,7 +126,9 @@ test('memory archive rejects recursive re-archiving even with force', () => {
   const source = join(runtime.memoryHome, 'once.md');
   writeFileSync(source, memoryDocument('Once').replace('status: active', 'status: complete'));
   const archived = archiveMemory(runtime, 'global', 'once', {}, capturedIo());
-  const archivedReference = relative(runtime.memoryHome, archived).replace(/\.md$/, '');
+  const archivedReference = relative(runtime.memoryHome, archived)
+    .replaceAll('\\', '/')
+    .replace(/\.md$/, '');
   const date = calendarDate(runtime);
   const recursiveDestination = join(
     runtime.memoryHome,
@@ -337,7 +338,7 @@ test('memory archive rolls back a move when post-move root validation fails', ()
 
   assert.throws(() => archiveMemory(runtime, 'global', 'future', {}, io), /memory check failed/i);
   assert.equal(readFileSync(source, 'utf8'), future);
-  assert.equal(statSync(source).mode & 0o777, 0o600);
+  assertMode(source, 0o600);
   assert.equal(existsSync(destination), false);
   assert.equal(existsSync(dirname(destination)), false);
   assert.equal(readFileSync(sentinel, 'utf8'), 'unrelated archive data\n');
@@ -355,7 +356,7 @@ test('memory supersede preserves a private source mode', () => {
   supersedeMemory(runtime, 'global', 'source', 'replacement', capturedIo());
 
   assert.match(readFileSync(source, 'utf8'), /status: superseded/);
-  assert.equal(statSync(source).mode & 0o777, 0o600);
+  assertMode(source, 0o600);
 });
 
 test('memory supersede restores original bytes and mode when post-write validation fails', () => {
@@ -373,6 +374,6 @@ test('memory supersede restores original bytes and mode when post-write validati
     /memory check failed/i,
   );
   assert.equal(readFileSync(source, 'utf8'), original);
-  assert.equal(statSync(source).mode & 0o777, 0o600);
+  assertMode(source, 0o600);
   assert.equal(io.logs.length, 0);
 });
