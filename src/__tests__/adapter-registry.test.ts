@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { onTestFinished, test } from 'vitest';
 import {
   adapterAliasMap,
@@ -14,6 +15,8 @@ import {
 import { adapterCapabilities, createAdapter } from '../adapters.js';
 import { normalizeAgents, supportedAgents } from '../agents.js';
 import { instructionFormats, instructionRenderer } from '../instruction-formats.js';
+
+const repositoryRoot = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 
 test('adapter registry is the single host inventory for CLI selection and aliases', () => {
   assert.deepEqual(
@@ -45,6 +48,8 @@ test('capabilities and labels always come from the registry entry', () => {
 
 test('eval adapter enum is derived from the same registry list', () => {
   assert.deepEqual(evalAdapterEnum(), [...supportedAgentNames]);
+  const schema = JSON.parse(readFileSync(join(repositoryRoot, 'evals', 'run.schema.json'), 'utf8'));
+  assert.deepEqual(schema.properties.host.properties.adapter.enum, evalAdapterEnum());
 });
 
 test('instruction format extension points cover every registry capability format', () => {

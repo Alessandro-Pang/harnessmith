@@ -64,6 +64,9 @@ for (const entry of adapterRegistry) {
     const { project, env } = fixture(`harnessmith-conform-life-${entry.name}-`);
     const adapter = adapterFor(entry.name, env, project);
 
+    assert.equal(statusAll([adapter])[0].installed, false);
+    assert.equal(existsSync(adapter.home), false);
+
     installAll([adapter], { env, noInitGlobal: true });
     const afterInstall = statusAll([adapter])[0];
     assert.equal(afterInstall.installed, true);
@@ -89,6 +92,7 @@ for (const entry of adapterRegistry) {
     assert.equal(uninstalled[0].adapter, entry.name);
     assert.equal(existsSync(adapter.record), false);
     assert.equal(existsSync(adapter.harness), false);
+    assert.equal(statusAll([adapter])[0].installed, false);
   });
 
   test(`conformance ${entry.name}: refuses unmanaged conflicts without force`, () => {
