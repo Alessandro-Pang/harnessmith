@@ -50,15 +50,44 @@ function escapeRegularExpression(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+function routingMatchPositions(candidate: string, term: string): number[] {
+  if (/\p{Script=Han}/u.test(candidate)) {
+    const positions: number[] = [];
+    let offset = 0;
+    while (offset <= term.length - candidate.length) {
+      const position = term.indexOf(candidate, offset);
+      if (position === -1) break;
+      positions.push(position);
+      offset = position + candidate.length;
+    }
+    return positions;
+  }
+  const pattern = new RegExp(
+    `(?:^|[^\\p{L}\\p{N}])(${escapeRegularExpression(candidate)})(?=$|[^\\p{L}\\p{N}])`,
+    'gu',
+  );
+  return [...term.matchAll(pattern)].map(
+    (match) => (match.index ?? 0) + match[0].length - (match[1]?.length ?? 0),
+  );
+}
+
+function routingMatchIsNegated(term: string, position: number): boolean {
+  const clause =
+    term
+      .slice(0, position)
+      .split(/[,.!?;，。！？；]/u)
+      .at(-1) ?? '';
+  return /(?:\b(?:do\s+not|don't|not|never|without|no)\s+(?:\p{L}+\s+){0,2}|(?:不要|无需|不必|别|禁止|避免|不)\s*)$/u.test(
+    clause,
+  );
+}
+
 function matchesRoutingTerm(trigger: string, term: string): boolean {
   const candidate = normalizeRoutingText(trigger);
   if (!candidate) return false;
-  if (candidate === term) return true;
-  if (/\p{Script=Han}/u.test(candidate)) return term.includes(candidate);
-  return new RegExp(
-    `(?:^|[^\\p{L}\\p{N}])${escapeRegularExpression(candidate)}(?:$|[^\\p{L}\\p{N}])`,
-    'u',
-  ).test(term);
+  return routingMatchPositions(candidate, term).some(
+    (position) => !routingMatchIsNegated(term, position),
+  );
 }
 
 function manifestEntries(value: unknown): Record<string, ManifestEntry> {

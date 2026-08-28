@@ -94,6 +94,24 @@ test('debugging a long-running handoff chooses diagnose and loads only supportin
   );
 });
 
+test('diagnostic routing ignores negated change intent and generic explanation wording', () => {
+  const report = routeDocumentation(docsRoot, [
+    'Diagnose a failing focused test and explain the likely cause. Do not implement a fix.',
+  ]);
+
+  assert.equal(report.primaryPlaybook?.name, 'diagnose');
+  assert.deepEqual(report.topics, []);
+  assert.ok(!report.routes.some(({ name }) => name === 'change'));
+  assert.ok(!report.routes.some(({ name }) => name === 'harness-cli-architecture'));
+});
+
+test('diagnostic routing ignores negated Chinese change intent', () => {
+  const report = routeDocumentation(docsRoot, ['诊断失败测试，不要修改代码']);
+
+  assert.equal(report.primaryPlaybook?.name, 'diagnose');
+  assert.ok(!report.routes.some(({ name }) => name === 'change'));
+});
+
 test('an exact multi-turn acceptance prompt routes every required autopilot owner', () => {
   const report = routeDocumentation(docsRoot, [
     'Change docs/status.txt from pending to ready. Acceptance: node verify-autopilot.mjs docs/status.txt exits 0 and no other tracked file changes. For all future tasks, keep status summaries to one sentence.',
