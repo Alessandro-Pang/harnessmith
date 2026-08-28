@@ -163,7 +163,7 @@ function checkPortableTemplate(root: string, check: Check): void {
       );
     }
     check(
-      !/\b(?:codex|cursor|claude|opencode)\b|CODEX_HOME|CLAUDE_CONFIG_DIR|OPENCODE_CONFIG_DIR/i.test(
+      !/\b(?:codex|cursor|claude|opencode|kimi)\b|CODEX_HOME|CLAUDE_CONFIG_DIR|OPENCODE_CONFIG_DIR|KIMI_CODE_HOME/i.test(
         content,
       ),
       `host-specific identity leaked into portable template: ${relative(root, path)}`,

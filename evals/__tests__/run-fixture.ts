@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, onTestFinished } from 'vitest';
+import type { AgentName } from '../../src/types.js';
 import { writeCandidateTarball } from './tarball-fixture.js';
 
 export const root = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
@@ -62,7 +63,7 @@ export function writeRun(
     outcome = 'passed',
     runId = `${adapter}-${scenarioId}`,
   }: {
-    adapter?: 'codex' | 'cursor' | 'claude' | 'opencode';
+    adapter?: AgentName;
     scenarioId?: string;
     finishedAt?: string;
     evaluatedAt?: string;

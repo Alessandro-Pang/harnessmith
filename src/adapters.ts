@@ -122,6 +122,10 @@ export function createAdapter(
     const agentHome = canonicalPath(env.OPENCODE_CONFIG_DIR || join(configRoot, 'opencode'));
     return globalMarkdownAdapter(name, 'OpenCode', agentHome);
   }
+  if (name === 'kimi') {
+    const agentHome = canonicalPath(env.KIMI_CODE_HOME || join(home, '.kimi-code'));
+    return globalMarkdownAdapter(name, 'Kimi Code CLI', agentHome);
+  }
   if (name === 'cursor') {
     const root = projectRoot(project);
     const agentHome = join(root, '.cursor');

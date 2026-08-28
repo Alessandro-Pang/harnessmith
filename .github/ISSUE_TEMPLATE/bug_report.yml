@@ -51,7 +51,7 @@ body:
       description: Provide what you know; use “unknown” when unavailable. / 请填写已知信息，不清楚的项目可写“未知”。
       placeholder: |
         Harnesssmith version / 版本：
-        Host: Codex / Cursor / Claude Code / OpenCode / installer only
+        Host: Codex / Cursor / Claude Code / OpenCode / Kimi Code CLI / installer only
         Scope / 范围：global / project
         OS：
         Node.js / pnpm：
