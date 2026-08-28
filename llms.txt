@@ -1,7 +1,7 @@
 # Harnessmith
 
 > Harnessmith is a cross-host Personal Harness distribution and work-state control plane for Codex, Cursor,
-> Claude Code, and OpenCode.
+> Claude Code, OpenCode, and Kimi Code CLI.
 > This file is an operational guide for an LLM helping a user install or initialize it.
 
 Project: https://www.npmjs.com/package/harnessmith
@@ -42,12 +42,17 @@ use the published `npx --yes harnessmith` commands below.
   - Instructions: `$OPENCODE_CONFIG_DIR/AGENTS.md` when set
   - Default instructions: `${XDG_CONFIG_HOME:-~/.config}/opencode/AGENTS.md`
   - Harness: `agent-harness` under the same effective OpenCode config directory
+- `kimi`
+  - Alias: `kimi-code`
+  - Instructions: `$KIMI_CODE_HOME/AGENTS.md`, default `~/.kimi-code/AGENTS.md`
+  - Harness: `agent-harness` under the same effective Kimi Code CLI data directory
+  - Supports Kimi Code CLI `0.12.0` or newer; does not target legacy Python `kimi-cli` data at `~/.kimi/`
 
 ## LLM installation protocol
 
 1. Verify the runtime with `node --version`. Stop and explain the requirement if Node.js is older than 24.12.
 2. Determine the exact agent selection from the user's request. Accepted values are `codex`, `cursor`,
-   `claude`, `claude-code`, `opencode`, and `all`. Never infer `all` from an ambiguous request.
+   `claude`, `claude-code`, `opencode`, `kimi`, `kimi-code`, and `all`. Never infer `all` from an ambiguous request.
 3. If Cursor is selected, determine the intended project path. Ask the user if more than one repository is
    plausible. Prefer an absolute path.
 4. Preview resolved destinations before writing:

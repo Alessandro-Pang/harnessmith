@@ -16,7 +16,7 @@ test('Commander supports repeatable and comma-separated agent values', async () 
       '--agent',
       'codex,cursor',
       '-a',
-      'claude-code,opencode',
+      'claude-code,opencode,kimi-code',
       '--project',
       '/tmp/project',
       '--dry-run',
@@ -24,13 +24,19 @@ test('Commander supports repeatable and comma-separated agent values', async () 
     { from: 'user' },
   );
   assert.ok(result);
-  assert.deepEqual(normalizeAgents(result.agent), ['codex', 'cursor', 'claude', 'opencode']);
+  assert.deepEqual(normalizeAgents(result.agent), [
+    'codex',
+    'cursor',
+    'claude',
+    'opencode',
+    'kimi',
+  ]);
   assert.equal(result.project, '/tmp/project');
   assert.equal(result.dryRun, true);
 });
 
 test('normalizeAgents expands all and rejects unknown agents', () => {
-  assert.deepEqual(normalizeAgents(['all']), ['codex', 'cursor', 'claude', 'opencode']);
+  assert.deepEqual(normalizeAgents(['all']), ['codex', 'cursor', 'claude', 'opencode', 'kimi']);
   assert.throws(() => normalizeAgents(['windsurf']), /Unsupported agent/);
 });
 
@@ -76,7 +82,7 @@ test('capabilities reports every adapter without resolving installation paths', 
   assert.equal(report.version, 1);
   assert.deepEqual(
     report.adapters.map(({ agent }: { agent: string }) => agent),
-    ['codex', 'cursor', 'claude', 'opencode'],
+    ['codex', 'cursor', 'claude', 'opencode', 'kimi'],
   );
   assert.equal(report.adapters[0].capabilities.enforcement.permissions, 'host-owned');
 });

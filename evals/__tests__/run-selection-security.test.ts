@@ -2,11 +2,12 @@ import assert from 'node:assert/strict';
 import { readFileSync, renameSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'vitest';
+import { supportedAdapters } from '../../scripts/eval-fingerprint.js';
 import { currentFingerprint, root, run, temporaryDirectory, writeRun } from './run-fixture.js';
 
 function writePassingMatrix(runsDirectory: string, evaluatedAt: string): void {
   const scenarioIds = Object.keys(currentFingerprint().scenarios);
-  for (const adapter of ['codex', 'cursor', 'claude', 'opencode'] as const) {
+  for (const adapter of supportedAdapters) {
     for (const scenarioId of scenarioIds) {
       writeRun(runsDirectory, {
         adapter,

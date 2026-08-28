@@ -280,7 +280,7 @@ test('json mode emits parseable automation output without terminal decoration', 
     .map((line) => JSON.parse(line));
   assert.deepEqual(
     plans.map(({ adapter }) => adapter),
-    ['codex', 'cursor', 'claude', 'opencode'],
+    ['codex', 'cursor', 'claude', 'opencode', 'kimi'],
   );
   assert.equal(plans[0].capabilities.scope, 'global');
   assert.equal(plans[1].capabilities.scope, 'project');

@@ -9,7 +9,7 @@
 [English](./README.en.md) · **简体中文**
 
 Harnessmith 是一个本地优先、跨 Host 的 Personal Harness 分发与工作状态控制层。它把同一套个人
-工作规则、渐进式文档、记忆协议和任务状态工具，安全地安装到 Codex、Cursor、Claude Code 与 OpenCode。
+工作规则、渐进式文档、记忆协议和任务状态工具，安全地安装到 Codex、Cursor、Claude Code、OpenCode 与 Kimi Code CLI。
 
 ```bash
 npx harnessmith
@@ -77,17 +77,23 @@ npx harnessmith --agent all --project /absolute/path/to/repository --dry-run
 | Codex | `$CODEX_HOME/AGENTS.md` | `$CODEX_HOME/agent-harness` | 全局 |
 | Claude Code | `$CLAUDE_CONFIG_DIR/CLAUDE.md`，并保留 `AGENTS.md` | `$CLAUDE_CONFIG_DIR/agent-harness` | 全局 |
 | OpenCode | `$OPENCODE_CONFIG_DIR/AGENTS.md`；未设置时 `${XDG_CONFIG_HOME:-~/.config}/opencode/AGENTS.md` | 对应配置根下 `agent-harness` | 全局 |
+| Kimi Code CLI | `$KIMI_CODE_HOME/AGENTS.md`；未设置时 `~/.kimi-code/AGENTS.md` | 对应数据根下 `agent-harness` | 全局 |
 | Cursor | `<project>/.cursor/rules/agent-harness.mdc` | `<project>/.cursor/agent-harness` | 项目 |
 
 Cursor 的文件化规则按项目安装。使用 `--project` 指定仓库；Harnessmith 只把自己管理的文件写入
 repository-local Git exclude 和 `.cursor/.ignore`，不会隐藏或覆盖团队已有的整个 `.cursor/` 目录。
+
+Kimi Code CLI 支持 `0.12.0` 及以上版本；Harnessmith 只适配当前 Node.js 版 Kimi Code CLI，不接管旧 Python
+`kimi-cli` 的 `~/.kimi/` 目录。
+配置契约以 Kimi Code CLI 官方 [数据位置](https://www.kimi.com/code/docs/en/kimi-code-cli/configuration/data-locations.html)
+和 [AGENTS.md 自定义](https://www.kimi.com/code/docs/en/kimi-code-cli/customization/agents) 文档为准。
 
 ## 常用操作
 
 ```bash
 # 安装单个或多个 Agent
 npx harnessmith install --agent codex
-npx harnessmith --agent codex,cursor,claude,opencode --project /absolute/path/to/repository
+npx harnessmith --agent codex,cursor,claude,opencode,kimi --project /absolute/path/to/repository
 
 # 为自动化输出稳定的 JSON Lines
 npx harnessmith --agent all --project . --dry-run --json
@@ -234,7 +240,7 @@ acceptance gate 进入 `complete`，并发更新使用任务锁。`task verify` 
 <details>
 <summary><strong>自动化参数与退出码</strong></summary>
 
-可重复传入 `--agent`；支持 `codex`、`cursor`、`claude`、`claude-code`、`opencode` 和 `all`。非交互调用应显式
+可重复传入 `--agent`；支持 `codex`、`cursor`、`claude`、`claude-code`、`opencode`、`kimi`、`kimi-code` 和 `all`。非交互调用应显式
 指定 Agent，并在需要稳定协议时使用 `--json`。
 
 `capabilities` 是不解析安装路径、不写文件的只读命令。dry-run、install result 和 status JSON 也
@@ -261,6 +267,7 @@ JSON 失败输出为单条 stderr 对象，包含 `version`、`error.code`、`me
 | `CODEX_HOME` | Codex 安装目标 | `~/.codex` |
 | `CLAUDE_CONFIG_DIR` | Claude Code 安装目标 | `~/.claude` |
 | `OPENCODE_CONFIG_DIR` | OpenCode 配置与安装目标 | `${XDG_CONFIG_HOME:-~/.config}/opencode` |
+| `KIMI_CODE_HOME` | Kimi Code CLI 配置与安装目标 | `~/.kimi-code` |
 | `HARNESS_MEMORY_HOME` | 跨项目个人记忆 | `~/.agent-docs` |
 | `HARNESS_PERSONAL_HOME` | 用户维护的规则与仓库关系 | `~/.agent-harness` |
 | `HARNESS_REPOSITORY_ROOT` | 仓库集合根目录 | `~/git-repo` |
