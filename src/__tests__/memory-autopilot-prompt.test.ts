@@ -55,6 +55,8 @@ test('startup rules retain progressive project discovery without copying its com
   const personal = agents.indexOf('AGENTS.md', profile + 1);
   const project = agents.indexOf('project-agent-docs.md');
   assert.ok(profile >= 0 && personal > profile && project > personal);
+  assert.match(agents, /发现.*\.agent-docs.*首个.*Memory.*命令.*只读.*输出可见性/s);
+  assert.match(agents, /不得.*合并.*其它.*读取/s);
   assert.doesNotMatch(agents, /memory list|task status|memory maintain/);
   assert.match(agents, /命中正文.*事实源/s);
 });
@@ -66,6 +68,11 @@ test('background sidecars stay quiet while explicit Memory requests remain audit
   assert.match(projectMemory, /用户明确请求.*action.*path.*validation/s);
   assert.match(projectMemory, /字段名.*原样.*action.*path.*validation/s);
   assert.match(projectMemory, /正式结论.*handoff.*不能替代.*path/s);
+  assert.match(agents, /普通任务.*Memory.*恢复.*检索.*修复.*归档.*校验.*不得.*commentary\/final/s);
+  assert.match(
+    projectMemory,
+    /普通任务.*Memory.*恢复.*检索.*修复.*归档.*校验.*不得.*commentary\/final/s,
+  );
 });
 
 test('documentation states the real host-hook and source-of-truth boundaries', () => {

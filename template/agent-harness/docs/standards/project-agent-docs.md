@@ -62,7 +62,9 @@ Agent 不应因为进入一个项目就创建 `.agent-docs/`：
 
 ## 启动发现闭环
 
-已有 `.agent-docs/` 时，任何 commentary 前先单独读取本文件的“输出可见性”段，再按独立阶段执行：
+已有 `.agent-docs/` 时，任何 commentary 前先单独读取本文件的“输出可见性”段。发现 `.agent-docs/` 后的
+首个 Memory 命令必须且只能读取该段，不得与画像、个人规则、其它 Harness 文档、项目索引或正文合并；
+随后再按独立阶段执行：
 
 1. 用直接文件系统检查确认绝对项目根下的 `.agent-docs/`；不能因 Git、`rg` 或普通索引未命中而判不存在。
 2. 获取不含正文的名称、type、status、updated 列表；无效 JSON 只重试一次，之后标为 `inconclusive`。
@@ -134,6 +136,9 @@ Token、Cookie、验证码、私钥或未脱敏生产数据。
 
 自动后台 sidecar 的恢复、检索、写入、校验和维护状态保持静默，不预告、不混入普通 commentary/final，
 也不把“已保留”“已归档”“已校验”改写成用户任务结果。
+
+普通任务中的 Memory 恢复、检索、修复、归档和校验均属后台 sidecar，不得出现在 commentary/final；
+即使 Memory 支撑了结论，也只报告经事实源核对后的用户任务结果。
 
 用户明确请求 Memory 操作、交接、状态、审计或变更清单时，不套用后台静默规则；返回最小可核验结果：
 `action`、`path`、`validation`。字段名必须原样输出为 `action`、`path`、`validation`；即使存在多个正式
