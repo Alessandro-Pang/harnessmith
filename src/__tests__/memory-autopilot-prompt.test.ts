@@ -93,6 +93,11 @@ test('the bounded first project-memory read contains the complete executable sta
   assert.match(boundedRead, /memory list.*空输出.*原样重试一次/s);
   assert.match(boundedRead, /maintain.*全部.*unindexed.*expired.*active\/blocked/s);
   assert.match(boundedRead, /命中正文.*命令.*完成.*事实源.*新.*单独命令.*不得.*合并/s);
+  assert.match(boundedRead, /同阶段.*多篇.*&&.*禁用.*;/s);
+  assert.match(
+    boundedRead,
+    /contradicted.*supersede.*archive.*expired.*无独有.*archive.*memory check.*--indexed.*--json/s,
+  );
 });
 
 test('the bounded output-visibility read retains the ordinary-sidecar classifier', () => {
@@ -103,6 +108,7 @@ test('the bounded output-visibility read retains the ordinary-sidecar classifier
 
   assert.match(boundedRead, /即使触发自动 sidecar.*不等于索要操作/s);
   assert.match(boundedRead, /prior memory.*preserve expensive finding.*后台 sidecar/s);
+  assert.match(boundedRead, /commentary.*不得.*值得保留.*纳入结论.*保存意图/s);
 });
 
 test('background sidecars stay quiet while explicit Memory requests remain auditable', () => {
