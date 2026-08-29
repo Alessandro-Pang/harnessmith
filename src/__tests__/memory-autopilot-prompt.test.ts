@@ -194,6 +194,11 @@ test('input capture policy distinguishes durable decisions from one-shot actions
     longRunning,
     /JSON payload.*旧.*open.*全部.*resolved.*只接受.*clearOpen.*true.*不得.*clear.*open.*占位/s,
   );
+  assert.match(
+    longRunning,
+    /每次.*mutation attempt.*全新.*payload.*命令.*执行.*冻结.*失败.*不得.*覆盖.*复用.*重试.*新.*路径.*跨 turn.*replay.*例外/s,
+  );
+  assert.match(longRunning, /verification.*精确命令.*exit 0.*completed.*不能.*代替/s);
   assert.match(operatingModel, /一次性.*授权.*不.*捕获/s);
   assert.match(architecture, /mode.*verbatim.*summary/s);
   assert.match(architecture, /close-input.*core\.md/s);
