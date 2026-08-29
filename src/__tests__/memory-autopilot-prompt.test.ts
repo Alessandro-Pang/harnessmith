@@ -45,9 +45,16 @@ test('top-level prompt is a compact bootstrap instead of a Memory CLI manual', (
   assert.ok(Math.max(...lines.map((line) => line.length)) <= 160);
   assert.doesNotMatch(
     agents,
-    /capture-input|capture-experience|close-handoff|reconcile-profile|clearOpen|sourceRefs|--payload-file/,
+    /capture-input|capture-experience|close-handoff|reconcile-profile|sourceRefs|--payload-file/,
   );
   assert.doesNotMatch(agents, /core\/git-conventions\.md/);
+});
+
+test('top-level rules preserve high-loss handoff payload contracts', () => {
+  assert.match(agents, /每次.*handoff.*attempt.*全新.*payload.*路径.*执行后.*冻结.*失败.*新路径/s);
+  assert.match(agents, /verification.*精确命令.*exit 0.*completed.*不能.*代替/s);
+  assert.match(agents, /旧.*open.*全部.*解决.*首次.*clearOpen.*true.*不得.*clear.*open/s);
+  assert.match(agents, /第二个.*独立.*已验证.*任务.*reason.*multi-task/s);
 });
 
 test('top-level routing uses one primary playbook plus supporting topics without category exceptions', () => {
