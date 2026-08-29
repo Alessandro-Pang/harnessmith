@@ -1,4 +1,10 @@
-# Harnessmith Architecture and Enforcement Model
+---
+title: 架构与执行边界
+description: Harnessmith 的实现平面、Adapter 契约、安全边界与版本模型
+owner: maintainers
+---
+
+# Harnessmith 架构与执行边界
 
 Harnessmith 是一个本地优先、跨 Host 的 Personal Harness 分发与工作状态控制层，覆盖 Codex、Cursor、
 Claude Code、OpenCode 和 Kimi Code CLI。它安全地安装和升级规则与内嵌 Harness CLI，并提供渐进式文档、项目上下文、
@@ -35,6 +41,30 @@ The gate does not launch or authenticate to any third-party host. 真实宿主�
 通过只表示“maintainer-attested structure 内部一致且绑定当前候选包”；本地记录和摘要可由仓库写入者
 伪造，不能证明证据确由真实 Host 产生、内容完整或 verdict 为真。可信来源需要外部 CI/attestation
 和人工证据复核；Harnessmith 仍未接管宿主 Runtime 或权限系统。
+
+## 组件与数据流
+
+```text
+npm package / npx harnessmith
+│
+├─ 外层 CLI（src/）
+│  └─ Host Adapter → 预检 → staging → 备份 → commit / rollback
+│                         │
+│                         ├─ 宿主规则入口（AGENTS.md / CLAUDE.md / MDC）
+│                         └─ 内嵌 Harness Runtime（template/agent-harness/）
+│                            ├─ docs router → 按任务渐进加载文档
+│                            ├─ Memory → 非权威索引与待核对线索
+│                            ├─ Task → ledger、checkpoint、acceptance gate
+│                            └─ audit → Host 提交的限界运行元数据
+│
+└─ 验证与发布
+   ├─ tests / preflight / schema → 确定性仓库门禁
+   ├─ Host Eval record → validate / gate → 人工证据复核
+   └─ Git tag + GitHub Release + npm Trusted Publishing
+```
+
+图中箭头表示数据或控制流，不表示授权传递。外层 CLI 只把已验证的模板写入用户选择的宿主范围；宿主读取规则后，
+模型、工具和权限事件仍停留在宿主边界。Memory、Task 与 audit 的输出也不会自动反向改写规则、源码或发布状态。
 
 ## Adapter 能力契约
 

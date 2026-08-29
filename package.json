@@ -6,7 +6,7 @@
     "type": "git",
     "url": "git+https://github.com/Alessandro-Pang/harnessmith.git"
   },
-  "homepage": "https://github.com/Alessandro-Pang/harnessmith#readme",
+  "homepage": "https://alexpang.cn/harnessmith/",
   "bugs": "https://github.com/Alessandro-Pang/harnessmith/issues",
   "author": "zi.yang <pcy1314@163.com> (https://github.com/Alessandro-Pang)",
   "type": "module",
@@ -44,6 +44,10 @@
     "build:emit": "tsup",
     "check": "pnpm run lint && pnpm run format:check && pnpm run lint:md && pnpm run typecheck && pnpm run quality:dead-code && pnpm run quality:secrets",
     "check:docs": "node --import tsx scripts/preflight.ts docs",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs",
+    "docs:check": "vitepress build docs",
     "check:cli": "pnpm run build && node --import tsx scripts/preflight.ts cli",
     "preflight:staged": "lint-staged && pnpm run typecheck && pnpm run check:docs",
     "preflight:quality": "pnpm run check && pnpm run build:emit && node --import tsx scripts/preflight.ts all",
@@ -131,6 +135,7 @@
     "typescript": "7.0.2",
     "unist-util-visit": "5.1.0",
     "vitest": "4.1.11",
+    "vitepress": "1.6.4",
     "yaml": "2.9.0"
   }
 }

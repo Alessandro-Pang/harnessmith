@@ -13,3 +13,7 @@ coverage/
 
 # Resumable local release snapshot and state
 /.release/
+
+# VitePress local output
+/docs/.vitepress/cache/
+/docs/.vitepress/dist/

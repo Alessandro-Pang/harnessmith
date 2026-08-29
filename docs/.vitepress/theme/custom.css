@@ -1,0 +1,21 @@
+:root {
+  --vp-c-brand-1: #176b5b;
+  --vp-c-brand-2: #258373;
+  --vp-c-brand-3: #39a08e;
+  --vp-c-brand-soft: rgba(23, 107, 91, 0.14);
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(120deg, #176b5b 15%, #4b7fb4 85%);
+}
+
+.VPHomeHero .text {
+  max-width: 720px;
+}
+
+.VPFeature {
+  border-color: color-mix(in srgb, var(--vp-c-brand-1) 24%, transparent);
+}
+
+:focus-visible {
+  outline: 3px solid var(--vp-c-brand-2);
+  outline-offset: 3px;
+}
