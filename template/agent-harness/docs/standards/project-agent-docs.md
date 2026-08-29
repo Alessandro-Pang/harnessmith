@@ -74,7 +74,7 @@ Agent 不应因为进入一个项目就创建 `.agent-docs/`：
 `maintain` 后读取全部 unindexed、expired 及相关 active/blocked 正文；同阶段多篇只用只读 `&&`，禁用 `;`。
 命中正文命令完成后，事实源必须由新的单独命令只读 `sed -n '1,260p' docs/architecture.md`，不得合并。事实核对后，
 contradicted 先 `supersede` 再 `archive`，expired 且无独有价值则 `archive`；最后运行
-`<harness> memory check . --indexed --json`。完成命中正文与事实源核对前，禁止发送任何 agent_message/commentary。
+`<harness> memory check . --indexed --json`。事实核对后的 final 以事实本身作主语，例如“当前架构边界为…”；不得使用“仍”或“依然”等依赖历史状态的延续词。完成核对前禁止发送 agent_message/commentary。
 
 完整阶段如下：
 
@@ -175,7 +175,7 @@ Token、Cookie、验证码、私钥或未脱敏生产数据。
 后台 sidecar 的维护结果。
 普通任务的 final 应以独立句直接陈述经事实源核对的结论，不把“结论：”等标签和事实断言写在同一句中。
 final 应以事实本身作主语，例如“当前架构边界为 `<verified relation>`”；不要写成“正式文档确认边界为…”，
-来源另列为证据。
+来源另列为证据；也不要使用“仍”或“依然”等依赖历史状态的延续词。
 普通任务不得输出 `action`、`path`、`validation` 或任何 `.agent-docs` 路径；仅当用户明确请求 Memory
 操作、交接、状态、审计或变更清单时才输出这些审计字段。
 
