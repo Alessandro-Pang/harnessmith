@@ -19,8 +19,9 @@ function owners(pattern: RegExp): string[] {
   return [...documents].flatMap(([name, content]) => (pattern.test(content) ? [name] : []));
 }
 
-test('handoff lifecycle has one normative owner', () => {
-  assert.deepEqual(owners(/clearOpen/), ['long-running-tasks']);
+test('handoff lifecycle has one normative owner plus the high-loss bootstrap guard', () => {
+  assert.deepEqual(owners(/clearOpen/), ['agents', 'long-running-tasks']);
+  assert.deepEqual(owners(/仅部分 resolved.*replacement `open`/), ['long-running-tasks']);
   assert.deepEqual(owners(/Task ledger[^\n]*唯一[^\n]*事实源/), ['long-running-tasks']);
   assert.deepEqual(owners(/phase[^\n]*compaction[^\n]*multi-task[^\n]*manual/), [
     'long-running-tasks',

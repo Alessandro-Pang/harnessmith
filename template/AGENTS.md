@@ -43,6 +43,10 @@
 - `docs/`、ADR、代码、测试、schema、lint 和 CI 是事实源；Memory 只保存非权威输入、状态、证据和
   可追溯提炼。宿主原生 memory 仅作待核对线索。
 - 项目 Memory 的资格、发现、写入、Task/Handoff、画像和 CLI 细节以路由命中的专题文档为准，入口层不复制其协议。
+- 每次 handoff mutation attempt 使用全新 payload 路径；命令执行后路径与内容冻结，失败重试也用新路径；
+  只有宿主要求的跨 turn identical replay 原样复用成功 payload。
+- Handoff 的 `verification` 写当前 verifier 精确命令与 `exit 0`，`completed` 不能代替；旧 `open` 全部解决时首次即用
+  `clearOpen: true`，不得用 `clear: ["open"]` 试探；同一 session 的第二个独立已验证任务用 `reason: multi-task`。
 - 自动后台 sidecar 保持静默；普通任务中的 Memory 恢复、检索、修复、归档和校验不得出现在 commentary/final，只报告用户任务结果。
 - 纯 host-signal/replay turn：宿主允许空响应时不得发送 `agent_message`；强制响应时只陈述上一用户任务的验证结果，不提 sidecar 动作。
 - 普通任务不得输出 `action`、`path`、`validation` 或任何 `.agent-docs` 路径；只有用户明确请求 Memory 审计时例外。
