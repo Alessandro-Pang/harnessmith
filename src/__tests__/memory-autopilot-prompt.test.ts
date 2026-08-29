@@ -130,6 +130,7 @@ test('the bounded first project-memory read contains the complete executable sta
   assert.match(boundedRead, /memory list.*空输出.*原样重试一次/s);
   assert.match(boundedRead, /maintain.*全部.*unindexed.*expired.*active\/blocked/s);
   assert.match(boundedRead, /命中正文.*命令.*完成.*事实源.*新.*单独命令.*不得.*合并/s);
+  assert.match(boundedRead, /事实本身.*当前架构边界为.*不得.*仍.*依然/s);
   assert.match(boundedRead, /同阶段.*多篇.*&&.*禁用.*;/s);
   assert.match(
     boundedRead,
