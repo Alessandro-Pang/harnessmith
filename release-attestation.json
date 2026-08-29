@@ -1,16 +1,16 @@
 {
   "schemaVersion": 3,
   "packageName": "harnessmith",
-  "packageVersion": "0.7.1",
-  "tag": "v0.7.1",
-  "artifactSha256": "aaf3b05fb80a1fc57bc0e2c78a50ee3563e64d34e19b2ee0eebb76c482fba8b1",
-  "behaviorSha256": "8ec0c55e46a2866a480eeb303ec59d1d26f4857cbc0c2a03e0446ee785120799",
+  "packageVersion": "0.8.0",
+  "tag": "v0.8.0",
+  "artifactSha256": "c6c1c828767b7743f4b34d67d93f4d36a3b8955d7b52370a072e8eb940be1137",
+  "behaviorSha256": "3f9e194533f1ca94cd121e1ef510bdb2f3daaa82ced83f352c2e589bdc5693b4",
   "harnessVersion": "2.6.0",
-  "rulesSha256": "9bf65b4dfdc867a5d80b802d561478977276888d68091c3d988453f8069c605b",
+  "rulesSha256": "14991ba38de731fdcdbecc10df6f51edb9d9684cc4c8b4c7824b925a6cc0b050",
   "scenarios": {
     "bootstrap-global-memory": "6083a39adb7b37e281ee795dd22c14d0dc0504556c147e18aa8b61282aa5a967",
     "progressive-disclosure": "6d25689a827a44f3aa1d7c4e268510ae14e8f844325f1e1eb3f757a192aa0df0",
-    "memory-fact-separation": "92ca7ba992a0427044a61f9db0a385b631a89dea6ee125a9ec05d5a6eee91a07",
+    "memory-fact-separation": "9aa2f1a83d5892f98f6ccae3fa6ebda38eaf7e341f81ec6fab3e7d1bbfe456e5",
     "destructive-boundary": "d9e89959382e32f4f19092022c1077e196c6f44e4f41cf2bea17ea5879da3f49",
     "safe-path-boundary": "693edeb5981d9f880ea9fc586d7dfe565f612f5aba9ec39638c4d37451d5b51f",
     "machine-error-contract": "9f0e59c1f70725bb8647765ec91331783b12b3b772058cf1239137733f466870",
@@ -34,9 +34,9 @@
   "assurance": "maintainer-attested-risk-exception",
   "riskAcceptance": {
     "schemaVersion": 1,
-    "acceptedAt": "2026-08-28T06:38:50Z",
+    "acceptedAt": "2026-08-29T05:20:44Z",
     "authorizedBy": "user",
-    "reason": "User explicitly accepted the Harnesssmith 0.7.1 Host Eval coverage risk and authorized continuing publication after the gate rejected all historical Codex records because the rebuilt candidate changed harnessVersion and rulesSha256.",
+    "reason": "User explicitly accepted the exact Harnesssmith 0.8.0 candidate Host Eval coverage risk and authorized publication before resolving the execution-model problem tracked by GitHub Issue #44. The post-merge Codex Host coverage remains infrastructure-inconclusive after repeated transport timeouts and is not represented as passing.",
     "uncoveredScenarios": [
       "codex/bootstrap-global-memory",
       "codex/progressive-disclosure",
@@ -54,8 +54,8 @@
       "codex/memory-profile-cross-task-recall",
       "codex/cross-repository-map-writeback"
     ],
-    "packageVersion": "0.7.1",
-    "packageArtifactSha256": "aaf3b05fb80a1fc57bc0e2c78a50ee3563e64d34e19b2ee0eebb76c482fba8b1"
+    "packageVersion": "0.8.0",
+    "packageArtifactSha256": "c6c1c828767b7743f4b34d67d93f4d36a3b8955d7b52370a072e8eb940be1137"
   },
-  "preparedAt": "2026-08-28T06:40:43.967Z"
+  "preparedAt": "2026-08-29T05:26:37.985Z"
 }
