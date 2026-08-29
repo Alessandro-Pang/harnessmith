@@ -44,27 +44,23 @@ Memory 用来帮助下一次会话重新找到历史线索，但它不是事实�
 
 ## 全链路示意
 
-```text
-你选择宿主与范围
-        │
-        ▼
-外层 CLI ── Adapter ── 预检 ── staging / 备份 ── 提交或回滚
-                                              │
-                                              ▼
-                              宿主规则入口 + 本地 Harness Runtime
-                                              │
-                    ┌─────────────────────────┼─────────────────────┐
-                    ▼                         ▼                     ▼
-             按需文档路由              Memory / Task          验证与有限审计
-                    └─────────────────────────┼─────────────────────┘
-                                              ▼
-                                 宿主模型循环、工具与权限系统
+```mermaid
+flowchart TD
+  Choice["你选择宿主与范围"] --> CLI["外层 CLI"]
+  CLI --> Adapter["Host Adapter"]
+  Adapter --> Preflight{"完整预检是否通过？"}
+  Preflight -->|"否"| Refuse["拒绝写入并说明原因"]
+  Preflight -->|"是"| Stage["staging · 备份 · 获取操作锁"]
+  Stage --> Commit{"提交是否成功？"}
+  Commit -->|"否"| Rollback["按精确记录回滚"]
+  Commit -->|"是"| Runtime["宿主规则入口 + 本地 Harness Runtime"]
+  Runtime --> Docs["按需文档路由"]
+  Runtime --> State["Memory / Task"]
+  Runtime --> Verify["验证与有限审计"]
+  Docs --> Host["宿主模型循环 · 工具 · 权限系统"]
+  State --> Host
+  Verify --> Host
 ```
 
 箭头表示数据或控制流，不传递授权。网页、仓库文本、Memory 和工具输出都只是输入；它们不能因为被 Agent 读取，就新增
 push、发布、生产变更或其他高风险权限。
-
-## 接下来读什么
-
-需要实现层细节，进入[架构](/architecture)；准备安装，进入[快速开始](/guide/getting-started)；评估保证范围，
-查看[责任与安全边界](/concepts/boundaries)。

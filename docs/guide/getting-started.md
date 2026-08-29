@@ -86,10 +86,3 @@ npx harnessmith install --agent codex,opencode,kimi-code
 > 阅读 https://raw.githubusercontent.com/Alessandro-Pang/harnessmith/main/llms.txt，按其中协议安装 Harnessmith；先执行 dry-run，再让我确认写入。
 
 <!-- markdownlint-enable MD034 -->
-
-## 下一步
-
-- 理解 restore、uninstall 和文件接管规则：[生命周期](/guide/lifecycle)
-- 理解安装后规则如何进入一次 Agent 任务：[Harnessmith 如何工作](/concepts/how-it-works)
-- 查看全部参数：[CLI 参考](/reference/cli)
-- 判断哪些能力由 Harnessmith 实现：[责任与安全边界](/concepts/boundaries)

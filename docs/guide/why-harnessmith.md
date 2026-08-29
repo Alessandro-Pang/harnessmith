@@ -41,8 +41,3 @@ Harnesssmith 适合个人长期维护、跨项目复用的 Coding Agent 工作�
 
 如果你只偶尔使用一个 Agent、只需要几行项目说明，直接维护一个简短 `AGENTS.md` 可能已经足够。Harnessmith
 也不是团队级云端控制平台，不提供模型服务、多 Agent 调度或集中式权限系统。
-
-## 接下来读什么
-
-想亲自试用，进入[快速开始](/guide/getting-started)；想先理解组成部分，阅读
-[Harnessmith 如何工作](/concepts/how-it-works)与[Harness Engineering](/concepts/harness-engineering)。

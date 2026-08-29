@@ -15,21 +15,14 @@ Host）**表示 Harnessmith 只提供 guidance 或接入点；**不支持（Unsu
 
 ## 先记住一个模型
 
-```text
-┌──────────────────────────────────────────────────────────────┐
-│ Coding Agent 宿主                                            │
-│ 模型循环 · 工具/MCP · sandbox · 权限批准 · token/成本        │
-└───────────────────────────────▲──────────────────────────────┘
-                                │ 读取规则、运行本地命令
-┌───────────────────────────────┴──────────────────────────────┐
-│ 安装后的 Personal Harness                                    │
-│ 短规则入口 · 文档路由 · 检索 · Memory · Task · 有限审计       │
-└───────────────────────────────▲──────────────────────────────┘
-                                │ 安装、升级、恢复
-┌───────────────────────────────┴──────────────────────────────┐
-│ Harnessmith 外层 CLI                                         │
-│ Host Adapter · SafePath · staging · 备份 · 事务 · 安装记录    │
-└──────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart BT
+  CLI["Harnessmith 外层 CLI<br/>Host Adapter · SafePath · staging · 备份 · 事务"]
+  Harness["安装后的 Personal Harness<br/>短规则入口 · 文档路由 · Memory · Task · 有限审计"]
+  Host["Coding Agent 宿主<br/>模型循环 · 工具/MCP · sandbox · 权限批准 · 成本"]
+
+  CLI -->|"安装 · 升级 · 恢复"| Harness
+  Harness -->|"读取规则 · 运行本地命令"| Host
 ```
 
 上层宿主负责“Agent 怎样运行”，中间 Harness 负责“Agent 怎样找到并延续你的工作方式”，外层 CLI 负责“这套工作方式
@@ -125,6 +118,3 @@ proposal-first 的显式命令升级，不静默覆盖原记录。
 
 Harnessmith 不是通用 Agent Runtime、模型网关、云端策略平台或多 Agent 调度器；也没有实现 Policy Engine、Canonical
 IR、Pack/Registry 或自动规则演化。部分概念曾出现在研发前评审中，当前明确属于历史提案，而非隐藏功能。
-
-下一步可以阅读[设计原则](/concepts/design-principles)理解这些取舍的原因，或阅读
-[责任与安全边界](/concepts/boundaries)判断它能承诺什么。

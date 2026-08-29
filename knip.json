@@ -2,12 +2,21 @@
   "$schema": "./node_modules/knip/schema.json",
   "entry": [
     "bin/harnessmith.mjs",
+    "docs/.vitepress/config.ts",
     "scripts/eval-gate.ts",
     "scripts/preflight.ts",
     "scripts/release-publish.ts",
     "template/agent-harness/bin/harness.mjs"
   ],
-  "ignoreDependencies": ["@secretlint/secretlint-rule-preset-recommend"],
+  "ignoreDependencies": [
+    "@braintree/sanitize-url",
+    "@secretlint/secretlint-rule-preset-recommend",
+    "cytoscape",
+    "cytoscape-cose-bilkent",
+    "dayjs",
+    "debug",
+    "mermaid"
+  ],
   "project": [
     "src/**/*.ts",
     "scripts/**/*.ts",

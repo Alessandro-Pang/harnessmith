@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitepress';
+import { withMermaid } from 'vitepress-plugin-mermaid';
 
-export default defineConfig({
+export default withMermaid(defineConfig({
   lang: 'zh-CN',
   title: 'Harnessmith',
   description: '跨宿主分发和安全管理个人 Agent Harness',
@@ -13,6 +14,23 @@ export default defineConfig({
     en: { label: 'English', lang: 'en', link: '/en/' },
   },
   head: [['meta', { name: 'theme-color', content: '#176b5b' }]],
+  mermaid: {
+    theme: 'base',
+    themeVariables: {
+      primaryColor: '#dcebe5',
+      primaryTextColor: '#16312a',
+      primaryBorderColor: '#2b7564',
+      lineColor: '#487066',
+      secondaryColor: '#eef2ed',
+      tertiaryColor: '#f7f4ea',
+      fontFamily: '"Avenir Next", "Segoe UI Variable", "PingFang SC", sans-serif',
+    },
+  },
+  vite: {
+    optimizeDeps: {
+      include: ['mermaid'],
+    },
+  },
   themeConfig: {
     nav: [
       { text: '认识 Harnessmith', link: '/guide/why-harnessmith' },
@@ -83,4 +101,4 @@ export default defineConfig({
       copyright: 'Harnesssmith contributors',
     },
   },
-});
+}));

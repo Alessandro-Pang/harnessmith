@@ -18,12 +18,15 @@ owner: maintainers
 会保存明确目标、当前状态、检查点、下一步和每条 acceptance；Memory 则让 Agent 找回“这个项目曾因 npm cache 权限
 失败”之类的线索，并要求回到当前现场验证。
 
-```text
-Memory：可能有帮助的历史线索 ──► 本轮重新核对
-                                  │
-Task：目标 ─► checkpoint ─► acceptance evidence ─► complete
-                                  │
-                                  └─ 未通过或无法验证：继续 / inconclusive
+```mermaid
+flowchart LR
+  Memory["Memory<br/>可能有帮助的历史线索"] --> Recheck["回到本轮事实源重新核对"]
+  Goal["Task 目标"] --> Checkpoint["checkpoint"]
+  Checkpoint --> Evidence["acceptance evidence"]
+  Evidence --> Gate{"acceptance gate"}
+  Gate -->|"全部满足"| Complete["complete"]
+  Gate -->|"未通过"| Continue["继续工作"]
+  Gate -->|"无法验证"| Inconclusive["inconclusive"]
 ```
 
 ## Memory 为什么是非权威的

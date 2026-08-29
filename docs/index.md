@@ -5,41 +5,79 @@ description: 跨宿主分发和安全管理个人 Agent Harness
 owner: maintainers
 hero:
   name: Harnessmith
-  text: 把你的 Agent 工作方式，安全地带到不同 Coding Agent
-  tagline: 一次维护个人规则、工作状态与验证习惯；由 Harnessmith 负责适配、安装、恢复和升级。
+  text: 让一套 Agent 工作方式，跨宿主可靠运行
+  tagline: 安全分发个人规则、工作状态与验证习惯。你维护方法，Harnessmith 处理适配、安装、恢复和升级。
   actions:
     - theme: brand
-      text: 5 分钟开始
+      text: 5 分钟上手
       link: /guide/getting-started
     - theme: alt
-      text: 它解决什么问题
+      text: 了解设计
       link: /guide/why-harnessmith
-features:
-  - title: 一套工作方式，多个宿主
-    details: 面向 Codex、Cursor、Claude Code、OpenCode 与 Kimi Code CLI 分发同一套个人 Harness。
-  - title: 改动前可看，出问题可退
-    details: dry-run、完整预检、备份、锁、恢复和精确回滚共同保护已有文件。
-  - title: 长任务不只靠聊天记录
-    details: 用本地 Memory、Task、检查点和验收证据衔接跨会话工作，同时保留项目事实源的权威性。
 ---
 
-# Harnesssmith 是什么
+<section class="home-signal" aria-label="Harnessmith 概览">
+  <p class="home-eyebrow">Personal Agent Harness · Local first</p>
+  <div class="home-signal-grid">
+    <div><strong>5</strong><span>个已接入宿主</span></div>
+    <div><strong>2</strong><span>层清晰架构</span></div>
+    <div><strong>1</strong><span>套可携带工作方式</span></div>
+  </div>
+</section>
 
-你是否遇到过这些情况？同一套安全边界要在多个 Coding Agent 中反复维护；规则越写越长，却越来越难被 Agent
-正确找到；一个任务跨过几次上下文压缩后，下一次会话只能靠猜；升级配置时，又担心覆盖自己原有的文件。
+<section class="home-intro">
+  <div>
+    <p class="home-kicker">为什么需要它</p>
+    <h2>Agent 会越来越强，工作环境也需要被认真设计。</h2>
+  </div>
+  <div>
+    <p>你是否遇到过这些情况：同一套安全边界在多个 Coding Agent 中反复维护；规则越写越长，却越来越难被准确找到；任务跨过几次上下文压缩后，下一次会话只能靠猜；升级配置时，又担心覆盖已有文件。</p>
+    <p>Harnessmith 管理的正是模型周围这一层：把个人方法变成可安全安装、按需发现、跨会话延续，并能用证据核对结果的本地工作环境。Harnessmith 不替代 Coding Agent，模型循环与权限系统仍由宿主负责。</p>
+  </div>
+</section>
 
-Harnesssmith 解决的不是“少写一份配置”，而是让一套个人 Agent 工作方式可以被**安全分发、按需发现、跨会话延续，
-并用证据核对结果**。它由两部分组成：外层 npm initializer 负责宿主适配和可恢复安装；安装后的本地 Harness
-负责文档路由、非权威 Memory、长任务状态与有限审计。
+<section class="home-bento" aria-label="核心能力">
+  <article class="home-card home-card-hosts">
+    <span class="home-card-index">01 / DISTRIBUTE</span>
+    <h2>一套方法，适配多个宿主</h2>
+    <p>Codex、Cursor、Claude Code、OpenCode 与 Kimi Code CLI 共享宿主中立的 Harness；路径、入口和激活差异由 Adapter 处理。</p>
+    <div class="host-list" aria-label="支持的宿主">
+      <span>Codex</span><span>Cursor</span><span>Claude Code</span><span>OpenCode</span><span>Kimi Code</span>
+    </div>
+  </article>
 
-Harnessmith 不替代 Coding Agent。模型循环、工具执行、sandbox、权限批准和 token 成本仍由 Codex、Cursor、
-Claude Code、OpenCode 或 Kimi Code CLI 自己负责。Harnessmith 管理的是它们周围那层可携带、可维护的个人工作环境。
+  <article class="home-card home-card-safe">
+    <span class="home-card-index">02 / RECOVER</span>
+    <h2>写入前看得见，失败后退得回</h2>
+    <p>dry-run、完整预检、操作锁、staging、备份和精确回滚共同保护已有文件。</p>
+    <div class="safety-line" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+  </article>
 
-## 从这里开始
+  <article class="home-card home-card-state">
+    <span class="home-card-index">03 / CONTINUE</span>
+    <h2>长任务不只靠聊天记录</h2>
+    <p>Memory 保存待核对线索；Task 保存目标、检查点、验收条件和证据。只有 acceptance gate 能让任务进入 complete。</p>
+  </article>
 
-- 还不确定是否需要它：先读[它解决什么问题](/guide/why-harnessmith)。
-- 想马上试用：跟随[5 分钟快速开始](/guide/getting-started)。
-- 想知道一次安装后发生了什么：阅读[Harnessmith 如何工作](/concepts/how-it-works)。
-- 要评估安全性和技术取舍：进入[架构](/architecture)、[责任边界](/concepts/boundaries)与[证据和评测](/concepts/evidence-and-evaluation)。
+  <article class="home-card home-card-boundary">
+    <span class="home-card-index">04 / BOUNDARY</span>
+    <h2>清楚说明什么不归它负责</h2>
+    <p>模型循环、sandbox、工具执行和权限批准仍由宿主负责。Harnessmith 不把文档建议包装成技术强制。</p>
+    <a href="/harnessmith/concepts/boundaries">查看责任边界 <span aria-hidden="true">→</span></a>
+  </article>
+</section>
 
-English readers can start from the [English overview](/en/).
+<section class="home-path" aria-labelledby="home-path-title">
+  <div>
+    <p class="home-kicker">从这里开始 · Choose your path</p>
+    <h2 id="home-path-title">从你现在最关心的问题开始</h2>
+  </div>
+  <nav aria-label="文档阅读路径">
+    <a href="/harnessmith/guide/why-harnessmith"><span>01</span><strong>它是否适合我？</strong><small>问题、场景与适用边界</small></a>
+    <a href="/harnessmith/guide/getting-started"><span>02</span><strong>怎样安全安装？</strong><small>从 dry-run 开始的 5 分钟路径</small></a>
+    <a href="/harnessmith/concepts/how-it-works"><span>03</span><strong>一次任务怎样运行？</strong><small>安装、路由、状态与验证全链路</small></a>
+    <a href="/harnessmith/architecture"><span>04</span><strong>为什么这样设计？</strong><small>分层、信任边界与工程取舍</small></a>
+  </nav>
+</section>
+
+<p class="home-english">English reader? Start with the <a href="/harnessmith/en/">English overview</a>.</p>

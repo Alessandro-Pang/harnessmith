@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'vitest';
@@ -16,6 +16,8 @@ test('documentation site has reproducible local build, search, links, and Pages 
     devDependencies?: Record<string, string>;
   };
   assert.equal(manifest.devDependencies?.vitepress, '1.6.4');
+  assert.equal(manifest.devDependencies?.mermaid, '11.17.2');
+  assert.equal(manifest.devDependencies?.['vitepress-plugin-mermaid'], '2.0.17');
   assert.equal(manifest.scripts?.['docs:dev'], 'vitepress dev docs');
   assert.equal(manifest.scripts?.['docs:build'], 'vitepress build docs');
   assert.equal(manifest.scripts?.['docs:preview'], 'vitepress preview docs');
@@ -26,6 +28,12 @@ test('documentation site has reproducible local build, search, links, and Pages 
   assert.match(config, /provider:\s*['"]local['"]/);
   assert.match(config, /lang:\s*['"]en['"]/);
   assert.doesNotMatch(config, /ignoreDeadLinks:\s*true/);
+  assert.match(config, /withMermaid/);
+  assert.match(config, /mermaid:\s*{/);
+
+  const deadCodeConfig = read('knip.json');
+  assert.match(deadCodeConfig, /docs\/\.vitepress\/config\.ts/);
+  assert.match(deadCodeConfig, /"mermaid"/);
 
   assert.match(read('docs/.vitepress/theme/custom.css'), /:focus-visible/);
 
@@ -34,6 +42,56 @@ test('documentation site has reproducible local build, search, links, and Pages 
   assert.match(workflow, /branches:\s*\[main\]/);
   assert.match(workflow, /pnpm run docs:build/);
   assert.match(workflow, /actions\/deploy-pages@v4/);
+});
+
+test('articles rely on theme prev-next navigation instead of handwritten reading footers', () => {
+  const markdownFiles = readdirSync(join(root, 'docs'), { recursive: true })
+    .map(String)
+    .filter((path) => path.endsWith('.md'));
+
+  for (const path of markdownFiles) {
+    const content = read(join('docs', path));
+    assert.doesNotMatch(
+      content,
+      /^##\s+(?:接下来读什么|继续阅读|下一步)\s*$/m,
+      `${path} must not duplicate theme prev-next navigation`,
+    );
+    assert.doesNotMatch(
+      content,
+      /(?:下一步可以阅读|继续阅读\[)/,
+      `${path} must not end with handwritten reading links`,
+    );
+  }
+});
+
+test('architecture and lifecycle diagrams render through Mermaid', () => {
+  for (const path of [
+    'docs/architecture.md',
+    'docs/concepts/how-it-works.md',
+    'docs/concepts/memory-and-tasks.md',
+  ]) {
+    const content = read(path);
+    assert.match(content, /```mermaid\n/);
+    assert.match(content, /flowchart\s+(?:BT|TD|LR)/);
+    assert.doesNotMatch(content, /```text\n/);
+    assert.doesNotMatch(content, /[┌┐└┘├┤┬┴┼]/);
+  }
+});
+
+test('home and theme provide a distinctive responsive visual system', () => {
+  const home = read('docs/index.md');
+  const styles = read('docs/.vitepress/theme/custom.css');
+
+  assert.doesNotMatch(home, /^features:/m);
+  assert.match(home, /class="home-signal"/);
+  assert.match(home, /class="home-bento"/);
+  assert.match(home, /class="home-path"/);
+
+  assert.match(styles, /\.VPHomeHero/);
+  assert.match(styles, /\.home-bento/);
+  assert.match(styles, /background-image:/);
+  assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/);
+  assert.match(styles, /html\.dark/);
 });
 
 test('documentation site covers user, contributor, architecture, boundary, and history routes', () => {
@@ -66,7 +124,12 @@ test('documentation site covers user, contributor, architecture, boundary, and h
     assert.equal(existsSync(join(root, page)), true, `${page} must exist`);
     const content = read(page);
     assert.match(content, /^---\n[\s\S]*?owner:\s*maintainers\n[\s\S]*?---\n/);
-    assert.match(content, /^#\s+.+/m);
+    if (page === 'docs/index.md') {
+      assert.match(content, /^layout:\s*home$/m);
+      assert.match(content, /^hero:\n[\s\S]*?^\s+name:\s*.+$/m);
+    } else {
+      assert.match(content, /^#\s+.+/m);
+    }
   }
 });
 
