@@ -2,7 +2,7 @@
 title: Long-running Task Protocol
 type: harness-core
 status: active
-updated: 2026-08-28
+updated: 2026-08-29
 ---
 
 # Long-running Task Protocol
@@ -78,11 +78,15 @@ active task、plan/backlog 与 handoff `open`/`next` 后确认无仍有效事项
 signal turn 内、下一条用户消息前，以 `reason: compaction` 单独执行并校验一次 checkpoint；已有、相同
 或刚更新快照均不豁免。该 signal turn 必须静默执行。仅预判压缩而尚未收到明确信号时，
 才按“旧快照不足恢复且有实质变化”去重。
-已运行适用 verifier 时，`verification` 必须写入当前命令与结果；旧 `open` 全部 resolved 时必须用
+已运行适用 verifier 时，`verification` 必须写入当前 verifier 的精确命令与 `exit 0`；只在 `completed`
+中声称验证通过不能代替 `verification`。旧 `open` 全部 resolved 时必须用
 `clearOpen: true`，仅部分 resolved 时必须用 replacement `open` 明列剩余项；省略都会保留旧值，close 不能代替。结束信号必须
 来自当前 user/host turn；`open` 空、sentinel、变更或验收全完成都不能据此提前 close。
 handoff JSON payload 中旧 `open` 全部 resolved 时只接受布尔字段 `clearOpen: true`，不得使用 `clear` 数组、
 空字符串或“No known remaining”等 `open` 占位；首次 mutation 前按此精确字段生成，禁止试错后重试。
+每次 handoff mutation attempt 必须先写入全新 payload 路径；命令开始执行后，该路径与内容即冻结，即使失败也
+不得覆盖或复用，重试必须创建新路径。只有宿主明确要求的跨 turn identical replay 例外：原样复用上一回合
+已成功 checkpoint 的相同路径和内容，且不得重写文件。
 
 自动命令必须单独执行且不得通过 shell 插值传递自由文本。自动 sidecar 与用户明确请求的 Memory 操作
 采用不同的可见性策略，统一遵循 [project Memory standard](../standards/project-agent-docs.md)；
