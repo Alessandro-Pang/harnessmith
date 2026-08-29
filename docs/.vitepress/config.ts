@@ -15,9 +15,9 @@ export default defineConfig({
   head: [['meta', { name: 'theme-color', content: '#176b5b' }]],
   themeConfig: {
     nav: [
-      { text: '快速开始', link: '/guide/getting-started' },
-      { text: '宿主支持', link: '/guide/hosts' },
-      { text: '架构', link: '/architecture' },
+      { text: '认识 Harnessmith', link: '/guide/why-harnessmith' },
+      { text: '开始使用', link: '/guide/getting-started' },
+      { text: '理解设计', link: '/concepts/how-it-works' },
       { text: 'CLI', link: '/reference/cli' },
       { text: 'English', link: '/en/' },
     ],
@@ -33,6 +33,13 @@ export default defineConfig({
       ],
       '/': [
         {
+          text: '认识 Harnessmith',
+          items: [
+            { text: '它解决什么问题', link: '/guide/why-harnessmith' },
+            { text: 'Harness Engineering', link: '/concepts/harness-engineering' },
+          ],
+        },
+        {
           text: '开始使用',
           items: [
             { text: '快速开始', link: '/guide/getting-started' },
@@ -41,22 +48,25 @@ export default defineConfig({
           ],
         },
         {
-          text: '理解 Harnessmith',
+          text: '理解设计',
           items: [
+            { text: 'Harnessmith 如何工作', link: '/concepts/how-it-works' },
             { text: '架构', link: '/architecture' },
             { text: '设计原则', link: '/concepts/design-principles' },
             { text: '责任与安全边界', link: '/concepts/boundaries' },
             { text: 'Memory 与 Task', link: '/concepts/memory-and-tasks' },
+            { text: '证据与评测', link: '/concepts/evidence-and-evaluation' },
           ],
         },
         {
-          text: '参考与维护',
+          text: '维护与贡献',
           items: [
             { text: 'CLI 参考', link: '/reference/cli' },
             { text: '版本与迁移', link: '/versions/migrations' },
             { text: '贡献指南', link: '/contributing' },
             { text: '内容策略', link: '/content-strategy' },
             { text: 'ADR', link: '/decisions/' },
+            { text: '历史与思想来源', link: '/project/history-and-influences' },
             { text: '参考资料', link: '/references' },
           ],
         },

@@ -1,36 +1,69 @@
 ---
 title: 责任与安全边界
-description: Harnessmith、宿主、外部服务与用户授权之间的责任划分
+description: Harnessmith 能保证什么、宿主负责什么、哪些结果仍需用户判断
 owner: maintainers
 ---
 
 # 责任与安全边界
 
-理解边界比记住功能列表更重要。Harnessmith 是分发与工作状态控制层，不是新的 Agent Runtime。
+最容易误解 Harnessmith 的方式，是把它看成另一个 Coding Agent。它实际管理 Agent 周围的个人工作层，因此有些保证可以
+由 Harnesssmith 机械实现，有些必须留给宿主，还有些只能由用户或外部可信系统决定。
 
-| 领域 | Harnessmith | Coding Agent 宿主 | 用户或外部系统 |
+## Harnesssmith 能保证什么
+
+在其授权根和支持的平台模型内，仓库实现与测试覆盖以下性质：
+
+- Adapter 按声明解析宿主路径与规则格式；
+- 生命周期先预检，再 staging、备份和事务提交，失败时精确回滚；
+- unmanaged 或 modified 目标默认不被静默覆盖；
+- route 与 search 按预算发现文档，不要求整体加载手册；
+- Memory 与 Task 写入经过路径、schema、锁和验收状态约束；
+- Host Eval 记录绑定候选包并接受结构、一致性和覆盖检查。
+
+这些是代码层保证，仍应按具体版本的实现和测试理解，而不是跨版本永久承诺。
+
+## Coding Agent 宿主保证什么
+
+模型循环、上下文压缩、工具/MCP 调度、sandbox、网络访问、权限提示、凭据管理、token/成本与事件真实性属于 Codex、
+Cursor、Claude Code、OpenCode 或 Kimi Code CLI。Harnesssmith 可以提供建议和接入点，但不能替宿主执行这些职责。
+
+例如，Harnesssmith 可以写明“远端写入需要明确授权”，但真正阻止一次未经批准的网络调用，需要宿主权限系统和用户
+审批；Markdown 本身不是 sandbox。
+
+## 用户与外部系统仍要决定什么
+
+用户选择安装范围、是否接管冲突文件，以及是否授权 commit、push、merge、发布、生产变更和消息发送。项目业务事实、
+风险接受和最终验收也不能由 Memory 或本地记录自动替代。
+
+可信的真实宿主 attestation、远端 CI 身份和供应链签名需要外部服务。Harnesssmith 的本地 gate 可以验证一份记录是否
+自洽，但不能证明写记录的人没有伪造它。
+
+## 一张责任表
+
+| 领域 | Harnesssmith | Coding Agent 宿主 | 用户或外部系统 |
 | --- | --- | --- | --- |
-| 规则分发 | Adapter、渲染、安装记录、备份与回滚 | 加载宿主原生规则格式 | 选择宿主和授权根 |
-| 模型执行 | 不实现 | 模型循环、上下文、token 与成本 | 选择模型与预算 |
-| 工具与权限 | 记录有限审计元数据 | 工具/MCP 调度、sandbox、批准事件 | 批准高风险动作、配置服务凭据 |
-| 工作状态 | 非权威 Memory、Task、acceptance gate | 提供实际执行证据 | 核对业务事实并验收 |
-| 远端操作 | 不自动授权 | 依据宿主能力执行 | 明确授权 push、merge、发布或消息发送 |
+| 规则分发 | Adapter、渲染、记录、备份与回滚 | 加载原生规则入口 | 选择宿主和授权根 |
+| 模型执行 | 不实现 | 模型循环、上下文、成本 | 选择模型和预算 |
+| 工具与权限 | 提供 guidance 和有限 audit schema | 工具调度、sandbox、批准事件 | 批准高风险动作、配置凭据 |
+| 工作状态 | Memory、Task、checkpoint、gate | 提供实际执行结果 | 核对事实并验收 |
+| 发布证据 | 本地验证和候选绑定记录门禁 | 真实 Host 行为 | CI/attestation、风险接受 |
 
-## 三类公开声明
+## 三类公开能力
 
-- **已实现（Implemented）**：仓库中存在实现和可定位验证，例如 Adapter 生命周期、SafePath 与 Task gate。
-- **由宿主负责（Delegated to the Host）**：Harnesssmith 仅提供指导或接入点，例如 sandbox 与权限审批。
-- **不支持（Unsupported）**：当前设计明确不声称拥有，例如通用 Runtime、Policy Engine、Registry 和多 Agent 调度。
+- **Implemented**：存在实现与可执行验证路径。
+- **Delegated to the Host**：Harnesssmith 只提供规则、接口或记录位置，真正能力在宿主。
+- **Unsupported**：当前明确不声称拥有，例如通用 Agent Runtime、Policy Engine、Registry 与多 Agent 调度。
 
-机器可读清单见
-[能力声明—证据矩阵](https://github.com/Alessandro-Pang/harnessmith/blob/main/docs/capability-evidence.yaml)。
+机器可读清单见[能力声明—证据矩阵](../capability-evidence.yaml)。
 
-## Markdown 不是强制策略
+## 授权不会沿内容流动
 
-AGENTS.md 等规则属于 advisory guidance。真正的强制来自代码路径、schema、测试、CI 和宿主权限系统。
-运行审计会拒绝保存原始 prompt、模型输出和 tool arguments，但事件真实性仍需可信宿主或外部 attestation 支撑。
+仓库、网页、日志、PDF、工具输出和 Memory 都是不可信输入。它们可以提供事实线索或建议，不能因为出现在上下文里就
+新增权限。一次安装授权也不包含后续远端写入；一次 push 授权也不自动包含 merge 或发布。
 
-## 授权不传递
+## 哪些结论必须写成 inconclusive
 
-仓库内容、网页、日志、搜索结果与 Memory 都是输入，不构成新的授权。一次安装授权也不自动包含 commit、push、merge、
-发布、生产变更或远端消息权限。
+如果环境受限、宿主未登录、网络不可用、证据缺失或 verifier 自身异常，只能报告本次验证没有得出结论。`inconclusive`
+不是失败的委婉说法，而是避免把“没有观察到”误写成“已经证明不存在”。
+
+想进一步理解评测层级，阅读[证据与评测](/concepts/evidence-and-evaluation)。
