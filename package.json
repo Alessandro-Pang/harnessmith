@@ -74,6 +74,7 @@
     "quality:secrets": "secretlint --no-color \"src/**/*\" \"scripts/**/*\" \"template/**/*\" \"evals/**/*\" \"docs/**/*\" \".github/**/*\" \".husky/**/*\" \"*.md\" \"*.txt\" \"*.json\" \"*.yaml\" \"*.yml\" \"*.ts\" \"*.mjs\"",
     "release:quality": "pnpm run check && pnpm run build:emit && pnpm run test:coverage:unit && pnpm run test:scripts-coverage",
     "release:check": "pnpm run release:quality && pnpm run eval:gate",
+    "release:verify-registry": "node --import tsx scripts/registry-verify.ts",
     "release": "node --import tsx scripts/release-version.ts",
     "release:prepare": "node --import tsx scripts/release-publish.ts --prepare-only",
     "release:publish": "node --import tsx scripts/release-publish.ts",

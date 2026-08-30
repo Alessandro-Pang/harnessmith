@@ -31,6 +31,7 @@ interface Workflow {
       if?: unknown;
       permissions?: Record<string, unknown>;
       steps?: Array<{
+        if?: unknown;
         name?: unknown;
         uses?: unknown;
         run?: unknown;
@@ -204,12 +205,22 @@ test('release notes are categorized and only created after npm publication is ve
     readFileSync(join(root, '.github', 'workflows', 'publish.yml'), 'utf8'),
   ) as Workflow;
   const publishSteps = workflow.jobs?.publish?.steps ?? [];
-  assert.ok(
-    publishSteps.some(({ name, run }) =>
-      /Verify npm publication/i.test(`${text(name)} ${text(run)}`),
-    ),
-    'publish job must verify the package is visible in npm',
+  const verification = publishSteps.find(({ name }) =>
+    /Verify npm registry package/i.test(text(name)),
   );
+  const verificationCommand = text(verification?.run);
+  assert.match(verificationCommand, /scripts\/registry-verify\.ts/);
+  assert.match(verificationCommand, /--version "\$\{GITHUB_REF_NAME#v\}"/);
+  assert.match(verificationCommand, /--expected-artifact \.release-ci\/harnessmith-\*\.tgz/);
+  assert.match(verificationCommand, /--require-provenance/);
+  assert.match(verificationCommand, /--evidence-file \.release-ci\/registry-verification\.json/);
+  assert.doesNotMatch(verificationCommand, /npm view/);
+  const evidenceUpload = publishSteps.find(({ name }) =>
+    /Upload registry verification evidence/i.test(text(name)),
+  );
+  assert.equal(evidenceUpload?.if, '$' + '{{ always() }}');
+  assert.match(text(evidenceUpload?.uses), /^actions\/upload-artifact@/);
+  assert.equal(evidenceUpload?.with?.path, '.release-ci/registry-verification.json');
   const release = workflow.jobs?.release;
   assert.equal(release?.needs, 'publish');
   assert.equal(release?.permissions?.contents, 'write');

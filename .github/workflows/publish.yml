@@ -48,18 +48,23 @@ jobs:
         env:
           HARNESS_RELEASE_WORKFLOW: '1'
         run: npm publish .release-ci/harnessmith-*.tgz --access public --registry=https://registry.npmjs.org/
-      - name: Verify npm publication
-        run: |
-          expected="${GITHUB_REF_NAME#v}"
-          for attempt in 1 2 3 4 5 6; do
-            actual=$(npm view "harnessmith@${expected}" version --registry=https://registry.npmjs.org/ 2>/dev/null || true)
-            if [ "${actual}" = "${expected}" ]; then
-              exit 0
-            fi
-            sleep 10
-          done
-          echo "harnessmith@${expected} is not visible in npm" >&2
-          exit 1
+      - name: Verify npm registry package
+        run: >-
+          node --import tsx scripts/registry-verify.ts
+          --package harnessmith
+          --version "${GITHUB_REF_NAME#v}"
+          --expected-artifact .release-ci/harnessmith-*.tgz
+          --evidence-file .release-ci/registry-verification.json
+          --require-provenance
+          --json
+      - name: Upload registry verification evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: registry-verification-${{ github.ref_name }}
+          path: .release-ci/registry-verification.json
+          if-no-files-found: warn
+          retention-days: 30
 
   release:
     name: Create GitHub Release
