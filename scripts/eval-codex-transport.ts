@@ -1,5 +1,6 @@
 import { isAbsolute } from 'node:path';
 import { execa } from 'execa';
+import { whichCommand } from 'which-command';
 import type { HostEvalAttempt, HostEvalAttemptResult } from './eval-runner.js';
 
 const maximumHostOutputBytes = 1024 * 1024;
@@ -79,7 +80,11 @@ export async function runBoundedHostProcess(options: {
       `Host process output limit must be an integer from 1 to ${maximumHostOutputBytes}`,
     );
   }
-  const result = await execa(options.invocation.executable, options.invocation.args, {
+  const executable = await whichCommand(options.invocation.executable, {
+    cwd: options.invocation.cwd,
+  });
+  if (!executable) return { kind: 'transport-failure', reason: 'process-unavailable' };
+  const result = await execa(executable, options.invocation.args, {
     cwd: options.invocation.cwd,
     input: options.prompt,
     cancelSignal: options.signal,
