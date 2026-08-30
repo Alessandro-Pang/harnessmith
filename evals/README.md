@@ -35,8 +35,8 @@ coverage and never become product behavior failures.
 Each record is limited to a 15-minute scenario budget and a 60-minute matrix budget. A run may retry once
 (`maxAttempts: 2`); the record preserves the attempt count, transport-failure count, and whether execution
 completed, exhausted its budget, failed in transport/evaluation, or stopped at an open circuit. This repository
-validates those limits and classifications and plans incremental coverage, but does not launch or schedule
-third-party Hosts.
+validates those limits and classifications, plans incremental coverage, and provides an opt-in Codex process
+transport. No command authenticates to, schedules, or launches a third-party Host automatically.
 
 All `local:` artifact references are relative to the record file. The validator rejects missing, tampered,
 oversized, or path-escaping records and artifacts; bounds record count and aggregate record/evidence bytes;
@@ -125,18 +125,28 @@ cover all changed behavior sources. L3 runs the full matrix when a behavior sour
 (`unmapped-behavior-source`) or the L2 selection would exceed that bound. This planner is fail closed: an
 unknown behavior file never silently inherits Host evidence.
 
-## Bounded runner contract
+## Bounded runner and Codex transport contract
 
-`scripts/eval-runner.ts` supplies the transport-neutral scheduling boundary used by a future real-Host
-adapter. Independent scenarios run with 2 workers by default and at most 3-way bounded parallelism. Each
+`scripts/eval-runner.ts` supplies the transport-neutral scheduling boundary used by real-Host adapters.
+Independent scenarios run with 2 workers by default and at most 3-way bounded parallelism. Each
 transport failure may retry once. Two consecutive transport failures open the circuit breaker, stop new work,
 and classify scenarios that never started as `infra-blocked`; they are never converted into behavior failures.
 
 The runner gives every attempt an `AbortSignal` and a hard deadline, enforces both the 15-minute scenario and
 60-minute matrix budgets, and preserves `behavior-failed`, `infra-inconclusive`, and `evaluator-failed` as
-separate outcomes. An injected executor and clock keep the scheduler deterministic in tests. The runner still
-does not authenticate to or launch a third-party Host by itself; concrete Host transport adapters and the RC
-drill remain separate work.
+separate outcomes. An injected executor and clock keep the scheduler deterministic in tests.
+
+`scripts/eval-codex-transport.ts` supplies the concrete transport for the current required Host. It invokes
+`codex exec` without a shell, sends the scenario prompt over stdin, selects JSONL output, an ephemeral session,
+the `workspace-write` sandbox, and automatic approval review, and never uses a dangerous sandbox-bypass flag.
+The workspace must be absolute and disposable. The runner `AbortSignal` terminates the process and its
+descendants; stdout and stderr are each capped at 1 MiB.
+
+Process launch, cancellation, WebSocket/TLS/network failures become transport failures. Output overflow,
+unrecognized non-zero exits, or a crashing evaluator become evaluator failures. An exit code of zero only
+produces a bounded capture: an injected behavior evaluator must still return `passed` or `behavior-failed`.
+This transport does not persist raw output, construct a `run.json`, authenticate, or start on import. A real RC
+drill, sanitized evidence capture, and maintainer review remain explicit later work.
 
 Gate output separates `exactArtifactCoverageCount` from `inheritedBehaviorCoverageCount` and lists every
 source package version and artifact digest under `inheritedFrom`. Release state and the signed release
@@ -151,9 +161,9 @@ The gate intentionally fails when records are absent, stale, `behavior-failed`, 
 `evaluator-failed`, tied to another behavior
 contract, or missing any scenario cell for a host required by the checked-in release policy. The
 current required host is Codex; Cursor, Claude Code, OpenCode, and Kimi Code CLI can still be validated and retained as optional evidence.
-The gate never launches, authenticates to,
-or spends money on a third-party host. External host execution and evidence capture remain explicit
-maintainer/CI responsibilities.
+The gate never launches, authenticates to, or spends money on a third-party host. External host execution and
+evidence capture remain explicit maintainer/CI responsibilities; merely importing or testing the Codex
+transport does not create real Host evidence.
 
 Passing this gate means only that a complete, fresh **maintainer-attested structure** is internally consistent
 and bound to the selected candidate. Local JSON, hashes, and artifacts are forgeable by a repository writer;
