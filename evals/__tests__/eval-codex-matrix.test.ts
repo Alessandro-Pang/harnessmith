@@ -8,7 +8,7 @@ import {
   readFileSync,
   writeFileSync,
 } from 'node:fs';
-import { join } from 'node:path';
+import { delimiter, join } from 'node:path';
 import { test } from 'vitest';
 
 import { repositoryRoot } from '../../scripts/eval-fingerprint.js';
@@ -213,14 +213,12 @@ test('scenario Host invocation keeps the prompt on stdin through the bounded tra
   const outputDirectory = join(directory, 'runs');
   const codexHome = join(directory, 'codex-home');
   const capturePath = join(directory, 'invocation.json');
-  const fakeCodex = join(directory, 'codex');
+  const fakeCodexImplementation = join(directory, 'fake-codex.mjs');
+  const fakeCodex = join(directory, process.platform === 'win32' ? 'codex.cmd' : 'codex');
   mkdirSync(codexHome);
   writeFileSync(join(codexHome, 'auth.json'), '{}\n');
   writeCandidateTarball(artifact, repositoryRoot);
-  writeFileSync(
-    fakeCodex,
-    `#!/usr/bin/env node
-import { writeFileSync } from 'node:fs';
+  const fakeCodexSource = `import { writeFileSync } from 'node:fs';
 let input = '';
 process.stdin.setEncoding('utf8');
 for await (const chunk of process.stdin) input += chunk;
@@ -228,7 +226,13 @@ writeFileSync(process.env.HARNESS_TEST_CODEX_CAPTURE, JSON.stringify({ argv: pro
 process.stdout.write('{"type":"thread.started","thread_id":"01a11111-2222-7333-8444-555555555555"}\\n');
 process.stdout.write('{"type":"item.completed","item":{"type":"agent_message","text":"fixture completion"}}\\n');
 process.stdout.write('{"type":"turn.completed","usage":{"input_tokens":12}}\\n');
-`,
+`;
+  writeFileSync(fakeCodexImplementation, fakeCodexSource);
+  writeFileSync(
+    fakeCodex,
+    process.platform === 'win32'
+      ? `@echo off\r\n"${process.execPath}" "${fakeCodexImplementation}" %*\r\n`
+      : `#!${process.execPath}\n${fakeCodexSource}`,
   );
   chmodSync(fakeCodex, 0o755);
 
@@ -242,7 +246,7 @@ process.stdout.write('{"type":"turn.completed","usage":{"input_tokens":12}}\\n')
       maxBuffer: 2 * 1024 * 1024,
       env: {
         ...process.env,
-        PATH: `${directory}:${process.env.PATH ?? ''}`,
+        PATH: `${directory}${delimiter}${process.env.PATH ?? ''}`,
         CODEX_HOME: codexHome,
         HARNESS_TEST_CODEX_CAPTURE: capturePath,
         HARNESS_RELEASE_ARTIFACT: artifact,
