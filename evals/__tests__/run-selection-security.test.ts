@@ -28,7 +28,7 @@ test('release gate uses the latest evaluated record for each host and scenario c
     adapter: 'codex',
     evaluatedAt: latest,
     finishedAt: new Date(Date.parse(latest) - 1_000).toISOString(),
-    outcome: 'failed',
+    outcome: 'behavior-failed',
     runId: 'codex-progressive-disclosure-latest',
     scenarioId: 'progressive-disclosure',
   });
@@ -36,7 +36,7 @@ test('release gate uses the latest evaluated record for each host and scenario c
   const result = run(['gate', '--runs-dir', runsDirectory]);
 
   assert.equal(result.status, 1);
-  assert.match(result.stderr, /failed codex\/progressive-disclosure/);
+  assert.match(result.stderr, /behavior-failed codex\/progressive-disclosure/);
 });
 
 test('release gate rejects a tied latest evaluatedAt for the same matrix cell', () => {

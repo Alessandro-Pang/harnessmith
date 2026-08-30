@@ -8,6 +8,7 @@ import {
   verifyHighConfidenceSecretRedaction,
   verifyRunArtifacts,
 } from './eval-artifacts.js';
+import { verifyExecutionClassification } from './eval-execution-contract.js';
 import { evaluationScenarioFingerprints, repositoryRoot } from './eval-fingerprint.js';
 
 export type VerifiedRun = { path: string; record: RunRecord };
@@ -180,6 +181,7 @@ export function validateEvaluationRecords(options: EvaluationRecordOptions = {})
     if (record.filesystemDiff.clean !== (record.filesystemDiff.changedPaths.length === 0)) {
       throw new Error('filesystemDiff clean flag conflicts with changedPaths');
     }
+    verifyExecutionClassification(path, record);
     verifyRunArtifacts(path, record, artifactBudget);
     verified.push({ path, record });
   }

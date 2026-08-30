@@ -255,7 +255,7 @@ test('manual host evaluation evidence has a versioned machine-readable contract'
   const example = JSON.parse(readFileSync(join(root, 'evals', 'run.example.json'), 'utf8'));
   const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
 
-  assert.equal(schema.$id, 'urn:harnessmith:eval-run:v4');
+  assert.equal(schema.$id, 'urn:harnessmith:eval-run:v5');
   assert.equal(validate(example), true, JSON.stringify(validate.errors));
   assert.equal(example.recordType, 'example-only');
   assert.equal(example.transcript.redacted, true);
@@ -265,6 +265,11 @@ test('manual host evaluation evidence has a versioned machine-readable contract'
   assert.match(example.subject.packageArtifactSha256, /^[a-f0-9]{64}$/);
   assert.match(example.subject.scenarioSha256, /^[a-f0-9]{64}$/);
   assert.match(example.subject.rulesSha256, /^[a-f0-9]{64}$/);
+  assert.equal(example.execution.maxAttempts, 2);
+  assert.equal(example.execution.scenarioBudgetMs, 15 * 60 * 1000);
+  assert.equal(example.execution.matrixBudgetMs, 60 * 60 * 1000);
+  assert.equal(example.execution.termination, 'transport-failure');
+  assert.equal(example.verdict.outcome, 'infra-inconclusive');
   assert.equal(example.subject.packageVersion, 'replace-with-current-package-version');
   assert.equal(example.subject.harnessVersion, 'replace-with-current-harness-version');
   assert.ok(example.host.product.length > 0);

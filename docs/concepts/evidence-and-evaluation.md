@@ -27,6 +27,15 @@ verifier 结果。场景断言同时检查期望行为与禁止行为，避免�
 这条链成本更高，也更容易受到认证、网络、宿主版本、超时和评测基础设施故障影响。因此环境准备、候选绑定、失败
 归因和证据保留本身也是评测设计的一部分。
 
+Host Eval v5 记录把结果固定为四类：`passed` 表示行为与断言通过；`behavior-failed` 表示真实产品行为未满足场景；
+transport、TLS、WebSocket、runner 超时或 circuit breaker 终止只能记为 `infra-inconclusive`；evaluator 本身无法完成判定时记为
+`evaluator-failed`。后三类都不能满足发布覆盖，尤其不能把 `infra-inconclusive` 降格解释成产品行为失败或通过。
+
+执行证据同时记录 tier、attempt、elapsed time 和 termination。单场景预算上限为 15 分钟，整套矩阵预算上限为 60 分钟；
+transport failure 最多自动重试一次，即总尝试次数不超过两次。`eval:validate` 会拒绝超预算、重试次数超限以及 termination
+与结果分类冲突的记录。当前 phase 只提供记录与门禁契约；真实 Host 的增量选择、有界并行和 circuit-break 调度仍由后续
+runner/CI 集成实现。
+
 ## 从任务到结论的五个阶段
 
 1. **定义任务与验收**：场景说明要观察什么，什么行为明确禁止。
@@ -62,8 +71,9 @@ predicate，但不应独自决定总体 verdict。
 
 ## 评测失败时如何解释
 
-首先区分产品行为失败与评测基础设施失败。无法访问宿主、认证过期或 runner 超时只能得到 `inconclusive` 或基础设施
-故障，不能直接证明 Harnessmith 不支持该宿主。同样，本地 `eval:validate` 通过也不能升级成“真实 Host 已验证”。
+首先区分产品行为失败与评测基础设施失败。无法访问宿主、认证过期或 runner 超时只能得到
+`infra-inconclusive`，不能直接证明 Harnessmith 不支持该宿主；evaluator 自身故障必须记为 `evaluator-failed`，不能伪装成
+`behavior-failed`。同样，本地 `eval:validate` 通过也不能升级成“真实 Host 已验证”。
 
 具体命令见项目 `package.json` 中的 `eval:check`、`eval:validate`、`eval:gate`、`release:check` 和
 `release:verify-registry`；当前公开能力与证据路径

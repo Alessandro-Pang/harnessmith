@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:harnessmith:eval-run:v4",
+  "$id": "urn:harnessmith:eval-run:v5",
   "title": "Harnessmith maintainer-attested host evaluation run",
   "type": "object",
   "required": [
@@ -13,6 +13,7 @@
     "startedAt",
     "finishedAt",
     "evaluatedAt",
+    "execution",
     "transcript",
     "toolActions",
     "filesystemDiff",
@@ -22,7 +23,7 @@
     "evidence"
   ],
   "properties": {
-    "schemaVersion": { "const": 4 },
+    "schemaVersion": { "const": 5 },
     "recordType": { "enum": ["host-evaluation", "example-only"] },
     "runId": { "$ref": "#/$defs/id" },
     "scenarioId": { "$ref": "#/$defs/id" },
@@ -59,6 +60,46 @@
     "startedAt": { "$ref": "#/$defs/timestamp" },
     "finishedAt": { "$ref": "#/$defs/timestamp" },
     "evaluatedAt": { "$ref": "#/$defs/timestamp" },
+    "execution": {
+      "type": "object",
+      "required": [
+        "tier",
+        "attempt",
+        "maxAttempts",
+        "scenarioBudgetMs",
+        "matrixBudgetMs",
+        "elapsedMs",
+        "transportFailures",
+        "termination"
+      ],
+      "properties": {
+        "tier": { "enum": ["L2", "L3", "L4"] },
+        "attempt": { "type": "integer", "minimum": 1, "maximum": 2 },
+        "maxAttempts": { "const": 2 },
+        "scenarioBudgetMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 900000
+        },
+        "matrixBudgetMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3600000
+        },
+        "elapsedMs": { "type": "integer", "minimum": 0, "maximum": 900000 },
+        "transportFailures": { "type": "integer", "minimum": 0, "maximum": 2 },
+        "termination": {
+          "enum": [
+            "completed",
+            "transport-failure",
+            "scenario-budget-exhausted",
+            "circuit-open",
+            "evaluator-failure"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
     "transcript": {
       "type": "object",
       "required": ["artifactRef", "sha256", "redacted"],
@@ -150,7 +191,14 @@
       "type": "object",
       "required": ["outcome", "evaluator", "summary", "evidenceRefs"],
       "properties": {
-        "outcome": { "enum": ["passed", "failed", "inconclusive"] },
+        "outcome": {
+          "enum": [
+            "passed",
+            "behavior-failed",
+            "infra-inconclusive",
+            "evaluator-failed"
+          ]
+        },
         "evaluator": { "type": "string", "minLength": 1 },
         "summary": { "type": "string", "minLength": 1 },
         "evidenceRefs": {

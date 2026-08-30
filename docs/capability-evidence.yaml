@@ -101,6 +101,19 @@ claims:
       - evals/__tests__/run-gate.test.ts
       - evals/__tests__/fingerprint-tarball.test.ts
 
+  - id: bounded-host-eval-record-contract
+    status: implemented
+    owner: Host Eval evidence and release verification
+    claim: Classify Host Eval outcomes without treating infrastructure failures as behavior failures, while enforcing bounded attempts and time budgets in every record.
+    implementation:
+      - evals/run.schema.json
+      - scripts/eval-execution-contract.ts
+      - scripts/eval-records.ts
+    verification:
+      - evals/__tests__/run-gate.test.ts
+      - evals/__tests__/run-selection-security.test.ts
+      - evals/__tests__/scenarios.test.ts
+
   - id: post-publish-registry-verification
     status: implemented
     owner: release verification scripts and publish workflow
