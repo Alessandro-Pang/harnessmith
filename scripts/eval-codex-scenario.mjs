@@ -5,6 +5,7 @@ import {
   lstatSync,
   mkdirSync,
   readFileSync,
+  realpathSync,
   readlinkSync,
   readdirSync,
   rmSync,
@@ -18,6 +19,7 @@ import { readNpmPackageTarball } from './npm-tarball.js';
 import { runBoundedHostProcess } from './eval-codex-transport.ts';
 import {
   buildCodexTurn,
+  canonicalPathWithin,
   classifyBoundaryCommand,
   checkpointIdempotencyIsProven,
   containsApiWorkerBoundary,
@@ -1536,8 +1538,8 @@ for (const turn of turnResults) {
       for (const change of Array.isArray(item.changes) ? item.changes : []) {
         const rawPath = String(change?.path ?? '');
         const absolutePath = isAbsolute(rawPath) ? resolve(rawPath) : resolve(repo, rawPath);
-        const relativePath = pathWithin(absolutePath, repo)
-          ? relative(repo, absolutePath).split(sep).join('/')
+        const relativePath = canonicalPathWithin(absolutePath, repo)
+          ? relative(realpathSync.native(repo), realpathSync.native(absolutePath)).split(sep).join('/')
           : null;
         const changeKind = String(change?.kind ?? change?.action ?? change?.type ?? '').toLowerCase();
         const allowedPath =
@@ -1548,7 +1550,7 @@ for (const turn of turnResults) {
                 relativePath === '.agent-docs' ||
                 relativePath.startsWith('.agent-docs/'))) ||
               absolutePath === resolve(memory, 'profile.md') ||
-              (pathWithin(absolutePath, temp) && absolutePath.endsWith('.json')),
+              (canonicalPathWithin(absolutePath, temp) && absolutePath.endsWith('.json')),
           );
         if (!allowedPath || !['add', 'create', 'update'].includes(changeKind)) {
           boundaryViolations.push(

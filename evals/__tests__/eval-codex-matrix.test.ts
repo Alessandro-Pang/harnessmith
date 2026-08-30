@@ -4,6 +4,7 @@ import {
   chmodSync,
   existsSync,
   mkdirSync,
+  realpathSync,
   readdirSync,
   readFileSync,
   symlinkSync,
@@ -252,6 +253,27 @@ test.skipIf(process.platform === 'win32')(
 
     assert.equal(typeof support.sameCanonicalPath, 'function');
     assert.equal(support.sameCanonicalPath(alias, target), true);
+  },
+);
+
+test.skipIf(process.platform === 'win32')(
+  'task temp payload inspection accepts canonical aliases without widening its boundary',
+  async () => {
+    const directory = temporaryDirectory();
+    const payload = join(directory, 'payload.json');
+    writeFileSync(payload, '{}\n');
+    const support = await import(
+      // @ts-expect-error The tracked evaluator support module is intentionally plain ESM.
+      '../../scripts/eval-codex-matrix-support.mjs'
+    );
+    const canonicalPayload = join(realpathSync.native(directory), 'payload.json');
+
+    assert.equal(support.canonicalPathWithin(canonicalPayload, directory), true);
+    assert.equal(support.inspectJsonPayloadPath(canonicalPayload, directory).ok, true);
+    assert.equal(
+      support.canonicalPathWithin(join(dirname(directory), 'outside.json'), directory),
+      false,
+    );
   },
 );
 

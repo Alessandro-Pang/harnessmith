@@ -1526,13 +1526,21 @@ function pathWithin(path, root) {
   return relation === '' || (!relation.startsWith(`..${sep}`) && relation !== '..' && !isAbsolute(relation));
 }
 
+export function canonicalPathWithin(path, root) {
+  try {
+    return pathWithin(realpathSync.native(resolve(path)), realpathSync.native(resolve(root)));
+  } catch {
+    return pathWithin(path, root);
+  }
+}
+
 export function inspectJsonPayloadPath(path, root) {
   const resolvedPath = resolve(path);
   const resolvedRoot = resolve(root);
   if (!resolvedPath.endsWith('.json')) {
     return { ok: false, resolvedPath, error: 'payload path must end in .json' };
   }
-  if (!pathWithin(resolvedPath, resolvedRoot)) {
+  if (!canonicalPathWithin(resolvedPath, resolvedRoot)) {
     return { ok: false, resolvedPath, error: 'payload path is outside the task temp root' };
   }
   try {
@@ -1540,8 +1548,13 @@ export function inspectJsonPayloadPath(path, root) {
     if (!rootEntry.isDirectory() || rootEntry.isSymbolicLink()) {
       return { ok: false, resolvedPath, error: 'task temp root is not a regular directory' };
     }
-    const relativePath = relative(resolvedRoot, resolvedPath);
-    let current = resolvedRoot;
+    const realRoot = realpathSync.native(resolvedRoot);
+    const realPath = realpathSync.native(resolvedPath);
+    if (!pathWithin(resolvedPath, resolvedRoot) && resolvedPath !== realPath) {
+      return { ok: false, resolvedPath, error: 'payload path contains a symlink component' };
+    }
+    const relativePath = relative(realRoot, realPath);
+    let current = realRoot;
     for (const segment of relativePath.split(sep).filter(Boolean)) {
       current = resolve(current, segment);
       if (lstatSync(current).isSymbolicLink()) {
@@ -1552,8 +1565,6 @@ export function inspectJsonPayloadPath(path, root) {
     if (!entry.isFile() || entry.isSymbolicLink()) {
       return { ok: false, resolvedPath, error: 'payload is not a regular non-symlink file' };
     }
-    const realRoot = realpathSync(resolvedRoot);
-    const realPath = realpathSync(resolvedPath);
     if (!pathWithin(realPath, realRoot)) {
       return { ok: false, resolvedPath, error: 'payload real path escapes the task temp root' };
     }
