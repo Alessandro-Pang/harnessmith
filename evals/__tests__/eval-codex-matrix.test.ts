@@ -6,9 +6,10 @@ import {
   mkdirSync,
   readdirSync,
   readFileSync,
+  symlinkSync,
   writeFileSync,
 } from 'node:fs';
-import { delimiter, join } from 'node:path';
+import { delimiter, dirname, join, relative } from 'node:path';
 import { test } from 'vitest';
 
 import { repositoryRoot } from '../../scripts/eval-fingerprint.js';
@@ -169,6 +170,63 @@ test('scenario fixture binds the supplied candidate and prepares without launchi
   assert.equal(fixture.scenarioId, 'machine-error-contract');
   assert.match(fixture.context, /unmanaged/i);
 });
+
+test('multi-turn fixtures keep payloads in the workspace and mount lock-bearing parent roots', () => {
+  const directory = temporaryDirectory();
+  const artifact = join(directory, 'candidate.tgz');
+  const codexHome = join(directory, 'codex-home');
+  mkdirSync(codexHome);
+  writeFileSync(join(codexHome, 'auth.json'), '{}\n');
+  writeCandidateTarball(artifact, repositoryRoot);
+
+  const prepare = (scenarioId: string) => {
+    const result = spawnSync(process.execPath, ['--import', 'tsx', scenarioEntry, scenarioId], {
+      cwd: repositoryRoot,
+      encoding: 'utf8',
+      timeout: 30_000,
+      maxBuffer: 2 * 1024 * 1024,
+      env: {
+        ...process.env,
+        CODEX_HOME: codexHome,
+        HARNESS_RELEASE_ARTIFACT: artifact,
+        HARNESS_EVAL_OUTPUT_DIR: join(directory, 'runs'),
+        HARNESS_EVAL_MODEL: 'gpt-5.6-sol',
+        HARNESS_EVAL_ATTEMPT: '1',
+        HARNESS_EVAL_MAX_ATTEMPTS: '2',
+        HARNESS_EVAL_SCENARIO_BUDGET_MS: '900000',
+        HARNESS_EVAL_MATRIX_BUDGET_MS: '3600000',
+        HARNESS_EVAL_FIXTURE_ONLY: '1',
+      },
+    });
+    assert.equal(result.status, 0, `${scenarioId}: ${result.stderr}`);
+    return JSON.parse(result.stdout);
+  };
+
+  const autopilot = prepare('memory-autopilot-unprompted');
+  assert.ok(!relative(autopilot.repo, autopilot.temp).startsWith('..'));
+  assert.ok(autopilot.hostArgs.includes(dirname(autopilot.memory)));
+
+  const repositoryMap = prepare('cross-repository-map-writeback');
+  assert.ok(repositoryMap.hostArgs.includes(dirname(repositoryMap.personal)));
+});
+
+test.skipIf(process.platform === 'win32')(
+  'evaluator path identity accepts symlink aliases of the same existing path',
+  async () => {
+    const directory = temporaryDirectory();
+    const target = join(directory, 'target');
+    const alias = join(directory, 'alias');
+    mkdirSync(target);
+    symlinkSync(target, alias, 'dir');
+    const support = await import(
+      // @ts-expect-error The tracked evaluator support module is intentionally plain ESM.
+      '../../scripts/eval-codex-matrix-support.mjs'
+    );
+
+    assert.equal(typeof support.sameCanonicalPath, 'function');
+    assert.equal(support.sameCanonicalPath(alias, target), true);
+  },
+);
 
 test.skipIf(coverageInstrumentation)(
   'all 15 catalog scenarios prepare disposable fixtures without launching Codex',

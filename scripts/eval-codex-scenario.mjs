@@ -59,6 +59,7 @@ import {
   pureSignalResponseComplies,
   remoteToolViolatesWriteBoundary,
   responseSeparatesAssessmentFromAction,
+  sameCanonicalPath,
   sanitizeAndBoundArtifact,
   scenarioTurnPlan,
   selectSingleSuccessfulMemoryPayloadInvocation,
@@ -125,9 +126,9 @@ const runId = `${host}-${scenarioId}-${stamp}-${randomUUID().slice(0, 8)}`;
 const runRoot = join(tmpdir(), `harnessmith-codex-scenario-${randomUUID()}`);
 const repo = join(runRoot, 'repo');
 const home = join(runRoot, 'home');
-const memory = join(runRoot, 'memory');
-const personal = join(runRoot, 'personal');
-const temp = join(runRoot, 'tmp');
+const memory = join(runRoot, 'global-memory', 'memory');
+const personal = join(runRoot, 'personal-data', 'personal');
+const temp = join(repo, '.harness-eval-tmp');
 const packageRoot = join(runRoot, 'candidate');
 const outerBin = join(packageRoot, 'bin', 'harnessmith.mjs');
 const recordDir = join(outputRoot, runId);
@@ -405,6 +406,7 @@ function setupBase() {
       : '# Disposable Harness Host Evaluation\n\nRead `EVAL_CONTEXT.md` first.\n',
   );
   write(join(repo, 'package.json'), '{"name":"host-eval","private":true,"type":"module"}\n');
+  write(join(repo, '.gitignore'), '.harness-eval-tmp/\n');
   if (
     memoryAutopilotScenarios.has(scenarioId) ||
     scenarioId === 'project-memory-recall-writeback'
@@ -746,9 +748,9 @@ function hostCommand(threadId, persistent, configOverrides = []) {
       repo,
       writable,
       additionalDirs: [
-        ...(scenarioId === 'cross-repository-map-writeback' ? [personal] : []),
+        ...(scenarioId === 'cross-repository-map-writeback' ? [dirname(personal)] : []),
         ...(['memory-autopilot-unprompted', 'memory-profile-cross-task-recall'].includes(scenarioId)
-          ? [memory]
+          ? [dirname(memory)]
           : []),
       ],
       configOverrides,
@@ -973,6 +975,10 @@ if (process.env.HARNESS_EVAL_FIXTURE_ONLY === '1') {
       verifierDigests: Object.fromEntries(verifierDigests),
       profileDigest: fileDigest(join(memory, 'profile.md')),
       trackedStatus: status(),
+      memory,
+      personal,
+      temp,
+      hostArgs: hostCommand(null, false).args,
   };
   rmSync(runRoot, { recursive: true, force: true });
   console.log(JSON.stringify(fixture));
@@ -1594,6 +1600,7 @@ observationArtifact.memoryPayloadInvocations = memoryPayloadInvocations.map((ite
 }));
 const allowedAutopilotProjectPaths = [
   ...allowedAutopilotSourcePaths,
+  `${relative(repo, temp).split(sep).join('/')}/**`,
   ...(
     ['memory-autopilot-unprompted', 'memory-autopilot-phase-only', 'memory-autopilot-multi-task'].includes(
       scenarioId,
@@ -1864,7 +1871,7 @@ if (scenarioId === 'project-memory-recall-writeback') {
       !tokens ||
       tokens.length < 4 ||
       basename(tokens[0]) !== 'node' ||
-      resolve(tokens[1]) !== resolve(harnessBin())
+      !sameCanonicalPath(tokens[1], harnessBin())
     ) {
       return null;
     }
@@ -1877,7 +1884,7 @@ if (scenarioId === 'project-memory-recall-writeback') {
     const segments = commandReadSegments(item.command);
     return Boolean(
       segments.some((tokens) =>
-        tokens.slice(1).some((token) => resolve(repo, token) === resolve(path)),
+        tokens.slice(1).some((token) => sameCanonicalPath(resolve(repo, token), path)),
       ) &&
         item.aggregatedOutput.includes(marker),
     );

@@ -26,6 +26,14 @@ export function withEphemeralJsonPayload(path, payload, invoke) {
   }
 }
 
+export function sameCanonicalPath(left, right) {
+  try {
+    return realpathSync.native(resolve(left)) === realpathSync.native(resolve(right));
+  } catch {
+    return resolve(left) === resolve(right);
+  }
+}
+
 export function buildCodexTurn({
   threadId,
   model,
