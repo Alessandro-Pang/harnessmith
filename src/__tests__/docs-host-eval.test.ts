@@ -38,3 +38,18 @@ test('Host Eval docs expose dependency-scoped incremental selection', () => {
   assert.match(capabilities, /scripts\/eval-planning\.ts/);
   assert.match(capabilities, /evals\/__tests__\/eval-planning\.test\.ts/);
 });
+
+test('Host Eval docs expose bounded parallel runner and circuit breaker', () => {
+  const evaluation = read('docs/concepts/evidence-and-evaluation.md');
+  const evalReadme = read('evals/README.md');
+  const capabilities = read('docs/capability-evidence.yaml');
+
+  for (const content of [evaluation, evalReadme]) {
+    assert.match(content, /2.*3.*并行|2.*3.*parallel/is);
+    assert.match(content, /circuit[- ]breaker/i);
+    assert.match(content, /infra-blocked/);
+  }
+  assert.match(capabilities, /id: bounded-host-eval-runner/);
+  assert.match(capabilities, /scripts\/eval-runner\.ts/);
+  assert.match(capabilities, /evals\/__tests__\/eval-runner\.test\.ts/);
+});

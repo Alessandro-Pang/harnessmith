@@ -125,6 +125,19 @@ cover all changed behavior sources. L3 runs the full matrix when a behavior sour
 (`unmapped-behavior-source`) or the L2 selection would exceed that bound. This planner is fail closed: an
 unknown behavior file never silently inherits Host evidence.
 
+## Bounded runner contract
+
+`scripts/eval-runner.ts` supplies the transport-neutral scheduling boundary used by a future real-Host
+adapter. Independent scenarios run with 2 workers by default and at most 3-way bounded parallelism. Each
+transport failure may retry once. Two consecutive transport failures open the circuit breaker, stop new work,
+and classify scenarios that never started as `infra-blocked`; they are never converted into behavior failures.
+
+The runner gives every attempt an `AbortSignal` and a hard deadline, enforces both the 15-minute scenario and
+60-minute matrix budgets, and preserves `behavior-failed`, `infra-inconclusive`, and `evaluator-failed` as
+separate outcomes. An injected executor and clock keep the scheduler deterministic in tests. The runner still
+does not authenticate to or launch a third-party Host by itself; concrete Host transport adapters and the RC
+drill remain separate work.
+
 Gate output separates `exactArtifactCoverageCount` from `inheritedBehaviorCoverageCount` and lists every
 source package version and artifact digest under `inheritedFrom`. Release state and the signed release
 attestation preserve that inheritance trail. Historical records whose scenario fingerprint no longer matches

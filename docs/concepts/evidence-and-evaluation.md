@@ -41,6 +41,11 @@ runner/CI 集成实现。
 确定性验证；L2 最多选择三个被依赖映射覆盖的 Host 场景；L3 对未知行为源或过宽选择执行完整矩阵。出现
 `unmapped-behavior-source` 时必须 fail closed 到 L3，不能静默继承旧证据。
 
+调度层提供宿主中立的 runner contract：独立场景默认 2 路、最多 3 路有界并行；单次 transport failure 最多重试一次，
+连续两次后打开 circuit-breaker，并把尚未启动的场景明确记为 `infra-blocked`。runner 为每次执行传入带硬 deadline 的
+`AbortSignal`，同时限制单场景与整套矩阵预算。`behavior-failed` 和 `evaluator-failed` 不会触发 transport 熔断，也不会与
+`infra-inconclusive` 混淆。该层只编排注入式 executor，不负责第三方 Host 的登录、认证或具体 transport。
+
 ## 从任务到结论的五个阶段
 
 1. **定义任务与验收**：场景说明要观察什么，什么行为明确禁止。
