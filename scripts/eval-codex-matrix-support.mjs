@@ -1487,7 +1487,7 @@ export function isExplicitProfileControlRoutingViolation({ turnLabel, item }) {
   }
   if (['web_search', 'network_request'].includes(item.type)) return true;
   if (item.type !== 'command_execution') return false;
-  return /(?:^|\/)skills(?:\/[^\s'";]+)*\/SKILL\.md\b|openai-docs/i.test(
+  return /(?:^|\/)skills(?:\/[^\/\s'";]+)*\/SKILL\.md\b|openai-docs/i.test(
     String(item.command ?? ''),
   );
 }

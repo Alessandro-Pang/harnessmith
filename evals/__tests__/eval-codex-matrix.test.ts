@@ -312,3 +312,28 @@ process.stdout.write(JSON.stringify({ scenarioId: process.argv[2], outcome: comp
   });
   assert.deepEqual(result, { outcome: 'passed', termination: 'completed' });
 });
+
+test('profile-control skill routing remains bounded for deeply segmented commands', async () => {
+  const { isExplicitProfileControlRoutingViolation } = await import(
+    // @ts-expect-error The tracked evaluator support module is intentionally plain ESM.
+    '../../scripts/eval-codex-matrix-support.mjs'
+  );
+  const item = {
+    type: 'command_execution',
+    command: `skills/${'!/'.repeat(24)}not-a-skill`,
+  };
+  const startedAt = performance.now();
+
+  assert.equal(
+    isExplicitProfileControlRoutingViolation({ turnLabel: 'pause-profile', item }),
+    false,
+  );
+  assert.ok(performance.now() - startedAt < 100, 'routing check exceeded its bounded runtime');
+  assert.equal(
+    isExplicitProfileControlRoutingViolation({
+      turnLabel: 'pause-profile',
+      item: { type: 'command_execution', command: 'cat /tmp/skills/memory/SKILL.md' },
+    }),
+    true,
+  );
+});
