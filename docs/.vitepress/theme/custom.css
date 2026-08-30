@@ -107,6 +107,25 @@ body {
   max-width: 1260px;
 }
 
+.VPHomeHero .image-container {
+  width: clamp(260px, 31vw, 420px);
+  height: auto;
+  transform: translate(3%, 2%);
+}
+
+.VPHomeHero .image-src {
+  width: 100%;
+  max-width: none;
+  max-height: none;
+  filter: drop-shadow(0 24px 48px rgb(23 107 91 / 14%));
+  transform: translate(-50%, 0);
+}
+
+html.dark .VPHomeHero .image-src {
+  content: url("/brand/harnessmith-logo-dark.svg");
+  filter: drop-shadow(0 24px 48px rgb(0 0 0 / 24%));
+}
+
 .VPHomeHero .main {
   position: relative;
   z-index: 1;
@@ -538,6 +557,10 @@ body {
   .VPHomeHero {
     padding-top: 72px !important;
     padding-bottom: 54px !important;
+  }
+
+  .VPHomeHero .image {
+    display: none;
   }
 
   .VPHomeHero .main {

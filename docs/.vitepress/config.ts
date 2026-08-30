@@ -13,7 +13,26 @@ export default withMermaid(defineConfig({
     root: { label: '简体中文', lang: 'zh-CN' },
     en: { label: 'English', lang: 'en', link: '/en/' },
   },
-  head: [['meta', { name: 'theme-color', content: '#176b5b' }]],
+  head: [
+    ['meta', { name: 'theme-color', content: '#176b5b' }],
+    [
+      'link',
+      {
+        rel: 'icon',
+        type: 'image/svg+xml',
+        href: '/harnessmith/brand/harnessmith-logo.svg',
+      },
+    ],
+    [
+      'link',
+      {
+        rel: 'icon',
+        type: 'image/svg+xml',
+        href: '/harnessmith/brand/harnessmith-logo-dark.svg',
+        media: '(prefers-color-scheme: dark)',
+      },
+    ],
+  ],
   markdown: {
     theme: {
       light: 'github-dark-high-contrast',
@@ -39,6 +58,10 @@ export default withMermaid(defineConfig({
   },
   themeConfig: {
     i18nRouting: false,
+    logo: {
+      light: '/brand/harnessmith-logo.svg',
+      dark: '/brand/harnessmith-logo-dark.svg',
+    },
     logoLink: '/harnessmith/',
     nav: [
       { text: '认识 Harnessmith', link: '/guide/why-harnessmith' },

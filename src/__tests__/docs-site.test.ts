@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'vitest';
@@ -25,6 +25,14 @@ test('documentation site has reproducible local build, search, links, and Pages 
 
   const config = read('docs/.vitepress/config.ts');
   assert.match(config, /base:\s*['"]\/harnessmith\/['"]/);
+  assert.match(
+    config,
+    /rel:\s*['"]icon['"],\s*type:\s*['"]image\/svg\+xml['"],\s*href:\s*['"]\/harnessmith\/brand\/harnessmith-logo\.svg['"]/,
+  );
+  assert.match(
+    config,
+    /href:\s*['"]\/harnessmith\/brand\/harnessmith-logo-dark\.svg['"],\s*media:\s*['"]\(prefers-color-scheme: dark\)['"]/,
+  );
   assert.match(config, /provider:\s*['"]local['"]/);
   assert.match(config, /lang:\s*['"]en['"]/);
   assert.doesNotMatch(config, /ignoreDeadLinks:\s*true/);
@@ -97,6 +105,47 @@ test('home and theme provide a distinctive responsive visual system', () => {
   assert.match(styles, /\.home-card-boundary a\s*{[^}]*position:\s*static/s);
   assert.match(styles, /\.home-card-boundary a\s*{[^}]*margin-top:\s*auto/s);
   assert.match(styles, /\.mermaid \.nodeLabel\s*{[^}]*line-height:\s*1\.3/s);
+});
+
+test('project logo is available in both themes and shown on the home page and READMEs', () => {
+  const config = read('docs/.vitepress/config.ts');
+  const home = read('docs/index.md');
+  const styles = read('docs/.vitepress/theme/custom.css');
+  const chinese = read('README.md');
+  const english = read('README.en.md');
+
+  assert.equal(existsSync(join(root, 'docs/public/brand/harnessmith-logo.svg')), true);
+  assert.equal(existsSync(join(root, 'docs/public/brand/harnessmith-logo-dark.svg')), true);
+  assert.match(
+    config,
+    /logo:\s*{\s*light:\s*['"]\/brand\/harnessmith-logo\.svg['"],\s*dark:\s*['"]\/brand\/harnessmith-logo-dark\.svg['"],?\s*}/,
+  );
+  assert.match(home, /image:\s*\n\s+src:\s*\/brand\/harnessmith-logo\.svg/);
+  assert.match(home, /alt:\s*Harnessmith logo/);
+  assert.match(styles, /\.VPHomeHero \.image-src\s*{[^}]*transform:\s*translate\(-50%,\s*0\)/s);
+  assert.match(styles, /html\.dark \.VPHomeHero \.image-src\s*{[^}]*harnessmith-logo-dark\.svg/s);
+  assert.match(
+    styles,
+    /@media \(max-width:\s*640px\)[\s\S]*?\.VPHomeHero \.image\s*{[^}]*display:\s*none/s,
+  );
+  assert.match(
+    chinese,
+    /^# Harnessmith\n\n<p align="center">\n\s*<img src="\.\/docs\/public\/brand\/harnessmith-logo\.svg"/,
+  );
+  assert.match(
+    english,
+    /^# Harnessmith\n\n<p align="center">\n\s*<img src="\.\/docs\/public\/brand\/harnessmith-logo\.svg"/,
+  );
+
+  for (const asset of [
+    'docs/public/brand/harnessmith-logo.svg',
+    'docs/public/brand/harnessmith-logo-dark.svg',
+  ]) {
+    const logo = read(asset);
+    assert.match(logo, /<title(?:\s+id="title")?>Harnessmith<\/title>/);
+    assert.match(logo, /<linearGradient/);
+    assert.doesNotMatch(logo, /<image|filter=|data:image/);
+  }
 });
 
 test('language switching is the only English entry in the Chinese site chrome', () => {
