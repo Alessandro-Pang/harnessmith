@@ -16,9 +16,9 @@ owner: maintainers
 - **Context engineering** 关注本次运行应该看到哪些规则、事实和历史。
 - **Harness engineering** 继续向外，关注执行环境、工具、生命周期、观测、验证和治理如何共同支撑任务。
 
-近期综述用 ETCLOVG 七层描述这一领域：Execution、Tool、Context、Lifecycle、Observability、Verification、
-Governance。这是一种有用的分析框架，不是成熟标准，也不是产品功能清单。层与层会相互影响：增加工具能力会扩大
-权限面；延长任务生命周期会增加状态、观测和验证需求。
+近期综述 [Agent Harness Engineering: A Survey](https://picrew.github.io/LLM-Harness/) 用 ETCLOVG 七层描述这一领域：
+Execution、Tool、Context、Lifecycle、Observability、Verification、Governance。这是一种有用的分析框架，不是成熟
+标准，也不是产品功能清单。层与层会相互影响：增加工具能力会扩大权限面；延长任务生命周期会增加状态、观测和验证需求。
 
 ## Harnessmith 在七层中的位置
 

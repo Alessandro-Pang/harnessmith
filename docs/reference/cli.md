@@ -30,6 +30,9 @@ owner: maintainers
 | `-v, --version` | 输出版本 |
 | `-h, --help` | 输出帮助 |
 
+`--yes` 只关闭交互，并在未指定宿主时选择 Codex；它不会自动接受文件冲突。`--force` 会接管 unmanaged 或已修改文件，
+使用前必须先审阅 dry-run/status 和备份目标。
+
 ## 示例
 
 ```bash
@@ -51,6 +54,18 @@ npx harnessmith restore --agent codex
 npx harnessmith uninstall --agent codex
 ```
 
-命令行参数是外层分发器契约。安装后内嵌的 Harness CLI 拥有独立命令面，负责 Memory、Task、文档路由与审计；
-参见 [Memory 与 Task](/concepts/memory-and-tasks)及仓库中的
-[Harness CLI 架构](https://github.com/Alessandro-Pang/harnessmith/blob/main/template/agent-harness/docs/core/harness-cli-architecture.md)。
+## 自动化输出与退出码
+
+非交互调用应显式指定 `--agent`，需要稳定协议时使用 `--json`。JSON 失败输出为单条 stderr 对象，包含 `version`、
+`error.code`、`message` 与 `exitCode`。
+
+| Exit code | 含义 |
+| ---: | --- |
+| 1 | 未分类内部错误 |
+| 2 | CLI 用法错误 |
+| 3 | 安全或完整性拒绝 |
+| 4 | operation lock 冲突 |
+| 5 | 没有可操作的安装状态 |
+
+命令行参数是外层分发器契约。安装后内嵌的 Harness CLI 拥有独立命令面，负责文档路由、Memory、Task、仓库关系与审计；
+完整用户命令见[运行时 CLI](/reference/runtime-cli)，设计边界见[Memory 与 Task](/concepts/memory-and-tasks)。

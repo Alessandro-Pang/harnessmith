@@ -41,6 +41,24 @@ Memory 可能来自旧会话、摘要或自动提取。即使当时正确，也�
 
 自动 sidecar 只做有界提取和索引，并保持普通对话安静。它不把模型推断升级成事实。
 
+## 信息分别保存在哪里
+
+| 位置 | 保存内容 | 边界 |
+| --- | --- | --- |
+| 宿主原生 memory | 宿主自动召回的历史线索 | 只作待核对输入 |
+| `~/.agent-harness` | 用户维护的个人规则与跨仓库关系 | personal overlay；升级和卸载不覆盖 |
+| `~/.agent-docs/profile.md` | 当前身份、工作方式与长期偏好 | Harness 内唯一 canonical 用户画像 |
+| `~/.agent-docs/core.md` 与其他全局 Memory | 跨项目主题与高价值提炼入口 | 不保存第二份当前画像 |
+| `<project>/.agent-docs` | 输入、会话、工作状态、证据与提炼发现 | 可审阅但非权威 |
+| `docs/`、ADR、代码、测试、schema、CI | 项目当前事实与可执行约束 | 权威层 |
+
+项目 `.agent-docs` 中，`core.md` 是活跃索引；`inputs/` 保存会影响决策的用户输入，`sessions/` 保存 handoff，`working/`
+保存计划与 Task ledger，`distilled/` 保存带来源的昂贵发现，`evidence/` 保存脱敏证据 manifest，`_archive/` 保存已关闭或被
+替代内容。读取时先看索引和元信息，不默认递归加载整个目录或 archive。
+
+当前没有稳定的 session-end 或 compaction-before 宿主 hook，因此 Harnesssmith 不能机械保证每次上下文压缩前都已经写入
+handoff。规则会要求在已知压缩信号、阶段完成且仍有后续、或恢复快照不足时更新，但这仍属于宿主执行边界。
+
 ## Task 为什么不是待办清单
 
 Task 是带验收契约的状态机。创建时定义目标和 acceptance；推进时写入 checkpoint 与下一步；机械 verifier 更新证据；

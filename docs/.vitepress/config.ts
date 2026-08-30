@@ -14,6 +14,12 @@ export default withMermaid(defineConfig({
     en: { label: 'English', lang: 'en', link: '/en/' },
   },
   head: [['meta', { name: 'theme-color', content: '#176b5b' }]],
+  markdown: {
+    theme: {
+      light: 'github-dark-high-contrast',
+      dark: 'github-dark-high-contrast',
+    },
+  },
   mermaid: {
     theme: 'base',
     themeVariables: {
@@ -79,7 +85,8 @@ export default withMermaid(defineConfig({
         {
           text: '维护与贡献',
           items: [
-            { text: 'CLI 参考', link: '/reference/cli' },
+            { text: '安装器 CLI', link: '/reference/cli' },
+            { text: '运行时 CLI', link: '/reference/runtime-cli' },
             { text: '版本与迁移', link: '/versions/migrations' },
             { text: '贡献指南', link: '/contributing' },
             { text: '内容策略', link: '/content-strategy' },

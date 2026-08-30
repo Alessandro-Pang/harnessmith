@@ -30,6 +30,8 @@ test('documentation site has reproducible local build, search, links, and Pages 
   assert.doesNotMatch(config, /ignoreDeadLinks:\s*true/);
   assert.match(config, /withMermaid/);
   assert.match(config, /mermaid:\s*{/);
+  assert.match(config, /light:\s*['"]github-dark-high-contrast['"]/);
+  assert.match(config, /dark:\s*['"]github-dark-high-contrast['"]/);
 
   const deadCodeConfig = read('knip.json');
   assert.match(deadCodeConfig, /docs\/\.vitepress\/config\.ts/);
@@ -92,6 +94,55 @@ test('home and theme provide a distinctive responsive visual system', () => {
   assert.match(styles, /background-image:/);
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/);
   assert.match(styles, /html\.dark/);
+  assert.match(styles, /\.home-card-boundary a\s*{[^}]*position:\s*static/s);
+  assert.match(styles, /\.home-card-boundary a\s*{[^}]*margin-top:\s*auto/s);
+  assert.match(styles, /\.mermaid \.nodeLabel\s*{[^}]*line-height:\s*1\.3/s);
+});
+
+test('history reflects the project origin without presenting the blind review as project history', () => {
+  const history = read('docs/project/history-and-influences.md');
+  const references = read('docs/references.md');
+
+  assert.match(history, /项目根目录.*AGENTS\.md/s);
+  assert.match(history, /Starport/);
+  assert.match(history, /搜索 CLI/);
+  assert.doesNotMatch(history, /研发前|Architecture Review|架构评审/);
+  assert.doesNotMatch(references, /Personal Agent Harness CLI Architecture Review|研发前架构评审/);
+  assert.match(references, /https:\/\/picrew\.github\.io\/LLM-Harness\//);
+});
+
+test('advanced README material remains available in the documentation site', () => {
+  const runtime = read('docs/reference/runtime-cli.md');
+  const config = read('docs/.vitepress/config.ts');
+  const strategy = read('docs/content-strategy.md');
+
+  for (const topic of [
+    'route',
+    'scanLimits',
+    'capture-input',
+    'capture-experience',
+    'profile-autopilot',
+    'repository-map',
+    'task verify',
+    'audit maintain',
+    '--consume-payload-file',
+    'HARNESS_MEMORY_HOME',
+  ]) {
+    assert.match(runtime, new RegExp(topic.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  }
+  assert.match(config, /运行时 CLI/);
+  assert.match(config, /\/reference\/runtime-cli/);
+  assert.match(strategy, /README 精简门禁/);
+  assert.match(strategy, /迁移清单/);
+  assert.match(strategy, /重复、过时或纯实现细节/);
+});
+
+test('markdown emphasis and Mermaid labels avoid known clipping patterns', () => {
+  const architecture = read('docs/architecture.md');
+
+  assert.doesNotMatch(architecture, /）\*\*[^\s]/u);
+  assert.match(architecture, /Coding Agent 宿主<br\/>模型循环 · 工具\/MCP<br\/>sandbox/);
+  assert.match(architecture, /Personal Harness<br\/>短规则入口 · 文档路由<br\/>Memory/);
 });
 
 test('documentation site covers user, contributor, architecture, boundary, and history routes', () => {
@@ -102,6 +153,7 @@ test('documentation site covers user, contributor, architecture, boundary, and h
     'docs/guide/hosts.md',
     'docs/guide/lifecycle.md',
     'docs/reference/cli.md',
+    'docs/reference/runtime-cli.md',
     'docs/architecture.md',
     'docs/concepts/how-it-works.md',
     'docs/concepts/harness-engineering.md',
@@ -164,7 +216,8 @@ test('core documentation follows a human question path and separates current fac
   assert.match(evaluation, /不能证明/);
 
   const history = read('docs/project/history-and-influences.md');
-  assert.match(history, /研发前/);
+  assert.match(history, /项目根目录.*AGENTS\.md/s);
+  assert.match(history, /Starport/);
   assert.match(history, /尚未经过双盲评审/);
   assert.match(history, /当前事实/);
 });

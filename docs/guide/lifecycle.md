@@ -36,7 +36,8 @@ npx harnessmith uninstall --agent codex
 ```
 
 `restore` 回到前一安装层；`uninstall` 恢复全部受管层并移除 Harnessmith 安装记录。两者都会先验证当前文件、
-备份关系和路径边界，不会重新渲染模板。
+备份关系和路径边界，不会重新渲染模板，也不会删除共享/项目 `.agent-docs` 或用户维护的 personal overlay。升级同样保留
+可变 `state/`，避免把运行记录与受管理模板混为一体。
 
 ## 临时资源
 

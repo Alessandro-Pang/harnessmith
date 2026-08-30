@@ -32,6 +32,10 @@ npx harnessmith capabilities --json
 环境变量解析、目标文件名和迁移兼容属于外层 Adapter，分发模板保持宿主中立。如需判断本机实际目标，优先运行
 `--dry-run --json`，不要仅依据文档猜测。
 
+Cursor 只把 Harnessmith 自己管理的文件写入 repository-local Git exclude 与 `.cursor/.ignore`，不会隐藏或覆盖团队已有的
+整个 `.cursor/` 目录。Kimi Code CLI 支持当前 Node.js 版本的 `0.12.0` 及以上版本，不接管旧 Python `kimi-cli` 使用的
+`~/.kimi/` 目录。
+
 ## 支持状态如何解释
 
 “支持”表示该 Adapter 已实现安装生命周期、能力描述和自动化回归；不表示每个宿主版本都完成了真实运行评测。

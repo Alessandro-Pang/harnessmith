@@ -9,17 +9,17 @@ owner: maintainers
 Harnessmith 是**跨 Host 的 Personal Harness 分发与工作状态控制层**。它把一套宿主中立的规则、文档和本地 Runtime
 安全地接入 Codex、Cursor、Claude Code、OpenCode 与 Kimi Code CLI，但不替代这些宿主的 Agent Runtime。
 
-公开能力始终分成三种状态：**已实现（Implemented）**表示代码与可执行证据都存在；**由宿主负责（Delegated to the
-Host）**表示 Harnessmith 只提供 guidance 或接入点；**不支持（Unsupported）**表示当前明确不声称拥有。逐项 owner
+公开能力始终分成三种状态：**已实现（Implemented）** 表示代码与可执行证据都存在；**由宿主负责（Delegated to the
+Host）** 表示 Harnessmith 只提供 guidance 或接入点；**不支持（Unsupported）** 表示当前明确不声称拥有。逐项 owner
 和证据路径见[能力声明—证据矩阵](./capability-evidence.yaml)。
 
 ## 先记住一个模型
 
 ```mermaid
 flowchart BT
-  CLI["Harnessmith 外层 CLI<br/>Host Adapter · SafePath · staging · 备份 · 事务"]
-  Harness["安装后的 Personal Harness<br/>短规则入口 · 文档路由 · Memory · Task · 有限审计"]
-  Host["Coding Agent 宿主<br/>模型循环 · 工具/MCP · sandbox · 权限批准 · 成本"]
+  CLI["Harnessmith 外层 CLI<br/>Host Adapter · SafePath<br/>staging · 备份 · 事务"]
+  Harness["安装后的 Personal Harness<br/>短规则入口 · 文档路由<br/>Memory · Task · 有限审计"]
+  Host["Coding Agent 宿主<br/>模型循环 · 工具/MCP<br/>sandbox · 权限批准 · 成本"]
 
   CLI -->|"安装 · 升级 · 恢复"| Harness
   Harness -->|"读取规则 · 运行本地命令"| Host
@@ -117,4 +117,4 @@ proposal-first 的显式命令升级，不静默覆盖原记录。
 ## 当前不是什么
 
 Harnessmith 不是通用 Agent Runtime、模型网关、云端策略平台或多 Agent 调度器；也没有实现 Policy Engine、Canonical
-IR、Pack/Registry 或自动规则演化。部分概念曾出现在研发前评审中，当前明确属于历史提案，而非隐藏功能。
+IR、Pack/Registry 或自动规则演化。这些名称描述的是当前明确不支持的能力，不是隐藏功能。

@@ -67,13 +67,12 @@ owner: maintainers
 
 ## 研究地图与历史资料
 
-- **Personal Agent Harness CLI Architecture Review v0.1.0（2026-08-19）**：研发前架构评审。原则与参考链接仍有价值，
-  但其中 Policy Engine、Canonical IR、Pack/Registry 等属于历史方案，不是当前实现。
-- **Agent Harness Engineering: A Survey（2026）**：覆盖 170 多个开源项目，并提出 ETCLOVG 七层分类。按当前资料状态
-  尚未经过双盲评审，且作者声明语料和分类边界存在限制；本站将其作为研究地图，不作为规范。
+- [Agent Harness Engineering: A Survey（2026）](https://picrew.github.io/LLM-Harness/)：覆盖 170 多个开源项目，并提出
+  ETCLOVG 七层分类。按当前资料状态尚未经过双盲评审，且作者声明语料和分类边界存在限制；本站将其作为研究地图，
+  不作为规范。
 - [Lost in the Middle](https://aclanthology.org/2024.tacl-1.9/)：长上下文中的信息位置影响，为渐进披露提供研究背景。
 
-两份本地资料如何影响项目、哪些提案没有实现，见[历史与思想来源](/project/history-and-influences)。
+项目如何从手工维护 `AGENTS.md` 与跨项目搜索实践演变而来，见[历史与思想来源](/project/history-and-influences)。
 
 ## 文档站点与交付
 
