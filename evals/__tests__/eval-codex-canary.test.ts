@@ -231,7 +231,7 @@ test('canary fixture binds the exact candidate and unmanaged target without laun
   }
 
   assert.equal(fixture.scenarioId, 'machine-error-contract');
-  assert.match(String(fixture.expectedCommand), /capture\.mjs$/);
+  assert.match(String(fixture.expectedCommand), /capture\.mjs'?$/);
   assert.equal(fixture.targetStatusBefore, '');
   assert.equal(fixture.maxAttempts, 1);
   assert.match(String(fixture.context), /Run this exact non-dry-run capture command once/);
