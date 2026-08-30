@@ -1119,9 +1119,12 @@ function captureMemoryPayloadEvidence(stdout, turnLabel) {
           (['capture-input', 'handoff'].includes(action) &&
             commandTokens.length === 8 &&
             payloadIndexes[0] === 5 &&
-            (isAbsolute(commandTokens[4])
-              ? resolve(commandTokens[4])
-              : resolve(repo, commandTokens[4])) === repo)),
+            sameCanonicalPath(
+              isAbsolute(commandTokens[4])
+                ? resolve(commandTokens[4])
+                : resolve(repo, commandTokens[4]),
+              repo,
+            ))),
     );
     const payloadState = payloadInspection.ok
       ? safeReadFile(resolvedPayloadPath, 1024 * 1024)
@@ -2332,14 +2335,21 @@ if (scenarioId === 'memory-autopilot-unprompted') {
           tokens &&
           tokens.length === 8 &&
           (tokens[0] === nodeBin || tokens[0] === 'node') &&
-          (isAbsolute(tokens[1]) ? resolve(tokens[1]) : resolve(repo, tokens[1])) ===
-            harnessBin() &&
+          sameCanonicalPath(
+            isAbsolute(tokens[1]) ? resolve(tokens[1]) : resolve(repo, tokens[1]),
+            harnessBin(),
+          ) &&
           tokens[2] === 'memory' &&
           tokens[3] === 'handoff' &&
-          (isAbsolute(tokens[4]) ? resolve(tokens[4]) : resolve(repo, tokens[4])) === repo &&
+          sameCanonicalPath(
+            isAbsolute(tokens[4]) ? resolve(tokens[4]) : resolve(repo, tokens[4]),
+            repo,
+          ) &&
           tokens[5] === '--payload-file' &&
-          (isAbsolute(tokens[6]) ? resolve(tokens[6]) : resolve(repo, tokens[6])) ===
-            item.resolvedPayloadPath &&
+          sameCanonicalPath(
+            isAbsolute(tokens[6]) ? resolve(tokens[6]) : resolve(repo, tokens[6]),
+            item.resolvedPayloadPath,
+          ) &&
           tokens[7] === '--json',
         );
       })() &&
