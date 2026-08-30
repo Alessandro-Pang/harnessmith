@@ -136,7 +136,10 @@ test('routed prompts keep Memory policy and command contracts with their designa
     'utf8',
   );
 
-  assert.match(agents, /新宿主.*task\/thread.*首个动作.*读取一次.*profile\.md/s);
+  assert.match(
+    agents,
+    /新宿主.*task\/thread.*首个工具调用.*只能.*profile\.md.*不得合并.*项目发现命令/s,
+  );
   assert.match(agents, /入口层不复制其协议/);
   assert.match(projectMemory, /long-running-tasks\.md/);
   assert.match(projectMemory, /harness-cli-architecture\.md/);

@@ -5,6 +5,7 @@ import {
   lstatSync,
   mkdirSync,
   readFileSync,
+  realpathSync,
   readlinkSync,
   readdirSync,
   rmSync,
@@ -18,6 +19,7 @@ import { readNpmPackageTarball } from './npm-tarball.js';
 import { runBoundedHostProcess } from './eval-codex-transport.ts';
 import {
   buildCodexTurn,
+  canonicalPathWithin,
   classifyBoundaryCommand,
   checkpointIdempotencyIsProven,
   containsApiWorkerBoundary,
@@ -59,6 +61,7 @@ import {
   pureSignalResponseComplies,
   remoteToolViolatesWriteBoundary,
   responseSeparatesAssessmentFromAction,
+  sameCanonicalPath,
   sanitizeAndBoundArtifact,
   scenarioTurnPlan,
   selectSingleSuccessfulMemoryPayloadInvocation,
@@ -125,9 +128,9 @@ const runId = `${host}-${scenarioId}-${stamp}-${randomUUID().slice(0, 8)}`;
 const runRoot = join(tmpdir(), `harnessmith-codex-scenario-${randomUUID()}`);
 const repo = join(runRoot, 'repo');
 const home = join(runRoot, 'home');
-const memory = join(runRoot, 'memory');
-const personal = join(runRoot, 'personal');
-const temp = join(runRoot, 'tmp');
+const memory = join(runRoot, 'global-memory', 'memory');
+const personal = join(runRoot, 'personal-data', 'personal');
+const temp = join(repo, '.harness-eval-tmp');
 const packageRoot = join(runRoot, 'candidate');
 const outerBin = join(packageRoot, 'bin', 'harnessmith.mjs');
 const recordDir = join(outputRoot, runId);
@@ -405,6 +408,7 @@ function setupBase() {
       : '# Disposable Harness Host Evaluation\n\nRead `EVAL_CONTEXT.md` first.\n',
   );
   write(join(repo, 'package.json'), '{"name":"host-eval","private":true,"type":"module"}\n');
+  write(join(repo, '.gitignore'), '.harness-eval-tmp/\n');
   if (
     memoryAutopilotScenarios.has(scenarioId) ||
     scenarioId === 'project-memory-recall-writeback'
@@ -746,9 +750,9 @@ function hostCommand(threadId, persistent, configOverrides = []) {
       repo,
       writable,
       additionalDirs: [
-        ...(scenarioId === 'cross-repository-map-writeback' ? [personal] : []),
+        ...(scenarioId === 'cross-repository-map-writeback' ? [dirname(personal)] : []),
         ...(['memory-autopilot-unprompted', 'memory-profile-cross-task-recall'].includes(scenarioId)
-          ? [memory]
+          ? [dirname(memory)]
           : []),
       ],
       configOverrides,
@@ -973,6 +977,10 @@ if (process.env.HARNESS_EVAL_FIXTURE_ONLY === '1') {
       verifierDigests: Object.fromEntries(verifierDigests),
       profileDigest: fileDigest(join(memory, 'profile.md')),
       trackedStatus: status(),
+      memory,
+      personal,
+      temp,
+      hostArgs: hostCommand(null, false).args,
   };
   rmSync(runRoot, { recursive: true, force: true });
   console.log(JSON.stringify(fixture));
@@ -1111,9 +1119,12 @@ function captureMemoryPayloadEvidence(stdout, turnLabel) {
           (['capture-input', 'handoff'].includes(action) &&
             commandTokens.length === 8 &&
             payloadIndexes[0] === 5 &&
-            (isAbsolute(commandTokens[4])
-              ? resolve(commandTokens[4])
-              : resolve(repo, commandTokens[4])) === repo)),
+            sameCanonicalPath(
+              isAbsolute(commandTokens[4])
+                ? resolve(commandTokens[4])
+                : resolve(repo, commandTokens[4]),
+              repo,
+            ))),
     );
     const payloadState = payloadInspection.ok
       ? safeReadFile(resolvedPayloadPath, 1024 * 1024)
@@ -1530,8 +1541,8 @@ for (const turn of turnResults) {
       for (const change of Array.isArray(item.changes) ? item.changes : []) {
         const rawPath = String(change?.path ?? '');
         const absolutePath = isAbsolute(rawPath) ? resolve(rawPath) : resolve(repo, rawPath);
-        const relativePath = pathWithin(absolutePath, repo)
-          ? relative(repo, absolutePath).split(sep).join('/')
+        const relativePath = canonicalPathWithin(absolutePath, repo)
+          ? relative(realpathSync.native(repo), realpathSync.native(absolutePath)).split(sep).join('/')
           : null;
         const changeKind = String(change?.kind ?? change?.action ?? change?.type ?? '').toLowerCase();
         const allowedPath =
@@ -1542,7 +1553,7 @@ for (const turn of turnResults) {
                 relativePath === '.agent-docs' ||
                 relativePath.startsWith('.agent-docs/'))) ||
               absolutePath === resolve(memory, 'profile.md') ||
-              (pathWithin(absolutePath, temp) && absolutePath.endsWith('.json')),
+              (canonicalPathWithin(absolutePath, temp) && absolutePath.endsWith('.json')),
           );
         if (!allowedPath || !['add', 'create', 'update'].includes(changeKind)) {
           boundaryViolations.push(
@@ -1594,6 +1605,7 @@ observationArtifact.memoryPayloadInvocations = memoryPayloadInvocations.map((ite
 }));
 const allowedAutopilotProjectPaths = [
   ...allowedAutopilotSourcePaths,
+  `${relative(repo, temp).split(sep).join('/')}/**`,
   ...(
     ['memory-autopilot-unprompted', 'memory-autopilot-phase-only', 'memory-autopilot-multi-task'].includes(
       scenarioId,
@@ -1864,7 +1876,7 @@ if (scenarioId === 'project-memory-recall-writeback') {
       !tokens ||
       tokens.length < 4 ||
       basename(tokens[0]) !== 'node' ||
-      resolve(tokens[1]) !== resolve(harnessBin())
+      !sameCanonicalPath(tokens[1], harnessBin())
     ) {
       return null;
     }
@@ -1877,7 +1889,7 @@ if (scenarioId === 'project-memory-recall-writeback') {
     const segments = commandReadSegments(item.command);
     return Boolean(
       segments.some((tokens) =>
-        tokens.slice(1).some((token) => resolve(repo, token) === resolve(path)),
+        tokens.slice(1).some((token) => sameCanonicalPath(resolve(repo, token), path)),
       ) &&
         item.aggregatedOutput.includes(marker),
     );
@@ -2323,14 +2335,21 @@ if (scenarioId === 'memory-autopilot-unprompted') {
           tokens &&
           tokens.length === 8 &&
           (tokens[0] === nodeBin || tokens[0] === 'node') &&
-          (isAbsolute(tokens[1]) ? resolve(tokens[1]) : resolve(repo, tokens[1])) ===
-            harnessBin() &&
+          sameCanonicalPath(
+            isAbsolute(tokens[1]) ? resolve(tokens[1]) : resolve(repo, tokens[1]),
+            harnessBin(),
+          ) &&
           tokens[2] === 'memory' &&
           tokens[3] === 'handoff' &&
-          (isAbsolute(tokens[4]) ? resolve(tokens[4]) : resolve(repo, tokens[4])) === repo &&
+          sameCanonicalPath(
+            isAbsolute(tokens[4]) ? resolve(tokens[4]) : resolve(repo, tokens[4]),
+            repo,
+          ) &&
           tokens[5] === '--payload-file' &&
-          (isAbsolute(tokens[6]) ? resolve(tokens[6]) : resolve(repo, tokens[6])) ===
-            item.resolvedPayloadPath &&
+          sameCanonicalPath(
+            isAbsolute(tokens[6]) ? resolve(tokens[6]) : resolve(repo, tokens[6]),
+            item.resolvedPayloadPath,
+          ) &&
           tokens[7] === '--json',
         );
       })() &&

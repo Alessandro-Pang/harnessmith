@@ -4,11 +4,13 @@ import {
   chmodSync,
   existsSync,
   mkdirSync,
+  realpathSync,
   readdirSync,
   readFileSync,
+  symlinkSync,
   writeFileSync,
 } from 'node:fs';
-import { delimiter, join } from 'node:path';
+import { delimiter, dirname, join, relative } from 'node:path';
 import { test } from 'vitest';
 
 import { repositoryRoot } from '../../scripts/eval-fingerprint.js';
@@ -131,6 +133,33 @@ test('matrix run schedules the complete catalog through the bounded runner', asy
   assert.ok(result.results.every(({ outcome }) => outcome === 'passed'));
 });
 
+test('repository-map scenario grants the exact personal-map write without source-write authority', () => {
+  const scenario = worktreeScenarioCatalog(repositoryRoot).scenarios.find(
+    ({ id }) => id === 'cross-repository-map-writeback',
+  );
+  assert.ok(scenario);
+  assert.match(scenario.prompt, /update the personal repository map/i);
+  assert.match(scenario.prompt, /do not modify repository source files/i);
+});
+
+test('structured Codex capacity failures remain retryable transport failures', async () => {
+  const support = await import(
+    // @ts-expect-error The tracked evaluator support module is intentionally plain ESM.
+    '../../scripts/eval-codex-matrix-support.mjs'
+  );
+  const completion = support.evaluateCodexTurnCompletion({
+    status: 1,
+    signal: null,
+    error: 'evaluator-failure:host-exit',
+    stderr: '',
+    stdout:
+      '{"type":"turn.failed","error":{"message":"Selected model is at capacity. Please try a different model."}}\n',
+  });
+
+  assert.equal(completion.completed, false);
+  assert.equal(completion.transportFailure, true);
+});
+
 test('scenario fixture binds the supplied candidate and prepares without launching Codex', () => {
   const directory = temporaryDirectory();
   const artifact = join(directory, 'candidate.tgz');
@@ -169,6 +198,95 @@ test('scenario fixture binds the supplied candidate and prepares without launchi
   assert.equal(fixture.scenarioId, 'machine-error-contract');
   assert.match(fixture.context, /unmanaged/i);
 });
+
+test('multi-turn fixtures keep payloads in the workspace and mount lock-bearing parent roots', () => {
+  const directory = temporaryDirectory();
+  const artifact = join(directory, 'candidate.tgz');
+  const codexHome = join(directory, 'codex-home');
+  mkdirSync(codexHome);
+  writeFileSync(join(codexHome, 'auth.json'), '{}\n');
+  writeCandidateTarball(artifact, repositoryRoot);
+
+  const prepare = (scenarioId: string) => {
+    const result = spawnSync(process.execPath, ['--import', 'tsx', scenarioEntry, scenarioId], {
+      cwd: repositoryRoot,
+      encoding: 'utf8',
+      timeout: 30_000,
+      maxBuffer: 2 * 1024 * 1024,
+      env: {
+        ...process.env,
+        CODEX_HOME: codexHome,
+        HARNESS_RELEASE_ARTIFACT: artifact,
+        HARNESS_EVAL_OUTPUT_DIR: join(directory, 'runs'),
+        HARNESS_EVAL_MODEL: 'gpt-5.6-sol',
+        HARNESS_EVAL_ATTEMPT: '1',
+        HARNESS_EVAL_MAX_ATTEMPTS: '2',
+        HARNESS_EVAL_SCENARIO_BUDGET_MS: '900000',
+        HARNESS_EVAL_MATRIX_BUDGET_MS: '3600000',
+        HARNESS_EVAL_FIXTURE_ONLY: '1',
+      },
+    });
+    assert.equal(result.status, 0, `${scenarioId}: ${result.stderr}`);
+    return JSON.parse(result.stdout);
+  };
+
+  const autopilot = prepare('memory-autopilot-unprompted');
+  assert.ok(!relative(autopilot.repo, autopilot.temp).startsWith('..'));
+  assert.ok(autopilot.hostArgs.includes(dirname(autopilot.memory)));
+
+  const repositoryMap = prepare('cross-repository-map-writeback');
+  assert.ok(repositoryMap.hostArgs.includes(dirname(repositoryMap.personal)));
+});
+
+test.skipIf(process.platform === 'win32')(
+  'evaluator path identity accepts symlink aliases of the same existing path',
+  async () => {
+    const directory = temporaryDirectory();
+    const target = join(directory, 'target');
+    const alias = join(directory, 'alias');
+    mkdirSync(target);
+    writeFileSync(join(target, 'harness.mjs'), '');
+    symlinkSync(target, alias, 'dir');
+    const support = await import(
+      // @ts-expect-error The tracked evaluator support module is intentionally plain ESM.
+      '../../scripts/eval-codex-matrix-support.mjs'
+    );
+
+    assert.equal(typeof support.sameCanonicalPath, 'function');
+    assert.equal(support.sameCanonicalPath(alias, target), true);
+    assert.equal(
+      support.memoryPayloadCommandHasExpectedPrefix({
+        commandTokens: [process.execPath, join(alias, 'harness.mjs')],
+        harnessIndex: 1,
+        nodePath: process.execPath,
+        harnessPath: join(target, 'harness.mjs'),
+        repo: directory,
+      }),
+      true,
+    );
+  },
+);
+
+test.skipIf(process.platform === 'win32')(
+  'task temp payload inspection accepts canonical aliases without widening its boundary',
+  async () => {
+    const directory = temporaryDirectory();
+    const payload = join(directory, 'payload.json');
+    writeFileSync(payload, '{}\n');
+    const support = await import(
+      // @ts-expect-error The tracked evaluator support module is intentionally plain ESM.
+      '../../scripts/eval-codex-matrix-support.mjs'
+    );
+    const canonicalPayload = join(realpathSync.native(directory), 'payload.json');
+
+    assert.equal(support.canonicalPathWithin(canonicalPayload, directory), true);
+    assert.equal(support.inspectJsonPayloadPath(canonicalPayload, directory).ok, true);
+    assert.equal(
+      support.canonicalPathWithin(join(dirname(directory), 'outside.json'), directory),
+      false,
+    );
+  },
+);
 
 test.skipIf(coverageInstrumentation)(
   'all 15 catalog scenarios prepare disposable fixtures without launching Codex',

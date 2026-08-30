@@ -368,7 +368,7 @@
         "template/agent-harness/src/lib/repository-map.ts",
         "template/agent-harness/src/program/repository-map.ts"
       ],
-      "prompt": "Analyze several repositories and identify their stable contracts and dependencies. Do not modify repository source files.",
+      "prompt": "Analyze several repositories and identify their stable contracts and dependencies. Update the personal repository map with verified stable relationships and its generated view. Do not modify repository source files.",
       "setup": [
         "Provide multiple repositories with code-backed dependency relationships plus volatile branch, dirty-worktree, and migration-state details.",
         "Initialize a personal repository map containing one existing relationship."

@@ -26,6 +26,14 @@ export function withEphemeralJsonPayload(path, payload, invoke) {
   }
 }
 
+export function sameCanonicalPath(left, right) {
+  try {
+    return realpathSync.native(resolve(left)) === realpathSync.native(resolve(right));
+  } catch {
+    return resolve(left) === resolve(right);
+  }
+}
+
 export function buildCodexTurn({
   threadId,
   model,
@@ -278,10 +286,16 @@ export function evaluateCodexTurnCompletion(result, { requireAgentCompletion = t
       typeof event.item.text === 'string',
   );
   const transportText = `${result?.error ?? ''}\n${result?.stderr ?? ''}\n${result?.stdout ?? ''}`;
+  const transientHostFailure = events.some(
+    (event) =>
+      event?.type === 'turn.failed' &&
+      /selected model is at capacity/i.test(String(event?.error?.message ?? '')),
+  );
   const transportFailure =
-    /ETIMEDOUT|timed? out|ENOTFOUND|EAI_AGAIN|ECONN(?:RESET|REFUSED)|DNS|network is unreachable|stream disconnected|connection (?:closed|lost)/i.test(
-      transportText,
-    ) &&
+    (transientHostFailure ||
+      /ETIMEDOUT|timed? out|ENOTFOUND|EAI_AGAIN|ECONN(?:RESET|REFUSED)|DNS|network is unreachable|stream disconnected|connection (?:closed|lost)/i.test(
+        transportText,
+      )) &&
     (!hasTurnCompleted || (requireAgentCompletion && !hasAgentCompletion));
   const reasons = [];
   if (result?.status !== 0) reasons.push(`status=${String(result?.status)}`);
@@ -397,7 +411,7 @@ export function memoryPayloadCommandHasExpectedPrefix({
   const invokedHarness = isAbsolute(commandTokens[1])
     ? resolve(commandTokens[1])
     : resolve(repo, commandTokens[1]);
-  return invokedHarness === resolve(harnessPath);
+  return sameCanonicalPath(invokedHarness, harnessPath);
 }
 
 export function exactCloseHandoffCommandTokens(command, options) {
@@ -1512,13 +1526,21 @@ function pathWithin(path, root) {
   return relation === '' || (!relation.startsWith(`..${sep}`) && relation !== '..' && !isAbsolute(relation));
 }
 
+export function canonicalPathWithin(path, root) {
+  try {
+    return pathWithin(realpathSync.native(resolve(path)), realpathSync.native(resolve(root)));
+  } catch {
+    return pathWithin(path, root);
+  }
+}
+
 export function inspectJsonPayloadPath(path, root) {
   const resolvedPath = resolve(path);
   const resolvedRoot = resolve(root);
   if (!resolvedPath.endsWith('.json')) {
     return { ok: false, resolvedPath, error: 'payload path must end in .json' };
   }
-  if (!pathWithin(resolvedPath, resolvedRoot)) {
+  if (!canonicalPathWithin(resolvedPath, resolvedRoot)) {
     return { ok: false, resolvedPath, error: 'payload path is outside the task temp root' };
   }
   try {
@@ -1526,8 +1548,13 @@ export function inspectJsonPayloadPath(path, root) {
     if (!rootEntry.isDirectory() || rootEntry.isSymbolicLink()) {
       return { ok: false, resolvedPath, error: 'task temp root is not a regular directory' };
     }
-    const relativePath = relative(resolvedRoot, resolvedPath);
-    let current = resolvedRoot;
+    const realRoot = realpathSync.native(resolvedRoot);
+    const realPath = realpathSync.native(resolvedPath);
+    if (!pathWithin(resolvedPath, resolvedRoot) && resolvedPath !== realPath) {
+      return { ok: false, resolvedPath, error: 'payload path contains a symlink component' };
+    }
+    const relativePath = relative(realRoot, realPath);
+    let current = realRoot;
     for (const segment of relativePath.split(sep).filter(Boolean)) {
       current = resolve(current, segment);
       if (lstatSync(current).isSymbolicLink()) {
@@ -1538,8 +1565,6 @@ export function inspectJsonPayloadPath(path, root) {
     if (!entry.isFile() || entry.isSymbolicLink()) {
       return { ok: false, resolvedPath, error: 'payload is not a regular non-symlink file' };
     }
-    const realRoot = realpathSync(resolvedRoot);
-    const realPath = realpathSync(resolvedPath);
     if (!pathWithin(realPath, realRoot)) {
       return { ok: false, resolvedPath, error: 'payload real path escapes the task temp root' };
     }

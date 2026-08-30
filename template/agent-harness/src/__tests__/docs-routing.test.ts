@@ -75,6 +75,7 @@ test.each(['创建分支', '给我创建一个分支名', '请检查这个提交
 
 test.each([
   'multi-stage task with verified phase',
+  'Change docs/phase-a.txt from pending to ready and run node verify-phase.mjs docs/phase-a.txt.',
   'context budget compaction',
   '多阶段任务，阶段已验证仍有后续',
   '上下文预算信号',
