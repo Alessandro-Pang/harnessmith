@@ -2,6 +2,7 @@ import { Command, InvalidArgumentError } from 'commander';
 import { gateEvaluationRecords, validateEvaluationRecords } from './eval-contract.js';
 import { evaluationFingerprint, releaseArtifactPath } from './eval-fingerprint.js';
 import { EvaluationGateError } from './eval-gate-failure.js';
+import { planEvaluation } from './eval-planning.js';
 
 function positiveNumber(value: string): number {
   const parsed = Number(value);
@@ -16,6 +17,15 @@ function main(): void {
     .name('eval-gate')
     .description('Validate maintainer-attested Harness host evaluation evidence')
     .showHelpAfterError();
+
+  program
+    .command('plan')
+    .description('select bounded Host evaluation scenarios for changed files')
+    .requiredOption('--changed-file <path...>', 'repository-relative changed file')
+    .requiredOption('--json', 'write the evaluation plan as JSON')
+    .action(({ changedFile }: { changedFile: string[] }) => {
+      process.stdout.write(`${JSON.stringify(planEvaluation(changedFile))}\n`);
+    });
 
   program
     .command('fingerprint')

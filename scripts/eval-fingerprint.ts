@@ -3,8 +3,6 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isDeepStrictEqual } from 'node:util';
-import type { AnySchema } from 'ajv';
-import { Ajv2020 } from 'ajv/dist/2020.js';
 import { supportedAgentNames } from '../src/agents.js';
 import type { AgentName } from '../src/types.js';
 import {
@@ -12,6 +10,12 @@ import {
   candidateRuleFingerprint,
   type RuleFingerprint,
 } from './eval-rule-fingerprint.js';
+import {
+  readScenarioCatalog,
+  type ScenarioCatalog,
+  scenarioDependencyFingerprints,
+  worktreeScenarioCatalog,
+} from './eval-scenarios.js';
 import {
   type NpmPackageTarball,
   readNpmPackageTarball,
@@ -21,17 +25,6 @@ import {
 export const repositoryRoot = dirname(dirname(fileURLToPath(import.meta.url)));
 export const supportedAdapters = [...supportedAgentNames] as AgentName[];
 export const requiredEvaluationAdapters = ['codex'] as const satisfies readonly AgentName[];
-
-type ScenarioContract = {
-  automatedChecks: string[];
-  id: string;
-  prompt: string;
-  setup: string[];
-  pass: string[];
-  forbidden: string[];
-};
-
-type ScenarioCatalog = { schemaVersion: 2; scenarios: ScenarioContract[] };
 
 const requiredDistributionFiles = [
   'package.json',
@@ -46,13 +39,6 @@ const requiredDistributionFiles = [
   'evals/scenarios.schema.json',
   'evals/run.schema.json',
 ];
-
-const scenarioSchema = JSON.parse(
-  readFileSync(join(repositoryRoot, 'evals', 'scenarios.schema.json'), 'utf8'),
-) as AnySchema;
-const validateScenarioCatalog = new Ajv2020({ allErrors: true, strict: true }).compile(
-  scenarioSchema,
-);
 
 function parseJson<T>(content: Buffer, name: string): T {
   try {
@@ -71,20 +57,6 @@ export function releaseArtifactPath(configured?: string): string {
   return resolveReleaseArtifactPath(configured, repositoryRoot);
 }
 
-function scenarioCatalog(content: Buffer): ScenarioCatalog {
-  const catalog = parseJson<unknown>(content, 'evals/scenarios.json');
-  if (!validateScenarioCatalog(catalog)) {
-    throw new Error(
-      `Candidate evaluation scenarios violate schema: ${JSON.stringify(validateScenarioCatalog.errors)}`,
-    );
-  }
-  const typedCatalog = catalog as ScenarioCatalog;
-  const ids = typedCatalog.scenarios.map(({ id }) => id);
-  if (new Set(ids).size !== ids.length)
-    throw new Error('Candidate evaluation scenario ids must be unique');
-  return typedCatalog;
-}
-
 function scenarioFingerprints(catalog: ScenarioCatalog): Record<string, string> {
   return Object.fromEntries(
     catalog.scenarios.map(({ id, prompt, setup, pass, forbidden }) => [
@@ -94,12 +66,8 @@ function scenarioFingerprints(catalog: ScenarioCatalog): Record<string, string> 
   );
 }
 
-function worktreeScenarioCatalog(): ScenarioCatalog {
-  return scenarioCatalog(readFileSync(join(repositoryRoot, 'evals', 'scenarios.json')));
-}
-
 export function evaluationScenarioFingerprints(): Record<string, string> {
-  return scenarioFingerprints(worktreeScenarioCatalog());
+  return scenarioFingerprints(worktreeScenarioCatalog(repositoryRoot));
 }
 
 function requiredFile(tarball: NpmPackageTarball, path: string): Buffer {
@@ -139,7 +107,7 @@ function assertCurrentReleaseContract(tarball: NpmPackageTarball): RuleFingerpri
   }
   const rules = candidateRuleFingerprint(repositoryRoot, tarball);
   const candidateScenarios = requiredFile(tarball, 'evals/scenarios.json');
-  scenarioCatalog(candidateScenarios);
+  readScenarioCatalog(candidateScenarios, requiredFile(tarball, 'evals/scenarios.schema.json'));
   const currentScenarios = readFileSync(join(repositoryRoot, 'evals', 'scenarios.json'));
   if (!candidateScenarios.equals(currentScenarios)) {
     throw new Error('Candidate evaluation scenarios do not match the release worktree');
@@ -171,12 +139,17 @@ export function evaluationFingerprint(packageArtifactPath = releaseArtifactPath(
     requiredFile(tarball, 'template/agent-harness/manifest.json'),
     'template/agent-harness/manifest.json',
   );
+  const catalog = readScenarioCatalog(
+    requiredFile(tarball, 'evals/scenarios.json'),
+    requiredFile(tarball, 'evals/scenarios.schema.json'),
+  );
   return {
     packageVersion: packageManifest.version,
     harnessVersion: harnessManifest.harnessVersion,
     packageArtifactSha256: tarball.sha256,
     behaviorSha256: sha256(JSON.stringify({ schemaVersion: 1, rulesSha256: rules.rulesSha256 })),
     ...rules,
-    scenarios: scenarioFingerprints(scenarioCatalog(requiredFile(tarball, 'evals/scenarios.json'))),
+    scenarios: scenarioFingerprints(catalog),
+    scenarioDependencies: scenarioDependencyFingerprints(catalog, repositoryRoot),
   };
 }

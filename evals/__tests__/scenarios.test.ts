@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Ajv2020 } from 'ajv/dist/2020.js';
@@ -12,7 +12,7 @@ test('behavior evaluation catalog has unique, observable scenarios', () => {
   const schema = JSON.parse(readFileSync(join(root, 'evals', 'scenarios.schema.json'), 'utf8'));
   const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
   assert.equal(validate(catalog), true, JSON.stringify(validate.errors));
-  assert.equal(catalog.schemaVersion, 2);
+  assert.equal(catalog.schemaVersion, 3);
   assert.ok(catalog.scenarios.length >= 5);
   const ids = new Set();
   for (const scenario of catalog.scenarios) {
@@ -24,6 +24,11 @@ test('behavior evaluation catalog has unique, observable scenarios', () => {
     assert.ok(Array.isArray(scenario.pass) && scenario.pass.length > 0);
     assert.ok(Array.isArray(scenario.forbidden) && scenario.forbidden.length > 0);
     assert.ok(Array.isArray(scenario.automatedChecks) && scenario.automatedChecks.length > 0);
+    assert.ok(Array.isArray(scenario.dependencyPaths) && scenario.dependencyPaths.length > 0);
+    for (const dependencyPath of scenario.dependencyPaths) {
+      assert.match(dependencyPath, /^(?:src|template)\//);
+      assert.equal(existsSync(join(root, dependencyPath)), true, dependencyPath);
+    }
     for (const check of scenario.automatedChecks) {
       const [file, title] = check.split('#');
       assert.ok(file && title, `invalid automated check: ${check}`);
@@ -255,7 +260,7 @@ test('manual host evaluation evidence has a versioned machine-readable contract'
   const example = JSON.parse(readFileSync(join(root, 'evals', 'run.example.json'), 'utf8'));
   const validate = new Ajv2020({ allErrors: true, strict: true }).compile(schema);
 
-  assert.equal(schema.$id, 'urn:harnessmith:eval-run:v5');
+  assert.equal(schema.$id, 'urn:harnessmith:eval-run:v6');
   assert.equal(validate(example), true, JSON.stringify(validate.errors));
   assert.equal(example.recordType, 'example-only');
   assert.equal(example.transcript.redacted, true);
@@ -264,6 +269,7 @@ test('manual host evaluation evidence has a versioned machine-readable contract'
   assert.match(example.transcript.sha256, /^[a-f0-9]{64}$/);
   assert.match(example.subject.packageArtifactSha256, /^[a-f0-9]{64}$/);
   assert.match(example.subject.scenarioSha256, /^[a-f0-9]{64}$/);
+  assert.match(example.subject.dependencySha256, /^[a-f0-9]{64}$/);
   assert.match(example.subject.rulesSha256, /^[a-f0-9]{64}$/);
   assert.equal(example.execution.maxAttempts, 2);
   assert.equal(example.execution.scenarioBudgetMs, 15 * 60 * 1000);

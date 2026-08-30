@@ -25,6 +25,7 @@ test('release gate inherits a complete matrix from another artifact with identic
     const record = JSON.parse(readFileSync(path, 'utf8'));
     record.subject.packageVersion = '0.5.0';
     record.subject.packageArtifactSha256 = 'f'.repeat(64);
+    record.subject.rulesSha256 = 'e'.repeat(64);
     writeFileSync(path, `${JSON.stringify(record, null, 2)}\n`);
   }
 
@@ -39,6 +40,28 @@ test('release gate inherits a complete matrix from another artifact with identic
   assert.deepEqual(output.inheritedFrom, [
     { packageVersion: '0.5.0', packageArtifactSha256: 'f'.repeat(64) },
   ]);
+});
+
+test('release gate invalidates only the scenario whose dependency fingerprint changed', () => {
+  const runsDirectory = temporaryDirectory();
+  const scenarioIds = Object.keys(currentFingerprint().scenarios);
+  for (const scenarioId of scenarioIds) {
+    const path = writeRun(runsDirectory, { scenarioId });
+    const record = JSON.parse(readFileSync(path, 'utf8'));
+    record.subject.packageVersion = '0.5.0';
+    record.subject.packageArtifactSha256 = 'f'.repeat(64);
+    record.subject.rulesSha256 = 'e'.repeat(64);
+    if (scenarioId === 'progressive-disclosure') {
+      record.subject.dependencySha256 = 'd'.repeat(64);
+    }
+    writeFileSync(path, `${JSON.stringify(record, null, 2)}\n`);
+  }
+
+  const result = run(['gate', '--runs-dir', runsDirectory]);
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /subject-drift dependencySha256 codex\/progressive-disclosure/);
+  assert.doesNotMatch(result.stderr, /codex\/bootstrap-global-memory/);
 });
 
 test('release gate invalidates only the scenario whose behavior contract changed', () => {

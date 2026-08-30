@@ -57,7 +57,9 @@ function behaviorCompatibleRecords(
       record.subject.scenarioSha256 === current.scenarios[record.scenarioId]
         ? null
         : 'scenarioSha256',
-      record.subject.rulesSha256 === current.rulesSha256 ? null : 'rulesSha256',
+      record.subject.dependencySha256 === current.scenarioDependencies[record.scenarioId]
+        ? null
+        : 'dependencySha256',
     ].filter((field): field is string => Boolean(field));
     if (drift.length === 0) compatible.push(run);
     else rejected.push(`subject-drift ${drift.join(',')} ${coverageKey}`);

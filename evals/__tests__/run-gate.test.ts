@@ -32,6 +32,10 @@ test('fingerprint binds the candidate package and every complete scenario contra
   assert.match(output.behaviorSha256, /^[a-f0-9]{64}$/);
   assert.notEqual(output.behaviorSha256, output.packageArtifactSha256);
   assert.match(output.rulesSha256, /^[a-f0-9]{64}$/);
+  assert.deepEqual(Object.keys(output.scenarioDependencies), Object.keys(output.scenarios));
+  for (const dependencySha256 of Object.values(output.scenarioDependencies)) {
+    assert.match(dependencySha256 as string, /^[a-f0-9]{64}$/);
+  }
   for (const source of [
     'dist/adapters.js',
     'dist/install-template.js',
@@ -355,7 +359,7 @@ test('validator rejects duplicate run identities across evidence files', () => {
   assert.match(result.stderr, /duplicate runId: codex-progressive-disclosure/);
 });
 
-test('release gate rejects records captured against a different rule fingerprint', () => {
+test('release gate retains the global rule fingerprint as audit data', () => {
   const runsDirectory = temporaryDirectory();
   const path = writeRun(runsDirectory);
   const record = JSON.parse(readFileSync(path, 'utf8'));
@@ -365,7 +369,8 @@ test('release gate rejects records captured against a different rule fingerprint
   const result = run(['gate', '--runs-dir', runsDirectory]);
 
   assert.equal(result.status, 1);
-  assert.match(result.stderr, /subject-drift rulesSha256 codex\/progressive-disclosure/);
+  assert.doesNotMatch(result.stderr, /subject-drift rulesSha256/);
+  assert.match(result.stderr, /codex\/bootstrap-global-memory/);
 });
 
 test('evaluation schema supports every adapter while release coverage uses the explicit host policy', async () => {

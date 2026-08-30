@@ -7,7 +7,7 @@ function driftedRun(): string {
   const runsDirectory = temporaryDirectory();
   const path = writeRun(runsDirectory);
   const record = JSON.parse(readFileSync(path, 'utf8'));
-  record.subject.rulesSha256 = 'f'.repeat(64);
+  record.subject.dependencySha256 = 'f'.repeat(64);
   writeFileSync(path, `${JSON.stringify(record, null, 2)}\n`);
   return runsDirectory;
 }
@@ -22,9 +22,11 @@ test('release gate emits structured failure attribution for automation', () => {
   assert.equal(failure.error.code, 'EVAL_COVERAGE_INCOMPLETE');
   assert.ok(failure.missing.includes('codex/progressive-disclosure'));
   assert.equal(failure.rejected.count, 1);
-  assert.deepEqual(failure.rejected.byReason, [{ reason: 'subject-drift:rulesSha256', count: 1 }]);
+  assert.deepEqual(failure.rejected.byReason, [
+    { reason: 'subject-drift:dependencySha256', count: 1 },
+  ]);
   assert.deepEqual(failure.rejected.records, [
-    'subject-drift rulesSha256 codex/progressive-disclosure',
+    'subject-drift dependencySha256 codex/progressive-disclosure',
   ]);
 });
 
@@ -32,6 +34,6 @@ test('release gate text output summarizes rejection causes before audit details'
   const result = run(['gate', '--runs-dir', driftedRun()]);
 
   assert.equal(result.status, 1);
-  assert.match(result.stderr, /Rejected record summary:\n- subject-drift:rulesSha256: 1/);
-  assert.match(result.stderr, /Rejected record details:\n- subject-drift rulesSha256/);
+  assert.match(result.stderr, /Rejected record summary:\n- subject-drift:dependencySha256: 1/);
+  assert.match(result.stderr, /Rejected record details:\n- subject-drift dependencySha256/);
 });
