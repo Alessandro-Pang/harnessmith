@@ -21,6 +21,7 @@ export type RunRecord = {
     harnessVersion: string;
     packageArtifactSha256: string;
     scenarioSha256: string;
+    dependencySha256: string;
     rulesSha256: string;
   };
   startedAt: string;

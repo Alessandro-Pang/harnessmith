@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:harnessmith:eval-run:v5",
+  "$id": "urn:harnessmith:eval-run:v6",
   "title": "Harnessmith maintainer-attested host evaluation run",
   "type": "object",
   "required": [
@@ -23,7 +23,7 @@
     "evidence"
   ],
   "properties": {
-    "schemaVersion": { "const": 5 },
+    "schemaVersion": { "const": 6 },
     "recordType": { "enum": ["host-evaluation", "example-only"] },
     "runId": { "$ref": "#/$defs/id" },
     "scenarioId": { "$ref": "#/$defs/id" },
@@ -46,6 +46,7 @@
         "harnessVersion",
         "packageArtifactSha256",
         "scenarioSha256",
+        "dependencySha256",
         "rulesSha256"
       ],
       "properties": {
@@ -53,6 +54,7 @@
         "harnessVersion": { "type": "string", "minLength": 1 },
         "packageArtifactSha256": { "$ref": "#/$defs/sha256" },
         "scenarioSha256": { "$ref": "#/$defs/sha256" },
+        "dependencySha256": { "$ref": "#/$defs/sha256" },
         "rulesSha256": { "$ref": "#/$defs/sha256" }
       },
       "additionalProperties": false

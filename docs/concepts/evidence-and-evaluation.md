@@ -27,14 +27,19 @@ verifier 结果。场景断言同时检查期望行为与禁止行为，避免�
 这条链成本更高，也更容易受到认证、网络、宿主版本、超时和评测基础设施故障影响。因此环境准备、候选绑定、失败
 归因和证据保留本身也是评测设计的一部分。
 
-Host Eval v5 记录把结果固定为四类：`passed` 表示行为与断言通过；`behavior-failed` 表示真实产品行为未满足场景；
+Host Eval v6 记录把结果固定为四类：`passed` 表示行为与断言通过；`behavior-failed` 表示真实产品行为未满足场景；
 transport、TLS、WebSocket、runner 超时或 circuit breaker 终止只能记为 `infra-inconclusive`；evaluator 本身无法完成判定时记为
 `evaluator-failed`。后三类都不能满足发布覆盖，尤其不能把 `infra-inconclusive` 降格解释成产品行为失败或通过。
 
 执行证据同时记录 tier、attempt、elapsed time 和 termination。单场景预算上限为 15 分钟，整套矩阵预算上限为 60 分钟；
 transport failure 最多自动重试一次，即总尝试次数不超过两次。`eval:validate` 会拒绝超预算、重试次数超限以及 termination
-与结果分类冲突的记录。当前 phase 只提供记录与门禁契约；真实 Host 的增量选择、有界并行和 circuit-break 调度仍由后续
+与结果分类冲突的记录。当前 phase 还提供依赖范围内的增量选择；真实 Host 的有界并行和 circuit-break 调度仍由后续
 runner/CI 集成实现。
+
+每个场景声明可影响其行为的 `dependencyPaths`，fingerprint 将这些文件绑定为独立的 `dependencySha256`。全局
+`rulesSha256` 继续用于审计，但不再让一个无关规则变更淘汰全部场景记录。`eval:plan` 把变更分为 L1、L2、L3：L1 仅需
+确定性验证；L2 最多选择三个被依赖映射覆盖的 Host 场景；L3 对未知行为源或过宽选择执行完整矩阵。出现
+`unmapped-behavior-source` 时必须 fail closed 到 L3，不能静默继承旧证据。
 
 ## 从任务到结论的五个阶段
 

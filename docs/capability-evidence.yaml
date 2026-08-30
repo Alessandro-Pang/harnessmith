@@ -114,6 +114,20 @@ claims:
       - evals/__tests__/run-selection-security.test.ts
       - evals/__tests__/scenarios.test.ts
 
+  - id: incremental-host-eval-selection
+    status: implemented
+    owner: Host Eval planning and release verification
+    claim: Select dependency-scoped Host Eval scenarios for mapped behavior changes and fail closed to the full matrix for unknown or over-broad changes.
+    implementation:
+      - evals/scenarios.json
+      - scripts/eval-planning.ts
+      - scripts/eval-scenarios.ts
+      - scripts/eval-contract.ts
+    verification:
+      - evals/__tests__/eval-planning.test.ts
+      - evals/__tests__/eval-inheritance.test.ts
+      - evals/__tests__/scenarios.test.ts
+
   - id: post-publish-registry-verification
     status: implemented
     owner: release verification scripts and publish workflow

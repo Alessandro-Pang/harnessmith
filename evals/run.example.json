@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "recordType": "example-only",
   "runId": "replace-with-real-run-id",
   "scenarioId": "progressive-disclosure",
@@ -15,6 +15,7 @@
     "harnessVersion": "replace-with-current-harness-version",
     "packageArtifactSha256": "0000000000000000000000000000000000000000000000000000000000000000",
     "scenarioSha256": "4444444444444444444444444444444444444444444444444444444444444444",
+    "dependencySha256": "5555555555555555555555555555555555555555555555555555555555555555",
     "rulesSha256": "1111111111111111111111111111111111111111111111111111111111111111"
   },
   "startedAt": "2026-08-19T00:00:00Z",

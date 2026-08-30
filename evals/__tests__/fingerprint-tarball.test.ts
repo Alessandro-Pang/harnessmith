@@ -61,7 +61,7 @@ test('fingerprint rejects a stale tarball instead of splicing in worktree versio
   assert.match(result.stderr, /name\/version does not match the release worktree/i);
 });
 
-test('fingerprint requires scenario catalog schemaVersion 2', () => {
+test('fingerprint requires scenario catalog schemaVersion 3', () => {
   const artifact = join(temporaryDirectory(), 'scenario-schema-v1.tgz');
   const scenarios = JSON.parse(
     Buffer.from(
@@ -242,16 +242,12 @@ test('fingerprint rejects a tarball with a corrupted header checksum', () => {
 
 test('fingerprint rejects candidate scenario contracts that differ from the release worktree', () => {
   const artifact = join(temporaryDirectory(), 'scenario.tgz');
-  const scenario = {
-    id: 'tarball-contract',
-    prompt: 'Prompt from tarball.',
-    setup: ['Tarball setup.'],
-    pass: ['Tarball pass.'],
-    forbidden: ['Tarball forbidden action.'],
-    automatedChecks: ['fixture#check'],
-  };
+  const scenarios = JSON.parse(
+    readFileSync(join(process.cwd(), 'evals', 'scenarios.json'), 'utf8'),
+  );
+  scenarios.scenarios[0].prompt = 'Prompt from a different candidate contract.';
   writeCandidateTarball(artifact, process.cwd(), {
-    scenarios: { schemaVersion: 2, scenarios: [scenario] },
+    scenarios,
   });
 
   const result = run(['fingerprint', '--json', '--package-artifact', artifact]);

@@ -14,7 +14,8 @@ setup, observable pass conditions, forbidden conditions, and local regression ch
 
 - host product/version and model/model version;
 - package version, exact candidate tarball, embedded Harness, complete scenario contract
-  (`id`/`prompt`/`setup`/`pass`/`forbidden`), distributed rule fingerprints, and the derived
+  (`id`/`prompt`/`setup`/`pass`/`forbidden`), its declared `dependencySha256`, distributed rule
+  fingerprints, and the derived
   `behaviorSha256` used for bounded evidence inheritance;
 - start and finish timestamps plus `evaluatedAt`, when the maintainer completed evidence review;
 - the Host Eval tier, attempt count, elapsed time, termination reason, and enforced scenario/matrix budgets;
@@ -26,7 +27,7 @@ setup, observable pass conditions, forbidden conditions, and local regression ch
   (`forbidden-1`, `forbidden-2`, …);
 - a verdict whose references resolve to independently stored evidence artifacts.
 
-Schema v5 makes infrastructure and evaluator failures explicit. `passed` and `behavior-failed` are valid only
+Schema v6 makes infrastructure and evaluator failures explicit. `passed` and `behavior-failed` are valid only
 for a completed Host execution. Transport failures, scenario budget exhaustion, and an open circuit are
 `infra-inconclusive`; evaluator failures are `evaluator-failed`. Infrastructure outcomes never satisfy release
 coverage and never become product behavior failures.
@@ -34,7 +35,8 @@ coverage and never become product behavior failures.
 Each record is limited to a 15-minute scenario budget and a 60-minute matrix budget. A run may retry once
 (`maxAttempts: 2`); the record preserves the attempt count, transport-failure count, and whether execution
 completed, exhausted its budget, failed in transport/evaluation, or stopped at an open circuit. This repository
-validates those limits and classifications but does not launch or schedule third-party Hosts.
+validates those limits and classifications and plans incremental coverage, but does not launch or schedule
+third-party Hosts.
 
 All `local:` artifact references are relative to the record file. The validator rejects missing, tampered,
 oversized, or path-escaping records and artifacts; bounds record count and aggregate record/evidence bytes;
@@ -110,11 +112,18 @@ The artifact and behavior identities intentionally serve different purposes:
 - `behaviorSha256` is domain-separated from the artifact digest and covers the distributed executable and rule
   surface represented by `rulesSha256`;
 - `scenarioSha256` independently identifies each Host scenario contract.
+- `dependencySha256` identifies the declared behavior sources that can affect one scenario.
 
-A metadata-only release may inherit fresh passing Host records when the embedded Harness version,
-`rulesSha256`, and that cell's `scenarioSha256` are unchanged. A rule, runtime, template, schema, adapter, or
-safety-boundary change alters the rule fingerprint and invalidates the complete matrix. A changed scenario
-invalidates only that scenario; unaffected cells remain reusable. SemVer alone never determines reuse.
+A metadata-only release may inherit fresh passing Host records when the embedded Harness version and that
+cell's scenario and dependency fingerprints are unchanged. The global `rulesSha256` remains audit evidence,
+but does not invalidate unrelated cells. A changed scenario contract or declared dependency invalidates only that scenario;
+unaffected cells remain reusable. SemVer alone never determines reuse.
+
+`pnpm run eval:plan --changed-file PATH` classifies repository changes before real Host execution. L1 keeps
+non-behavior changes in deterministic checks only. L2 selects at most three scenarios whose `dependencyPaths`
+cover all changed behavior sources. L3 runs the full matrix when a behavior source is unmapped
+(`unmapped-behavior-source`) or the L2 selection would exceed that bound. This planner is fail closed: an
+unknown behavior file never silently inherits Host evidence.
 
 Gate output separates `exactArtifactCoverageCount` from `inheritedBehaviorCoverageCount` and lists every
 source package version and artifact digest under `inheritedFrom`. Release state and the signed release

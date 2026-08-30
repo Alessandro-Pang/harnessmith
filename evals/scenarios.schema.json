@@ -1,11 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:harnessmith:eval-scenarios:v2",
+  "$id": "urn:harnessmith:eval-scenarios:v3",
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "scenarios"],
   "properties": {
-    "schemaVersion": { "const": 2 },
+    "schemaVersion": { "const": 3 },
     "scenarios": {
       "type": "array",
       "minItems": 1,
@@ -26,10 +26,29 @@
       "uniqueItems": true,
       "items": { "$ref": "#/$defs/nonEmptyText" }
     },
+    "dependencyPaths": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^(?:src|template)/(?!.*/(?:\\.\\.?)(?:/|$))[^\\\\]+$",
+        "maxLength": 512
+      }
+    },
     "scenario": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "prompt", "setup", "pass", "forbidden", "automatedChecks"],
+      "required": [
+        "id",
+        "prompt",
+        "setup",
+        "pass",
+        "forbidden",
+        "automatedChecks",
+        "dependencyPaths"
+      ],
       "properties": {
         "id": {
           "type": "string",
@@ -40,6 +59,7 @@
         "setup": { "$ref": "#/$defs/textList" },
         "pass": { "$ref": "#/$defs/textList" },
         "forbidden": { "$ref": "#/$defs/textList" },
+        "dependencyPaths": { "$ref": "#/$defs/dependencyPaths" },
         "automatedChecks": {
           "type": "array",
           "minItems": 1,

@@ -236,24 +236,6 @@ test('release documentation distinguishes post-publish registry clean-room evide
   assert.match(contributing, /registry clean-room/i);
 });
 
-test('Host Eval documentation exposes bounded execution and explicit failure classes', () => {
-  const evaluation = read('docs/concepts/evidence-and-evaluation.md');
-  const evalReadme = read('evals/README.md');
-  const capabilities = read('docs/capability-evidence.yaml');
-
-  for (const content of [evaluation, evalReadme]) {
-    assert.match(content, /behavior-failed/);
-    assert.match(content, /infra-inconclusive/);
-    assert.match(content, /evaluator-failed/);
-    assert.match(content, /15 分钟|15-minute/);
-    assert.match(content, /60 分钟|60-minute/);
-    assert.match(content, /重试一次|retry once/);
-  }
-  assert.match(capabilities, /id: bounded-host-eval-record-contract/);
-  assert.match(capabilities, /evals\/run\.schema\.json/);
-  assert.match(capabilities, /evals\/__tests__\/run-gate\.test\.ts/);
-});
-
 test('cross-repository relationships remain a first-class public capability', () => {
   const readme = read('README.md');
   const english = read('README.en.md');

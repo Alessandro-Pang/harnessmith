@@ -38,6 +38,7 @@ let fingerprintCache:
       behaviorSha256: string;
       rulesSha256: string;
       scenarios: Record<string, string>;
+      scenarioDependencies: Record<string, string>;
     }
   | undefined;
 
@@ -90,7 +91,7 @@ export function writeRun(
   writeFileSync(join(directory, 'transcript.md'), transcript);
   writeFileSync(join(directory, 'filesystem-diff.txt'), filesystemDiff);
   const record = {
-    schemaVersion: 5,
+    schemaVersion: 6,
     recordType: 'host-evaluation',
     runId,
     scenarioId,
@@ -106,6 +107,7 @@ export function writeRun(
       harnessVersion: subject.harnessVersion,
       packageArtifactSha256: subject.packageArtifactSha256,
       scenarioSha256: subject.scenarios[scenarioId],
+      dependencySha256: subject.scenarioDependencies[scenarioId],
       rulesSha256: subject.rulesSha256,
     },
     startedAt: new Date(Date.parse(finishedAt) - 60_000).toISOString(),
