@@ -1,5 +1,9 @@
 # Harnessmith
 
+<p align="center">
+  <img src="./docs/public/brand/harnessmith-logo.svg" alt="Harnessmith" width="176" />
+</p>
+
 > Forge once. Work consistently across coding agents.
 
 [![npm version](https://img.shields.io/npm/v/harnessmith.svg)](https://www.npmjs.com/package/harnessmith)

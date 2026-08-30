@@ -7,6 +7,9 @@ hero:
   name: Harnessmith
   text: 让一套 Agent 工作方式，跨宿主可靠运行
   tagline: 安全分发个人规则、工作状态与验证习惯。你维护方法，Harnessmith 处理适配、安装、恢复和升级。
+  image:
+    src: /brand/harnessmith-logo.svg
+    alt: Harnessmith logo
   actions:
     - theme: brand
       text: 5 分钟上手
