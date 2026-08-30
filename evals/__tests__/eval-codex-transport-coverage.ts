@@ -18,17 +18,7 @@ const runFixture = (source: string, maxOutputBytes = 1024) =>
 
 assert.deepEqual(buildCodexInvocation({ executable: '/bin/codex', workspace: '/tmp/eval' }), {
   executable: '/bin/codex',
-  args: [
-    'exec',
-    '--json',
-    '--ephemeral',
-    '--sandbox',
-    'workspace-write',
-    '--approve-for-me',
-    '--cd',
-    '/tmp/eval',
-    '-',
-  ],
+  args: ['exec', '--json', '--ephemeral', '--approve-for-me', '--cd', '/tmp/eval', '-'],
   cwd: '/tmp/eval',
 });
 assert.throws(() => buildCodexInvocation({ workspace: 'relative' }), /absolute workspace/);
@@ -98,6 +88,9 @@ for (const message of ['ECONNRESET', 'WebSocket connection failed', 'TLS handsha
 assert.deepEqual(await runFixture('process.exit(2)'), {
   kind: 'evaluator-failure',
   reason: 'host-exit',
+  exitCode: 2,
+  stdout: '',
+  stderr: '',
 });
 
 const attempt = {
@@ -169,3 +162,5 @@ assert.equal(
   }),
   'function',
 );
+
+await import('./eval-codex-canary-coverage.js');

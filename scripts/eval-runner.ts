@@ -6,7 +6,7 @@ export type HostEvalAttemptResult =
 export type HostEvalAttempt = {
   scenarioId: string;
   attempt: number;
-  maxAttempts: 2;
+  maxAttempts: 1 | 2;
   deadlineMs: number;
   signal: AbortSignal;
 };

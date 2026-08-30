@@ -9,23 +9,23 @@ test('Codex invocation keeps the prompt on stdin and uses bounded safe flags', (
 
   assert.deepEqual(invocation, {
     executable: '/bin/codex',
-    args: [
-      'exec',
-      '--json',
-      '--ephemeral',
-      '--sandbox',
-      'workspace-write',
-      '--approve-for-me',
-      '--cd',
-      '/tmp/eval',
-      '-',
-    ],
+    args: ['exec', '--json', '--ephemeral', '--approve-for-me', '--cd', '/tmp/eval', '-'],
     cwd: '/tmp/eval',
   });
   assert.equal(
     invocation.args.some((arg) => arg.includes('dangerously')),
     false,
   );
+});
+
+test('Codex invocation binds the explicitly authorized model', () => {
+  const invocation = buildCodexInvocation({
+    executable: '/bin/codex',
+    workspace: '/tmp/eval',
+    model: 'gpt-5.6-sol',
+  });
+
+  assert.deepEqual(invocation.args.slice(0, 3), ['exec', '--model', 'gpt-5.6-sol']);
 });
 
 test('Codex invocation requires an absolute disposable workspace', () => {
@@ -55,6 +55,22 @@ test('bounded host process sends the scenario prompt through stdin', async () =>
     stdout: prompt,
     stderr: 'fixture stderr',
   });
+});
+
+test('bounded host process applies the isolated Host environment', async () => {
+  const result = await transport.runBoundedHostProcess({
+    invocation: {
+      executable: process.execPath,
+      args: ['-e', "process.stdout.write(process.env.HARNESS_EVAL_SENTINEL ?? 'missing')"],
+      cwd: process.cwd(),
+      env: { ...process.env, HARNESS_EVAL_SENTINEL: 'isolated' },
+    },
+    prompt: 'fixture prompt',
+    signal: new AbortController().signal,
+    maxOutputBytes: 1024,
+  });
+
+  assert.equal(result.kind === 'completed' ? result.stdout : result.kind, 'isolated');
 });
 
 test('bounded host process rejects output limits outside the hard cap', async () => {
@@ -167,7 +183,13 @@ test('bounded host process classifies an unrecognized host exit as evaluator fai
     maxOutputBytes: 1024,
   });
 
-  assert.deepEqual(result, { kind: 'evaluator-failure', reason: 'host-exit' });
+  assert.deepEqual(result, {
+    kind: 'evaluator-failure',
+    reason: 'host-exit',
+    exitCode: 2,
+    stdout: '',
+    stderr: 'unexpected fixture failure',
+  });
 });
 
 test('Codex executor delegates completed output to the behavior evaluator', async () => {
@@ -196,6 +218,31 @@ test('Codex executor delegates completed output to the behavior evaluator', asyn
 
   assert.equal(observedPrompt, 'prompt:safe-path');
   assert.deepEqual(result, { outcome: 'behavior-failed', termination: 'completed' });
+});
+
+test('Codex executor binds the authorized model and isolated environment', async () => {
+  const execute = transport.createCodexHostEvalExecutor({
+    workspace: '/tmp/eval',
+    model: 'gpt-5.6-sol',
+    environment: { HARNESS_EVAL_SENTINEL: 'isolated' },
+    promptForScenario: () => 'fixture prompt',
+    runProcess: async ({ invocation }) => {
+      assert.deepEqual(invocation.args.slice(0, 3), ['exec', '--model', 'gpt-5.6-sol']);
+      assert.equal(invocation.env?.HARNESS_EVAL_SENTINEL, 'isolated');
+      return { kind: 'completed', exitCode: 0, stdout: '{}', stderr: '' };
+    },
+    evaluate: async () => ({ outcome: 'passed', termination: 'completed' }),
+  });
+
+  const result = await execute({
+    scenarioId: 'machine-error-contract',
+    attempt: 1,
+    maxAttempts: 1,
+    deadlineMs: Date.now() + 1000,
+    signal: new AbortController().signal,
+  });
+
+  assert.equal(result.outcome, 'passed');
 });
 
 test('Codex executor maps process transport failures without calling the evaluator', async () => {
@@ -243,6 +290,43 @@ test('Codex executor preserves process evaluator failures', async () => {
   assert.deepEqual(result, {
     outcome: 'evaluator-failed',
     termination: 'evaluator-failure',
+  });
+});
+
+test('Codex executor exposes bounded host-exit diagnostics to the evidence layer', async () => {
+  let observed: transport.HostProcessCapture | undefined;
+  const execute = transport.createCodexHostEvalExecutor({
+    workspace: '/tmp/eval',
+    promptForScenario: () => 'fixture prompt',
+    runProcess: async () => ({
+      kind: 'evaluator-failure',
+      reason: 'host-exit',
+      exitCode: 2,
+      stdout: 'bounded stdout',
+      stderr: 'bounded stderr',
+    }),
+    observeCapture: (capture) => {
+      observed = capture;
+    },
+    evaluate: async () => {
+      throw new Error('behavior evaluator must not run');
+    },
+  });
+
+  await execute({
+    scenarioId: 'host-exit',
+    attempt: 1,
+    maxAttempts: 1,
+    deadlineMs: Date.now() + 1000,
+    signal: new AbortController().signal,
+  });
+
+  assert.deepEqual(observed, {
+    kind: 'evaluator-failure',
+    reason: 'host-exit',
+    exitCode: 2,
+    stdout: 'bounded stdout',
+    stderr: 'bounded stderr',
   });
 });
 

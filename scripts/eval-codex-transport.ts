@@ -9,6 +9,7 @@ export type HostProcessInvocation = {
   executable: string;
   args: string[];
   cwd: string;
+  env?: NodeJS.ProcessEnv;
 };
 
 export type HostProcessCapture =
@@ -19,11 +20,18 @@ export type HostProcessCapture =
       stderr: string;
     }
   | { kind: 'transport-failure'; reason: 'canceled' | 'connection' | 'process-unavailable' }
-  | { kind: 'evaluator-failure'; reason: 'host-exit' | 'output-limit' };
+  | { kind: 'evaluator-failure'; reason: 'output-limit' }
+  | {
+      kind: 'evaluator-failure';
+      reason: 'host-exit';
+      exitCode: number | null;
+      stdout: string;
+      stderr: string;
+    };
 
 export type CompletedHostProcessCapture = Extract<HostProcessCapture, { kind: 'completed' }>;
 
-type RunHostProcess = (options: {
+export type RunHostProcess = (options: {
   invocation: HostProcessInvocation;
   prompt: string;
   signal: AbortSignal;
@@ -34,6 +42,7 @@ type HostBehaviorResult = Extract<HostEvalAttemptResult, { termination: 'complet
 
 export function buildCodexInvocation(options: {
   executable?: string;
+  model?: string;
   workspace: string;
 }): HostProcessInvocation {
   if (!isAbsolute(options.workspace)) {
@@ -44,10 +53,9 @@ export function buildCodexInvocation(options: {
     executable,
     args: [
       'exec',
+      ...(options.model ? ['--model', options.model] : []),
       '--json',
       '--ephemeral',
-      '--sandbox',
-      'workspace-write',
       '--approve-for-me',
       '--cd',
       options.workspace,
@@ -86,6 +94,7 @@ export async function runBoundedHostProcess(options: {
   if (!executable) return { kind: 'transport-failure', reason: 'process-unavailable' };
   const result = await execa(executable, options.invocation.args, {
     cwd: options.invocation.cwd,
+    env: options.invocation.env,
     input: options.prompt,
     cancelSignal: options.signal,
     forceKillAfterDelay: 1_000,
@@ -106,7 +115,15 @@ export async function runBoundedHostProcess(options: {
   if (result.exitCode !== 0 && isConnectionFailure(`${result.stdout}\n${result.stderr}`)) {
     return { kind: 'transport-failure', reason: 'connection' };
   }
-  if (result.exitCode !== 0) return { kind: 'evaluator-failure', reason: 'host-exit' };
+  if (result.exitCode !== 0) {
+    return {
+      kind: 'evaluator-failure',
+      reason: 'host-exit',
+      exitCode: result.exitCode ?? null,
+      stdout: result.stdout,
+      stderr: result.stderr,
+    };
+  }
   return {
     kind: 'completed',
     exitCode: 0,
@@ -118,15 +135,18 @@ export async function runBoundedHostProcess(options: {
 export function createCodexHostEvalExecutor(options: {
   workspace: string;
   executable?: string;
+  model?: string;
+  environment?: NodeJS.ProcessEnv;
   maxOutputBytes?: number;
   promptForScenario: (scenarioId: string) => string;
   runProcess?: RunHostProcess;
+  observeCapture?: (capture: HostProcessCapture) => void;
   evaluate: (
     capture: CompletedHostProcessCapture,
     attempt: HostEvalAttempt,
   ) => Promise<HostBehaviorResult>;
 }): (attempt: HostEvalAttempt) => Promise<HostEvalAttemptResult> {
-  const invocation = buildCodexInvocation(options);
+  const invocation = { ...buildCodexInvocation(options), env: options.environment };
   const runProcess = options.runProcess ?? runBoundedHostProcess;
   const maxOutputBytes = options.maxOutputBytes ?? maximumHostOutputBytes;
   return async (attempt) => {
@@ -136,6 +156,7 @@ export function createCodexHostEvalExecutor(options: {
       signal: attempt.signal,
       maxOutputBytes,
     });
+    options.observeCapture?.(capture);
     if (capture.kind === 'transport-failure') {
       return { outcome: 'infra-inconclusive', termination: 'transport-failure' };
     }
