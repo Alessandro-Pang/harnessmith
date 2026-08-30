@@ -245,6 +245,7 @@ test.skipIf(process.platform === 'win32')(
     const target = join(directory, 'target');
     const alias = join(directory, 'alias');
     mkdirSync(target);
+    writeFileSync(join(target, 'harness.mjs'), '');
     symlinkSync(target, alias, 'dir');
     const support = await import(
       // @ts-expect-error The tracked evaluator support module is intentionally plain ESM.
@@ -253,6 +254,16 @@ test.skipIf(process.platform === 'win32')(
 
     assert.equal(typeof support.sameCanonicalPath, 'function');
     assert.equal(support.sameCanonicalPath(alias, target), true);
+    assert.equal(
+      support.memoryPayloadCommandHasExpectedPrefix({
+        commandTokens: [process.execPath, join(alias, 'harness.mjs')],
+        harnessIndex: 1,
+        nodePath: process.execPath,
+        harnessPath: join(target, 'harness.mjs'),
+        repo: directory,
+      }),
+      true,
+    );
   },
 );
 

@@ -411,7 +411,7 @@ export function memoryPayloadCommandHasExpectedPrefix({
   const invokedHarness = isAbsolute(commandTokens[1])
     ? resolve(commandTokens[1])
     : resolve(repo, commandTokens[1]);
-  return invokedHarness === resolve(harnessPath);
+  return sameCanonicalPath(invokedHarness, harnessPath);
 }
 
 export function exactCloseHandoffCommandTokens(command, options) {
