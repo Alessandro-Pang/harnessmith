@@ -36,7 +36,8 @@ Each record is limited to a 15-minute scenario budget and a 60-minute matrix bud
 (`maxAttempts: 2`); the record preserves the attempt count, transport-failure count, and whether execution
 completed, exhausted its budget, failed in transport/evaluation, or stopped at an open circuit. This repository
 validates those limits and classifications, plans incremental coverage, and provides an opt-in Codex process
-transport. No command authenticates to, schedules, or launches a third-party Host automatically.
+transport plus a first-class full-matrix driver. Nothing runs on import or during unit tests; real Host work
+starts only when a maintainer explicitly invokes the driver with an exact candidate digest and model.
 
 All `local:` artifact references are relative to the record file. The validator rejects missing, tampered,
 oversized, or path-escaping records and artifacts; bounds record count and aggregate record/evidence bytes;
@@ -148,6 +149,31 @@ produces a bounded capture: an injected behavior evaluator must still return `pa
 This transport does not persist raw output, construct a `run.json`, authenticate, or start on import. A real RC
 drill, sanitized evidence capture, and maintainer review remain explicit later work.
 
+`pnpm run eval:codex-matrix` is the opt-in L3 driver around that transport. It requires the complete 15-scenario
+catalog, an absolute candidate tarball and its pre-authorized SHA-256, an explicit Codex model, and a new
+evidence directory. Defaults remain policy choices supplied by the caller; the release contract permits 1–3
+workers, at most 15 minutes per scenario, at most 60 minutes for the matrix, one transport retry, and at most
+1 MiB each for Host stdout and stderr. For example:
+
+```bash
+pnpm run eval:codex-matrix -- \
+  --package-artifact /absolute/path/harnessmith-x.y.z.tgz \
+  --expected-package-sha256 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef \
+  --model gpt-5.6-sol \
+  --concurrency 2 \
+  --scenario-budget-ms 900000 \
+  --matrix-budget-ms 3600000 \
+  --max-output-bytes 1048576 \
+  --output-dir /absolute/new/path/codex-l3-runs
+```
+
+Each attempt installs only the supplied tarball into a disposable fixture, invokes `codex exec` without a
+shell, and sends prompts on stdin. The fixture exposes the current `CODEX_HOME/auth.json` by symlink instead
+of copying credentials into evidence. Each completed attempt writes schema-v6 sanitized artifacts and an
+independently verified verdict; the driver validates all records, runs the exact-candidate gate after a fully
+passing matrix, and writes a bounded `matrix-summary.json`. Behavior, infrastructure, evaluator, circuit, and
+budget outcomes stay distinct. An incomplete matrix exits non-zero and never becomes release coverage.
+
 Gate output separates `exactArtifactCoverageCount` from `inheritedBehaviorCoverageCount` and lists every
 source package version and artifact digest under `inheritedFrom`. Release state and the signed release
 attestation also preserve a matrix-cell evidence ledger with `exact`, `inherited`, and `infra-blocked`
@@ -161,9 +187,9 @@ The gate intentionally fails when records are absent, stale, `behavior-failed`, 
 `evaluator-failed`, tied to another behavior
 contract, or missing any scenario cell for a host required by the checked-in release policy. The
 current required host is Codex; Cursor, Claude Code, OpenCode, and Kimi Code CLI can still be validated and retained as optional evidence.
-The gate never launches, authenticates to, or spends money on a third-party host. External host execution and
-evidence capture remain explicit maintainer/CI responsibilities; merely importing or testing the Codex
-transport does not create real Host evidence.
+The gate never launches, authenticates to, or spends money on a third-party host. Host execution and evidence
+capture remain explicit maintainer/CI responsibilities through the separate matrix driver; merely importing or
+testing either module does not create real Host evidence.
 
 Passing this gate means only that a complete, fresh **maintainer-attested structure** is internally consistent
 and bound to the selected candidate. Local JSON, hashes, and artifacts are forgeable by a repository writer;

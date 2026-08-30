@@ -137,6 +137,19 @@ claims:
     verification:
       - evals/__tests__/eval-runner.test.ts
 
+  - id: codex-l3-matrix-driver
+    status: implemented
+    owner: Codex Host Eval execution and evidence
+    claim: Run the complete Codex L3 scenario catalog against one authorized candidate and explicit model through shell-free bounded processes, disposable fixtures, independent verifiers, and schema-v6 evidence.
+    implementation:
+      - scripts/eval-codex-matrix.ts
+      - scripts/eval-codex-scenario-process.ts
+      - scripts/eval-codex-scenario.mjs
+      - scripts/eval-codex-matrix-support.mjs
+    verification:
+      - evals/__tests__/eval-codex-matrix.test.ts
+      - evals/__tests__/eval-codex-matrix-coverage.ts
+
   - id: release-host-eval-evidence-state
     status: implemented
     owner: Host Eval evidence and release verification
