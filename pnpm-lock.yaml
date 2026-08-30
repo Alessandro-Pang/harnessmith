@@ -107,6 +107,9 @@ importers:
       mermaid:
         specifier: 11.17.2
         version: 11.17.2
+      minisearch:
+        specifier: 7.2.0
+        version: 7.2.0
       secretlint:
         specifier: 13.0.4
         version: 13.0.4

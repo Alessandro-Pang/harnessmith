@@ -1,5 +1,5 @@
 import { type Command, InvalidArgumentError } from 'commander';
-import type { SearchOptions } from '../lib/search.js';
+import type { SearchMode, SearchOptions } from '../lib/search.js';
 
 export interface SearchCommandOptions extends SearchOptions {
   json?: boolean;
@@ -14,8 +14,15 @@ function integer(value: string): number {
   return parsed;
 }
 
+function searchMode(value: string): SearchMode {
+  if (value === 'auto' || value === 'scan' || value === 'fulltext') return value;
+  throw new InvalidArgumentError('expected one of: auto, scan, fulltext');
+}
+
 export function addSearchOptions<TCommand extends Command>(command: TCommand): TCommand {
   return command
+    .option('--mode <mode>', 'retrieval mode: auto, scan, or fulltext', searchMode, 'auto')
+    .option('--refresh-index', 'atomically build or update the local full-text index')
     .option('--limit <count>', 'maximum matching lines', integer, 50)
     .option('--max-line-length <count>', 'maximum characters returned per line', integer, 400)
     .option('--max-depth <count>', 'maximum directory traversal depth', integer)

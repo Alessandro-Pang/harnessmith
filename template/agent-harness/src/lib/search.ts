@@ -13,6 +13,7 @@ const defaultLimit = 50;
 const defaultMaxLineLength = 400;
 
 export type SearchTrust = 'guidance' | 'untrusted';
+export type SearchMode = 'auto' | 'scan' | 'fulltext';
 
 export interface SearchSource {
   root: string;
@@ -24,6 +25,8 @@ export interface SearchSource {
 export interface SearchOptions extends Partial<SearchScanLimits> {
   limit?: number;
   maxLineLength?: number;
+  mode?: SearchMode;
+  refreshIndex?: boolean;
 }
 
 interface SearchMatch {
@@ -33,6 +36,23 @@ interface SearchMatch {
   line: number;
   text: string;
   truncated: boolean;
+  score?: number;
+  matchedFields?: string[];
+}
+
+export interface SearchRetrieval {
+  requestedMode: SearchMode;
+  usedMode: 'scan' | 'fulltext';
+  indexStatus:
+    | 'not-requested'
+    | 'ready'
+    | 'refreshed'
+    | 'missing'
+    | 'stale'
+    | 'corrupt'
+    | 'unsupported';
+  scopeHash: string;
+  fallbackReason?: string;
 }
 
 export interface SearchReport {
@@ -46,6 +66,7 @@ export interface SearchReport {
   scanStats: SearchScanStats;
   skipped: SearchSkip[];
   matches: SearchMatch[];
+  retrieval?: SearchRetrieval;
 }
 
 export function searchableFiles(
@@ -87,7 +108,7 @@ export function textSearch(
   return report.matches.length;
 }
 
-function positiveInteger(value: number | undefined, fallback: number, name: string): number {
+export function positiveInteger(value: number | undefined, fallback: number, name: string): number {
   if (value === undefined) return fallback;
   if (!Number.isInteger(value) || value < 1) throw new Error(`${name} must be a positive integer`);
   return value;
@@ -105,7 +126,10 @@ function sanitizeLine(line: string): string {
   }).join('');
 }
 
-function boundedLine(line: string, maxLineLength: number): { text: string; truncated: boolean } {
+export function boundedLine(
+  line: string,
+  maxLineLength: number,
+): { text: string; truncated: boolean } {
   const sanitized = sanitizeLine(line);
   if (sanitized.length <= maxLineLength) return { text: sanitized, truncated: false };
   if (maxLineLength === 1) return { text: '…', truncated: true };

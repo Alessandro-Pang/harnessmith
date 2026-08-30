@@ -1,6 +1,7 @@
 {
   "all": true,
   "exclude": [
+    "scripts/search-benchmark.ts",
     "scripts/release-attestation.ts",
     "scripts/release-finalize.ts",
     "scripts/release-publish.ts",

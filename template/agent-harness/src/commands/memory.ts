@@ -5,7 +5,8 @@ import { memoryMaintenanceReport } from '../lib/memory-maintenance.js';
 import { markdownFiles, readMemoryDocument, resolveMemoryRoot } from '../lib/memory-path.js';
 import { validateMemoryRoot } from '../lib/memory-validation.js';
 import { assertSafePath } from '../lib/safe-path.js';
-import { outputSearch, type SearchOptions, searchText } from '../lib/search.js';
+import { outputSearch, type SearchOptions } from '../lib/search.js';
+import { searchWithIndex } from '../lib/search-index.js';
 import { assertNoHighConfidenceSecret } from '../lib/secret-hygiene.js';
 import { calendarDate } from '../runtime.js';
 import type { Io, Runtime } from '../types.js';
@@ -72,7 +73,8 @@ export function memorySearch(
     quietSuccess: true,
     rootKind: root === runtime.memoryHome ? 'global' : 'project',
   });
-  const report = searchText(
+  const report = searchWithIndex(
+    runtime,
     query,
     [
       {

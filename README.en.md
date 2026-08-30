@@ -88,6 +88,13 @@ See the [CLI reference](https://alexpang.cn/harnessmith/reference/cli) and
 [Runtime CLI reference](https://alexpang.cn/harnessmith/reference/runtime-cli#repository-map-维护跨项目关系) explains the
 Repository Map model, evidence threshold, and maintenance commands.
 
+## Embedded document search
+
+`search` / `memory search` use `--mode auto` by default: a valid local full-text index enables weighted BM25 retrieval,
+otherwise the commands safely fall back to the existing bounded scan. Only explicit `--refresh-index` atomically builds or
+incrementally updates the rebuildable cache under `state/search/`; the cache is not a source of truth. `--mode fulltext`
+fails closed when the index is unavailable, while `--mode scan` forces scanning.
+
 ## Safety boundaries
 
 | State | Harnessmith's contract |

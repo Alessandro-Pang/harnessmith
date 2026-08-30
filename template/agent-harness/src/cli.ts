@@ -199,7 +199,7 @@ export function createHarnessProgram(runtime: Runtime = createRuntime(), outputI
   addSearchOptions(
     program
       .command('search <query...>')
-      .description('search routed Harness and project context')
+      .description('search routed Harness and project context with safe index fallback')
       .option('--project <path>', 'project path', process.cwd()),
   ).action(
     run((query: string[], options: SearchCommandOptions & { project: string }) =>

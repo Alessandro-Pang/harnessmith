@@ -1,6 +1,7 @@
 import { join, resolve } from 'node:path';
 import { gitRoot } from '../lib/git.js';
-import { outputSearch, type SearchOptions, searchText } from '../lib/search.js';
+import { outputSearch, type SearchOptions } from '../lib/search.js';
+import { searchWithIndex } from '../lib/search-index.js';
 import { assertNoHighConfidenceSecret } from '../lib/secret-hygiene.js';
 import type { Io, Runtime } from '../types.js';
 
@@ -14,7 +15,8 @@ export function contextSearch(
   assertNoHighConfidenceSecret([query, project], 'Context search request');
   const target = resolve(project);
   const root = gitRoot(target) || target;
-  const report = searchText(
+  const report = searchWithIndex(
+    runtime,
     query,
     [
       { root: runtime.docsRoot, label: 'harness-docs', trust: 'guidance' },

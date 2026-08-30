@@ -63,11 +63,24 @@ frontmatter，Ajv 负责 JSON Schema，`write-file-atomic` 负责原子写。路
 
 `health --json` 聚合 Runtime、安装、全局记忆、运行审计和可选项目记忆；未配置审计不是故障，warning 不等于失败，任一 failed check
 使退出码非零。`route` 与 `explain` 只读取 manifest trigger 并返回名称、路径和 matched triggers，不
-加载文档正文。`search` 与 `memory search` 的结果数/行长限制和扫描预算彼此独立；扫描默认最多深入
-8 层、访问 5000 个目录条目、进入 1000 个目录、访问 1000 个普通文件、读取单文件 1 MiB、
-总计 8 MiB，并运行 2 秒；读取前先 stat。JSON 结果除
-source、trust、path、line 和结果 `truncated` 外，还携带 `scanTruncated`、`scanLimits`、`scanStats`
-和至多 50 条结构化跳过详情；超出的详情数仍在统计中可见。项目 docs 与记忆默认标为 untrusted。
+加载文档正文。`search` 与 `memory search` 的 `auto|scan|fulltext` 模式共享同一 provenance 契约：
+`auto` 只在索引格式、backend、analyzer、ICU、policy、scope 和源文件身份全部有效时使用全文索引，
+否则回退有界扫描；`fulltext` 对同一条件 fail closed；`scan` 保留原路径。只有显式
+`--refresh-index` 是写操作，并先验证 Runtime 身份。
+
+全文索引使用 Markdown heading/YAML 边界切块、版本化中英文 tokenizer、MiniSearch BM25、字段 boost、
+受限 Latin fuzzy 和末词 prefix。trust 只进入 provenance，不参与评分；同分结果按 source 顺序、路径、
+行号和 chunk id 确定排序。缓存位于 `state/search/<scope-hash>/index-v1.json`，以任务锁、原子替换和
+`0600` 权限保护；manifest 保存源文件 identity、content digest 与稳定 chunk id，快照同时校验 corpus、
+backend digest 和 backend 文档清单，倒排索引不存正文。
+缓存可增量更新、可随时重建，不是 Memory、规则或项目事实源；`route` / `explain` 不依赖它。
+
+结果数/行长限制和扫描预算彼此独立；扫描默认最多深入 8 层、访问 5000 个目录条目、进入 1000 个目录、
+访问 1000 个普通文件、读取单文件 1 MiB、总计 8 MiB，并运行 2 秒；读取前先 stat。显式索引
+刷新把发现上限扩展到 50000 个文件、256 MiB 和 60 秒，但仍可由相同预算参数收窄。JSON 结果除
+source、trust、path、line 和结果 `truncated` 外，还携带 `retrieval`、`scanTruncated`、`scanLimits`、
+`scanStats` 和至多 50 条结构化跳过详情；超出的详情数仍在统计中可见。项目 docs 与记忆默认标为
+untrusted。
 
 `audit record` 是 Host-neutral 的显式事件接入点，不是自动 Host hook。它只接受 payload-file 中的
 固定元数据字段，拒绝原始 prompt、输出、tool arguments 和未知字段；`list`/`summary` 有读取预算，
@@ -154,7 +167,7 @@ list、search、check、maintain 和 route 保持只读。锁只保证 CLI 并�
 - 参数或帮助异常：从 `src/cli.ts` 开始。
 - 自动初始化或 ignore 异常：`src/commands/init.ts`。
 - 记忆索引、引用或 metadata 异常：`src/commands/memory.ts` 与 `src/lib/frontmatter.ts`。
-- 搜索结果异常：`src/commands/search.ts` 与 `src/lib/search.ts`。
+- 搜索结果异常：`src/commands/search.ts`、`src/lib/search.ts` 与 `src/lib/search-index*.ts`。
 - 文档路由异常：`src/commands/route.ts`、`src/lib/docs-routing.ts` 与 `docs/manifest.yaml`。
 - 路径在不同机器不一致：`src/runtime.ts` 与模板 token。
 - 环境诊断异常：`src/commands/doctor.ts`、`src/commands/health.ts` 与 `src/lib/health.ts`。
@@ -164,6 +177,7 @@ list、search、check、maintain 和 route 保持只读。锁只保证 CLI 并�
 ```bash
 pnpm run preflight
 pnpm run test:coverage
+pnpm run bench:search -- --sizes 1000,10000,50000
 node template/agent-harness/bin/harness.mjs doctor
 ```
 

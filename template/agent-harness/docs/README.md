@@ -61,6 +61,9 @@ node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs route 评审 permissions --j
 # 在 Harness、项目 docs 与记忆中做有界检索
 node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs search --project /absolute/project/path \
   --limit 20 --max-line-length 300 --json "authentication"
+# 显式构建或增量刷新本地全文索引；之后 auto 会优先使用有效索引
+node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs search --project /absolute/project/path \
+  --refresh-index --json "authentication"
 ```
 
 命中后只读取所需文档。其他命令、参数与默认预算以
