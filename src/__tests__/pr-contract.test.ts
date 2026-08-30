@@ -53,7 +53,6 @@ test('allows Dependabot branches while retaining title and template checks', () 
       ...validPullRequest,
       title: 'chore(deps): update pnpm/action-setup',
       headRef: 'dependabot/github_actions/pnpm/action-setup-6',
-      body: validPullRequest.body.replace('Closes #12', 'Closes #12'),
     }),
     [],
   );
