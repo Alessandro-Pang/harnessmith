@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { lstatSync, readFileSync } from 'node:fs';
-import { isAbsolute, join, normalize, relative, sep } from 'node:path';
+import { join, posix, relative, sep, win32 } from 'node:path';
 import type { AnySchema } from 'ajv';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 
@@ -50,7 +50,12 @@ export function worktreeScenarioCatalog(repositoryRoot: string): ScenarioCatalog
 }
 
 function dependencyFile(repositoryRoot: string, path: string): Buffer {
-  if (isAbsolute(path) || path.includes('\\') || normalize(path) !== path) {
+  if (
+    posix.isAbsolute(path) ||
+    win32.isAbsolute(path) ||
+    path.includes('\\') ||
+    posix.normalize(path) !== path
+  ) {
     throw new Error(`Unsafe evaluation dependency path: ${path}`);
   }
   const absolute = join(repositoryRoot, path);

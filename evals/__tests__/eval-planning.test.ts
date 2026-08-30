@@ -59,8 +59,9 @@ test('planner fails closed to L3 when mapped changes exceed the L2 scenario boun
 });
 
 test('planner rejects unsafe changed-file paths', () => {
-  const result = run(['plan', '--changed-file', '../src/install.ts', '--json']);
-
-  assert.equal(result.status, 1);
-  assert.match(result.stderr, /Unsafe changed file path/);
+  for (const path of ['../src/install.ts', 'C:/src/install.ts']) {
+    const result = run(['plan', '--changed-file', path, '--json']);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /Unsafe changed file path/);
+  }
 });

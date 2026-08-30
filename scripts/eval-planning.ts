@@ -1,4 +1,4 @@
-import { isAbsolute, normalize } from 'node:path';
+import { posix, win32 } from 'node:path';
 import { repositoryRoot } from './eval-fingerprint.js';
 import { worktreeScenarioCatalog } from './eval-scenarios.js';
 
@@ -33,8 +33,9 @@ function normalizeChangedFiles(changedFiles: string[]): string[] {
     if (
       path.length === 0 ||
       path.includes('\\') ||
-      isAbsolute(path) ||
-      normalize(path) !== path ||
+      posix.isAbsolute(path) ||
+      win32.isAbsolute(path) ||
+      posix.normalize(path) !== path ||
       path === '.' ||
       path === '..' ||
       path.split('/').some((segment) => segment === '.' || segment === '..')
