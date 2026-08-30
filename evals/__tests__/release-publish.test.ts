@@ -45,6 +45,14 @@ function evaluationGate() {
     exactArtifactCoverageCount: 0,
     inheritedBehaviorCoverageCount: coverageCount,
     inheritedFrom: [inheritedSource],
+    evidence: {
+      exact: [],
+      inherited: Object.keys(fingerprint.scenarios).map((scenario) => ({
+        cell: `codex/${scenario}`,
+        ...inheritedSource,
+      })),
+      infraBlocked: [],
+    },
     hosts: ['codex'],
     scenarios: Object.keys(fingerprint.scenarios),
     maxAgeDays: 30,
@@ -327,7 +335,7 @@ test('release prepare checks a persistent snapshot without contacting npm', () =
 
   assert.deepEqual(calls, [['run', 'release:check']]);
   const state = JSON.parse(readFileSync(join(stateDirectory, 'release-state.json'), 'utf8'));
-  assert.equal(state.schemaVersion, 3);
+  assert.equal(state.schemaVersion, 5);
   assert.equal(state.evaluation.assurance, 'maintainer-attested-structure');
   assert.equal(state.evaluation.coverageCount, Object.keys(currentFingerprint().scenarios).length);
   assert.equal(state.evaluation.packageArtifactSha256, state.artifactSha256);
@@ -338,6 +346,12 @@ test('release prepare checks a persistent snapshot without contacting npm', () =
     Object.keys(currentFingerprint().scenarios).length,
   );
   assert.deepEqual(state.evaluation.inheritedFrom, [inheritedSource]);
+  assert.deepEqual(state.evaluation.evidence.exact, []);
+  assert.equal(
+    state.evaluation.evidence.inherited.length,
+    Object.keys(currentFingerprint().scenarios).length,
+  );
+  assert.deepEqual(state.evaluation.evidence.infraBlocked, []);
 });
 
 test('release prepare records an explicit eval-risk exception without claiming passing coverage', () => {
@@ -354,6 +368,7 @@ test('release prepare records an explicit eval-risk exception without claiming p
       authorizedBy: 'user',
       reason: 'Explicitly accepted known Host Eval risk for 0.6.0.',
       uncoveredScenarios,
+      infraBlockedScenarios: uncoveredScenarios.slice(0, 2),
     })}\n`,
   );
   const calls: string[][] = [];
@@ -383,11 +398,16 @@ test('release prepare records an explicit eval-risk exception without claiming p
     ['run', 'test:coverage'],
   ]);
   const state = JSON.parse(readFileSync(join(stateDirectory, 'release-state.json'), 'utf8'));
-  assert.equal(state.schemaVersion, 4);
+  assert.equal(state.schemaVersion, 5);
   assert.equal(state.evaluation.coverageCount, 0);
   assert.equal(state.evaluation.exactArtifactCoverageCount, 0);
   assert.equal(state.evaluation.inheritedBehaviorCoverageCount, 0);
   assert.deepEqual(state.evaluation.riskAcceptance.uncoveredScenarios, uncoveredScenarios);
+  assert.deepEqual(state.evaluation.evidence, {
+    exact: [],
+    inherited: [],
+    infraBlocked: uncoveredScenarios.slice(0, 2),
+  });
 });
 
 test('release resume rejects a prepared snapshot whose bytes changed', () => {

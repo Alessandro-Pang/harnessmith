@@ -19,6 +19,9 @@ export function loadReleaseRiskAcceptance(
     uncoveredScenarios: Array.isArray(input.uncoveredScenarios)
       ? input.uncoveredScenarios.map(String)
       : [],
+    ...(Array.isArray(input.infraBlockedScenarios)
+      ? { infraBlockedScenarios: input.infraBlockedScenarios.map(String) }
+      : {}),
     packageVersion,
     packageArtifactSha256,
   };

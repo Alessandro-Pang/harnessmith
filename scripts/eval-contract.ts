@@ -23,6 +23,16 @@ export interface InheritedEvaluationSource {
   packageArtifactSha256: string;
 }
 
+interface InheritedEvaluationCell extends InheritedEvaluationSource {
+  cell: string;
+}
+
+export interface EvaluationEvidence {
+  exact: string[];
+  inherited: InheritedEvaluationCell[];
+  infraBlocked: string[];
+}
+
 export interface EvaluationGateResult {
   valid: true;
   assurance: 'maintainer-attested-structure';
@@ -32,6 +42,7 @@ export interface EvaluationGateResult {
   exactArtifactCoverageCount: number;
   inheritedBehaviorCoverageCount: number;
   inheritedFrom: InheritedEvaluationSource[];
+  evidence: EvaluationEvidence;
   hosts: string[];
   scenarios: string[];
   maxAgeDays: number;
@@ -41,7 +52,12 @@ type Fingerprint = ReturnType<typeof evaluationFingerprint>;
 type CoverageSummary = Pick<
   EvaluationGateResult,
   'exactArtifactCoverageCount' | 'inheritedBehaviorCoverageCount' | 'inheritedFrom'
-> & { covered: Set<string>; rejected: string[] };
+> & {
+  covered: Set<string>;
+  rejected: string[];
+  exact: Set<string>;
+  inheritedCells: Map<string, InheritedEvaluationCell>;
+};
 
 function behaviorCompatibleRecords(
   records: VerifiedRun[],
@@ -89,6 +105,8 @@ function coverageSummary(
   rejected: string[],
 ): CoverageSummary {
   const covered = new Set<string>();
+  const exactCells = new Set<string>();
+  const inheritedCells = new Map<string, InheritedEvaluationCell>();
   let exactArtifactCoverageCount = 0;
   let inheritedBehaviorCoverageCount = 0;
   const inherited = new Map<string, InheritedEvaluationSource>();
@@ -106,14 +124,17 @@ function coverageSummary(
       const exact =
         record.subject.packageVersion === current.packageVersion &&
         record.subject.packageArtifactSha256 === current.packageArtifactSha256;
-      if (exact) exactArtifactCoverageCount += 1;
-      else {
+      if (exact) {
+        exactArtifactCoverageCount += 1;
+        exactCells.add(key);
+      } else {
         inheritedBehaviorCoverageCount += 1;
         const source = {
           packageVersion: record.subject.packageVersion,
           packageArtifactSha256: record.subject.packageArtifactSha256,
         };
         inherited.set(`${source.packageVersion}\0${source.packageArtifactSha256}`, source);
+        inheritedCells.set(key, { cell: key, ...source });
       }
     } else if (!isFresh(record, cutoff)) rejected.push(`stale ${key}`);
     else if (record.verdict.outcome !== 'passed') rejected.push(`${record.verdict.outcome} ${key}`);
@@ -136,6 +157,8 @@ function coverageSummary(
         left.packageVersion.localeCompare(right.packageVersion) ||
         left.packageArtifactSha256.localeCompare(right.packageArtifactSha256),
     ),
+    exact: exactCells,
+    inheritedCells,
   };
 }
 
@@ -157,6 +180,9 @@ export function gateEvaluationRecords(options: EvaluationGateOptions = {}): Eval
     scenarioIds
       .map((scenarioId) => `${adapter}/${scenarioId}`)
       .filter((key) => !coverage.covered.has(key)),
+  );
+  const matrix = requiredEvaluationAdapters.flatMap((adapter) =>
+    scenarioIds.map((scenarioId) => `${adapter}/${scenarioId}`),
   );
   if (missing.length > 0) {
     throw new EvaluationGateError({
@@ -187,6 +213,14 @@ export function gateEvaluationRecords(options: EvaluationGateOptions = {}): Eval
     exactArtifactCoverageCount: coverage.exactArtifactCoverageCount,
     inheritedBehaviorCoverageCount: coverage.inheritedBehaviorCoverageCount,
     inheritedFrom: coverage.inheritedFrom,
+    evidence: {
+      exact: matrix.filter((cell) => coverage.exact.has(cell)),
+      inherited: matrix.flatMap((cell) => {
+        const inherited = coverage.inheritedCells.get(cell);
+        return inherited ? [inherited] : [];
+      }),
+      infraBlocked: [],
+    },
     hosts: [...requiredEvaluationAdapters],
     scenarios: scenarioIds,
     maxAgeDays,

@@ -53,3 +53,18 @@ test('Host Eval docs expose bounded parallel runner and circuit breaker', () => 
   assert.match(capabilities, /scripts\/eval-runner\.ts/);
   assert.match(capabilities, /evals\/__tests__\/eval-runner\.test\.ts/);
 });
+
+test('Host Eval docs expose release evidence state without counting infrastructure blocks', () => {
+  const evaluation = read('docs/concepts/evidence-and-evaluation.md');
+  const evalReadme = read('evals/README.md');
+  const capabilities = read('docs/capability-evidence.yaml');
+
+  for (const content of [evaluation, evalReadme]) {
+    assert.match(content, /exact.*inherited.*infra-blocked/is);
+    assert.match(content, /release state.*attestation/is);
+    assert.match(content, /infra-blocked.*(?:不计入|never counts).*coverage/is);
+  }
+  assert.match(capabilities, /id: release-host-eval-evidence-state/);
+  assert.match(capabilities, /scripts\/release-evaluation-evidence\.ts/);
+  assert.match(capabilities, /evals\/__tests__\/release-risk-integrity\.test\.ts/);
+});
