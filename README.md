@@ -8,8 +8,11 @@
 
 [English](./README.en.md) · **简体中文** · [完整文档](https://alexpang.cn/harnessmith/)
 
-Harnessmith 是一个本地优先、跨 Host 的 Personal Harness 分发与工作状态控制层。它把同一套个人规则、
-渐进式上下文、非权威记忆和任务工具，安全地安装到不同 Coding Agent。
+如果你经常在多个项目和 Coding Agent 之间切换，就会反复遇到同一类问题：规则散落在不同宿主，项目关系和工作进度
+需要一遍遍解释，历史文档越积越多，却不能每次全部塞进模型上下文。
+
+Harnessmith 是一个本地优先、跨 Host 的 Personal Harness 分发与工作状态控制层。它把实践中已经有效的个人规则、
+渐进式文档检索、非权威 Memory 和 Task 工具，安全地安装到不同 Coding Agent，并为升级、恢复和验证提供明确边界。
 
 ```bash
 npx harnessmith
@@ -68,12 +71,16 @@ npx harnessmith uninstall --agent codex
 # 查看 Adapter 的机器可读边界
 npx harnessmith capabilities --json
 
+# 检查个人 Repository Map 中的跨仓库关系
+node <harness-path>/bin/harness.mjs repository-map check --json
+
 # 安装后检查内嵌 Runtime
 node <harness-path>/bin/harness.mjs health --json
 ```
 
 完整参数和失败处理见 [CLI 参考](https://alexpang.cn/harnessmith/reference/cli)与
-[安全生命周期](https://alexpang.cn/harnessmith/guide/lifecycle)。
+[安全生命周期](https://alexpang.cn/harnessmith/guide/lifecycle)。Repository Map 的关系模型、证据门槛和维护命令见
+[运行时 CLI](https://alexpang.cn/harnessmith/reference/runtime-cli#repository-map-维护跨项目关系)。
 
 ## 安全边界
 
@@ -91,8 +98,8 @@ Markdown 规则是行为指导，不是权限强制。审计 schema 拒绝原始
 
 - [完整文档](https://alexpang.cn/harnessmith/)与[快速开始](https://alexpang.cn/harnessmith/guide/getting-started)
 - [架构](https://alexpang.cn/harnessmith/architecture)、[设计原则](https://alexpang.cn/harnessmith/concepts/design-principles)与[责任边界](https://alexpang.cn/harnessmith/concepts/boundaries)
-- [Memory 与 Task](https://alexpang.cn/harnessmith/concepts/memory-and-tasks)、[版本与迁移](https://alexpang.cn/harnessmith/versions/migrations)
-- [Memory Autopilot](https://alexpang.cn/harnessmith/concepts/memory-and-tasks) 的发现、验证与隐私边界
+- [Memory 与 Task](https://alexpang.cn/harnessmith/concepts/memory-and-tasks)（含 Memory Autopilot）、[版本与迁移](https://alexpang.cn/harnessmith/versions/migrations)
+- [历史与思想来源](https://alexpang.cn/harnessmith/project/history-and-influences)
 - [贡献指南](./CONTRIBUTING.md) · [安全策略](./SECURITY.md) · [许可证](./LICENSE)
 
 ## 参与开发

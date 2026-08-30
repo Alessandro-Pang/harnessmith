@@ -33,12 +33,12 @@ npx harnessmith capabilities --json
 `--dry-run --json`，不要仅依据文档猜测。
 
 Cursor 只把 Harnessmith 自己管理的文件写入 repository-local Git exclude 与 `.cursor/.ignore`，不会隐藏或覆盖团队已有的
-整个 `.cursor/` 目录。Kimi Code CLI 支持当前 Node.js 版本的 `0.12.0` 及以上版本，不接管旧 Python `kimi-cli` 使用的
-`~/.kimi/` 目录。
+整个 `.cursor/` 目录。Kimi Adapter 面向当前 TypeScript/Node.js 实现的 Kimi Code CLI，并使用 `KIMI_CODE_HOME`；它不接管
+旧 Python `kimi-cli` 使用的 `~/.kimi/` 目录。精确兼容要求以对应 npm 发布包中的 `llms.txt` 为准。
 
 ## 支持状态如何解释
 
 “支持”表示该 Adapter 已实现安装生命周期、能力描述和自动化回归；不表示每个宿主版本都完成了真实运行评测。
 逐项声明与证据路径以仓库中的
 [capability-evidence.yaml](https://github.com/Alessandro-Pang/harnessmith/blob/main/docs/capability-evidence.yaml)
-为准。真实 Host Eval 与发布门禁的限制见[架构](/architecture#发布就绪定义)。
+为准。真实 Host Eval 与发布门禁的限制见[证据与评测](/concepts/evidence-and-evaluation)。

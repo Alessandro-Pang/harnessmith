@@ -50,7 +50,7 @@ Memory 可能来自旧会话、摘要或自动提取。即使当时正确，也�
 | `~/.agent-docs/profile.md` | 当前身份、工作方式与长期偏好 | Harness 内唯一 canonical 用户画像 |
 | `~/.agent-docs/core.md` 与其他全局 Memory | 跨项目主题与高价值提炼入口 | 不保存第二份当前画像 |
 | `<project>/.agent-docs` | 输入、会话、工作状态、证据与提炼发现 | 可审阅但非权威 |
-| `docs/`、ADR、代码、测试、schema、CI | 项目当前事实与可执行约束 | 权威层 |
+| `docs/`、代码、测试、schema、CI | 项目当前事实与可执行约束 | 权威层 |
 
 项目 `.agent-docs` 中，`core.md` 是活跃索引；`inputs/` 保存会影响决策的用户输入，`sessions/` 保存 handoff，`working/`
 保存计划与 Task ledger，`distilled/` 保存带来源的昂贵发现，`evidence/` 保存脱敏证据 manifest，`_archive/` 保存已关闭或被
@@ -82,7 +82,7 @@ Runtime audit 只接受 trace、操作、策略决定、耗时、结果、artifa
 命令、schema 和状态机以随 npm 包分发的 Runtime 为准：
 
 - [Harness CLI architecture](https://github.com/Alessandro-Pang/harnessmith/blob/main/template/agent-harness/docs/core/harness-cli-architecture.md)
-- [Memory architecture](https://github.com/Alessandro-Pang/harnessmith/blob/main/template/agent-harness/docs/core/memory-architecture.md)
-- [Task lifecycle](https://github.com/Alessandro-Pang/harnessmith/blob/main/template/agent-harness/docs/topics/task-lifecycle.md)
+- [Project Memory standard](https://github.com/Alessandro-Pang/harnessmith/blob/main/template/agent-harness/docs/standards/project-agent-docs.md)
+- [Long-running task protocol](https://github.com/Alessandro-Pang/harnessmith/blob/main/template/agent-harness/docs/core/long-running-tasks.md)
 
 本站帮助人理解概念；安装后的模板文档与对应版本的代码、schema 才是该版本的操作契约。

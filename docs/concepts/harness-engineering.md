@@ -1,10 +1,19 @@
 ---
-title: 什么是 Harness Engineering
-description: 解释模型之外的执行、上下文、状态、验证与治理基础设施
+title: Harness Engineering 与 Harnessmith
+description: 解释这个后来进入项目的领域视角，以及 Harnesssmith 在其中的位置
 owner: maintainers
 ---
 
-# 什么是 Harness Engineering
+# Harness Engineering 与 Harnessmith
+
+先说明两者的关系：Harnessmith 不是从 Harness Engineering 的概念或分层模型出发设计的。项目先在实际使用中解决规则
+复用、文档检索和工作记录问题，后来在通用化过程中遇到宿主适配、授权、Memory、生命周期和验证边界，才发现这些问题
+与业界讨论的 Harness Engineering 高度重合。这个概念为既有工程问题提供了更完整的观察坐标，而不是项目的起点。
+
+真实演进顺序见[历史与思想来源](/project/history-and-influences)。本页只解释这个领域概念，以及它如何帮助核对 Harnessmith
+当前做了什么、没有做什么。
+
+## 什么是 Harness Engineering
 
 模型决定“能推理到什么程度”，Harness 决定模型在什么环境中得到哪些上下文、能调用什么、如何持续工作，以及结果
 怎样被观察和验证。对 Coding Agent 来说，只优化提示词通常不够；工具接口、仓库可读性、权限边界和反馈回路同样会

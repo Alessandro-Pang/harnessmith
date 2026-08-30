@@ -7,7 +7,7 @@ owner: maintainers
 # 参考资料
 
 外部资料用于解释设计背景，不覆盖仓库中的可执行事实。本页优先链接一手来源，并说明每项资料与 Harnesssmith 的关系。
-链接状态核对日期：2026-08-29。
+链接与关键说明核对日期：2026-08-30。
 
 ## 当前项目契约
 
@@ -22,7 +22,7 @@ owner: maintainers
 - [Security Policy](https://github.com/Alessandro-Pang/harnessmith/blob/main/SECURITY.md)：
   漏洞报告与支持范围。
 
-如果本页其余资料与这些契约冲突，以当前代码、测试、schema、manifest 和已接受 ADR 为准。
+如果本页其余资料与这些契约冲突，以当前代码、测试、schema 和 manifest 为准。
 
 ## Agent 规则与渐进上下文
 
@@ -60,6 +60,10 @@ owner: maintainers
 
 ## 评测与可观测
 
+- [Wikipedia: Test harness](https://en.wikipedia.org/wiki/Test_harness)：传统软件测试中用于提供固定输入、执行被测程序并
+  比较输出的辅助系统。它提供术语背景，不定义 Harnesssmith 的 Coding Agent 能力边界。
+- [EleutherAI lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-harness)：语言模型评测框架，展示任务、模型
+  适配与可重复评测的 Harness 语义；Harnesssmith 不复用其 Runtime，也不把模型 benchmark 等同于 Host Eval。
 - [OpenAI Evals](https://github.com/openai/evals)：可执行评测与回归思路。
 - [SWE-bench](https://www.swebench.com/)：真实仓库 issue 任务与 verifier 驱动评测的代表性基准。
 - [OpenTelemetry](https://opentelemetry.io/docs/specs/otel/)：trace、metric 和 log 的开放可观测规范。Harnessmith 的

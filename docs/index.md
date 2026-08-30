@@ -28,11 +28,11 @@ hero:
 <section class="home-intro">
   <div>
     <p class="home-kicker">为什么需要它</p>
-    <h2>Agent 会越来越强，工作环境也需要被认真设计。</h2>
+    <h2>项目和宿主越多，越需要一套不会失控的工作方式。</h2>
   </div>
   <div>
     <p>你是否遇到过这些情况：同一套安全边界在多个 Coding Agent 中反复维护；规则越写越长，却越来越难被准确找到；任务跨过几次上下文压缩后，下一次会话只能靠猜；升级配置时，又担心覆盖已有文件。</p>
-    <p>Harnessmith 管理的正是模型周围这一层：把个人方法变成可安全安装、按需发现、跨会话延续，并能用证据核对结果的本地工作环境。Harnessmith 不替代 Coding Agent，模型循环与权限系统仍由宿主负责。</p>
+    <p>Harnessmith 从这些实际问题中长出来：先把已经有效的规则、检索和工作文档方法做成通用工具，再为跨宿主使用补上权限边界、Memory、生命周期和验证。它不替代 Coding Agent，模型循环与权限系统仍由宿主负责。</p>
   </div>
 </section>
 
@@ -79,5 +79,3 @@ hero:
     <a href="/harnessmith/architecture"><span>04</span><strong>为什么这样设计？</strong><small>分层、信任边界与工程取舍</small></a>
   </nav>
 </section>
-
-<p class="home-english">English reader? Start with the <a href="/harnessmith/en/">English overview</a>.</p>

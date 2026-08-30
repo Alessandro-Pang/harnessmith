@@ -48,6 +48,9 @@ flowchart BT
 `template/AGENTS.md` 是短入口，只保留高损失边界和发现顺序。详细内容位于 `template/agent-harness/docs/`，由
 manifest、route 和 search 按任务发现。项目内更具体的规则、skill、代码和测试仍优先于通用个人规则。
 
+用户所有的 Personal overlay 还维护 Repository Map：以有类型的直接关系连接 provider、contract 和 consumer，并用两侧
+权威来源约束写入。它帮助跨仓任务定位 owner 与影响面，但不替代项目架构文档、实时拓扑或部署状态。
+
 这层提供 guidance，不提供 enforcement。Agent 是否遵循自然语言规则仍受模型和宿主影响；真正必须成立的约束要落到
 代码、schema、测试、CI 或宿主权限系统。
 
@@ -60,11 +63,11 @@ manifest、route 和 search 按任务发现。项目内更具体的规则、skil
 
 ### 4. Verification：区分可重复门禁与真实宿主证据
 
-tests、schema、preflight、覆盖率与包检查验证仓库内确定性契约。Host Eval 绑定精确候选 tarball，收集真实宿主的工具、
-文件和 verifier 证据；`eval:validate` 与 `eval:gate` 再检查记录结构、覆盖与 release policy。
+tests、schema、preflight、覆盖率与包检查验证仓库内确定性契约。完整的 Host Eval 应把真实宿主运行得到的工具、文件和
+verifier 证据绑定到精确候选 tarball；仓库中的 `eval:validate` 与 `eval:gate` 只负责检查记录结构、覆盖与 release policy。
 
 `eval:gate` 是 executable release gate，但它只校验 maintainer-attested record structure 的候选绑定、结构、一致性与
-覆盖。The gate does not launch or authenticate to any third-party host，也不能证明记录确由真实 Host 产生；可信来源需要
+覆盖。它不会启动第三方宿主，也不负责登录或认证，更不能证明记录确由真实 Host 产生；可信来源需要
 外部 CI、签名 attestation 和人工复核。详见[证据与评测](/concepts/evidence-and-evaluation)。
 
 ## 一次安装的事务边界

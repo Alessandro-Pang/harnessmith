@@ -8,8 +8,12 @@
 
 **English** · [简体中文](./README.md) · [Full documentation](https://alexpang.cn/harnessmith/en/)
 
+If you move between several projects and coding agents, the same problems repeat: instructions drift across hosts, project
+relationships and progress must be explained again, and growing history cannot all fit safely into model context.
+
 Harnessmith is a local-first, cross-host Personal Harness distribution and work-state control plane. It safely installs one
-set of personal instructions, progressive context, non-authoritative memory, and task tools across coding-agent hosts.
+set of personal instructions, progressive document retrieval, non-authoritative Memory, and Task tools across coding-agent
+hosts, with explicit upgrade, recovery, and verification boundaries.
 
 ```bash
 npx harnessmith
@@ -68,12 +72,17 @@ npx harnessmith uninstall --agent codex
 # Inspect machine-readable Adapter boundaries
 npx harnessmith capabilities --json
 
+# Check cross-repository relationships in your personal Repository Map
+node <harness-path>/bin/harness.mjs repository-map check --json
+
 # Check the embedded Runtime after installation
 node <harness-path>/bin/harness.mjs health --json
 ```
 
 See the [CLI reference](https://alexpang.cn/harnessmith/reference/cli) and
-[safe lifecycle guide](https://alexpang.cn/harnessmith/guide/lifecycle) for all options and failure handling.
+[safe lifecycle guide](https://alexpang.cn/harnessmith/guide/lifecycle) for all options and failure handling. The
+[Runtime CLI reference](https://alexpang.cn/harnessmith/reference/runtime-cli#repository-map-维护跨项目关系) explains the
+Repository Map model, evidence threshold, and maintenance commands.
 
 ## Safety boundaries
 
@@ -91,8 +100,8 @@ and tool arguments; event authenticity still belongs to the host or external att
 
 - [Full documentation](https://alexpang.cn/harnessmith/en/) and [getting started](https://alexpang.cn/harnessmith/en/getting-started)
 - [Architecture](https://alexpang.cn/harnessmith/architecture), [design principles](https://alexpang.cn/harnessmith/concepts/design-principles), and [boundaries](https://alexpang.cn/harnessmith/concepts/boundaries)
-- [Memory and Tasks](https://alexpang.cn/harnessmith/concepts/memory-and-tasks) and [versions and migrations](https://alexpang.cn/harnessmith/versions/migrations)
-- [Memory Autopilot](https://alexpang.cn/harnessmith/concepts/memory-and-tasks) discovery, verification, and privacy boundaries
+- [Memory and Tasks](https://alexpang.cn/harnessmith/concepts/memory-and-tasks), including Memory Autopilot, and [versions and migrations](https://alexpang.cn/harnessmith/versions/migrations)
+- [Project history and influences](https://alexpang.cn/harnessmith/project/history-and-influences) (Chinese canonical page)
 - [Contributing](./CONTRIBUTING.md) · [Security](./SECURITY.md) · [License](./LICENSE)
 
 ## Contributing

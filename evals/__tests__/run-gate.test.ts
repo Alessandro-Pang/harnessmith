@@ -437,5 +437,5 @@ test('evaluation and release docs distinguish contracts from real fresh host evi
   assert.match(releasing, /Host Eval inheritance/i);
   assert.match(releasing, /exact candidate tarball/i);
   assert.match(architecture, /executable release gate/i);
-  assert.match(architecture, /does not launch.*third-party host/i);
+  assert.match(architecture, /不会启动第三方宿主.*不负责登录或认证/s);
 });

@@ -38,12 +38,13 @@ export default withMermaid(defineConfig({
     },
   },
   themeConfig: {
+    i18nRouting: false,
+    logoLink: '/harnessmith/',
     nav: [
       { text: '认识 Harnessmith', link: '/guide/why-harnessmith' },
       { text: '开始使用', link: '/guide/getting-started' },
       { text: '理解设计', link: '/concepts/how-it-works' },
       { text: 'CLI', link: '/reference/cli' },
-      { text: 'English', link: '/en/' },
     ],
     sidebar: {
       '/en/': [
@@ -87,10 +88,10 @@ export default withMermaid(defineConfig({
           items: [
             { text: '安装器 CLI', link: '/reference/cli' },
             { text: '运行时 CLI', link: '/reference/runtime-cli' },
+            { text: '临时资源', link: '/temporary-resources' },
             { text: '版本与迁移', link: '/versions/migrations' },
             { text: '贡献指南', link: '/contributing' },
             { text: '内容策略', link: '/content-strategy' },
-            { text: 'ADR', link: '/decisions/' },
             { text: '历史与思想来源', link: '/project/history-and-influences' },
             { text: '参考资料', link: '/references' },
           ],

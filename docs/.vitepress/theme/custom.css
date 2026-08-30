@@ -454,14 +454,6 @@ body {
   font-size: 12px;
 }
 
-.home-english {
-  margin: 0 !important;
-  padding: 24px 0 0;
-  border-top: 1px solid var(--vp-c-divider);
-  color: var(--vp-c-text-3);
-  text-align: center;
-}
-
 .vp-doc {
   line-height: 1.8;
 }

@@ -14,8 +14,9 @@ Harnessmith 有三个不同的版本维度，不能混为一个数字：
 | Harness Runtime | `template/agent-harness/manifest.json` | 内嵌工作状态能力版本 |
 | schema | 各 schema 与 manifest | 持久化数据兼容契约 |
 
-当前公开 npm 版本线为 `0.8.x`。精确版本、资产和变更说明以
-[GitHub Releases](https://github.com/Alessandro-Pang/harnessmith/releases)为准，不维护无限增长的仓库 Changelog 文件。
+精确 npm 版本以根 `package.json`、npm registry 和
+[GitHub Releases](https://github.com/Alessandro-Pang/harnessmith/releases)为准。发布说明直接维护在 GitHub Release 中，
+不在长期文档里复制当前版本，也不维护会无限增长的仓库 Changelog 文件。
 
 ## 升级
 
@@ -36,4 +37,4 @@ Runtime 读取旧 Task ledger 时执行确定性内存迁移，但不会用旧�
 不会自动覆盖原记录。
 
 新增持久化 schema 时，必须记录：输入版本、输出版本、是否可逆、失败行为、备份位置、兼容窗口和验证命令。重大取舍
-写入 [ADR](/decisions/)。
+直接写入对应的架构或迁移文档，并说明背景、替代方案和兼容后果。
