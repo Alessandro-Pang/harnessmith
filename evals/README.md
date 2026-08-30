@@ -140,8 +140,12 @@ drill remain separate work.
 
 Gate output separates `exactArtifactCoverageCount` from `inheritedBehaviorCoverageCount` and lists every
 source package version and artifact digest under `inheritedFrom`. Release state and the signed release
-attestation preserve that inheritance trail. Historical records whose scenario fingerprint no longer matches
-may remain in the evidence directory, but they are not eligible for current coverage.
+attestation also preserve a matrix-cell evidence ledger with `exact`, `inherited`, and `infra-blocked`
+entries. Inherited cells bind their source package version and artifact digest. `infra-blocked` never counts
+toward passing coverage and is only permitted in an exact, user-authorized risk exception whose uncovered
+matrix contains those cells. Historical records whose scenario fingerprint no longer matches may remain in
+the evidence directory, but they are not eligible for current coverage. Legacy release state and attestation
+schemas remain readable; newly prepared releases write the explicit evidence schema.
 
 The gate intentionally fails when records are absent, stale, `behavior-failed`, `infra-inconclusive`,
 `evaluator-failed`, tied to another behavior

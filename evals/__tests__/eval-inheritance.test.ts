@@ -40,6 +40,16 @@ test('release gate inherits a complete matrix from another artifact with identic
   assert.deepEqual(output.inheritedFrom, [
     { packageVersion: '0.5.0', packageArtifactSha256: 'f'.repeat(64) },
   ]);
+  assert.deepEqual(output.evidence.exact, []);
+  assert.deepEqual(
+    output.evidence.inherited,
+    scenarioIds.map((scenarioId) => ({
+      cell: `codex/${scenarioId}`,
+      packageVersion: '0.5.0',
+      packageArtifactSha256: 'f'.repeat(64),
+    })),
+  );
+  assert.deepEqual(output.evidence.infraBlocked, []);
 });
 
 test('release gate invalidates only the scenario whose dependency fingerprint changed', () => {

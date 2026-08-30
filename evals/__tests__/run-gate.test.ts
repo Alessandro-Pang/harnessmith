@@ -314,6 +314,7 @@ test('release gate emits machine-readable success only for the complete fresh ho
   }
 
   const result = run(['gate', '--runs-dir', runsDirectory, '--max-age-days', '30', '--json']);
+  const exact = scenarioIds.map((scenarioId) => `codex/${scenarioId}`);
 
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(JSON.parse(result.stdout), {
@@ -325,6 +326,7 @@ test('release gate emits machine-readable success only for the complete fresh ho
     exactArtifactCoverageCount: adapters.length * scenarioIds.length,
     inheritedBehaviorCoverageCount: 0,
     inheritedFrom: [],
+    evidence: { exact, inherited: [], infraBlocked: [] },
     hosts: adapters,
     scenarios: scenarioIds,
     maxAgeDays: 30,

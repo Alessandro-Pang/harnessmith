@@ -1,13 +1,23 @@
 import { chmodSync, existsSync, lstatSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import writeFileAtomic from 'write-file-atomic';
-import { isAgentName } from '../src/agents.js';
-import type { InheritedEvaluationSource } from './eval-contract.js';
+import type { EvaluationEvidence, InheritedEvaluationSource } from './eval-contract.js';
 import { repositoryRoot, requiredEvaluationAdapters } from './eval-fingerprint.js';
 import { readNpmPackageTarball } from './npm-tarball.js';
+import {
+  evaluationMatrix,
+  releaseEvaluationEvidenceIsValid,
+} from './release-evaluation-evidence.js';
+import { releaseRiskAcceptanceIsValid } from './release-risk-validation.js';
+
+export {
+  evaluationMatrix,
+  releaseEvaluationEvidenceIsValid,
+} from './release-evaluation-evidence.js';
+export { releaseRiskAcceptanceIsValid } from './release-risk-validation.js';
 
 export interface ReleaseState {
-  schemaVersion: 3 | 4;
+  schemaVersion: 3 | 4 | 5;
   status: 'prepared' | 'published';
   artifactPath: string;
   artifactSha256: string;
@@ -20,6 +30,7 @@ export interface ReleaseState {
     exactArtifactCoverageCount: number;
     inheritedBehaviorCoverageCount: number;
     inheritedFrom: InheritedEvaluationSource[];
+    evidence?: EvaluationEvidence;
     packageArtifactSha256: string;
     behaviorSha256: string;
     harnessVersion: string;
@@ -36,25 +47,9 @@ export interface ReleaseRiskAcceptance {
   authorizedBy: 'user';
   reason: string;
   uncoveredScenarios: string[];
+  infraBlockedScenarios?: string[];
   packageVersion: string;
   packageArtifactSha256: string;
-}
-
-export function evaluationMatrix(
-  requiredHosts: readonly string[],
-  scenarios: Readonly<Record<string, string>>,
-): string[] {
-  return requiredHosts.flatMap((host) =>
-    Object.keys(scenarios).map((scenario) => `${host}/${scenario}`),
-  );
-}
-
-function isExactStringSet(actual: readonly string[], expected: readonly string[]): boolean {
-  return (
-    actual.length === expected.length &&
-    new Set(actual).size === actual.length &&
-    actual.every((entry) => expected.includes(entry))
-  );
 }
 
 export function releaseStateDirectory(configured?: string): string {
@@ -87,42 +82,22 @@ function isStringRecord(value: unknown): value is Record<string, string> {
   );
 }
 
-export function releaseRiskAcceptanceIsValid(
-  value: unknown,
-  artifactSha256: unknown,
-  packageVersion: unknown,
-  expectedUncoveredScenarios: readonly string[],
-): value is ReleaseRiskAcceptance {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
-  const acceptance = value as Partial<ReleaseRiskAcceptance>;
-  return (
-    acceptance.schemaVersion === 1 &&
-    acceptance.authorizedBy === 'user' &&
-    typeof acceptance.acceptedAt === 'string' &&
-    Number.isFinite(Date.parse(acceptance.acceptedAt)) &&
-    typeof acceptance.reason === 'string' &&
-    acceptance.reason.trim().length > 0 &&
-    acceptance.reason.length <= 500 &&
-    Array.isArray(acceptance.uncoveredScenarios) &&
-    acceptance.uncoveredScenarios.length > 0 &&
-    isExactStringSet(acceptance.uncoveredScenarios, expectedUncoveredScenarios) &&
-    acceptance.uncoveredScenarios.every((entry) => {
-      if (typeof entry !== 'string') return false;
-      const [host, scenario, extra] = entry.split('/');
-      return !extra && isAgentName(host) && /^[a-z0-9][a-z0-9-]*$/u.test(scenario ?? '');
-    }) &&
-    acceptance.packageVersion === packageVersion &&
-    acceptance.packageArtifactSha256 === artifactSha256
-  );
-}
-
 function hasValidEvaluation(
   value: unknown,
   artifactSha256: unknown,
   packageVersion: unknown,
+  stateSchemaVersion: unknown,
 ): boolean {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const evaluation = value as Partial<ReleaseState['evaluation']>;
+  const evidenceValid = releaseEvaluationEvidenceIsValid(
+    evaluation.evidence,
+    Number(evaluation.exactArtifactCoverageCount),
+    Number(evaluation.inheritedBehaviorCoverageCount),
+    Array.isArray(evaluation.inheritedFrom) ? evaluation.inheritedFrom : [],
+    Array.isArray(evaluation.requiredHosts) ? evaluation.requiredHosts : [],
+    isStringRecord(evaluation.scenarios) ? evaluation.scenarios : {},
+  );
   return (
     ['maintainer-attested-structure', 'maintainer-attested-risk-exception'].includes(
       String(evaluation.assurance),
@@ -161,11 +136,16 @@ function hasValidEvaluation(
     isStringRecord(evaluation.scenarios) &&
     Array.isArray(evaluation.requiredHosts) &&
     JSON.stringify(evaluation.requiredHosts) === JSON.stringify(requiredEvaluationAdapters) &&
+    (Number(stateSchemaVersion) === 5 ? evidenceValid : evaluation.evidence === undefined) &&
     (evaluation.assurance === 'maintainer-attested-structure'
       ? !evaluation.riskAcceptance &&
+        (Number(stateSchemaVersion) !== 5 || evaluation.evidence?.infraBlocked.length === 0) &&
         Number(evaluation.coverageCount) >=
           evaluation.requiredHosts.length * Object.keys(evaluation.scenarios).length
       : Number(evaluation.coverageCount) === 0 &&
+        (Number(stateSchemaVersion) !== 5 ||
+          JSON.stringify(evaluation.evidence?.infraBlocked) ===
+            JSON.stringify(evaluation.riskAcceptance?.infraBlockedScenarios ?? [])) &&
         releaseRiskAcceptanceIsValid(
           evaluation.riskAcceptance,
           artifactSha256,
@@ -192,7 +172,7 @@ export function readReleaseState(directory: string): ReleaseState | undefined {
   if (
     !parsed ||
     typeof parsed !== 'object' ||
-    ![3, 4].includes(Number((parsed as Partial<ReleaseState>).schemaVersion)) ||
+    ![3, 4, 5].includes(Number((parsed as Partial<ReleaseState>).schemaVersion)) ||
     !['prepared', 'published'].includes(String((parsed as Partial<ReleaseState>).status)) ||
     typeof (parsed as Partial<ReleaseState>).artifactPath !== 'string' ||
     typeof (parsed as Partial<ReleaseState>).artifactSha256 !== 'string' ||
@@ -203,6 +183,7 @@ export function readReleaseState(directory: string): ReleaseState | undefined {
       (parsed as Partial<ReleaseState>).evaluation,
       (parsed as Partial<ReleaseState>).artifactSha256,
       (parsed as Partial<ReleaseState>).packageVersion,
+      (parsed as Partial<ReleaseState>).schemaVersion,
     )
   ) {
     throw new Error(`Invalid release state structure: ${path}`);

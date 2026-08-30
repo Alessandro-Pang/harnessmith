@@ -136,7 +136,7 @@ function prepareRelease(
   }
   const previous = readReleaseState(directory);
   const state: ReleaseState = {
-    schemaVersion: riskAcceptance ? 4 : 3,
+    schemaVersion: 5,
     status: 'prepared',
     artifactPath: artifact,
     artifactSha256: fingerprint.packageArtifactSha256,
@@ -150,6 +150,11 @@ function prepareRelease(
       exactArtifactCoverageCount: evaluation?.exactArtifactCoverageCount ?? 0,
       inheritedBehaviorCoverageCount: evaluation?.inheritedBehaviorCoverageCount ?? 0,
       inheritedFrom: evaluation?.inheritedFrom ?? [],
+      evidence: evaluation?.evidence ?? {
+        exact: [],
+        inherited: [],
+        infraBlocked: riskAcceptance?.infraBlockedScenarios ?? [],
+      },
       packageArtifactSha256: fingerprint.packageArtifactSha256,
       behaviorSha256: fingerprint.behaviorSha256,
       harnessVersion: fingerprint.harnessVersion,

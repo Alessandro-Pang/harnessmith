@@ -33,8 +33,8 @@ transport、TLS、WebSocket、runner 超时或 circuit breaker 终止只能记�
 
 执行证据同时记录 tier、attempt、elapsed time 和 termination。单场景预算上限为 15 分钟，整套矩阵预算上限为 60 分钟；
 transport failure 最多自动重试一次，即总尝试次数不超过两次。`eval:validate` 会拒绝超预算、重试次数超限以及 termination
-与结果分类冲突的记录。当前 phase 还提供依赖范围内的增量选择；真实 Host 的有界并行和 circuit-break 调度仍由后续
-runner/CI 集成实现。
+与结果分类冲突的记录。当前实现还提供依赖范围内的增量选择和宿主中立 runner；具体第三方 Host transport 与 CI 认证
+仍由后续集成实现。
 
 每个场景声明可影响其行为的 `dependencyPaths`，fingerprint 将这些文件绑定为独立的 `dependencySha256`。全局
 `rulesSha256` 继续用于审计，但不再让一个无关规则变更淘汰全部场景记录。`eval:plan` 把变更分为 L1、L2、L3：L1 仅需
@@ -45,6 +45,12 @@ runner/CI 集成实现。
 连续两次后打开 circuit-breaker，并把尚未启动的场景明确记为 `infra-blocked`。runner 为每次执行传入带硬 deadline 的
 `AbortSignal`，同时限制单场景与整套矩阵预算。`behavior-failed` 和 `evaluator-failed` 不会触发 transport 熔断，也不会与
 `infra-inconclusive` 混淆。该层只编排注入式 executor，不负责第三方 Host 的登录、认证或具体 transport。
+
+发布证据按矩阵单元区分 `exact`、`inherited`、`infra-blocked`。`exact` 绑定当前候选 artifact；`inherited` 额外绑定来源
+版本与 artifact digest；`infra-blocked` 不计入 passing coverage。release state 和 release attestation 会保留这三类清单，
+并校验它们与聚合计数、`inheritedFrom` 和完整 release matrix 一致。正常发布不得含 `infra-blocked`；风险例外只能记录
+已包含在精确 `uncoveredScenarios` 中的 blocked 单元，不能把基础设施阻塞转换成通过证据。旧 schema 仍可读取，新准备的
+发布会写入显式证据 schema。
 
 ## 从任务到结论的五个阶段
 
