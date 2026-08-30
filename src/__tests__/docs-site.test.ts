@@ -222,6 +222,20 @@ test('memory and task overview links to the current canonical runtime protocols'
   assert.doesNotMatch(overview, /core\/memory-architecture\.md|topics\/task-lifecycle\.md/);
 });
 
+test('release documentation distinguishes post-publish registry clean-room evidence', () => {
+  const evaluation = read('docs/concepts/evidence-and-evaluation.md');
+  const capabilities = read('docs/capability-evidence.yaml');
+  const contributing = read('CONTRIBUTING.md');
+
+  assert.match(evaluation, /release:verify-registry/);
+  assert.match(evaluation, /registry metadata.*integrity.*隔离安装/s);
+  assert.match(evaluation, /传播延迟.*metadata.*integrity.*运行失败/s);
+  assert.match(capabilities, /id: post-publish-registry-verification/);
+  assert.match(capabilities, /scripts\/registry-verification\.ts/);
+  assert.match(capabilities, /evals\/__tests__\/registry-verification\.test\.ts/);
+  assert.match(contributing, /registry clean-room/i);
+});
+
 test('cross-repository relationships remain a first-class public capability', () => {
   const readme = read('README.md');
   const english = read('README.en.md');

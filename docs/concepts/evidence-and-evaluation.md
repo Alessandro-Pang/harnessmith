@@ -43,6 +43,17 @@ verdict 的内部一致性。release gate 还会检查当前 policy 要求的宿
 它们不能证明记录一定来自真实 Host，也不能证明脱敏前证据完整、维护者结论正确或第三方服务没有异常。仓库写入者可以
 伪造一份结构正确的本地记录；更强信任需要外部 CI、签名 attestation 和人工证据复核。
 
+## 发布后的 Registry Clean-room
+
+发布前的 tarball 与 Host Eval 不能证明 npm registry 最终向用户提供了相同字节。tag publish workflow 因此在
+`npm publish` 成功后运行 `release:verify-registry`：等待精确版本可见，核对官方 registry metadata、SHA-1、SHA-512
+integrity、SHA-256 和 provenance，再对实际下载的 tarball 执行隔离安装，HOME 与 npm cache 均位于受管临时目录。smoke 依次覆盖外层 CLI
+version、capabilities、无写 dry-run、最小 install，以及内嵌 Harness 的 doctor 和 health。
+
+验证输出把传播延迟、metadata 不匹配、integrity 不匹配和运行失败分成稳定错误码，并写入
+`registry-verification.json` 供对应 GitHub Actions run 上传。已经成功发布但 clean-room 失败时只保留诊断证据并停止创建
+GitHub Release，不尝试覆盖或删除 npm 中不可变的已发布版本。
+
 ## 为什么不只检查最终文本
 
 最终文本可能说“测试通过”，但文件没有修改；也可能没有出现预期关键词，却已经完成了正确工具调用。Harnesssmith 的
@@ -54,5 +65,6 @@ predicate，但不应独自决定总体 verdict。
 首先区分产品行为失败与评测基础设施失败。无法访问宿主、认证过期或 runner 超时只能得到 `inconclusive` 或基础设施
 故障，不能直接证明 Harnessmith 不支持该宿主。同样，本地 `eval:validate` 通过也不能升级成“真实 Host 已验证”。
 
-具体命令见项目 `package.json` 中的 `eval:check`、`eval:validate`、`eval:gate` 和 `release:check`；当前公开能力与证据路径
+具体命令见项目 `package.json` 中的 `eval:check`、`eval:validate`、`eval:gate`、`release:check` 和
+`release:verify-registry`；当前公开能力与证据路径
 以[能力声明—证据矩阵](../capability-evidence.yaml)为准。

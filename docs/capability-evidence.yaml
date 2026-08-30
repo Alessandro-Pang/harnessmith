@@ -101,6 +101,19 @@ claims:
       - evals/__tests__/run-gate.test.ts
       - evals/__tests__/fingerprint-tarball.test.ts
 
+  - id: post-publish-registry-verification
+    status: implemented
+    owner: release verification scripts and publish workflow
+    claim: Verify official npm registry metadata, provenance, exact package bytes, and isolated installed behavior after publication.
+    implementation:
+      - scripts/registry-verification.ts
+      - scripts/registry-verification-registry.ts
+      - scripts/registry-verification-smoke.ts
+      - .github/workflows/publish.yml
+    verification:
+      - evals/__tests__/registry-verification.test.ts
+      - src/__tests__/github-templates.test.ts
+
   - id: model-loop-tools-and-permissions
     status: delegated
     owner: host Agent Runtime
