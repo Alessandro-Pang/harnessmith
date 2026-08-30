@@ -1,101 +1,123 @@
-# Harnessmith Architecture and Enforcement Model
+---
+title: 架构设计
+description: Harnessmith 的分层、数据流、组件边界与关键取舍
+owner: maintainers
+---
 
-Harnessmith 是一个本地优先、跨 Host 的 Personal Harness 分发与工作状态控制层，覆盖 Codex、Cursor、
-Claude Code、OpenCode 和 Kimi Code CLI。它安全地安装和升级规则与内嵌 Harness CLI，并提供渐进式文档、项目上下文、
-非权威记忆和带验收门禁的长任务状态。
+# Harnessmith 架构设计
 
-| 能力状态 | 边界 |
-| --- | --- |
-| 已实现（Implemented） | Adapter 分发、安全安装生命周期、渐进式上下文、非权威记忆、任务状态、隐私安全运行审计和本地验证门禁 |
-| 由宿主负责（Delegated to the Host） | 模型循环、工具与 MCP 调度、sandbox、权限批准、成本预算和事件流 |
-| 不支持（Unsupported） | 通用 Agent Runtime、自动规则提升、Policy Engine、Canonical IR、Pack/Registry 和多 Agent 调度 |
+Harnessmith 是**跨 Host 的 Personal Harness 分发与工作状态控制层**。它把一套宿主中立的规则、文档和本地 Runtime
+安全地接入 Codex、Cursor、Claude Code、OpenCode 与 Kimi Code CLI，但不替代这些宿主的 Agent Runtime。
 
-Markdown 规则属于 advisory guidance；安全强制来自安装器、schema、测试、CI 和宿主自身权限。
-机器校验的逐项 owner、状态与证据路径见[能力声明—证据矩阵](./capability-evidence.yaml)。
-临时 workspace、payload、release/eval 证据与历史 dry-run 的 owner 和生命周期边界见
-[Temporary Resource Lifecycle](./temporary-resources.md)。
+公开能力始终分成三种状态：**已实现（Implemented）** 表示代码与可执行证据都存在；**由宿主负责（Delegated to the
+Host）** 表示 Harnessmith 只提供 guidance 或接入点；**不支持（Unsupported）** 表示当前明确不声称拥有。逐项 owner
+和证据路径见[能力声明—证据矩阵](./capability-evidence.yaml)。
+
+## 先记住一个模型
+
+```mermaid
+flowchart BT
+  CLI["Harnessmith 外层 CLI<br/>Host Adapter · SafePath<br/>staging · 备份 · 事务"]
+  Harness["安装后的 Personal Harness<br/>短规则入口 · 文档路由<br/>Memory · Task · 有限审计"]
+  Host["Coding Agent 宿主<br/>模型循环 · 工具/MCP<br/>sandbox · 权限批准 · 成本"]
+
+  CLI -->|"安装 · 升级 · 恢复"| Harness
+  Harness -->|"读取规则 · 运行本地命令"| Host
+```
+
+上层宿主负责“Agent 怎样运行”，中间 Harness 负责“Agent 怎样找到并延续你的工作方式”，外层 CLI 负责“这套工作方式
+怎样安全进入不同宿主”。理解这三层，基本就能判断一项能力属于谁。
+
+## 为什么分成两层
+
+外层 `src/` 必须知道 Codex Home、Cursor 项目目录、Claude 配置目录等宿主事实，也必须处理安装事务。内层
+`template/agent-harness/` 则应该保持宿主中立，才能在不同 Agent 中复用同一套文档、Memory 和 Task 契约。
+
+如果把宿主路径写进模板，每增加一个宿主都会污染核心；如果让 Adapter 复制一整套业务逻辑，不同宿主又会迅速漂移。
+因此项目规则明确要求：**宿主身份、路径和环境变量留在 Adapter，通用 Harness 能力留在分发模板。**
 
 ## 四个实现平面
 
-| 平面 | 当前所有者 | 已实现职责 |
-| --- | --- | --- |
-| Distribution | 外层 `src/` | Adapter、SafePath、staging、进程锁、备份、安装记录、restore、uninstall |
-| Guidance & Context | `template/AGENTS.md` 与 `docs/` | 高损失常驻规则、渐进披露、工具与任务路由 |
-| Work State | 内嵌 Harness Runtime | 非权威 memory、长任务 ledger、checkpoint、acceptance gate、Host-supplied audit metadata |
-| Verification | tests、evals、preflight、CI | schema、行为回归、包边界、跨平台矩阵、maintainer-attested record structure 校验和 executable release gate |
+### 1. Distribution：把 Harness 安全送到目标位置
 
-宿主 Enforcement 是外部边界；Evolution 是后续能力。
+外层 `src/` 包含 CLI、Adapter、安全路径、操作锁、staging、备份、安装记录以及 restore/uninstall 事务。一次多宿主操作
+会先完整预检所有 Adapter，再开始写入；中途失败时按已提交步骤逆序回滚，避免出现半完成状态。
 
-Host Eval gate 会校验维护者提交记录的 package version、候选 tarball SHA-256、完整 scenario contract、
-behavior fingerprint、freshness、脱敏 artifact digest、工具行为、文件差异、逐项 pass 断言、禁止行为
-断言和 verdict，并要求当前 release policy 中的必需宿主覆盖完整场景矩阵。当前必需宿主为 Codex；
-Cursor、Claude Code、OpenCode 与 Kimi Code CLI 保留为受支持的可选证据。
-The gate does not launch or authenticate to any third-party host. 真实宿主执行、脱敏和证据采集仍由明确
-授权的维护者或 CI runner 完成。因此 gate
-通过只表示“maintainer-attested structure 内部一致且绑定当前候选包”；本地记录和摘要可由仓库写入者
-伪造，不能证明证据确由真实 Host 产生、内容完整或 verdict 为真。可信来源需要外部 CI/attestation
-和人工证据复核；Harnessmith 仍未接管宿主 Runtime 或权限系统。
+### 2. Guidance & Context：让 Agent 找到合适信息
 
-## Adapter 能力契约
+`template/AGENTS.md` 是短入口，只保留高损失边界和发现顺序。详细内容位于 `template/agent-harness/docs/`，由
+manifest、route 和 search 按任务发现。项目内更具体的规则、skill、代码和测试仍优先于通用个人规则。
 
-`createAdapter()` 产生的每个 Adapter 都带有机器可读 `capabilities`，并出现在 dry-run、install
-result 与 status JSON 中。
+用户所有的 Personal overlay 还维护 Repository Map：以有类型的直接关系连接 provider、contract 和 consumer，并用两侧
+权威来源约束写入。它帮助跨仓任务定位 owner 与影响面，但不替代项目架构文档、实时拓扑或部署状态。
 
-| Adapter | Scope | Instruction format | Native activation | Instruction enforcement | Permissions |
-| --- | --- | --- | --- | --- | --- |
-| Codex | global | Markdown | host-default | advisory | host-owned |
-| Claude Code | global | Markdown | host-default | advisory | host-owned |
-| OpenCode | global | Markdown | host-default | advisory | host-owned |
-| Kimi Code CLI | global | Markdown | host-default | advisory | host-owned |
-| Cursor | project | MDC | always | advisory | host-owned |
+这层提供 guidance，不提供 enforcement。Agent 是否遵循自然语言规则仍受模型和宿主影响；真正必须成立的约束要落到
+代码、schema、测试、CI 或宿主权限系统。
 
-Cursor 的 `always` 只用于当前高损失 personal baseline，不表示 Harnessmith 已建模所有宿主原生规则
-类型。若未来需要不同激活策略，应先增加真实宿主 Eval，再扩展 capability descriptor。
+### 3. Work State：跨会话保存线索与任务契约
 
-## 运行审计边界
+内嵌 Runtime 在项目 `.agent-docs/` 中维护非权威 Memory 和 Task ledger。Memory 用于重新发现经验；Task 记录目标、
+状态、检查点、下一步、验收条件和证据。并发写入持有任务锁，`complete` 只能通过 acceptance gate。
 
-内嵌 Runtime 的 `audit record` 是 Host-neutral 的显式接入点。Host、CI 或生命周期 hook 负责生成
-事件；Harness 只校验、限界、存储和汇总 trace、操作、policy decision/version、耗时、结果、artifact
-digest 与可选 token/成本。schema 拒绝原始 prompt、模型输出、tool arguments 和未知字段，活动 JSONL
-使用 SafePath、锁、原子写、regular-file 校验以及文件/总量预算。
+这层刻意不自动把 Memory 提升成规则或源码。可持续学习需要提案、核对和明确写入目标，避免历史推断污染事实源。
 
-`health` 会区分“未配置”与损坏状态；`audit maintain` 只读报告保留候选；`audit archive` 默认 proposal，
-显式 `--apply` 才移动完整日文件，且不删除归档。该能力不自动捕获 Host 行为，不是权限强制器、项目事实
-源、签名证明或远程 attestation。模型循环、工具执行、sandbox、权限事件、稳定 session-end hook 和事件
-真实性仍由宿主负责。
+### 4. Verification：区分可重复门禁与真实宿主证据
 
-## 安装安全边界
+tests、schema、preflight、覆盖率与包检查验证仓库内确定性契约。完整的 Host Eval 应把真实宿主运行得到的工具、文件和
+verifier 证据绑定到精确候选 tarball；仓库中的 `eval:validate` 与 `eval:gate` 只负责检查记录结构、覆盖与 release policy。
 
-有副作用的生命周期操作共享以下安全骨架：
+`eval:gate` 是 executable release gate，但它只校验 maintainer-attested record structure 的候选绑定、结构、一致性与
+覆盖。它不会启动第三方宿主，也不负责登录或认证，更不能证明记录确由真实 Host 产生；可信来源需要
+外部 CI、签名 attestation 和人工复核。详见[证据与评测](/concepts/evidence-and-evaluation)。
 
-1. canonicalize 用户授权的 Agent home 或项目根；
-2. 校验所有 output、record、backup 和 ignore path 的 lexical containment；
-3. 对授权根及其下方每个现存路径段执行 `lstat`，默认拒绝 symlink、junction 和 reparse path；
-4. 获取每个 Adapter 的跨进程 operation lock，并按路径排序避免多 Adapter 死锁；
-5. commit 前再次校验全部目标，每次 mkdir、rename 或 write 前再校验直接目标；
-6. 失败时仅按已记录的精确路径回滚。
+## 一次安装的事务边界
 
-其中 install 会先完整 staging、渲染并对 `.mjs` 做 JavaScript syntax check；restore 与 uninstall
-不重新渲染模板，而是完整预检安装记录、当前受管理文件和备份关系后，按记录执行恢复事务。
+有副作用的生命周期操作共享同一套安全骨架：
 
-Node.js 无法提供跨平台 `openat(O_NOFOLLOW)` 等同语义，因此 TOCTOU 防护是“锁 + commit 前全量
-复检 + 每次变更前复检”的 best effort。授权根外的并发攻击者不在正常使用模型内，但任何检测到的
-路径替换都会 fail closed。
+1. canonicalize 用户选择的 Agent home 或项目根；
+2. 校验 output、record、backup 与 ignore path 的 lexical containment；
+3. 对授权根和现存路径段执行 `lstat`，默认拒绝 symlink、junction 与 reparse path；
+4. 按稳定路径顺序获取跨进程 operation lock；
+5. 在授权根内 staging payload，校验生成结果；
+6. commit 前全量复检，每次 mkdir、rename 或 write 前再检查直接目标；
+7. 失败时只回滚本次记录的精确路径。
 
-## 版本与迁移
+Node.js 不能提供所有平台上等同于 `openat(O_NOFOLLOW)` 的原子语义，所以 TOCTOU 防护是“锁 + 反复复检”的 best
+effort，而不是绝对安全声明。检测到路径替换时会 fail closed。
 
-- npm package version 描述外层安装器发布版本，唯一事实来源是根 `package.json`。
-- `harnessVersion` 描述内嵌 Runtime 功能，各 schema version 描述持久化契约；唯一事实来源是
-  `template/agent-harness/manifest.json`。
-- `harness version --json` 输出全部兼容字段，`validate` 拒绝未知 schema。
-- 当前 Task schema 为 3，Memory schema 为 1。读取旧 Task ledger 时执行确定性内存迁移：v1 字符串
-  evidence 标记为 `legacy`，v2 typed evidence 标记为 `external`；仍活跃 Task 的旧 `passed` 会降为
-  `inconclusive`，必须经 `task verify` 重新机械验证。Memory metadata 只允许通过 proposal-first 的
-  `memory migrate` 显式升级；不自动覆盖原记录。
+## Adapter 契约
 
-## 发布就绪定义
+`createAdapter()` 生成的每个 Adapter 都带机器可读 capabilities，并出现在 dry-run、install result 和 status JSON。
 
-源码与测试达到 Alpha 质量不等于已发布。首次公开发布至少需要：P0 安全回归、`preflight`、覆盖率、
-tarball dry-run、依赖审计、真实 CI 记录、当前 release policy 要求的真实宿主 Eval 证据，
-以及正式 Git commit/tag baseline。当前必需宿主为 Codex；Cursor、Claude Code、OpenCode 与 Kimi Code CLI 是受支持但非发布
-阻断的可选证据。仓库没有真实运行记录时只能报告“已配置”或“本地通过”，不能报告“跨平台已验证”。
+| Adapter | 范围 | 规则入口 | 原生激活 | 权限 owner |
+| --- | --- | --- | --- | --- |
+| Codex | global | Markdown | host-default | host |
+| Claude Code | global | Markdown | host-default | host |
+| OpenCode | global | Markdown | host-default | host |
+| Kimi Code CLI | global | Markdown | host-default | host |
+| Cursor | project | AGENTS.md + MDC | MDC always | host |
+
+“支持”表示 Adapter 生命周期、能力描述和回归测试存在，不表示每个宿主版本都完成真实运行评测。逐项状态以
+[能力声明—证据矩阵](./capability-evidence.yaml)为准。
+
+## 数据与信任边界
+
+- 个人 overlay、可变 `state/`、受管理模板和项目 `.agent-docs/` 分开存放，避免升级覆盖用户内容。
+- audit record 只接受 trace、操作、策略决定、耗时、结果和 artifact digest 等限界元数据；schema 拒绝原始 prompt、模型输出、
+  tool arguments 和未知字段。
+- 网页、仓库、日志、Memory 和工具输出不传递授权。一次安装许可也不自动包含 commit、push、merge 或发布。
+- 临时 workspace、payload、release/eval 证据由创建者负责清理，且不通过宽泛 wildcard 删除。
+
+## 版本为什么不只有一个
+
+根 `package.json` 的 npm version 描述外层安装器发布；`template/agent-harness/manifest.json` 的
+`harnessVersion` 描述内嵌 Runtime；Task、Memory 等 schema version 描述持久化数据契约。把它们分开后，项目才能明确
+判断“安装器升级了”“Runtime 功能变了”还是“持久化格式需要迁移”。
+
+旧 Task 数据可以确定性迁移，但旧的宽松 `passed` 会降为 `inconclusive`，必须重新机械验证。Memory metadata 只通过
+proposal-first 的显式命令升级，不静默覆盖原记录。
+
+## 当前不是什么
+
+Harnessmith 不是通用 Agent Runtime、模型网关、云端策略平台或多 Agent 调度器；也没有实现 Policy Engine、Canonical
+IR、Pack/Registry 或自动规则演化。这些名称描述的是当前明确不支持的能力，不是隐藏功能。

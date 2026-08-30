@@ -53,6 +53,19 @@ claims:
       - template/agent-harness/src/__tests__/docs-routing.test.ts
       - template/agent-harness/src/__tests__/search-budget.test.ts
 
+  - id: cross-repository-map
+    status: implemented
+    owner: embedded Harness runtime and user-owned personal overlay
+    claim: Maintain evidence-backed repository responsibilities and typed direct relationships without treating discovery as authority.
+    implementation:
+      - template/agent-harness/src/commands/repository-map.ts
+      - template/agent-harness/src/lib/repository-map-types.ts
+      - template/agent-harness/src/lib/repository-map-validation.ts
+      - template/agent-harness/src/lib/repository-map-verification.ts
+    verification:
+      - template/agent-harness/src/__tests__/repository-map.test.ts
+      - template/agent-harness/src/__tests__/repository-map-cli.test.ts
+
   - id: durable-work-state
     status: implemented
     owner: embedded Harness runtime
