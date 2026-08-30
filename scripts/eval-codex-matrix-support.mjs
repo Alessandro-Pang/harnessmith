@@ -286,10 +286,16 @@ export function evaluateCodexTurnCompletion(result, { requireAgentCompletion = t
       typeof event.item.text === 'string',
   );
   const transportText = `${result?.error ?? ''}\n${result?.stderr ?? ''}\n${result?.stdout ?? ''}`;
+  const transientHostFailure = events.some(
+    (event) =>
+      event?.type === 'turn.failed' &&
+      /selected model is at capacity/i.test(String(event?.error?.message ?? '')),
+  );
   const transportFailure =
-    /ETIMEDOUT|timed? out|ENOTFOUND|EAI_AGAIN|ECONN(?:RESET|REFUSED)|DNS|network is unreachable|stream disconnected|connection (?:closed|lost)/i.test(
-      transportText,
-    ) &&
+    (transientHostFailure ||
+      /ETIMEDOUT|timed? out|ENOTFOUND|EAI_AGAIN|ECONN(?:RESET|REFUSED)|DNS|network is unreachable|stream disconnected|connection (?:closed|lost)/i.test(
+        transportText,
+      )) &&
     (!hasTurnCompleted || (requireAgentCompletion && !hasAgentCompletion));
   const reasons = [];
   if (result?.status !== 0) reasons.push(`status=${String(result?.status)}`);
