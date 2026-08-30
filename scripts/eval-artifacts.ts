@@ -26,6 +26,21 @@ export type RunRecord = {
   startedAt: string;
   finishedAt: string;
   evaluatedAt: string;
+  execution: {
+    tier: 'L2' | 'L3' | 'L4';
+    attempt: number;
+    maxAttempts: 2;
+    scenarioBudgetMs: number;
+    matrixBudgetMs: number;
+    elapsedMs: number;
+    transportFailures: number;
+    termination:
+      | 'completed'
+      | 'transport-failure'
+      | 'scenario-budget-exhausted'
+      | 'circuit-open'
+      | 'evaluator-failure';
+  };
   transcript: Artifact;
   toolActions: Array<{ sequence: number }>;
   filesystemDiff: Artifact & { changedPaths: string[]; clean: boolean };
@@ -42,7 +57,10 @@ export type RunRecord = {
     passed: boolean;
     evidenceRefs: string[];
   }>;
-  verdict: { outcome: 'passed' | 'failed' | 'inconclusive'; evidenceRefs: string[] };
+  verdict: {
+    outcome: 'passed' | 'behavior-failed' | 'infra-inconclusive' | 'evaluator-failed';
+    evidenceRefs: string[];
+  };
 };
 
 export function createArtifactVerificationBudget(): ArtifactVerificationBudget {

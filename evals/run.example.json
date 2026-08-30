@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "recordType": "example-only",
   "runId": "replace-with-real-run-id",
   "scenarioId": "progressive-disclosure",
@@ -20,6 +20,16 @@
   "startedAt": "2026-08-19T00:00:00Z",
   "finishedAt": "2026-08-19T00:05:00Z",
   "evaluatedAt": "2026-08-19T00:10:00Z",
+  "execution": {
+    "tier": "L2",
+    "attempt": 2,
+    "maxAttempts": 2,
+    "scenarioBudgetMs": 900000,
+    "matrixBudgetMs": 3600000,
+    "elapsedMs": 300000,
+    "transportFailures": 2,
+    "termination": "transport-failure"
+  },
   "transcript": {
     "artifactRef": "local:artifacts/redacted-transcript.md",
     "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
@@ -64,7 +74,7 @@
     }
   ],
   "verdict": {
-    "outcome": "inconclusive",
+    "outcome": "infra-inconclusive",
     "evaluator": "replace-with-evaluator",
     "summary": "This fixture demonstrates the contract and is not a real host run.",
     "evidenceRefs": ["redacted-transcript", "filesystem-diff"]

@@ -61,13 +61,20 @@ export function writeRun(
     finishedAt = new Date().toISOString(),
     evaluatedAt = finishedAt,
     outcome = 'passed',
+    termination = 'completed',
     runId = `${adapter}-${scenarioId}`,
   }: {
     adapter?: AgentName;
     scenarioId?: string;
     finishedAt?: string;
     evaluatedAt?: string;
-    outcome?: 'passed' | 'failed' | 'inconclusive';
+    outcome?: 'passed' | 'behavior-failed' | 'infra-inconclusive' | 'evaluator-failed';
+    termination?:
+      | 'completed'
+      | 'transport-failure'
+      | 'scenario-budget-exhausted'
+      | 'circuit-open'
+      | 'evaluator-failure';
     runId?: string;
   } = {},
 ): string {
@@ -83,7 +90,7 @@ export function writeRun(
   writeFileSync(join(directory, 'transcript.md'), transcript);
   writeFileSync(join(directory, 'filesystem-diff.txt'), filesystemDiff);
   const record = {
-    schemaVersion: 4,
+    schemaVersion: 5,
     recordType: 'host-evaluation',
     runId,
     scenarioId,
@@ -104,6 +111,16 @@ export function writeRun(
     startedAt: new Date(Date.parse(finishedAt) - 60_000).toISOString(),
     finishedAt,
     evaluatedAt,
+    execution: {
+      tier: 'L2',
+      attempt: 1,
+      maxAttempts: 2,
+      scenarioBudgetMs: 15 * 60 * 1000,
+      matrixBudgetMs: 60 * 60 * 1000,
+      elapsedMs: 60_000,
+      transportFailures: 0,
+      termination,
+    },
     transcript: {
       artifactRef: 'local:transcript.md',
       sha256: digest(transcript),

@@ -17,6 +17,7 @@ setup, observable pass conditions, forbidden conditions, and local regression ch
   (`id`/`prompt`/`setup`/`pass`/`forbidden`), distributed rule fingerprints, and the derived
   `behaviorSha256` used for bounded evidence inheritance;
 - start and finish timestamps plus `evaluatedAt`, when the maintainer completed evidence review;
+- the Host Eval tier, attempt count, elapsed time, termination reason, and enforced scenario/matrix budgets;
 - a redacted transcript artifact and SHA-256 digest;
 - ordered tool actions, including approval and outcome;
 - a filesystem-diff artifact, digest, and changed-path summary;
@@ -24,6 +25,16 @@ setup, observable pass conditions, forbidden conditions, and local regression ch
 - one evidence-backed assertion for every ordered scenario `forbidden` condition
   (`forbidden-1`, `forbidden-2`, …);
 - a verdict whose references resolve to independently stored evidence artifacts.
+
+Schema v5 makes infrastructure and evaluator failures explicit. `passed` and `behavior-failed` are valid only
+for a completed Host execution. Transport failures, scenario budget exhaustion, and an open circuit are
+`infra-inconclusive`; evaluator failures are `evaluator-failed`. Infrastructure outcomes never satisfy release
+coverage and never become product behavior failures.
+
+Each record is limited to a 15-minute scenario budget and a 60-minute matrix budget. A run may retry once
+(`maxAttempts: 2`); the record preserves the attempt count, transport-failure count, and whether execution
+completed, exhausted its budget, failed in transport/evaluation, or stopped at an open circuit. This repository
+validates those limits and classifications but does not launch or schedule third-party Hosts.
 
 All `local:` artifact references are relative to the record file. The validator rejects missing, tampered,
 oversized, or path-escaping records and artifacts; bounds record count and aggregate record/evidence bytes;
@@ -110,7 +121,8 @@ source package version and artifact digest under `inheritedFrom`. Release state 
 attestation preserve that inheritance trail. Historical records whose scenario fingerprint no longer matches
 may remain in the evidence directory, but they are not eligible for current coverage.
 
-The gate intentionally fails when records are absent, stale, inconclusive, failed, tied to another behavior
+The gate intentionally fails when records are absent, stale, `behavior-failed`, `infra-inconclusive`,
+`evaluator-failed`, tied to another behavior
 contract, or missing any scenario cell for a host required by the checked-in release policy. The
 current required host is Codex; Cursor, Claude Code, OpenCode, and Kimi Code CLI can still be validated and retained as optional evidence.
 The gate never launches, authenticates to,
