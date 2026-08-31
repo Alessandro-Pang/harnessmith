@@ -123,6 +123,22 @@ export function responseSeparatesAssessmentFromAction(message) {
   return reportsNoAction && describesProspectiveAction;
 }
 
+export function multiTaskCheckpointReplacementIsProven({
+  afterSecond,
+  afterThird,
+  allVerifiersPassed,
+}) {
+  return Boolean(
+    afterSecond &&
+      afterThird &&
+      afterSecond.path === afterThird.path &&
+      afterSecond.digest !== afterThird.digest &&
+      afterSecond.reason === 'multi-task' &&
+      afterThird.reason === 'multi-task' &&
+      allVerifiersPassed,
+  );
+}
+
 export function scenarioTurnPlan(scenarioId, initialPrompt) {
   const initial = { label: 'initial', prompt: initialPrompt, kind: 'user' };
   if (scenarioId === 'memory-autopilot-unprompted') {
