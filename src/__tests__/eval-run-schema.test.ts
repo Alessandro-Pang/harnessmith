@@ -93,3 +93,34 @@ test('rewriteEvalAdapterEnumSource preserves surrounding compact JSON text', () 
   assert.equal(rewritten.includes('"product": { "type": "string" }'), true);
   assert.equal(rewritten.includes('"only-codex"'), false);
 });
+
+test('apply and rewrite fail closed when the adapter enum target is missing', () => {
+  assert.throws(
+    () => applyEvalAdapterEnum({ properties: { host: { properties: {} } } }),
+    /missing properties\.host\.properties\.adapter/,
+  );
+  assert.throws(
+    () =>
+      applyEvalAdapterEnum({
+        properties: { host: { properties: { adapter: 'bad' as unknown as { enum?: unknown } } } },
+      }),
+    /missing properties\.host\.properties\.adapter/,
+  );
+  assert.throws(
+    () => rewriteEvalAdapterEnumSource('{"properties":{}}'),
+    /missing a host\.adapter\.enum array/,
+  );
+});
+
+test('check and generate fail closed when the schema file is missing', () => {
+  const root = mkdtempSync(join(tmpdir(), 'harnessmith-eval-schema-missing-'));
+  onTestFinished(() => rmSync(root, { recursive: true, force: true }));
+
+  const missing = checkEvalRunSchemaAdapterEnum(root);
+  assert.equal(missing.ok, false);
+  assert.equal(missing.actual, undefined);
+  assert.throws(
+    () => generateEvalRunSchemaAdapterEnum(root),
+    /evals\/run\.schema\.json is missing/,
+  );
+});

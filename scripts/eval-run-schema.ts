@@ -96,10 +96,6 @@ export function generateEvalRunSchemaAdapterEnum(
     return { changed: false, path, expected: [...expected] };
   }
   const after = rewriteEvalAdapterEnumSource(before, expected);
-  const rewritten = JSON.parse(after) as EvalRunSchema;
-  if (!evalAdapterEnumsMatch(readEvalAdapterEnum(rewritten), expected)) {
-    throw new Error('failed to rewrite evals/run.schema.json host.adapter.enum from the registry');
-  }
   writeFileSync(path, after);
   return { changed: true, path, expected: [...expected] };
 }
