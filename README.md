@@ -81,6 +81,10 @@ npx harnessmith --agent all --project /absolute/path/to/repository --dry-run
 | DeepSeek Harness | `$DSH_HOME/AGENTS.md`；未设置或为空时 `~/.dsh/AGENTS.md` | `$DSH_HOME/agent-harness` | 全局 |
 | Cursor | `<project>/.cursor/rules/agent-harness.mdc` | `<project>/.cursor/agent-harness` | 项目 |
 
+DeepSeek（官方 `dsh` / `@deepseek-ai/dsh`）Adapter **只**安装用户全局 `$DSH_HOME/AGENTS.md`。项目根与
+嵌套指令、权限/sandbox/审批仍由宿主按会话加载与强制；安装成功不等于完整 DSH 作用域链或 Host Eval
+已验证。边界见[架构说明](./docs/architecture.md#deepseek-harness-契约来源与验证边界)。
+
 Cursor 的文件化规则按项目安装。使用 `--project` 指定仓库；Harnessmith 只把自己管理的文件写入
 repository-local Git exclude 和 `.cursor/.ignore`，不会隐藏或覆盖团队已有的整个 `.cursor/` 目录。
 

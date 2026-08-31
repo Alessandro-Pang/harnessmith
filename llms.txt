@@ -43,12 +43,15 @@ use the published `npx --yes harnessmith` commands below.
   - Default instructions: `${XDG_CONFIG_HOME:-~/.config}/opencode/AGENTS.md`
   - Harness: `agent-harness` under the same effective OpenCode config directory
 - `deepseek` (aliases: `dsh`, `deepseek-harness`)
-  - Product: DeepSeek Harness CLI (`dsh` / `@deepseek-ai/dsh`)
+  - Official coordinates: `deepseek-ai/deepseek-harness`, package `@deepseek-ai/dsh`, executable `dsh`
   - Instructions: `$DSH_HOME/AGENTS.md` when set to a non-empty value
   - Default instructions: `~/.dsh/AGENTS.md`
   - Harness: `agent-harness` under the same effective DeepSeek Harness home
-  - Contract source: `@deepseek-ai/dsh-agent-instructions` loads the user-global `$DSH_HOME/AGENTS.md`
-    baseline; Harnessmith does not mount Cordis plugins or edit `settings.yaml` / credentials
+  - Contract source: `@deepseek-ai/dsh-agent-instructions` user-global baseline only
+  - Out of scope: project-root / nested `AGENTS.md`/`CLAUDE.md` candidates and local overlays; Cordis
+    patches; `settings.yaml`; credentials; permissions, sandbox, tool allowlists, and approval
+  - Do not tell the user that installing the file enforces DSH security controls or verifies a real
+    Session baseline; file presence is not Host Eval evidence
 
 ## LLM installation protocol
 

@@ -84,6 +84,11 @@ After installation, Harnessmith initializes:
 | DeepSeek Harness | `$DSH_HOME/AGENTS.md`; otherwise `~/.dsh/AGENTS.md` when unset or blank | `$DSH_HOME/agent-harness` | Global |
 | Cursor | `<project>/.cursor/rules/agent-harness.mdc` | `<project>/.cursor/agent-harness` | Project |
 
+The DeepSeek Adapter (official `dsh` / `@deepseek-ai/dsh`) installs **only** the user-global
+`$DSH_HOME/AGENTS.md`. Project-root and nested instruction candidates, plus permissions / sandbox /
+approval, stay host-owned. A successful install does not mean the full DSH instruction chain or a real
+Host Eval is verified. See the [architecture note](./docs/architecture.md#deepseek-harness-契约来源与验证边界).
+
 Cursor file-based rules are project-scoped. Pass `--project` for the intended repository. Harnessmith adds
 only its managed files to the repository-local Git exclude file and `.cursor/.ignore`; it never hides or
 overwrites the team's entire `.cursor/` directory.

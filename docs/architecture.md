@@ -52,24 +52,34 @@ Cursor 的 `always` 只用于当前高损失 personal baseline，不表示 Harne
 
 ### DeepSeek Harness 契约来源与验证边界
 
-产品身份：官方 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（CLI `dsh` /
-`@deepseek-ai/dsh`）。配置根为 `$DSH_HOME`（默认 `~/.dsh`）；空或仅空白的 `DSH_HOME` 按上游
-`resolveDshHome` 视为未设置。
+产品身份（官方坐标）：仓库 [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)，
+npm 包 `@deepseek-ai/dsh`，可执行文件 `dsh`。配置根为 `$DSH_HOME`（默认 `~/.dsh`）；空或仅空白的
+`DSH_HOME` 按上游 `resolveDshHome` 视为未设置。契约以官方包文档与
+`@deepseek-ai/dsh-agent-instructions` 为准；社区 handbook 仅作参考，不是 DeepSeek AI 官方项目。
+
+**不要把 Adapter 契约等同于「写一个全局 Markdown 文件」。** 产品身份与指令加载是两件事：DSH 会话
+baseline 是一条作用域链，而 Harnessmith 只托管其中固定的用户全局一层。
+
+| 范围 | 谁负责 | 说明 |
+| --- | --- | --- |
+| 用户全局 `$DSH_HOME/AGENTS.md` | Harnessmith Adapter | 唯一安装的指令入口；同根下还有 `agent-harness/`、`.harnessmith/` |
+| 项目根 / 嵌套 `AGENTS.md`、`CLAUDE.md` 与 `.local` overlay | 宿主 / 工作区 | 按 Session `cwd`、根标记与候选列表加载；**不在**安装范围内 |
+| 权限、sandbox、工具白名单、审批 | 宿主 Runtime | 指令文件仅为 advisory，安装成功不等于强制执行 |
+| Cordis patch、`settings.yaml`、凭证 | 宿主 / 用户 | Harnessmith **不**写入、不挂载插件 |
 
 官方规则加载契约来自 `@deepseek-ai/dsh-agent-instructions`：用户全局基线固定为
-`$DSH_HOME/AGENTS.md`（无 local overlay）。因此 DeepSeek Adapter 复用 global Markdown Adapter，
-只管理该 `AGENTS.md` 与同根下的 `agent-harness/`、`.harnessmith/`。Harnessmith **不**写入
-`cordis.patch.yml`、`settings.yaml`、`.credentials.yaml`，也 **不**挂载 Cordis 插件。
+`$DSH_HOME/AGENTS.md`（该作用域无 local overlay）。因此 DeepSeek Adapter 复用 global Markdown
+Adapter，只管理上表「Harnessmith Adapter」行。
 
 | 状态 | DeepSeek 边界 |
 | --- | --- |
-| 已实现（Implemented） | Adapter 路径解析、`install --dry-run` / `install` / `status` / `restore` / `uninstall`、SafePath、锁、备份与回滚 |
-| 已在真实宿主验证（Verified on Host） | 尚未提交 maintainer-attested DeepSeek Host Eval 记录；发布门禁仍只要求 Codex |
-| 由宿主负责（Delegated to the Host） | `dsh` 模型循环、工具/权限、profile/bundle 组合、会话存储与凭证 |
+| 已实现（Implemented） | 用户全局路径解析、`install --dry-run` / `install` / `status` / `restore` / `uninstall`、SafePath、锁、备份、所有权标记与回滚；**不**声称托管完整作用域链 |
+| 已在真实宿主验证（Verified on Host） | 尚未提交 maintainer-attested DeepSeek Host Eval；文件存在 ≠ 已验证 Session baseline 注入；发布门禁仍只要求 Codex |
+| 由宿主负责（Delegated to the Host） | 项目/嵌套指令发现、模型循环、工具/权限/sandbox/审批、profile/bundle、会话存储与凭证 |
 
 真实 Host Eval 计划（可选证据，不阻断当前 release policy）：在隔离 `$DSH_HOME` 下安装候选包，启动
-`dsh`/`npx @deepseek-ai/dsh`，按 `evals/scenarios.json` 跑通场景并写入脱敏 `run.json`；验证宿主确实把
-`$DSH_HOME/AGENTS.md` 注入会话 baseline，且 Harness CLI 健康检查通过。
+真实 `dsh` Session，按 `evals/scenarios.json` 跑通场景并写入脱敏 `run.json`；验证宿主确实把
+`$DSH_HOME/AGENTS.md` 注入 baseline（而非仅检查文件落盘），且 Harness CLI 健康检查通过。
 
 ## 运行审计边界
 
