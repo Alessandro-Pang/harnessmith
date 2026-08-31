@@ -1,0 +1,17 @@
+{
+  "name": "harnessmith-search-candidate-benchmark",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.12.0"
+  },
+  "scripts": {
+    "benchmark": "node --expose-gc compare.mjs"
+  },
+  "dependencies": {
+    "@orama/orama": "3.1.18",
+    "esbuild": "0.28.2",
+    "minisearch": "7.2.0",
+    "yaml": "2.9.0"
+  }
+}

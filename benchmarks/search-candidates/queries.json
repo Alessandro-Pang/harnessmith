@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "queries": [
+    {
+      "id": "technical-agents-file",
+      "category": "exact-technical",
+      "query": "AGENTS.md",
+      "relevant": ["standards/project-agents.md"]
+    },
+    {
+      "id": "technical-capture-input",
+      "category": "exact-technical",
+      "query": "capture-input",
+      "relevant": ["standards/project-agent-docs.md"]
+    },
+    {
+      "id": "technical-host-evals",
+      "category": "exact-technical",
+      "query": "host-evals",
+      "relevant": ["manifest.yaml"]
+    },
+    {
+      "id": "english-title",
+      "category": "english",
+      "query": "Safety and Verification",
+      "relevant": ["core/safety-and-verification.md"]
+    },
+    {
+      "id": "english-limited-typo",
+      "category": "fuzzy",
+      "query": "repositry map",
+      "relevant": ["projects/repository-map.md"]
+    },
+    {
+      "id": "chinese-permission-safety",
+      "category": "chinese-natural",
+      "query": "如何安全处理破坏性操作和权限验证",
+      "relevant": ["core/safety-and-verification.md"]
+    },
+    {
+      "id": "chinese-cross-repository",
+      "category": "chinese-natural",
+      "query": "怎样维护跨仓库发布顺序和回滚边界",
+      "relevant": ["projects/repository-map.md"]
+    },
+    {
+      "id": "chinese-memory-isolation",
+      "category": "chinese-natural",
+      "query": "Host Eval 证据为什么不能进入项目记忆扫描",
+      "relevant": [
+        "standards/project-agent-docs.md",
+        "core/harness-cli-architecture.md"
+      ]
+    }
+  ]
+}
