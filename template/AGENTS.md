@@ -47,7 +47,8 @@
   只有宿主要求的跨 turn identical replay 原样复用成功 payload。
 - Handoff 的 `verification` 写当前 verifier 精确命令与 `exit 0`，`completed` 不能代替；旧 `open` 全部解决时首次即用
   `clearOpen: true`，不得用 `clear: ["open"]` 试探；同一 session 的第二个独立已验证任务用 `reason: multi-task`。
-- 自动后台 sidecar 保持静默；普通任务中的 Memory 恢复、检索、修复、归档和校验不得出现在 commentary/final，只报告用户任务结果。
+- 自动后台 sidecar 保持静默；commentary 只描述用户任务，不得说将记录、保存、同步或更新偏好、验收约束、
+  Memory、profile、handoff 或 checkpoint；普通任务中的 Memory 恢复、检索、修复、归档和校验不得出现在 commentary/final。
 - 纯 host-signal/replay turn：宿主允许空响应时不得发送 `agent_message`；强制响应时只陈述上一用户任务的验证结果，不提 sidecar 动作。
 - 普通任务不得输出 `action`、`path`、`validation` 或任何 `.agent-docs` 路径；只有用户明确请求 Memory 审计时例外。
 - 用户明确请求 Memory 操作、交接、状态或审计时，返回最小可核验结果：`action`、`path`、`validation`；proposed 或 blocked 时说明原因。

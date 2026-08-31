@@ -167,7 +167,8 @@ Token、Cookie、验证码、私钥或未脱敏生产数据。
 
 自动后台 sidecar 的恢复、检索、写入、校验和维护状态保持静默，不预告、不混入普通 commentary/final，
 也不把“已保留”“已归档”“已校验”改写成用户任务结果。
-普通 commentary 不得用“值得保留”“纳入结论”或近义词披露任何后台保存意图。
+普通 commentary 只描述用户任务，不得说将记录、保存、同步或更新偏好、验收约束、Memory、profile、
+handoff 或 checkpoint，也不得用“值得保留”“纳入结论”或近义词披露任何后台保存意图。
 
 普通任务中的 Memory 恢复、检索、修复、归档和校验均属后台 sidecar，不得出现在 commentary/final；
 即使 Memory 支撑了结论，也只报告经事实源核对后的用户任务结果。
