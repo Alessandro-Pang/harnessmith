@@ -62,6 +62,45 @@ test('scenario aggregation preserves genuine evaluator failures', async () => {
   });
 });
 
+test('explicit profile controls accept equivalent Markdown audit tables', async () => {
+  const { isRoutineMemoryAnnouncement } = await support();
+  const message = [
+    '| action | path | validation |',
+    '|---|---|---|',
+    '| forgotten | `global-memory/memory/profile.md` | Harness returned `updated` |',
+  ].join('\n');
+
+  assert.equal(
+    isRoutineMemoryAnnouncement({
+      turnLabel: 'forget-profile',
+      turnKind: 'user',
+      message,
+      beforeMemoryMutation: false,
+      hasRoutineMemoryMutation: true,
+    }),
+    false,
+  );
+});
+
+test('code-review profile keys accept stable review dimensions only', async () => {
+  const { isCodeReviewProfileKey } = await support();
+
+  assert.equal(isCodeReviewProfileKey('review.ordering', 'communication.status-summary'), true);
+  assert.equal(
+    isCodeReviewProfileKey('engineering.code-review-order', 'communication.status-summary'),
+    true,
+  );
+  assert.equal(
+    isCodeReviewProfileKey('identity.current-role', 'communication.status-summary'),
+    false,
+  );
+  assert.equal(isCodeReviewProfileKey('Review.Ordering', 'communication.status-summary'), false);
+  assert.equal(
+    isCodeReviewProfileKey('communication.status-summary', 'communication.status-summary'),
+    false,
+  );
+});
+
 test('resumed Codex turns retain their additional writable roots through config', async () => {
   const { buildCodexTurn } = await support();
   const args = buildCodexTurn({
