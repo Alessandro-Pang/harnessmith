@@ -1,16 +1,17 @@
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { onTestFinished, test } from 'vitest';
+import { checkEvalRunSchemaAdapterEnum } from '../../scripts/eval-run-schema.js';
 import {
+  type AgentName,
   adapterAliasMap,
   adapterRegistry,
   evalAdapterEnum,
   getAdapterDefinition,
   supportedAgentNames,
-  type AgentName,
 } from '../adapter-registry.js';
 import { adapterCapabilities, createAdapter } from '../adapters.js';
 import { normalizeAgents, supportedAgents } from '../agents.js';
@@ -51,8 +52,9 @@ test('capabilities and labels always come from the registry entry', () => {
 
 test('eval adapter enum is derived from the same registry list', () => {
   assert.deepEqual(evalAdapterEnum(), [...supportedAgentNames]);
-  const schema = JSON.parse(readFileSync(join(repositoryRoot, 'evals', 'run.schema.json'), 'utf8'));
-  assert.deepEqual(schema.properties.host.properties.adapter.enum, evalAdapterEnum());
+  const result = checkEvalRunSchemaAdapterEnum(repositoryRoot);
+  assert.equal(result.ok, true, JSON.stringify(result));
+  assert.deepEqual(result.expected, evalAdapterEnum());
 });
 
 test('instruction format extension points cover every registry capability format', () => {

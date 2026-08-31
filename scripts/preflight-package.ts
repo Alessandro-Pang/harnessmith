@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { evalAdapterEnum } from '../src/adapter-registry.js';
+import { checkEvalRunSchemaAdapterEnum } from './eval-run-schema.js';
 
 type Check = (condition: unknown, message: string) => void;
 
@@ -29,19 +29,10 @@ function checkPublicGuidance(root: string, version: string, check: Check): void 
 }
 
 function checkEvalAdapterEnum(root: string, check: Check): void {
-  const schemaPath = join(root, 'evals', 'run.schema.json');
-  check(existsSync(schemaPath), 'evals/run.schema.json is missing');
-  if (!existsSync(schemaPath)) return;
-  const schema = JSON.parse(read(schemaPath)) as {
-    properties?: { host?: { properties?: { adapter?: { enum?: unknown } } } };
-  };
-  const enumValues = schema.properties?.host?.properties?.adapter?.enum;
-  const expected = evalAdapterEnum();
+  const result = checkEvalRunSchemaAdapterEnum(root);
   check(
-    Array.isArray(enumValues) &&
-      enumValues.length === expected.length &&
-      enumValues.every((value, index) => value === expected[index]),
-    `evals/run.schema.json host.adapter.enum must match adapter registry: ${expected.join(', ')}`,
+    result.ok,
+    `evals/run.schema.json host.adapter.enum must match adapter registry: ${result.expected.join(', ')}`,
   );
 }
 

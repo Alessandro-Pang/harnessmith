@@ -376,14 +376,10 @@ test('release gate retains the global rule fingerprint as audit data', () => {
 });
 
 test('evaluation schema supports every adapter while release coverage uses the explicit host policy', async () => {
-  const { supportedAgents } = await import('../../src/agents.js');
   const { requiredEvaluationAdapters } = await import('../../scripts/eval-fingerprint.js');
-  const schema = JSON.parse(readFileSync(join(root, 'evals', 'run.schema.json'), 'utf8'));
+  const { checkEvalRunSchemaAdapterEnum } = await import('../../scripts/eval-run-schema.js');
 
-  assert.deepEqual(
-    schema.properties.host.properties.adapter.enum,
-    supportedAgents.map(({ value }) => value),
-  );
+  assert.equal(checkEvalRunSchemaAdapterEnum(root).ok, true);
   assert.deepEqual(requiredEvaluationAdapters, ['codex']);
 });
 

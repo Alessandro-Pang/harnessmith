@@ -64,6 +64,8 @@
     "eval:codex-matrix": "node --import tsx scripts/eval-codex-matrix.ts",
     "eval:validate": "node --import tsx scripts/eval-gate.ts validate",
     "eval:gate": "node --import tsx scripts/eval-gate.ts gate",
+    "eval:schema:generate": "node --import tsx scripts/eval-run-schema.ts generate",
+    "eval:schema:check": "node --import tsx scripts/eval-run-schema.ts check",
     "temp:scan": "node --import tsx scripts/temp-resources.ts --json",
     "bench:search": "node --expose-gc --import tsx scripts/search-benchmark.ts",
     "pretest:coverage": "pnpm run build",
