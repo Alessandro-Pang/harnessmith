@@ -1,6 +1,6 @@
 {
   "name": "harnessmith",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Distribute and safely manage a cross-host personal harness and durable work state.",
   "repository": {
     "type": "git",
