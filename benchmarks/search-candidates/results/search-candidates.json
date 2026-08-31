@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "generatedAt": "2026-08-31T01:57:46.276Z",
-  "repositoryCommit": "1ec7a2773c4aad7528b47a3cbedfada8b88d645e",
+  "generatedAt": "2026-08-31T02:03:07.888Z",
+  "repositoryCommit": "653f554033555745909d0a00ffe2e9fc592c4d51",
   "environment": {
     "node": "v24.19.0",
     "platform": "darwin",
@@ -18,29 +18,29 @@
     {
       "candidate": "minisearch",
       "size": 1000,
-      "buildMs": 1113.491583,
-      "incrementalUpdateMs": 0.3915420000000722,
-      "coldRestoreMs": 44.84129199999984,
-      "retainedHeapBytes": 14997336,
-      "observedStagePeakHeapBytes": 179780080,
-      "serializedIndexBytes": 2159370,
+      "buildMs": 946.990916,
+      "incrementalUpdateMs": 0.3221250000001419,
+      "coldRestoreMs": 39.150333000000046,
+      "retainedHeapBytes": 13785704,
+      "observedStagePeakHeapBytes": 125527304,
+      "serializedIndexBytes": 2078378,
       "bundledCandidateBytes": 17663,
       "latency": {
         "exact-technical": {
-          "p50Ms": 0.03008399999998801,
-          "p95Ms": 0.11141700000007404
+          "p50Ms": 0.029999999999972715,
+          "p95Ms": 0.11091699999997218
         },
         "english": {
-          "p50Ms": 0.1948330000000169,
-          "p95Ms": 0.4457910000000993
+          "p50Ms": 0.1984580000000733,
+          "p95Ms": 0.4375840000000153
         },
         "fuzzy": {
-          "p50Ms": 0.3147080000001097,
-          "p95Ms": 0.7264999999999873
+          "p50Ms": 0.3108750000001237,
+          "p95Ms": 0.7357919999999467
         },
         "chinese-natural": {
-          "p50Ms": 0.706957999999986,
-          "p95Ms": 0.8770000000001801
+          "p50Ms": 0.7411250000000109,
+          "p95Ms": 0.9570420000000013
         }
       },
       "qualityByCategory": {
@@ -240,12 +240,12 @@
         "files": 18,
         "baseChunks": 80,
         "sourceDigest": "543d6a82728099e5682fe6eb44fa56bc62b5da32f4125e54706259c1df5abd05",
-        "corpusDigest": "263942e33296e37e9d59fa54c29597883eb0f619608e2f99203c6674fec62542",
+        "corpusDigest": "b3f82b5c2ea551d8dc53a40652873fc1d201f5de6a3926bdf0d9fe20d4a03d7e",
         "construction": "Sorted public template/agent-harness/docs Markdown/YAML; split by Markdown heading and 16k characters; deterministically cycle real chunks with stable replica ids."
       },
       "qualityCorpus": {
         "documents": 80,
-        "corpusDigest": "06ff92f46be474cc48183bb548de1ae198ab8f8c213cb3e96dbcb5c4c30aa423",
+        "corpusDigest": "d75340b9a9aa5e50a8913e9ed701e5932368da1d67f5a7fa8d618214b123871f",
         "construction": "One copy of every real Harness documentation chunk; no scale replicas."
       },
       "querySet": {
@@ -284,35 +284,35 @@
         }
       },
       "configurationDigest": "429037b8b687c31b5fba2902944473920f0c94664d7cb7bed1a310bc673ddd50",
-      "repositoryCommit": "1ec7a2773c4aad7528b47a3cbedfada8b88d645e",
+      "repositoryCommit": "653f554033555745909d0a00ffe2e9fc592c4d51",
       "repositoryRoot": "harnessmith-search-evidence"
     },
     {
       "candidate": "orama",
       "size": 1000,
-      "buildMs": 1496.682583,
-      "incrementalUpdateMs": 0.854415999999901,
-      "coldRestoreMs": 42.63308299999994,
-      "retainedHeapBytes": 34609672,
-      "observedStagePeakHeapBytes": 88014424,
-      "serializedIndexBytes": 12107235,
+      "buildMs": 1366.771125,
+      "incrementalUpdateMs": 0.7574999999999363,
+      "coldRestoreMs": 36.52679199999989,
+      "retainedHeapBytes": 32002872,
+      "observedStagePeakHeapBytes": 71828664,
+      "serializedIndexBytes": 11754583,
       "bundledCandidateBytes": 68265,
       "latency": {
         "exact-technical": {
-          "p50Ms": 0.26220899999998437,
-          "p95Ms": 2.2345000000000255
+          "p50Ms": 0.2391250000000582,
+          "p95Ms": 1.9918749999999363
         },
         "english": {
-          "p50Ms": 0.11804200000005949,
-          "p95Ms": 0.3596660000000611
+          "p50Ms": 0.10795899999993708,
+          "p95Ms": 0.2989159999999629
         },
         "fuzzy": {
-          "p50Ms": 1.7690419999998994,
-          "p95Ms": 5.982124999999996
+          "p50Ms": 1.1295829999999114,
+          "p95Ms": 5.63212499999986
         },
         "chinese-natural": {
-          "p50Ms": 0.5880000000001928,
-          "p95Ms": 1.360541000000012
+          "p50Ms": 0.46308300000009694,
+          "p95Ms": 0.7859169999999267
         }
       },
       "qualityByCategory": {
@@ -518,12 +518,12 @@
         "files": 18,
         "baseChunks": 80,
         "sourceDigest": "543d6a82728099e5682fe6eb44fa56bc62b5da32f4125e54706259c1df5abd05",
-        "corpusDigest": "263942e33296e37e9d59fa54c29597883eb0f619608e2f99203c6674fec62542",
+        "corpusDigest": "b3f82b5c2ea551d8dc53a40652873fc1d201f5de6a3926bdf0d9fe20d4a03d7e",
         "construction": "Sorted public template/agent-harness/docs Markdown/YAML; split by Markdown heading and 16k characters; deterministically cycle real chunks with stable replica ids."
       },
       "qualityCorpus": {
         "documents": 80,
-        "corpusDigest": "06ff92f46be474cc48183bb548de1ae198ab8f8c213cb3e96dbcb5c4c30aa423",
+        "corpusDigest": "d75340b9a9aa5e50a8913e9ed701e5932368da1d67f5a7fa8d618214b123871f",
         "construction": "One copy of every real Harness documentation chunk; no scale replicas."
       },
       "querySet": {
@@ -562,35 +562,35 @@
         }
       },
       "configurationDigest": "429037b8b687c31b5fba2902944473920f0c94664d7cb7bed1a310bc673ddd50",
-      "repositoryCommit": "1ec7a2773c4aad7528b47a3cbedfada8b88d645e",
+      "repositoryCommit": "653f554033555745909d0a00ffe2e9fc592c4d51",
       "repositoryRoot": "harnessmith-search-evidence"
     },
     {
       "candidate": "minisearch",
       "size": 10000,
-      "buildMs": 10109.642375000001,
-      "incrementalUpdateMs": 0.5352080000011483,
-      "coldRestoreMs": 318.71791699999994,
-      "retainedHeapBytes": 100192448,
-      "observedStagePeakHeapBytes": 359110904,
-      "serializedIndexBytes": 22552762,
+      "buildMs": 9975.337207999999,
+      "incrementalUpdateMs": 0.8261670000010781,
+      "coldRestoreMs": 267.13037500000064,
+      "retainedHeapBytes": 87620176,
+      "observedStagePeakHeapBytes": 285504352,
+      "serializedIndexBytes": 21679468,
       "bundledCandidateBytes": 17663,
       "latency": {
         "exact-technical": {
-          "p50Ms": 0.25791600000047765,
-          "p95Ms": 0.7296669999996084
+          "p50Ms": 0.13325000000077125,
+          "p95Ms": 0.7622499999997672
         },
         "english": {
-          "p50Ms": 1.8145839999997406,
-          "p95Ms": 3.4476660000000265
+          "p50Ms": 1.722249999998894,
+          "p95Ms": 2.9817910000001575
         },
         "fuzzy": {
-          "p50Ms": 1.707790999998906,
-          "p95Ms": 2.329666999999972
+          "p50Ms": 1.8559999999997672,
+          "p95Ms": 3.1669160000001284
         },
         "chinese-natural": {
-          "p50Ms": 8.000625000000582,
-          "p95Ms": 10.762375000000247
+          "p50Ms": 7.295125000000553,
+          "p95Ms": 11.845041999999012
         }
       },
       "qualityByCategory": {
@@ -790,12 +790,12 @@
         "files": 18,
         "baseChunks": 80,
         "sourceDigest": "543d6a82728099e5682fe6eb44fa56bc62b5da32f4125e54706259c1df5abd05",
-        "corpusDigest": "41a6a2e2f3d5010611e62c84334b640d28440e12cd55bbf0cbaf9856984b1462",
+        "corpusDigest": "9dc18925e5eb55c8d953243e25bf7ea9d1d3eda606502c677836ea0c3e1f7d83",
         "construction": "Sorted public template/agent-harness/docs Markdown/YAML; split by Markdown heading and 16k characters; deterministically cycle real chunks with stable replica ids."
       },
       "qualityCorpus": {
         "documents": 80,
-        "corpusDigest": "06ff92f46be474cc48183bb548de1ae198ab8f8c213cb3e96dbcb5c4c30aa423",
+        "corpusDigest": "d75340b9a9aa5e50a8913e9ed701e5932368da1d67f5a7fa8d618214b123871f",
         "construction": "One copy of every real Harness documentation chunk; no scale replicas."
       },
       "querySet": {
@@ -834,35 +834,35 @@
         }
       },
       "configurationDigest": "429037b8b687c31b5fba2902944473920f0c94664d7cb7bed1a310bc673ddd50",
-      "repositoryCommit": "1ec7a2773c4aad7528b47a3cbedfada8b88d645e",
+      "repositoryCommit": "653f554033555745909d0a00ffe2e9fc592c4d51",
       "repositoryRoot": "harnessmith-search-evidence"
     },
     {
       "candidate": "orama",
       "size": 10000,
-      "buildMs": 25609.872,
-      "incrementalUpdateMs": 5.3185840000005555,
-      "coldRestoreMs": 815.8629580000015,
-      "retainedHeapBytes": 293096712,
-      "observedStagePeakHeapBytes": 503341352,
-      "serializedIndexBytes": 117396622,
+      "buildMs": 14616.4665,
+      "incrementalUpdateMs": 3.4337500000001455,
+      "coldRestoreMs": 418.28512500000033,
+      "retainedHeapBytes": 266851976,
+      "observedStagePeakHeapBytes": 475572496,
+      "serializedIndexBytes": 113742180,
       "bundledCandidateBytes": 68265,
       "latency": {
         "exact-technical": {
-          "p50Ms": 4.253292000001238,
-          "p95Ms": 48.408166999997775
+          "p50Ms": 2.3717080000024,
+          "p95Ms": 29.01904200000172
         },
         "english": {
-          "p50Ms": 3.4783339999994496,
-          "p95Ms": 5.911583000000974
+          "p50Ms": 1.556416999999783,
+          "p95Ms": 1.8537910000013653
         },
         "fuzzy": {
-          "p50Ms": 9.96979199999987,
-          "p95Ms": 17.65416600000026
+          "p50Ms": 5.309666999997717,
+          "p95Ms": 7.8659999999981665
         },
         "chinese-natural": {
-          "p50Ms": 27.317166999997426,
-          "p95Ms": 36.440999999998894
+          "p50Ms": 14.477083999998285,
+          "p95Ms": 20.73308299999917
         }
       },
       "qualityByCategory": {
@@ -1068,12 +1068,12 @@
         "files": 18,
         "baseChunks": 80,
         "sourceDigest": "543d6a82728099e5682fe6eb44fa56bc62b5da32f4125e54706259c1df5abd05",
-        "corpusDigest": "41a6a2e2f3d5010611e62c84334b640d28440e12cd55bbf0cbaf9856984b1462",
+        "corpusDigest": "9dc18925e5eb55c8d953243e25bf7ea9d1d3eda606502c677836ea0c3e1f7d83",
         "construction": "Sorted public template/agent-harness/docs Markdown/YAML; split by Markdown heading and 16k characters; deterministically cycle real chunks with stable replica ids."
       },
       "qualityCorpus": {
         "documents": 80,
-        "corpusDigest": "06ff92f46be474cc48183bb548de1ae198ab8f8c213cb3e96dbcb5c4c30aa423",
+        "corpusDigest": "d75340b9a9aa5e50a8913e9ed701e5932368da1d67f5a7fa8d618214b123871f",
         "construction": "One copy of every real Harness documentation chunk; no scale replicas."
       },
       "querySet": {
@@ -1112,7 +1112,7 @@
         }
       },
       "configurationDigest": "429037b8b687c31b5fba2902944473920f0c94664d7cb7bed1a310bc673ddd50",
-      "repositoryCommit": "1ec7a2773c4aad7528b47a3cbedfada8b88d645e",
+      "repositoryCommit": "653f554033555745909d0a00ffe2e9fc592c4d51",
       "repositoryRoot": "harnessmith-search-evidence"
     },
     {
@@ -1121,7 +1121,7 @@
       "status": "failed",
       "exitCode": null,
       "signal": "SIGABRT",
-      "error": "<--- Last few GCs --->\n\n[840:0x130008000]    65478 ms: Scavenge 1021.7 (1037.2) -> 1019.0 (1036.4) MB, pooled: 0 MB, 0.38 / 0.00 ms  (average mu = 0.261, current mu = 0.263) allocation failure; \n[840:0x130008000]    65530 ms: Mark-Compact (reduce) 1021.4 (1036.8) -> 1019.8 (1034.4) MB, pooled: 0 MB, 50.29 / 0.00 ms  (+ 0.4 ms in 30 steps since start of marking, biggest step 0.2 ms, walltime since start of marking 52 ms) (average mu = 0.217, curre\nFATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory\n----- Native stack trace -----\n\n 1: 0x104b659f4 node::OOMErrorHandler(char const*, v8::OOMDetails const&) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 2: 0x104de0000 v8::internal::V8::FatalProcessOutOfMemory(v8::internal::Isolate*, char const*, v8::OOMDetails const&) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 3: 0x10503f4b4 v8::internal::Heap::stack() [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 4: 0x105042888 v8::internal::Heap::HasLowYoungGenerationAllocationRate() [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 5: 0x105053a7c v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags)::$_1::operator()() const [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 6: 0x105053350 void heap::base::Stack::SetMarkerAndCallbackImpl<v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags)::$_1>(heap::base::Stack*, void*, void const*) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 7: 0x105a07be0 PushAllRegistersAndIterateStack [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 8: 0x10503d1b8 v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 9: 0x104fb4b7c v8::internal::StackGuard::HandleInterrupts(v8::internal::StackGuard::InterruptLevel) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n10: 0x1054a2880 v8::internal::Runtime_StackGuard(int, unsigned long*, v8::internal::Isolate*) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n11: 0x105afa234 Builtins_CEntry_Return1_ArgvOnStack_NoBuiltinExit [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n12: 0x105ac2e00 Builtins_MapIteratorPrototypeNext [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n13: 0x105b64d9c Builtins_ObjectFromEntries [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n14: 0x140100d5c \n15: 0x105a5cbec Builtins_InterpreterEntryTrampoline [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n16: 0x105a5cbec Builtins_InterpreterEntryTrampoline [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n17: 0x105a9b7e8 Builtins_AsyncFunctionAwaitResolveClosure [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n18: 0x105b70e58 Builtins_PromiseFulfillReactionJob [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n19: 0x105a8abd0 Builtins_RunMicrotasks [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n20: 0x105a5a7b0 Builtins_JSRunMicrotasksEntry [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n21: 0x104f83690 v8::internal::(anonymous namespace)::Invoke(v8::internal::Isolate*, v8::internal::(anonymous namespace)::InvokeParams const&) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n22: 0x104f83f04 v8::internal::(anonymous namespace)::InvokeWithTryCatch(v8::internal::Isolate*, v8::internal::(anonymous namespace)::InvokeParams const&) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n23: 0x104f84040 v8::internal::Execution::TryRunMicrotasks(v8::internal::Isolate*, v8::internal::MicrotaskQueue*) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n24: 0x104fb2de4 v8::internal::MicrotaskQueue::RunMicrotasks(v8::internal::Isolate*) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n25: 0x104fb3744 v8::internal::MicrotaskQueue::PerformCheckpoint(v8::Isolate*) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n26: 0x104a430b8 node::InternalCallbackScope::Close() [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n27: 0x104a42a90 node::InternalCallbackScope::~InternalCallbackScope() [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n28: 0x104b0e874 node::StartExecution(node::Environment*, std::__1::function<v8::MaybeLocal<v8::Value> (node::StartExecutionCallbackInfoWithModule const&)>) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n29: 0x104a498a0 node::LoadEnvironment(node::Environment*, std::__1::function<v8::MaybeLocal<v8::Value> (node::StartExecutionCallbackInfoWithModule const&)>, std::__1::function<void (node::Environment*, v8::Local<v8::Value>, v8::Local<v8::Value>)>) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n30: 0x104bc0774 node::NodeMainInstance::Run() [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n31: 0x104b127e0 node::Start(int, char**) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n32: 0x194280274 start [/usr/lib/dyld]"
+      "error": "<--- Last few GCs --->\n\n[26784:0x128008000]    54222 ms: Mark-Compact 1003.8 (1053.2) -> 1003.1 (1068.8) MB, pooled: 0 MB, 34.96 / 0.00 ms  (average mu = 0.138, current mu = 0.012) allocation failure; scavenge might not succeed\n[26784:0x128008000]    54261 ms: Mark-Compact (reduce) 1003.6 (1069.1) -> 1003.3 (1038.0) MB, pooled: 0 MB, 35.38 / 0.00 ms  (+ 0.1 ms in 2 steps since start of marking, biggest step 0.1 ms, walltime since start of marking 36 ms) (average mu = 0.112, curr\nFATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory\n----- Native stack trace -----\n\n 1: 0x1024cd9f4 node::OOMErrorHandler(char const*, v8::OOMDetails const&) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 2: 0x102748000 v8::internal::V8::FatalProcessOutOfMemory(v8::internal::Isolate*, char const*, v8::OOMDetails const&) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 3: 0x1029a74b4 v8::internal::Heap::stack() [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 4: 0x1029aa888 v8::internal::Heap::HasLowYoungGenerationAllocationRate() [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 5: 0x1029bba7c v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags)::$_1::operator()() const [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 6: 0x1029bb350 void heap::base::Stack::SetMarkerAndCallbackImpl<v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags)::$_1>(heap::base::Stack*, void*, void const*) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 7: 0x10336fbe0 PushAllRegistersAndIterateStack [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 8: 0x1029a51b8 v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 9: 0x102999ec4 v8::internal::HeapAllocator::AllocateRawWithRetryOrFailSlowPath(int, v8::internal::AllocationType, v8::internal::AllocationOrigin, v8::internal::AllocationAlignment) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n10: 0x10296552c v8::internal::FactoryBase<v8::internal::Factory>::NewFixedArray(int, v8::internal::AllocationType) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n11: 0x102b61444 v8::internal::(anonymous namespace)::ElementsAccessorBase<v8::internal::(anonymous namespace)::FastHoleyObjectElementsAccessor, v8::internal::(anonymous namespace)::ElementsKindTraits<(v8::internal::ElementsKind)3>>::ConvertElementsWithCapacity(v8::internal::DirectHandle<v8::internal::JSObject>, v8::internal::DirectHandle<v8::internal::FixedArrayBase>, v8::internal::ElementsKind, unsigned int, unsigned int, unsigned int) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n12: 0x102b61298 v8::internal::(anonymous namespace)::ElementsAccessorBase<v8::internal::(anonymous namespace)::FastHoleyObjectElementsAccessor, v8::internal::(anonymous namespace)::ElementsKindTraits<(v8::internal::ElementsKind)3>>::GrowCapacityAndConvertImpl(v8::internal::DirectHandle<v8::internal::JSObject>, unsigned int) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n13: 0x102b61be0 v8::internal::(anonymous namespace)::FastElementsAccessor<v8::internal::(anonymous namespace)::FastHoleyObjectElementsAccessor, v8::internal::(anonymous namespace)::ElementsKindTraits<(v8::internal::ElementsKind)3>>::AddImpl(v8::internal::DirectHandle<v8::internal::JSObject>, unsigned int, v8::internal::DirectHandle<v8::internal::Object>, v8::internal::PropertyAttributes, unsigned int) [<home>/.cache/codex-runtimes/codex-primary-ru\n... <failure output truncated> ...\nor*, v8::internal::DirectHandle<v8::internal::Object>, v8::internal::PropertyAttributes, v8::Maybe<v8::internal::ShouldThrow>, v8::internal::JSObject::AccessorInfoHandling, v8::internal::EnforceDefineSemantics, v8::internal::StoreOrigin) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n17: 0x102c49cf0 v8::internal::JSReceiver::CreateDataProperty(v8::internal::Isolate*, v8::internal::DirectHandle<v8::internal::JSReceiver>, v8::internal::PropertyKey, v8::internal::DirectHandle<v8::internal::Object>, v8::Maybe<v8::internal::ShouldThrow>) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n18: 0x102e13ab4 v8::internal::Runtime_CreateDataProperty(int, unsigned long*, v8::internal::Isolate*) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n19: 0x103462234 Builtins_CEntry_Return1_ArgvOnStack_NoBuiltinExit [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n20: 0x1034cd0d0 Builtins_ObjectFromEntries [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n21: 0x15812bd7c \n22: 0x1033c4bec Builtins_InterpreterEntryTrampoline [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n23: 0x1033c4bec Builtins_InterpreterEntryTrampoline [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n24: 0x1034037e8 Builtins_AsyncFunctionAwaitResolveClosure [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n25: 0x1034d8e58 Builtins_PromiseFulfillReactionJob [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n26: 0x1033f2bd0 Builtins_RunMicrotasks [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n27: 0x1033c27b0 Builtins_JSRunMicrotasksEntry [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n28: 0x1028eb690 v8::internal::(anonymous namespace)::Invoke(v8::internal::Isolate*, v8::internal::(anonymous namespace)::InvokeParams const&) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n29: 0x1028ebf04 v8::internal::(anonymous namespace)::InvokeWithTryCatch(v8::internal::Isolate*, v8::internal::(anonymous namespace)::InvokeParams const&) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n30: 0x1028ec040 v8::internal::Execution::TryRunMicrotasks(v8::internal::Isolate*, v8::internal::MicrotaskQueue*) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n31: 0x10291ade4 v8::internal::MicrotaskQueue::RunMicrotasks(v8::internal::Isolate*) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n32: 0x10291b744 v8::internal::MicrotaskQueue::PerformCheckpoint(v8::Isolate*) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n33: 0x1023ab0b8 node::InternalCallbackScope::Close() [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n34: 0x1023aaa90 node::InternalCallbackScope::~InternalCallbackScope() [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n35: 0x102476874 node::StartExecution(node::Environment*, std::__1::function<v8::MaybeLocal<v8::Value> (node::StartExecutionCallbackInfoWithModule const&)>) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n36: 0x1023b18a0 node::LoadEnvironment(node::Environment*, std::__1::function<v8::MaybeLocal<v8::Value> (node::StartExecutionCallbackInfoWithModule const&)>, std::__1::function<void (node::Environment*, v8::Local<v8::Value>, v8::Local<v8::Value>)>) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n37: 0x102528774 node::NodeMainInstance::Run() [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n38: 0x10247a7e0 node::Start(int, char**) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n39: 0x194280274 start [/usr/lib/dyld]"
     },
     {
       "candidate": "orama",
@@ -1129,7 +1129,7 @@
       "status": "failed",
       "exitCode": null,
       "signal": "SIGABRT",
-      "error": "<--- Last few GCs --->\n\n[5974:0x118018000]    60039 ms: Scavenge 1018.1 (1028.2) -> 1017.3 (1030.2) MB, pooled: 0 MB, 0.88 / 0.00 ms  (average mu = 0.378, current mu = 0.384) allocation failure; \n[5974:0x118018000]    60304 ms: Mark-Compact (reduce) 1017.5 (1030.2) -> 1017.1 (1027.4) MB, pooled: 0 MB, 263.42 / 0.00 ms  (+ 0.0 ms in 3 steps since start of marking, biggest step 0.0 ms, walltime since start of marking 266 ms) (average mu = 0.273, cur\nFATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory\n----- Native stack trace -----\n\n 1: 0x104e499f4 node::OOMErrorHandler(char const*, v8::OOMDetails const&) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 2: 0x1050c4000 v8::internal::V8::FatalProcessOutOfMemory(v8::internal::Isolate*, char const*, v8::OOMDetails const&) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 3: 0x1053234b4 v8::internal::Heap::stack() [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 4: 0x105326888 v8::internal::Heap::HasLowYoungGenerationAllocationRate() [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 5: 0x105337a7c v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags)::$_1::operator()() const [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 6: 0x105337350 void heap::base::Stack::SetMarkerAndCallbackImpl<v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags)::$_1>(heap::base::Stack*, void*, void const*) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 7: 0x105cebbe0 PushAllRegistersAndIterateStack [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 8: 0x1053211b8 v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 9: 0x105298b7c v8::internal::StackGuard::HandleInterrupts(v8::internal::StackGuard::InterruptLevel) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n10: 0x105786bb0 v8::internal::Runtime_StackGuardWithGap(int, unsigned long*, v8::internal::Isolate*) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n11: 0x105dde234 Builtins_CEntry_Return1_ArgvOnStack_NoBuiltinExit [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n12: 0x13903e088 \n13: 0x1391014f4 \n14: 0x139107184 \n15: 0x1391085d4 \n16: 0x13910c4e0 \n17: 0x13910a9f0 \n18: 0x105d40bec Builtins_InterpreterEntryTrampoline [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n19: 0x105d40bec Builtins_InterpreterEntryTrampoline [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n20: 0x105d40bec Builtins_InterpreterEntryTrampoline [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n21: 0x105d40bec Builtins_InterpreterEntryTrampoline [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n22: 0x105d40bec Builtins_InterpreterEntryTrampoline [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n23: 0x105d7f7e8 Builtins_AsyncFunctionAwaitResolveClosure [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n24: 0x105e54e58 Builtins_PromiseFulfillReactionJob [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n25: 0x105d6ebd0 Builtins_RunMicrotasks [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n26: 0x105d3e7b0 Builtins_JSRunMicrotasksEntry [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n27: 0x105267690 v8::internal::(anonymous namespace)::Invoke(v8::internal::Isolate*, v8::internal::(anonymous namespace)::InvokeParams const&) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n28: 0x105267f04 v8::internal::(anonymous namespace)::InvokeWithTryCatch(v8::internal::Isolate*, v8::internal::(anonymous namespace)::InvokeParams const&) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n29: 0x105268040 v8::internal::Execution::TryRunMicrotasks(v8::internal::Isolate*, v8::internal::MicrotaskQueue*) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n30: 0x105296de4 v8::internal::MicrotaskQueue::RunMicrotasks(v8::internal::Isolate*) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n31: 0x105297744 v8::internal::MicrotaskQueue::PerformCheckpoint(v8::Isolate*) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n32: 0x104d270b8 node::InternalCallbackScope::Close() [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n33: 0x104d26a90 node::InternalCallbackScope::~InternalCallbackScope() [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n34: 0x104df2874 node::StartExecution(node::Environment*, std::__1::function<v8::MaybeLocal<v8::Value> (node::StartExecutionCallbackInfoWithModule const&)>) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n35: 0x104d2d8a0 node::LoadEnvironment(node::Environment*, std::__1::function<v8::MaybeLocal<v8::Value> (node::StartExecutionCallbackInfoWithModule const&)>, std::__1::function<void (node::Environment*, v8::Local<v8::Value>, v8::Local<v8::Value>)>) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n36: 0x104ea4774 node::NodeMainInstance::Run() [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n37: 0x104df67e0 node::Start(int, char**) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n38: 0x194280274 start [/usr/lib/dyld]"
+      "error": "<--- Last few GCs --->\n\n[29915:0x148008000]    70270 ms: Mark-Compact (reduce) 1016.2 (1032.4) -> 1013.1 (1030.1) MB, pooled: 0 MB, 143.79 / 0.00 ms  (+ 0.0 ms in 2 steps since start of marking, biggest step 0.0 ms, walltime since start of marking 146 ms) (average mu = 0.219, cu[29915:0x148008000]    70382 ms: Mark-Compact 1016.4 (1031.5) -> 1014.7 (1032.5) MB, pooled: 0 MB, 92.12 / 0.00 ms  (average mu = 0.206, current mu = 0.176) allocation failure; GC in old space requested\n\nFATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory\n----- Native stack trace -----\n\n 1: 0x100b3d9f4 node::OOMErrorHandler(char const*, v8::OOMDetails const&) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 2: 0x100db8000 v8::internal::V8::FatalProcessOutOfMemory(v8::internal::Isolate*, char const*, v8::OOMDetails const&) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 3: 0x1010174b4 v8::internal::Heap::stack() [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 4: 0x10101a888 v8::internal::Heap::HasLowYoungGenerationAllocationRate() [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 5: 0x10102ba7c v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags)::$_1::operator()() const [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 6: 0x10102b350 void heap::base::Stack::SetMarkerAndCallbackImpl<v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags)::$_1>(heap::base::Stack*, void*, void const*) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 7: 0x1019dfbe0 PushAllRegistersAndIterateStack [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 8: 0x1010151b8 v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 9: 0x101009ec4 v8::internal::HeapAllocator::AllocateRawWithRetryOrFailSlowPath(int, v8::internal::AllocationType, v8::internal::AllocationOrigin, v8::internal::AllocationAlignment) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n10: 0x100fd5960 v8::internal::FactoryBase<v8::internal::Factory>::NewFixedArrayWithFiller(v8::internal::DirectHandle<v8::internal::Map>, int, v8::internal::DirectHandle<v8::internal::HeapObject>, v8::internal::AllocationType) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n11: 0x101359090 v8::internal::Handle<v8::internal::OrderedHashSet>::MaybeType v8::internal::OrderedHashTable<v8::internal::OrderedHashSet, 1>::Rehash<v8::internal::Handle>(v8::internal::Isolate*, v8::internal::Handle<v8::internal::OrderedHashSet>, int) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n12: 0x101471874 v8::internal::Runtime_SetGrow(int, unsigned long*, v8::internal::Isolate*) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n13: 0x101ad2234 Builtins_CEntry_Return1_ArgvOnStack_NoBuiltinExit [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n14: 0x101ab5620 Builtins_SetPrototypeAdd [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n15: 0x1202812e0 \n16: 0x12017d9e0 \n17: 0x12028e5f4 \n18: 0x120291dc0 \n19: 0x120290710 \n20: 0x101a34bec Builtins_InterpreterEntryTrampoline [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n21: 0x101a34bec Builtins_InterpreterEntryTrampoline [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n22: 0x101a34bec Builtins_InterpreterEntryTrampoline [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n23: 0x101a34bec Builtins_InterpreterEntryTrampoline [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n24: 0x101a34bec Builtins_InterpreterEntryTrampoline [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n25: 0x101a737e8 Builtins_AsyncFunctionAwaitResolveClosure [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n26: 0x101b48e58 Builtins_PromiseFulfillReactionJob [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n27: 0x101a62bd0 Builtins_RunMicrotasks [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n28: 0x101a327b0 Builtins_JSRunMicrotasksEntry [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n29: 0x100f5b690 v8::internal::(anonymous namespace)::Invoke(v8::internal::Isolate*, v8::internal::(anonymous namespace)::InvokeParams const&) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n30: 0x100f5bf04 v8::internal::(anonymous namespace)::InvokeWithTryCatch(v8::internal::Isolate*, v8::internal::(anonymous namespace)::InvokeParams const&) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n31: 0x100f5c040 v8::internal::Execution::TryRunMicrotasks(v8::internal::Isolate*, v8::internal::MicrotaskQueue*) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n32: 0x100f8ade4 v8::internal::MicrotaskQueue::RunMicrotasks(v8::internal::Isolate*) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n33: 0x100f8b744 v8::internal::MicrotaskQueue::PerformCheckpoint(v8::Isolate*) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n34: 0x100a1b0b8 node::InternalCallbackScope::Close() [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n35: 0x100a1aa90 node::InternalCallbackScope::~InternalCallbackScope() [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n36: 0x100ae6874 node::StartExecution(node::Environment*, std::__1::function<v8::MaybeLocal<v8::Value> (node::StartExecutionCallbackInfoWithModule const&)>) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n37: 0x100a218a0 node::LoadEnvironment(node::Environment*, std::__1::function<v8::MaybeLocal<v8::Value> (node::StartExecutionCallbackInfoWithModule const&)>, std::__1::function<void (node::Environment*, v8::Local<v8::Value>, v8::Local<v8::Value>)>) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n38: 0x100b98774 node::NodeMainInstance::Run() [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n39: 0x100aea7e0 node::Start(int, char**) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n40: 0x194280274 start [/usr/lib/dyld]"
     }
   ]
 }

@@ -48,14 +48,14 @@ heap, serialized index bytes, and an esbuild-minified candidate bundle size.
 ## Recorded Node 24 run
 
 `results/search-candidates.json` records the complete 30-iteration run against method commit
-`1ec7a2773c4aad7528b47a3cbedfada8b88d645e` on Node 24.19.0, macOS arm64, Apple M4, 16 GiB RAM. Selected 10k
+`653f554033555745909d0a00ffe2e9fc592c4d51` on Node 24.19.0, macOS arm64, Apple M4, 16 GiB RAM. Selected 10k
 metrics are summarized below; the JSON remains the source of truth for every query, P50/P95 value, digest, and bounded
 failure trace. Machine-specific home paths in those traces are redacted.
 
 | Candidate | Build | Update | Restore | Retained / stage peak heap | Index / bundle | Exact P95 | English P95 | Fuzzy P95 | Chinese P95 | Exact R@5/10 | Chinese R@5/10 |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| MiniSearch | 10.11 s | 0.54 ms | 319 ms | 95.6 / 342.5 MiB | 21.5 MiB / 17.2 KiB | 0.73 ms | 3.45 ms | 2.33 ms | 10.76 ms | 100% / 100% | 100% / 100% |
-| Orama | 25.61 s | 5.32 ms | 816 ms | 279.5 / 480 MiB | 112 MiB / 66.7 KiB | 48.41 ms | 5.91 ms | 17.65 ms | 36.44 ms | 100% / 100% | 83% / 83% |
+| MiniSearch | 9.98 s | 0.83 ms | 267 ms | 83.6 / 272.3 MiB | 20.7 MiB / 17.2 KiB | 0.76 ms | 2.98 ms | 3.17 ms | 11.85 ms | 100% / 100% | 100% / 100% |
+| Orama | 14.62 s | 3.43 ms | 418 ms | 254.5 / 453.5 MiB | 108.5 MiB / 66.7 KiB | 29.02 ms | 1.85 ms | 7.87 ms | 20.73 ms | 100% / 100% | 83% / 83% |
 
 Both 50k workers terminated with `SIGABRT` under the fixed 1024 MiB old-space budget; their final V8 traces are retained
 in the JSON. This is negative evidence, not a missing row: neither candidate is established as safe for a 50k corpus of
