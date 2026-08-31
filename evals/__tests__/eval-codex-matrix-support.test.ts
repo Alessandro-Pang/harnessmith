@@ -11,6 +11,57 @@ async function support() {
   );
 }
 
+test('structured Codex capacity failures remain retryable transport failures', async () => {
+  const { evaluateCodexTurnCompletion } = await support();
+  const completion = evaluateCodexTurnCompletion({
+    status: 1,
+    signal: null,
+    error: 'evaluator-failure:host-exit',
+    stderr: '',
+    stdout:
+      '{"type":"turn.failed","error":{"message":"Selected model is at capacity. Please try a different model."}}\n',
+  });
+
+  assert.equal(completion.completed, false);
+  assert.equal(completion.transportFailure, true);
+});
+
+test('scenario aggregation preserves completion-classified transport failures', async () => {
+  const { classifyCodexScenarioHostFailures } = await support();
+  const classification = classifyCodexScenarioHostFailures([
+    {
+      result: {
+        captureKind: 'evaluator-failure',
+        error: 'evaluator-failure:host-exit',
+      },
+      completion: { transportFailure: true },
+    },
+  ]);
+
+  assert.deepEqual(classification, {
+    transportFailed: true,
+    hostEvaluatorFailed: false,
+  });
+});
+
+test('scenario aggregation preserves genuine evaluator failures', async () => {
+  const { classifyCodexScenarioHostFailures } = await support();
+  const classification = classifyCodexScenarioHostFailures([
+    {
+      result: {
+        captureKind: 'evaluator-failure',
+        error: 'evaluator-failure:host-exit',
+      },
+      completion: { transportFailure: false },
+    },
+  ]);
+
+  assert.deepEqual(classification, {
+    transportFailed: false,
+    hostEvaluatorFailed: true,
+  });
+});
+
 test('resumed Codex turns retain their additional writable roots through config', async () => {
   const { buildCodexTurn } = await support();
   const args = buildCodexTurn({

@@ -22,6 +22,7 @@ import {
   canonicalPathWithin,
   classifyBoundaryCommand,
   checkpointIdempotencyIsProven,
+  classifyCodexScenarioHostFailures,
   containsApiWorkerBoundary,
   containsAssertedObsoleteRecall,
   containsRetryInvestigationContext,
@@ -3015,12 +3016,7 @@ write(join(recordDir, 'observations.json'), observationsText);
 const hostTurnsPassed = everyTurnCompleted;
 const evaluatorHealthy = evaluatorErrors.length === 0 && treeErrors.length === 0;
 const checks = [hostTurnsPassed, evidenceComplete, evaluatorHealthy, ...passValues, ...forbiddenValues];
-const transportFailed = turnResults.some((turn) => turn.result.captureKind === 'transport-failure');
-const hostEvaluatorFailed = turnResults.some(
-  (turn) =>
-    turn.result.captureKind === 'evaluator-failure' ||
-    (turn.result.captureKind !== 'transport-failure' && Boolean(turn.result.error)),
-);
+const { transportFailed, hostEvaluatorFailed } = classifyCodexScenarioHostFailures(turnResults);
 let outcome = transportFailed
   ? 'infra-inconclusive'
   : !evidenceComplete || !evaluatorHealthy || hostEvaluatorFailed
