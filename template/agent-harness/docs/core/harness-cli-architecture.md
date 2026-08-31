@@ -75,6 +75,20 @@ frontmatter，Ajv 负责 JSON Schema，`write-file-atomic` 负责原子写。路
 backend digest 和 backend 文档清单，倒排索引不存正文。
 缓存可增量更新、可随时重建，不是 Memory、规则或项目事实源；`route` / `explain` 不依赖它。
 
+Phase 1 backend 选型证据固定在独立 benchmark 提交
+[`bf27c9331a5cacb6294eadcb310919799d6d43c3`](https://github.com/Alessandro-Pang/harnessmith/tree/bf27c9331a5cacb6294eadcb310919799d6d43c3/benchmarks/search-candidates)，
+方法提交为 `653f554033555745909d0a00ffe2e9fc592c4d51`。该结果使用 Node 24.19.0、macOS arm64、
+Apple M4、16 GiB RAM 和 30 次查询迭代；真实 Harness 源语料 digest 为
+`543d6a82728099e5682fe6eb44fa56bc62b5da32f4125e54706259c1df5abd05`，10k 扩容语料 digest 为
+`9dc18925e5eb55c8d953243e25bf7ea9d1d3eda606502c677836ea0c3e1f7d83`，query set digest 为
+`3a0f41ae11ae9f14c0c6a58c356fae4a67ea665e876dda03f59d926e89702a64`，统一配置 digest 为
+`429037b8b687c31b5fba2902944473920f0c94664d7cb7bed1a310bc673ddd50`。在 10k persistent-index
+规模上，MiniSearch 的 cold restore 为 267 ms、retained heap 为 83.6 MiB、索引为 20.7 MiB，固定质量集
+Top-5/Top-10 均为 100%；Orama 分别为 418 ms、254.5 MiB、108.5 MiB，中文自然句 Top-5/Top-10
+为 83%。因此 Phase 1 选择 MiniSearch，且不把 Orama 引入生产依赖。两者在固定 1 GiB old-space 下的
+50k 真实正文扩容均因 OOM 失败；这是一条明确的负面规模证据，不扩大当前 10k 选型结论，也不取消
+既有源文件、时间、序列化大小门禁和扫描回退。
+
 结果数/行长限制和扫描预算彼此独立；扫描默认最多深入 8 层、访问 5000 个目录条目、进入 1000 个目录、
 访问 1000 个普通文件、读取单文件 1 MiB、总计 8 MiB，并运行 2 秒；读取前先 stat。显式索引
 刷新把发现上限扩展到 50000 个文件、256 MiB 和 60 秒，但仍可由相同预算参数收窄。JSON 结果除
