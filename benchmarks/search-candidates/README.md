@@ -25,8 +25,10 @@ sentence. The report records the source corpus digest, generated corpus digest, 
 digest.
 
 `queries.json` fixes exact technical identifiers, an English title query, a bounded Latin typo, and Chinese natural
-sentences against known source documents. Quality is reported as document-level Top-5/Top-10 recall after deduplicating
-replicated chunks by their real source path.
+sentences against known source documents. Latency is measured against every requested scale. Ranking quality is measured
+against one copy of every real Harness documentation chunk and reported as document-level Top-5/Top-10 recall. Keeping
+the quality corpus separate prevents identical scale replicas from crowding each other out of Top-N; both corpus digests
+are recorded in the result.
 
 ## Candidate configuration
 

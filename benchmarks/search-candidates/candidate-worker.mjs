@@ -194,12 +194,27 @@ const queryResults = [];
 const latencyByCategory = new Map();
 for (const query of querySet.queries) {
   const samples = [];
-  let hits = [];
   for (let iteration = 0; iteration < iterations; iteration += 1) {
     const started = performance.now();
-    hits = await adapter.query(backend, query.query, query.category);
+    await adapter.query(backend, query.query, query.category, 10);
     samples.push(performance.now() - started);
   }
+  const categorySamples = latencyByCategory.get(query.category) || [];
+  categorySamples.push(...samples);
+  latencyByCategory.set(query.category, categorySamples);
+}
+observedHeap.push(process.memoryUsage().heapUsed);
+collectGarbage();
+const retainedHeapBytes = Math.max(0, process.memoryUsage().heapUsed - baselineHeap);
+
+// Ranking quality is evaluated on the single-copy real corpus. Measuring it on
+// the scaled corpus would let identical benchmark replicas crowd each other out
+// of Top-N and turn the expansion strategy into a false quality regression.
+const qualityCorpus = loadHarnessCorpus(corpus.baseChunks);
+let qualityBackend = adapter.create();
+await adapter.build(qualityBackend, qualityCorpus.documents);
+for (const query of querySet.queries) {
+  const hits = await adapter.query(qualityBackend, query.query, query.category);
   const top5 = uniqueSources(hits, 5);
   const top10 = uniqueSources(hits, 10);
   queryResults.push({
@@ -209,16 +224,10 @@ for (const query of querySet.queries) {
     top10,
     recallAt5: recall(top5, query.relevant),
     recallAt10: recall(top10, query.relevant),
-    latencyP50Ms: percentile(samples, 0.5),
-    latencyP95Ms: percentile(samples, 0.95),
   });
-  const categorySamples = latencyByCategory.get(query.category) || [];
-  categorySamples.push(...samples);
-  latencyByCategory.set(query.category, categorySamples);
 }
-observedHeap.push(process.memoryUsage().heapUsed);
+qualityBackend = null;
 collectGarbage();
-const retainedHeapBytes = Math.max(0, process.memoryUsage().heapUsed - baselineHeap);
 
 const qualityByCategory = Object.fromEntries(
   [...new Set(queryResults.map(({ category }) => category))].map((category) => {
@@ -259,6 +268,11 @@ console.log(
       sourceDigest: corpus.sourceDigest,
       corpusDigest: corpus.corpusDigest,
       construction: corpus.construction,
+    },
+    qualityCorpus: {
+      documents: qualityCorpus.documents.length,
+      corpusDigest: qualityCorpus.corpusDigest,
+      construction: 'One copy of every real Harness documentation chunk; no scale replicas.',
     },
     querySet: { version: querySet.version, digest: querySet.digest },
     configuration,

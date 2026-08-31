@@ -53,7 +53,7 @@ for (const size of sizes) {
 }
 
 const report = {
-  version: 1,
+  version: 2,
   generatedAt: new Date().toISOString(),
   repositoryCommit: commit,
   environment: {
