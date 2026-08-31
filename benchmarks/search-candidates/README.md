@@ -44,3 +44,24 @@ are recorded in the result.
 
 Metrics include build, one-document update, cold restore, per-category P50/P95, Top-5/Top-10 recall, retained/stage-peak
 heap, serialized index bytes, and an esbuild-minified candidate bundle size.
+
+## Recorded Node 24 run
+
+`results/search-candidates.json` records the complete 30-iteration run against method commit
+`1ec7a2773c4aad7528b47a3cbedfada8b88d645e` on Node 24.19.0, macOS arm64, Apple M4, 16 GiB RAM. Selected 10k
+metrics are summarized below; the JSON remains the source of truth for every query, P50/P95 value, digest, and bounded
+failure trace. Machine-specific home paths in those traces are redacted.
+
+| Candidate | Build | Update | Restore | Retained / stage peak heap | Index / bundle | Exact P95 | English P95 | Fuzzy P95 | Chinese P95 | Exact R@5/10 | Chinese R@5/10 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| MiniSearch | 10.11 s | 0.54 ms | 319 ms | 95.6 / 342.5 MiB | 21.5 MiB / 17.2 KiB | 0.73 ms | 3.45 ms | 2.33 ms | 10.76 ms | 100% / 100% | 100% / 100% |
+| Orama | 25.61 s | 5.32 ms | 816 ms | 279.5 / 480 MiB | 112 MiB / 66.7 KiB | 48.41 ms | 5.91 ms | 17.65 ms | 36.44 ms | 100% / 100% | 83% / 83% |
+
+Both 50k workers terminated with `SIGABRT` under the fixed 1024 MiB old-space budget; their final V8 traces are retained
+in the JSON. This is negative evidence, not a missing row: neither candidate is established as safe for a 50k corpus of
+these real, relatively large Harness chunks under that memory limit.
+
+MiniSearch remains the Phase 1 choice because at the 10k persistent-index scale it preserves the fixed query quality
+while using substantially less retained heap, serialized storage, and bundle space, and it builds and restores faster.
+The 50k result does not justify silently lifting the persistence budget; larger corpora must remain bounded/fail-fast or
+fall back to scanning until a separately evidenced backend or partitioning design exists.

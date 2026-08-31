@@ -1,0 +1,1135 @@
+{
+  "version": 2,
+  "generatedAt": "2026-08-31T01:57:46.276Z",
+  "repositoryCommit": "1ec7a2773c4aad7528b47a3cbedfada8b88d645e",
+  "environment": {
+    "node": "v24.19.0",
+    "platform": "darwin",
+    "release": "24.3.0",
+    "arch": "arm64",
+    "cpu": "Apple M4",
+    "logicalCpuCount": 10,
+    "totalMemoryBytes": 17179869184
+  },
+  "command": "pnpm run benchmark -- --sizes 1000,10000,50000 --iterations 30",
+  "iterations": 30,
+  "heapLimitMiBPerWorker": 1024,
+  "results": [
+    {
+      "candidate": "minisearch",
+      "size": 1000,
+      "buildMs": 1113.491583,
+      "incrementalUpdateMs": 0.3915420000000722,
+      "coldRestoreMs": 44.84129199999984,
+      "retainedHeapBytes": 14997336,
+      "observedStagePeakHeapBytes": 179780080,
+      "serializedIndexBytes": 2159370,
+      "bundledCandidateBytes": 17663,
+      "latency": {
+        "exact-technical": {
+          "p50Ms": 0.03008399999998801,
+          "p95Ms": 0.11141700000007404
+        },
+        "english": {
+          "p50Ms": 0.1948330000000169,
+          "p95Ms": 0.4457910000000993
+        },
+        "fuzzy": {
+          "p50Ms": 0.3147080000001097,
+          "p95Ms": 0.7264999999999873
+        },
+        "chinese-natural": {
+          "p50Ms": 0.706957999999986,
+          "p95Ms": 0.8770000000001801
+        }
+      },
+      "qualityByCategory": {
+        "exact-technical": {
+          "meanRecallAt5": 1,
+          "meanRecallAt10": 1
+        },
+        "english": {
+          "meanRecallAt5": 1,
+          "meanRecallAt10": 1
+        },
+        "fuzzy": {
+          "meanRecallAt5": 1,
+          "meanRecallAt10": 1
+        },
+        "chinese-natural": {
+          "meanRecallAt5": 1,
+          "meanRecallAt10": 1
+        }
+      },
+      "queries": [
+        {
+          "id": "technical-agents-file",
+          "category": "exact-technical",
+          "top5": [
+            "standards/project-agents.md",
+            "core/git-conventions.md",
+            "core/operating-model.md",
+            "standards/project-agent-docs.md",
+            "README.md"
+          ],
+          "top10": [
+            "standards/project-agents.md",
+            "core/git-conventions.md",
+            "core/operating-model.md",
+            "standards/project-agent-docs.md",
+            "README.md",
+            "manifest.yaml",
+            "standards/user-profile-memory.md"
+          ],
+          "recallAt5": 1,
+          "recallAt10": 1
+        },
+        {
+          "id": "technical-capture-input",
+          "category": "exact-technical",
+          "top5": [
+            "manifest.yaml",
+            "standards/project-agent-docs.md",
+            "core/harness-cli-architecture.md"
+          ],
+          "top10": [
+            "manifest.yaml",
+            "standards/project-agent-docs.md",
+            "core/harness-cli-architecture.md"
+          ],
+          "recallAt5": 1,
+          "recallAt10": 1
+        },
+        {
+          "id": "technical-host-evals",
+          "category": "exact-technical",
+          "top5": [
+            "manifest.yaml"
+          ],
+          "top10": [
+            "manifest.yaml"
+          ],
+          "recallAt5": 1,
+          "recallAt10": 1
+        },
+        {
+          "id": "english-title",
+          "category": "english",
+          "top5": [
+            "core/safety-and-verification.md",
+            "README.md",
+            "manifest.yaml",
+            "core/tool-routing.md",
+            "projects/repository-map.md"
+          ],
+          "top10": [
+            "core/safety-and-verification.md",
+            "README.md",
+            "manifest.yaml",
+            "core/tool-routing.md",
+            "projects/repository-map.md",
+            "playbooks/research-and-design.md",
+            "playbooks/release-and-external.md",
+            "playbooks/change.md",
+            "playbooks/diagnose.md",
+            "playbooks/review.md"
+          ],
+          "recallAt5": 1,
+          "recallAt10": 1
+        },
+        {
+          "id": "english-limited-typo",
+          "category": "fuzzy",
+          "top5": [
+            "projects/repository-map.md",
+            "manifest.yaml",
+            "README.md",
+            "core/operating-model.md",
+            "playbooks/change.md"
+          ],
+          "top10": [
+            "projects/repository-map.md",
+            "manifest.yaml",
+            "README.md",
+            "core/operating-model.md",
+            "playbooks/change.md",
+            "core/harness-cli-architecture.md",
+            "core/git-conventions.md",
+            "core/long-running-tasks.md"
+          ],
+          "recallAt5": 1,
+          "recallAt10": 1
+        },
+        {
+          "id": "chinese-permission-safety",
+          "category": "chinese-natural",
+          "top5": [
+            "README.md",
+            "manifest.yaml",
+            "core/safety-and-verification.md",
+            "playbooks/review.md",
+            "standards/project-agent-docs.md"
+          ],
+          "top10": [
+            "README.md",
+            "manifest.yaml",
+            "core/safety-and-verification.md",
+            "playbooks/review.md",
+            "standards/project-agent-docs.md",
+            "core/harness-cli-architecture.md",
+            "core/long-running-tasks.md",
+            "standards/user-profile-memory.md",
+            "playbooks/change.md",
+            "projects/repository-map.md"
+          ],
+          "recallAt5": 1,
+          "recallAt10": 1
+        },
+        {
+          "id": "chinese-cross-repository",
+          "category": "chinese-natural",
+          "top5": [
+            "projects/repository-map.md",
+            "playbooks/release-and-external.md",
+            "playbooks/change.md",
+            "core/harness-cli-architecture.md",
+            "standards/project-agent-docs.md"
+          ],
+          "top10": [
+            "projects/repository-map.md",
+            "playbooks/release-and-external.md",
+            "playbooks/change.md",
+            "core/harness-cli-architecture.md",
+            "standards/project-agent-docs.md",
+            "standards/user-profile-memory.md",
+            "core/git-conventions.md",
+            "core/operating-model.md",
+            "manifest.yaml",
+            "playbooks/review.md"
+          ],
+          "recallAt5": 1,
+          "recallAt10": 1
+        },
+        {
+          "id": "chinese-memory-isolation",
+          "category": "chinese-natural",
+          "top5": [
+            "core/harness-cli-architecture.md",
+            "standards/project-agent-docs.md",
+            "core/safety-and-verification.md",
+            "projects/repository-map.md",
+            "standards/user-profile-memory.md"
+          ],
+          "top10": [
+            "core/harness-cli-architecture.md",
+            "standards/project-agent-docs.md",
+            "core/safety-and-verification.md",
+            "projects/repository-map.md",
+            "standards/user-profile-memory.md",
+            "manifest.yaml",
+            "standards/project-agents.md",
+            "core/long-running-tasks.md",
+            "README.md",
+            "core/observability.md"
+          ],
+          "recallAt5": 1,
+          "recallAt10": 1
+        }
+      ],
+      "corpus": {
+        "files": 18,
+        "baseChunks": 80,
+        "sourceDigest": "543d6a82728099e5682fe6eb44fa56bc62b5da32f4125e54706259c1df5abd05",
+        "corpusDigest": "263942e33296e37e9d59fa54c29597883eb0f619608e2f99203c6674fec62542",
+        "construction": "Sorted public template/agent-harness/docs Markdown/YAML; split by Markdown heading and 16k characters; deterministically cycle real chunks with stable replica ids."
+      },
+      "qualityCorpus": {
+        "documents": 80,
+        "corpusDigest": "06ff92f46be474cc48183bb548de1ae198ab8f8c213cb3e96dbcb5c4c30aa423",
+        "construction": "One copy of every real Harness documentation chunk; no scale replicas."
+      },
+      "querySet": {
+        "version": 1,
+        "digest": "3a0f41ae11ae9f14c0c6a58c356fae4a67ea665e876dda03f59d926e89702a64"
+      },
+      "configuration": {
+        "fields": [
+          "aliases",
+          "title",
+          "headings",
+          "path",
+          "body"
+        ],
+        "boosts": {
+          "aliases": 10,
+          "title": 8,
+          "headings": 5,
+          "path": 2,
+          "body": 1
+        },
+        "tokenizer": "Harness analyzer v2: NFKC, Chinese words+bigrams, preserved technical identifiers",
+        "minisearch": {
+          "version": "7.2.0",
+          "prefix": "last nontechnical term only; Latin >=3 or Han >=2",
+          "fuzzy": "nontechnical Latin/alphanumeric terms length >=5, distance 1",
+          "weights": {
+            "fuzzy": 0.35,
+            "prefix": 0.7
+          }
+        },
+        "orama": {
+          "version": "3.1.18",
+          "prefix": "exact=false for nontechnical queries",
+          "fuzzy": "tolerance 1 only for fuzzy-category queries"
+        }
+      },
+      "configurationDigest": "429037b8b687c31b5fba2902944473920f0c94664d7cb7bed1a310bc673ddd50",
+      "repositoryCommit": "1ec7a2773c4aad7528b47a3cbedfada8b88d645e",
+      "repositoryRoot": "harnessmith-search-evidence"
+    },
+    {
+      "candidate": "orama",
+      "size": 1000,
+      "buildMs": 1496.682583,
+      "incrementalUpdateMs": 0.854415999999901,
+      "coldRestoreMs": 42.63308299999994,
+      "retainedHeapBytes": 34609672,
+      "observedStagePeakHeapBytes": 88014424,
+      "serializedIndexBytes": 12107235,
+      "bundledCandidateBytes": 68265,
+      "latency": {
+        "exact-technical": {
+          "p50Ms": 0.26220899999998437,
+          "p95Ms": 2.2345000000000255
+        },
+        "english": {
+          "p50Ms": 0.11804200000005949,
+          "p95Ms": 0.3596660000000611
+        },
+        "fuzzy": {
+          "p50Ms": 1.7690419999998994,
+          "p95Ms": 5.982124999999996
+        },
+        "chinese-natural": {
+          "p50Ms": 0.5880000000001928,
+          "p95Ms": 1.360541000000012
+        }
+      },
+      "qualityByCategory": {
+        "exact-technical": {
+          "meanRecallAt5": 1,
+          "meanRecallAt10": 1
+        },
+        "english": {
+          "meanRecallAt5": 1,
+          "meanRecallAt10": 1
+        },
+        "fuzzy": {
+          "meanRecallAt5": 1,
+          "meanRecallAt10": 1
+        },
+        "chinese-natural": {
+          "meanRecallAt5": 0.8333333333333334,
+          "meanRecallAt10": 0.8333333333333334
+        }
+      },
+      "queries": [
+        {
+          "id": "technical-agents-file",
+          "category": "exact-technical",
+          "top5": [
+            "standards/project-agents.md",
+            "core/git-conventions.md",
+            "core/operating-model.md",
+            "standards/project-agent-docs.md",
+            "README.md"
+          ],
+          "top10": [
+            "standards/project-agents.md",
+            "core/git-conventions.md",
+            "core/operating-model.md",
+            "standards/project-agent-docs.md",
+            "README.md",
+            "standards/user-profile-memory.md",
+            "manifest.yaml"
+          ],
+          "recallAt5": 1,
+          "recallAt10": 1
+        },
+        {
+          "id": "technical-capture-input",
+          "category": "exact-technical",
+          "top5": [
+            "manifest.yaml",
+            "standards/project-agent-docs.md",
+            "core/harness-cli-architecture.md"
+          ],
+          "top10": [
+            "manifest.yaml",
+            "standards/project-agent-docs.md",
+            "core/harness-cli-architecture.md"
+          ],
+          "recallAt5": 1,
+          "recallAt10": 1
+        },
+        {
+          "id": "technical-host-evals",
+          "category": "exact-technical",
+          "top5": [
+            "standards/project-agent-docs.md",
+            "manifest.yaml",
+            "core/harness-cli-architecture.md"
+          ],
+          "top10": [
+            "standards/project-agent-docs.md",
+            "manifest.yaml",
+            "core/harness-cli-architecture.md"
+          ],
+          "recallAt5": 1,
+          "recallAt10": 1
+        },
+        {
+          "id": "english-title",
+          "category": "english",
+          "top5": [
+            "core/safety-and-verification.md",
+            "core/tool-routing.md",
+            "playbooks/research-and-design.md",
+            "playbooks/change.md",
+            "playbooks/diagnose.md"
+          ],
+          "top10": [
+            "core/safety-and-verification.md",
+            "core/tool-routing.md",
+            "playbooks/research-and-design.md",
+            "playbooks/change.md",
+            "playbooks/diagnose.md",
+            "playbooks/release-and-external.md",
+            "projects/repository-map.md",
+            "README.md",
+            "manifest.yaml",
+            "playbooks/review.md"
+          ],
+          "recallAt5": 1,
+          "recallAt10": 1
+        },
+        {
+          "id": "english-limited-typo",
+          "category": "fuzzy",
+          "top5": [
+            "projects/repository-map.md",
+            "README.md",
+            "core/observability.md",
+            "core/tool-routing.md",
+            "manifest.yaml"
+          ],
+          "top10": [
+            "projects/repository-map.md",
+            "README.md",
+            "core/observability.md",
+            "core/tool-routing.md",
+            "manifest.yaml",
+            "core/operating-model.md",
+            "playbooks/change.md",
+            "core/git-conventions.md",
+            "core/harness-cli-architecture.md",
+            "core/long-running-tasks.md"
+          ],
+          "recallAt5": 1,
+          "recallAt10": 1
+        },
+        {
+          "id": "chinese-permission-safety",
+          "category": "chinese-natural",
+          "top5": [
+            "core/safety-and-verification.md",
+            "playbooks/review.md",
+            "standards/project-agent-docs.md",
+            "standards/user-profile-memory.md",
+            "README.md"
+          ],
+          "top10": [
+            "core/safety-and-verification.md",
+            "playbooks/review.md",
+            "standards/project-agent-docs.md",
+            "standards/user-profile-memory.md",
+            "README.md",
+            "playbooks/release-and-external.md",
+            "playbooks/change.md",
+            "playbooks/research-and-design.md",
+            "projects/repository-map.md",
+            "playbooks/diagnose.md"
+          ],
+          "recallAt5": 1,
+          "recallAt10": 1
+        },
+        {
+          "id": "chinese-cross-repository",
+          "category": "chinese-natural",
+          "top5": [
+            "projects/repository-map.md",
+            "playbooks/review.md",
+            "playbooks/release-and-external.md",
+            "core/tool-routing.md",
+            "core/operating-model.md"
+          ],
+          "top10": [
+            "projects/repository-map.md",
+            "playbooks/review.md",
+            "playbooks/release-and-external.md",
+            "core/tool-routing.md",
+            "core/operating-model.md",
+            "core/git-conventions.md",
+            "playbooks/change.md",
+            "standards/project-agent-docs.md",
+            "README.md",
+            "standards/user-profile-memory.md"
+          ],
+          "recallAt5": 1,
+          "recallAt10": 1
+        },
+        {
+          "id": "chinese-memory-isolation",
+          "category": "chinese-natural",
+          "top5": [
+            "core/safety-and-verification.md",
+            "projects/repository-map.md",
+            "core/operating-model.md",
+            "standards/project-agent-docs.md",
+            "standards/user-profile-memory.md"
+          ],
+          "top10": [
+            "core/safety-and-verification.md",
+            "projects/repository-map.md",
+            "core/operating-model.md",
+            "standards/project-agent-docs.md",
+            "standards/user-profile-memory.md",
+            "standards/project-agents.md",
+            "README.md",
+            "core/observability.md",
+            "core/long-running-tasks.md",
+            "manifest.yaml"
+          ],
+          "recallAt5": 0.5,
+          "recallAt10": 0.5
+        }
+      ],
+      "corpus": {
+        "files": 18,
+        "baseChunks": 80,
+        "sourceDigest": "543d6a82728099e5682fe6eb44fa56bc62b5da32f4125e54706259c1df5abd05",
+        "corpusDigest": "263942e33296e37e9d59fa54c29597883eb0f619608e2f99203c6674fec62542",
+        "construction": "Sorted public template/agent-harness/docs Markdown/YAML; split by Markdown heading and 16k characters; deterministically cycle real chunks with stable replica ids."
+      },
+      "qualityCorpus": {
+        "documents": 80,
+        "corpusDigest": "06ff92f46be474cc48183bb548de1ae198ab8f8c213cb3e96dbcb5c4c30aa423",
+        "construction": "One copy of every real Harness documentation chunk; no scale replicas."
+      },
+      "querySet": {
+        "version": 1,
+        "digest": "3a0f41ae11ae9f14c0c6a58c356fae4a67ea665e876dda03f59d926e89702a64"
+      },
+      "configuration": {
+        "fields": [
+          "aliases",
+          "title",
+          "headings",
+          "path",
+          "body"
+        ],
+        "boosts": {
+          "aliases": 10,
+          "title": 8,
+          "headings": 5,
+          "path": 2,
+          "body": 1
+        },
+        "tokenizer": "Harness analyzer v2: NFKC, Chinese words+bigrams, preserved technical identifiers",
+        "minisearch": {
+          "version": "7.2.0",
+          "prefix": "last nontechnical term only; Latin >=3 or Han >=2",
+          "fuzzy": "nontechnical Latin/alphanumeric terms length >=5, distance 1",
+          "weights": {
+            "fuzzy": 0.35,
+            "prefix": 0.7
+          }
+        },
+        "orama": {
+          "version": "3.1.18",
+          "prefix": "exact=false for nontechnical queries",
+          "fuzzy": "tolerance 1 only for fuzzy-category queries"
+        }
+      },
+      "configurationDigest": "429037b8b687c31b5fba2902944473920f0c94664d7cb7bed1a310bc673ddd50",
+      "repositoryCommit": "1ec7a2773c4aad7528b47a3cbedfada8b88d645e",
+      "repositoryRoot": "harnessmith-search-evidence"
+    },
+    {
+      "candidate": "minisearch",
+      "size": 10000,
+      "buildMs": 10109.642375000001,
+      "incrementalUpdateMs": 0.5352080000011483,
+      "coldRestoreMs": 318.71791699999994,
+      "retainedHeapBytes": 100192448,
+      "observedStagePeakHeapBytes": 359110904,
+      "serializedIndexBytes": 22552762,
+      "bundledCandidateBytes": 17663,
+      "latency": {
+        "exact-technical": {
+          "p50Ms": 0.25791600000047765,
+          "p95Ms": 0.7296669999996084
+        },
+        "english": {
+          "p50Ms": 1.8145839999997406,
+          "p95Ms": 3.4476660000000265
+        },
+        "fuzzy": {
+          "p50Ms": 1.707790999998906,
+          "p95Ms": 2.329666999999972
+        },
+        "chinese-natural": {
+          "p50Ms": 8.000625000000582,
+          "p95Ms": 10.762375000000247
+        }
+      },
+      "qualityByCategory": {
+        "exact-technical": {
+          "meanRecallAt5": 1,
+          "meanRecallAt10": 1
+        },
+        "english": {
+          "meanRecallAt5": 1,
+          "meanRecallAt10": 1
+        },
+        "fuzzy": {
+          "meanRecallAt5": 1,
+          "meanRecallAt10": 1
+        },
+        "chinese-natural": {
+          "meanRecallAt5": 1,
+          "meanRecallAt10": 1
+        }
+      },
+      "queries": [
+        {
+          "id": "technical-agents-file",
+          "category": "exact-technical",
+          "top5": [
+            "standards/project-agents.md",
+            "core/git-conventions.md",
+            "core/operating-model.md",
+            "standards/project-agent-docs.md",
+            "README.md"
+          ],
+          "top10": [
+            "standards/project-agents.md",
+            "core/git-conventions.md",
+            "core/operating-model.md",
+            "standards/project-agent-docs.md",
+            "README.md",
+            "manifest.yaml",
+            "standards/user-profile-memory.md"
+          ],
+          "recallAt5": 1,
+          "recallAt10": 1
+        },
+        {
+          "id": "technical-capture-input",
+          "category": "exact-technical",
+          "top5": [
+            "manifest.yaml",
+            "standards/project-agent-docs.md",
+            "core/harness-cli-architecture.md"
+          ],
+          "top10": [
+            "manifest.yaml",
+            "standards/project-agent-docs.md",
+            "core/harness-cli-architecture.md"
+          ],
+          "recallAt5": 1,
+          "recallAt10": 1
+        },
+        {
+          "id": "technical-host-evals",
+          "category": "exact-technical",
+          "top5": [
+            "manifest.yaml"
+          ],
+          "top10": [
+            "manifest.yaml"
+          ],
+          "recallAt5": 1,
+          "recallAt10": 1
+        },
+        {
+          "id": "english-title",
+          "category": "english",
+          "top5": [
+            "core/safety-and-verification.md",
+            "README.md",
+            "manifest.yaml",
+            "core/tool-routing.md",
+            "projects/repository-map.md"
+          ],
+          "top10": [
+            "core/safety-and-verification.md",
+            "README.md",
+            "manifest.yaml",
+            "core/tool-routing.md",
+            "projects/repository-map.md",
+            "playbooks/research-and-design.md",
+            "playbooks/release-and-external.md",
+            "playbooks/change.md",
+            "playbooks/diagnose.md",
+            "playbooks/review.md"
+          ],
+          "recallAt5": 1,
+          "recallAt10": 1
+        },
+        {
+          "id": "english-limited-typo",
+          "category": "fuzzy",
+          "top5": [
+            "projects/repository-map.md",
+            "manifest.yaml",
+            "README.md",
+            "core/operating-model.md",
+            "playbooks/change.md"
+          ],
+          "top10": [
+            "projects/repository-map.md",
+            "manifest.yaml",
+            "README.md",
+            "core/operating-model.md",
+            "playbooks/change.md",
+            "core/harness-cli-architecture.md",
+            "core/git-conventions.md",
+            "core/long-running-tasks.md"
+          ],
+          "recallAt5": 1,
+          "recallAt10": 1
+        },
+        {
+          "id": "chinese-permission-safety",
+          "category": "chinese-natural",
+          "top5": [
+            "README.md",
+            "manifest.yaml",
+            "core/safety-and-verification.md",
+            "playbooks/review.md",
+            "standards/project-agent-docs.md"
+          ],
+          "top10": [
+            "README.md",
+            "manifest.yaml",
+            "core/safety-and-verification.md",
+            "playbooks/review.md",
+            "standards/project-agent-docs.md",
+            "core/harness-cli-architecture.md",
+            "core/long-running-tasks.md",
+            "standards/user-profile-memory.md",
+            "playbooks/change.md",
+            "projects/repository-map.md"
+          ],
+          "recallAt5": 1,
+          "recallAt10": 1
+        },
+        {
+          "id": "chinese-cross-repository",
+          "category": "chinese-natural",
+          "top5": [
+            "projects/repository-map.md",
+            "playbooks/release-and-external.md",
+            "playbooks/change.md",
+            "core/harness-cli-architecture.md",
+            "standards/project-agent-docs.md"
+          ],
+          "top10": [
+            "projects/repository-map.md",
+            "playbooks/release-and-external.md",
+            "playbooks/change.md",
+            "core/harness-cli-architecture.md",
+            "standards/project-agent-docs.md",
+            "standards/user-profile-memory.md",
+            "core/git-conventions.md",
+            "core/operating-model.md",
+            "manifest.yaml",
+            "playbooks/review.md"
+          ],
+          "recallAt5": 1,
+          "recallAt10": 1
+        },
+        {
+          "id": "chinese-memory-isolation",
+          "category": "chinese-natural",
+          "top5": [
+            "core/harness-cli-architecture.md",
+            "standards/project-agent-docs.md",
+            "core/safety-and-verification.md",
+            "projects/repository-map.md",
+            "standards/user-profile-memory.md"
+          ],
+          "top10": [
+            "core/harness-cli-architecture.md",
+            "standards/project-agent-docs.md",
+            "core/safety-and-verification.md",
+            "projects/repository-map.md",
+            "standards/user-profile-memory.md",
+            "manifest.yaml",
+            "standards/project-agents.md",
+            "core/long-running-tasks.md",
+            "README.md",
+            "core/observability.md"
+          ],
+          "recallAt5": 1,
+          "recallAt10": 1
+        }
+      ],
+      "corpus": {
+        "files": 18,
+        "baseChunks": 80,
+        "sourceDigest": "543d6a82728099e5682fe6eb44fa56bc62b5da32f4125e54706259c1df5abd05",
+        "corpusDigest": "41a6a2e2f3d5010611e62c84334b640d28440e12cd55bbf0cbaf9856984b1462",
+        "construction": "Sorted public template/agent-harness/docs Markdown/YAML; split by Markdown heading and 16k characters; deterministically cycle real chunks with stable replica ids."
+      },
+      "qualityCorpus": {
+        "documents": 80,
+        "corpusDigest": "06ff92f46be474cc48183bb548de1ae198ab8f8c213cb3e96dbcb5c4c30aa423",
+        "construction": "One copy of every real Harness documentation chunk; no scale replicas."
+      },
+      "querySet": {
+        "version": 1,
+        "digest": "3a0f41ae11ae9f14c0c6a58c356fae4a67ea665e876dda03f59d926e89702a64"
+      },
+      "configuration": {
+        "fields": [
+          "aliases",
+          "title",
+          "headings",
+          "path",
+          "body"
+        ],
+        "boosts": {
+          "aliases": 10,
+          "title": 8,
+          "headings": 5,
+          "path": 2,
+          "body": 1
+        },
+        "tokenizer": "Harness analyzer v2: NFKC, Chinese words+bigrams, preserved technical identifiers",
+        "minisearch": {
+          "version": "7.2.0",
+          "prefix": "last nontechnical term only; Latin >=3 or Han >=2",
+          "fuzzy": "nontechnical Latin/alphanumeric terms length >=5, distance 1",
+          "weights": {
+            "fuzzy": 0.35,
+            "prefix": 0.7
+          }
+        },
+        "orama": {
+          "version": "3.1.18",
+          "prefix": "exact=false for nontechnical queries",
+          "fuzzy": "tolerance 1 only for fuzzy-category queries"
+        }
+      },
+      "configurationDigest": "429037b8b687c31b5fba2902944473920f0c94664d7cb7bed1a310bc673ddd50",
+      "repositoryCommit": "1ec7a2773c4aad7528b47a3cbedfada8b88d645e",
+      "repositoryRoot": "harnessmith-search-evidence"
+    },
+    {
+      "candidate": "orama",
+      "size": 10000,
+      "buildMs": 25609.872,
+      "incrementalUpdateMs": 5.3185840000005555,
+      "coldRestoreMs": 815.8629580000015,
+      "retainedHeapBytes": 293096712,
+      "observedStagePeakHeapBytes": 503341352,
+      "serializedIndexBytes": 117396622,
+      "bundledCandidateBytes": 68265,
+      "latency": {
+        "exact-technical": {
+          "p50Ms": 4.253292000001238,
+          "p95Ms": 48.408166999997775
+        },
+        "english": {
+          "p50Ms": 3.4783339999994496,
+          "p95Ms": 5.911583000000974
+        },
+        "fuzzy": {
+          "p50Ms": 9.96979199999987,
+          "p95Ms": 17.65416600000026
+        },
+        "chinese-natural": {
+          "p50Ms": 27.317166999997426,
+          "p95Ms": 36.440999999998894
+        }
+      },
+      "qualityByCategory": {
+        "exact-technical": {
+          "meanRecallAt5": 1,
+          "meanRecallAt10": 1
+        },
+        "english": {
+          "meanRecallAt5": 1,
+          "meanRecallAt10": 1
+        },
+        "fuzzy": {
+          "meanRecallAt5": 1,
+          "meanRecallAt10": 1
+        },
+        "chinese-natural": {
+          "meanRecallAt5": 0.8333333333333334,
+          "meanRecallAt10": 0.8333333333333334
+        }
+      },
+      "queries": [
+        {
+          "id": "technical-agents-file",
+          "category": "exact-technical",
+          "top5": [
+            "standards/project-agents.md",
+            "core/git-conventions.md",
+            "core/operating-model.md",
+            "standards/project-agent-docs.md",
+            "README.md"
+          ],
+          "top10": [
+            "standards/project-agents.md",
+            "core/git-conventions.md",
+            "core/operating-model.md",
+            "standards/project-agent-docs.md",
+            "README.md",
+            "standards/user-profile-memory.md",
+            "manifest.yaml"
+          ],
+          "recallAt5": 1,
+          "recallAt10": 1
+        },
+        {
+          "id": "technical-capture-input",
+          "category": "exact-technical",
+          "top5": [
+            "manifest.yaml",
+            "standards/project-agent-docs.md",
+            "core/harness-cli-architecture.md"
+          ],
+          "top10": [
+            "manifest.yaml",
+            "standards/project-agent-docs.md",
+            "core/harness-cli-architecture.md"
+          ],
+          "recallAt5": 1,
+          "recallAt10": 1
+        },
+        {
+          "id": "technical-host-evals",
+          "category": "exact-technical",
+          "top5": [
+            "standards/project-agent-docs.md",
+            "manifest.yaml",
+            "core/harness-cli-architecture.md"
+          ],
+          "top10": [
+            "standards/project-agent-docs.md",
+            "manifest.yaml",
+            "core/harness-cli-architecture.md"
+          ],
+          "recallAt5": 1,
+          "recallAt10": 1
+        },
+        {
+          "id": "english-title",
+          "category": "english",
+          "top5": [
+            "core/safety-and-verification.md",
+            "core/tool-routing.md",
+            "playbooks/research-and-design.md",
+            "playbooks/change.md",
+            "playbooks/diagnose.md"
+          ],
+          "top10": [
+            "core/safety-and-verification.md",
+            "core/tool-routing.md",
+            "playbooks/research-and-design.md",
+            "playbooks/change.md",
+            "playbooks/diagnose.md",
+            "playbooks/release-and-external.md",
+            "projects/repository-map.md",
+            "README.md",
+            "manifest.yaml",
+            "playbooks/review.md"
+          ],
+          "recallAt5": 1,
+          "recallAt10": 1
+        },
+        {
+          "id": "english-limited-typo",
+          "category": "fuzzy",
+          "top5": [
+            "projects/repository-map.md",
+            "README.md",
+            "core/observability.md",
+            "core/tool-routing.md",
+            "manifest.yaml"
+          ],
+          "top10": [
+            "projects/repository-map.md",
+            "README.md",
+            "core/observability.md",
+            "core/tool-routing.md",
+            "manifest.yaml",
+            "core/operating-model.md",
+            "playbooks/change.md",
+            "core/git-conventions.md",
+            "core/harness-cli-architecture.md",
+            "core/long-running-tasks.md"
+          ],
+          "recallAt5": 1,
+          "recallAt10": 1
+        },
+        {
+          "id": "chinese-permission-safety",
+          "category": "chinese-natural",
+          "top5": [
+            "core/safety-and-verification.md",
+            "playbooks/review.md",
+            "standards/project-agent-docs.md",
+            "standards/user-profile-memory.md",
+            "README.md"
+          ],
+          "top10": [
+            "core/safety-and-verification.md",
+            "playbooks/review.md",
+            "standards/project-agent-docs.md",
+            "standards/user-profile-memory.md",
+            "README.md",
+            "playbooks/release-and-external.md",
+            "playbooks/change.md",
+            "playbooks/research-and-design.md",
+            "projects/repository-map.md",
+            "playbooks/diagnose.md"
+          ],
+          "recallAt5": 1,
+          "recallAt10": 1
+        },
+        {
+          "id": "chinese-cross-repository",
+          "category": "chinese-natural",
+          "top5": [
+            "projects/repository-map.md",
+            "playbooks/review.md",
+            "playbooks/release-and-external.md",
+            "core/tool-routing.md",
+            "core/operating-model.md"
+          ],
+          "top10": [
+            "projects/repository-map.md",
+            "playbooks/review.md",
+            "playbooks/release-and-external.md",
+            "core/tool-routing.md",
+            "core/operating-model.md",
+            "core/git-conventions.md",
+            "playbooks/change.md",
+            "standards/project-agent-docs.md",
+            "README.md",
+            "standards/user-profile-memory.md"
+          ],
+          "recallAt5": 1,
+          "recallAt10": 1
+        },
+        {
+          "id": "chinese-memory-isolation",
+          "category": "chinese-natural",
+          "top5": [
+            "core/safety-and-verification.md",
+            "projects/repository-map.md",
+            "core/operating-model.md",
+            "standards/project-agent-docs.md",
+            "standards/user-profile-memory.md"
+          ],
+          "top10": [
+            "core/safety-and-verification.md",
+            "projects/repository-map.md",
+            "core/operating-model.md",
+            "standards/project-agent-docs.md",
+            "standards/user-profile-memory.md",
+            "standards/project-agents.md",
+            "README.md",
+            "core/observability.md",
+            "core/long-running-tasks.md",
+            "manifest.yaml"
+          ],
+          "recallAt5": 0.5,
+          "recallAt10": 0.5
+        }
+      ],
+      "corpus": {
+        "files": 18,
+        "baseChunks": 80,
+        "sourceDigest": "543d6a82728099e5682fe6eb44fa56bc62b5da32f4125e54706259c1df5abd05",
+        "corpusDigest": "41a6a2e2f3d5010611e62c84334b640d28440e12cd55bbf0cbaf9856984b1462",
+        "construction": "Sorted public template/agent-harness/docs Markdown/YAML; split by Markdown heading and 16k characters; deterministically cycle real chunks with stable replica ids."
+      },
+      "qualityCorpus": {
+        "documents": 80,
+        "corpusDigest": "06ff92f46be474cc48183bb548de1ae198ab8f8c213cb3e96dbcb5c4c30aa423",
+        "construction": "One copy of every real Harness documentation chunk; no scale replicas."
+      },
+      "querySet": {
+        "version": 1,
+        "digest": "3a0f41ae11ae9f14c0c6a58c356fae4a67ea665e876dda03f59d926e89702a64"
+      },
+      "configuration": {
+        "fields": [
+          "aliases",
+          "title",
+          "headings",
+          "path",
+          "body"
+        ],
+        "boosts": {
+          "aliases": 10,
+          "title": 8,
+          "headings": 5,
+          "path": 2,
+          "body": 1
+        },
+        "tokenizer": "Harness analyzer v2: NFKC, Chinese words+bigrams, preserved technical identifiers",
+        "minisearch": {
+          "version": "7.2.0",
+          "prefix": "last nontechnical term only; Latin >=3 or Han >=2",
+          "fuzzy": "nontechnical Latin/alphanumeric terms length >=5, distance 1",
+          "weights": {
+            "fuzzy": 0.35,
+            "prefix": 0.7
+          }
+        },
+        "orama": {
+          "version": "3.1.18",
+          "prefix": "exact=false for nontechnical queries",
+          "fuzzy": "tolerance 1 only for fuzzy-category queries"
+        }
+      },
+      "configurationDigest": "429037b8b687c31b5fba2902944473920f0c94664d7cb7bed1a310bc673ddd50",
+      "repositoryCommit": "1ec7a2773c4aad7528b47a3cbedfada8b88d645e",
+      "repositoryRoot": "harnessmith-search-evidence"
+    },
+    {
+      "candidate": "minisearch",
+      "size": 50000,
+      "status": "failed",
+      "exitCode": null,
+      "signal": "SIGABRT",
+      "error": "<--- Last few GCs --->\n\n[840:0x130008000]    65478 ms: Scavenge 1021.7 (1037.2) -> 1019.0 (1036.4) MB, pooled: 0 MB, 0.38 / 0.00 ms  (average mu = 0.261, current mu = 0.263) allocation failure; \n[840:0x130008000]    65530 ms: Mark-Compact (reduce) 1021.4 (1036.8) -> 1019.8 (1034.4) MB, pooled: 0 MB, 50.29 / 0.00 ms  (+ 0.4 ms in 30 steps since start of marking, biggest step 0.2 ms, walltime since start of marking 52 ms) (average mu = 0.217, curre\nFATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory\n----- Native stack trace -----\n\n 1: 0x104b659f4 node::OOMErrorHandler(char const*, v8::OOMDetails const&) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 2: 0x104de0000 v8::internal::V8::FatalProcessOutOfMemory(v8::internal::Isolate*, char const*, v8::OOMDetails const&) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 3: 0x10503f4b4 v8::internal::Heap::stack() [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 4: 0x105042888 v8::internal::Heap::HasLowYoungGenerationAllocationRate() [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 5: 0x105053a7c v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags)::$_1::operator()() const [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 6: 0x105053350 void heap::base::Stack::SetMarkerAndCallbackImpl<v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags)::$_1>(heap::base::Stack*, void*, void const*) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 7: 0x105a07be0 PushAllRegistersAndIterateStack [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 8: 0x10503d1b8 v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 9: 0x104fb4b7c v8::internal::StackGuard::HandleInterrupts(v8::internal::StackGuard::InterruptLevel) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n10: 0x1054a2880 v8::internal::Runtime_StackGuard(int, unsigned long*, v8::internal::Isolate*) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n11: 0x105afa234 Builtins_CEntry_Return1_ArgvOnStack_NoBuiltinExit [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n12: 0x105ac2e00 Builtins_MapIteratorPrototypeNext [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n13: 0x105b64d9c Builtins_ObjectFromEntries [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n14: 0x140100d5c \n15: 0x105a5cbec Builtins_InterpreterEntryTrampoline [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n16: 0x105a5cbec Builtins_InterpreterEntryTrampoline [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n17: 0x105a9b7e8 Builtins_AsyncFunctionAwaitResolveClosure [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n18: 0x105b70e58 Builtins_PromiseFulfillReactionJob [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n19: 0x105a8abd0 Builtins_RunMicrotasks [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n20: 0x105a5a7b0 Builtins_JSRunMicrotasksEntry [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n21: 0x104f83690 v8::internal::(anonymous namespace)::Invoke(v8::internal::Isolate*, v8::internal::(anonymous namespace)::InvokeParams const&) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n22: 0x104f83f04 v8::internal::(anonymous namespace)::InvokeWithTryCatch(v8::internal::Isolate*, v8::internal::(anonymous namespace)::InvokeParams const&) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n23: 0x104f84040 v8::internal::Execution::TryRunMicrotasks(v8::internal::Isolate*, v8::internal::MicrotaskQueue*) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n24: 0x104fb2de4 v8::internal::MicrotaskQueue::RunMicrotasks(v8::internal::Isolate*) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n25: 0x104fb3744 v8::internal::MicrotaskQueue::PerformCheckpoint(v8::Isolate*) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n26: 0x104a430b8 node::InternalCallbackScope::Close() [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n27: 0x104a42a90 node::InternalCallbackScope::~InternalCallbackScope() [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n28: 0x104b0e874 node::StartExecution(node::Environment*, std::__1::function<v8::MaybeLocal<v8::Value> (node::StartExecutionCallbackInfoWithModule const&)>) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n29: 0x104a498a0 node::LoadEnvironment(node::Environment*, std::__1::function<v8::MaybeLocal<v8::Value> (node::StartExecutionCallbackInfoWithModule const&)>, std::__1::function<void (node::Environment*, v8::Local<v8::Value>, v8::Local<v8::Value>)>) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n30: 0x104bc0774 node::NodeMainInstance::Run() [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n31: 0x104b127e0 node::Start(int, char**) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n32: 0x194280274 start [/usr/lib/dyld]"
+    },
+    {
+      "candidate": "orama",
+      "size": 50000,
+      "status": "failed",
+      "exitCode": null,
+      "signal": "SIGABRT",
+      "error": "<--- Last few GCs --->\n\n[5974:0x118018000]    60039 ms: Scavenge 1018.1 (1028.2) -> 1017.3 (1030.2) MB, pooled: 0 MB, 0.88 / 0.00 ms  (average mu = 0.378, current mu = 0.384) allocation failure; \n[5974:0x118018000]    60304 ms: Mark-Compact (reduce) 1017.5 (1030.2) -> 1017.1 (1027.4) MB, pooled: 0 MB, 263.42 / 0.00 ms  (+ 0.0 ms in 3 steps since start of marking, biggest step 0.0 ms, walltime since start of marking 266 ms) (average mu = 0.273, cur\nFATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory\n----- Native stack trace -----\n\n 1: 0x104e499f4 node::OOMErrorHandler(char const*, v8::OOMDetails const&) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 2: 0x1050c4000 v8::internal::V8::FatalProcessOutOfMemory(v8::internal::Isolate*, char const*, v8::OOMDetails const&) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 3: 0x1053234b4 v8::internal::Heap::stack() [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 4: 0x105326888 v8::internal::Heap::HasLowYoungGenerationAllocationRate() [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 5: 0x105337a7c v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags)::$_1::operator()() const [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 6: 0x105337350 void heap::base::Stack::SetMarkerAndCallbackImpl<v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags)::$_1>(heap::base::Stack*, void*, void const*) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 7: 0x105cebbe0 PushAllRegistersAndIterateStack [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 8: 0x1053211b8 v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n 9: 0x105298b7c v8::internal::StackGuard::HandleInterrupts(v8::internal::StackGuard::InterruptLevel) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n10: 0x105786bb0 v8::internal::Runtime_StackGuardWithGap(int, unsigned long*, v8::internal::Isolate*) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n11: 0x105dde234 Builtins_CEntry_Return1_ArgvOnStack_NoBuiltinExit [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n12: 0x13903e088 \n13: 0x1391014f4 \n14: 0x139107184 \n15: 0x1391085d4 \n16: 0x13910c4e0 \n17: 0x13910a9f0 \n18: 0x105d40bec Builtins_InterpreterEntryTrampoline [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n19: 0x105d40bec Builtins_InterpreterEntryTrampoline [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n20: 0x105d40bec Builtins_InterpreterEntryTrampoline [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n21: 0x105d40bec Builtins_InterpreterEntryTrampoline [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n22: 0x105d40bec Builtins_InterpreterEntryTrampoline [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n23: 0x105d7f7e8 Builtins_AsyncFunctionAwaitResolveClosure [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n24: 0x105e54e58 Builtins_PromiseFulfillReactionJob [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n25: 0x105d6ebd0 Builtins_RunMicrotasks [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n26: 0x105d3e7b0 Builtins_JSRunMicrotasksEntry [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n27: 0x105267690 v8::internal::(anonymous namespace)::Invoke(v8::internal::Isolate*, v8::internal::(anonymous namespace)::InvokeParams const&) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n28: 0x105267f04 v8::internal::(anonymous namespace)::InvokeWithTryCatch(v8::internal::Isolate*, v8::internal::(anonymous namespace)::InvokeParams const&) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n29: 0x105268040 v8::internal::Execution::TryRunMicrotasks(v8::internal::Isolate*, v8::internal::MicrotaskQueue*) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n30: 0x105296de4 v8::internal::MicrotaskQueue::RunMicrotasks(v8::internal::Isolate*) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n31: 0x105297744 v8::internal::MicrotaskQueue::PerformCheckpoint(v8::Isolate*) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n32: 0x104d270b8 node::InternalCallbackScope::Close() [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n33: 0x104d26a90 node::InternalCallbackScope::~InternalCallbackScope() [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n34: 0x104df2874 node::StartExecution(node::Environment*, std::__1::function<v8::MaybeLocal<v8::Value> (node::StartExecutionCallbackInfoWithModule const&)>) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n35: 0x104d2d8a0 node::LoadEnvironment(node::Environment*, std::__1::function<v8::MaybeLocal<v8::Value> (node::StartExecutionCallbackInfoWithModule const&)>, std::__1::function<void (node::Environment*, v8::Local<v8::Value>, v8::Local<v8::Value>)>) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n36: 0x104ea4774 node::NodeMainInstance::Run() [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n37: 0x104df67e0 node::Start(int, char**) [<home>/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node]\n38: 0x194280274 start [/usr/lib/dyld]"
+    }
+  ]
+}
