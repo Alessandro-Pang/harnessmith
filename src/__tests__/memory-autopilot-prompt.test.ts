@@ -100,6 +100,13 @@ test('startup rules retain progressive project discovery without copying its com
   assert.match(agents, /命中正文.*事实源/s);
 });
 
+test('startup requires a standalone bounded profile read as the first tool call', () => {
+  assert.match(
+    agents,
+    /首个工具调用.*只能.*profile\.md.*不得.*项目.*命令|首个工具调用.*只包含.*profile\.md.*不得.*合并/s,
+  );
+});
+
 test('startup deterministically discovers one explicitly referenced project context before memory', () => {
   const personal = agents.indexOf('AGENTS.md');
   const projectEntry = agents.indexOf('README.md', personal + 1);

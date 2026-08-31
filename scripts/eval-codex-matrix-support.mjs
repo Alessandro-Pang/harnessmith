@@ -26,6 +26,15 @@ export function withEphemeralJsonPayload(path, payload, invoke) {
   }
 }
 
+export function sameCanonicalPath(left, right) {
+  if (typeof left !== 'string' || !left || typeof right !== 'string' || !right) return false;
+  try {
+    return realpathSync.native(resolve(left)) === realpathSync.native(resolve(right));
+  } catch {
+    return resolve(left) === resolve(right);
+  }
+}
+
 export function buildCodexTurn({
   threadId,
   model,
@@ -36,6 +45,16 @@ export function buildCodexTurn({
   ephemeral = false,
 }) {
   if (threadId) {
+    const resumeSandboxOverrides = writable
+      ? [
+          'sandbox_mode="workspace-write"',
+          ...(additionalDirs.length > 0
+            ? [
+                `sandbox_workspace_write.writable_roots=${JSON.stringify(additionalDirs)}`,
+              ]
+            : []),
+        ]
+      : ['sandbox_mode="read-only"'];
     return [
       'exec',
       'resume',
@@ -43,6 +62,7 @@ export function buildCodexTurn({
       '--model',
       model,
       ...configOverrides.flatMap((value) => ['-c', value]),
+      ...resumeSandboxOverrides.flatMap((value) => ['-c', value]),
       threadId,
       '-',
     ];
@@ -278,10 +298,16 @@ export function evaluateCodexTurnCompletion(result, { requireAgentCompletion = t
       typeof event.item.text === 'string',
   );
   const transportText = `${result?.error ?? ''}\n${result?.stderr ?? ''}\n${result?.stdout ?? ''}`;
+  const transientHostFailure = events.some(
+    (event) =>
+      event?.type === 'turn.failed' &&
+      /selected model is at capacity/i.test(String(event?.error?.message ?? '')),
+  );
   const transportFailure =
-    /ETIMEDOUT|timed? out|ENOTFOUND|EAI_AGAIN|ECONN(?:RESET|REFUSED)|DNS|network is unreachable|stream disconnected|connection (?:closed|lost)/i.test(
-      transportText,
-    ) &&
+    (transientHostFailure ||
+      /ETIMEDOUT|timed? out|ENOTFOUND|EAI_AGAIN|ECONN(?:RESET|REFUSED)|DNS|network is unreachable|stream disconnected|connection (?:closed|lost)/i.test(
+        transportText,
+      )) &&
     (!hasTurnCompleted || (requireAgentCompletion && !hasAgentCompletion));
   const reasons = [];
   if (result?.status !== 0) reasons.push(`status=${String(result?.status)}`);
@@ -397,7 +423,7 @@ export function memoryPayloadCommandHasExpectedPrefix({
   const invokedHarness = isAbsolute(commandTokens[1])
     ? resolve(commandTokens[1])
     : resolve(repo, commandTokens[1]);
-  return invokedHarness === resolve(harnessPath);
+  return sameCanonicalPath(invokedHarness, harnessPath);
 }
 
 export function exactCloseHandoffCommandTokens(command, options) {
@@ -1119,6 +1145,7 @@ export function checkpointIdempotencyIsProven({
   followOutput,
   followOutputObserved,
   repeatedOutput,
+  repeatedOutputObserved,
   expectedPath,
   expectedReference,
   preToFollowChanged,
@@ -1127,6 +1154,8 @@ export function checkpointIdempotencyIsProven({
 }) {
   const parsedFollowOutputObserved = Boolean(followOutput);
   if (Boolean(followOutputObserved) !== parsedFollowOutputObserved) return false;
+  const parsedRepeatedOutputObserved = Boolean(repeatedOutput);
+  if (Boolean(repeatedOutputObserved) !== parsedRepeatedOutputObserved) return false;
   const followOutputCompatible = memoryPayloadOutputIsCompatible(followOutput, {
     kind: 'episode',
     actions: ['created', 'updated'],
@@ -1134,14 +1163,17 @@ export function checkpointIdempotencyIsProven({
   });
   const followIdentityCompatible =
     !followOutputObserved ||
-    (followOutput?.path === expectedPath && followOutput?.reference === expectedReference);
-  const repeatedOutputCompatible = Boolean(
-    repeatedOutput?.version === 1 &&
-      repeatedOutput?.action === 'unchanged' &&
-      repeatedOutput?.kind === 'episode' &&
-      repeatedOutput?.path === expectedPath &&
-      repeatedOutput?.reference === expectedReference,
-  );
+    (sameCanonicalPath(followOutput?.path, expectedPath) &&
+      followOutput?.reference === expectedReference);
+  const repeatedOutputCompatible = repeatedOutputObserved
+    ? Boolean(
+        repeatedOutput?.version === 1 &&
+          repeatedOutput?.action === 'unchanged' &&
+          repeatedOutput?.kind === 'episode' &&
+          sameCanonicalPath(repeatedOutput?.path, expectedPath) &&
+          repeatedOutput?.reference === expectedReference,
+      )
+    : repeatedOutput == null;
   return Boolean(
     followCommandExact &&
       repeatedCommandExact &&
@@ -1346,7 +1378,7 @@ export function containsApiWorkerBoundary(content) {
       .replace(/\*\*(API\s*(?:->|→)\s*[A-Za-z][A-Za-z0-9_-]*)\*\*/giu, '$1')
       .replace(/__(API\s*(?:->|→)\s*[A-Za-z][A-Za-z0-9_-]*)__/giu, '$1')
       .replace(
-        /\s*[,，]\s*(?:(?:and\s+)?`?LegacyWorker`?\s+(?:is\s+)?(?:no longer used|retired|disabled)|(?:(?:且|并声明)\s*)?`?LegacyWorker`?\s*(?:已停用|不再(?:使用|采用)))(?:\s*[:：]\s*\[[^\]\r\n]+\]\([^\)\r\n]+\))?\s*[.!?。！？]?\s*$/iu,
+        /\s*[,，]\s*(?:(?:and\s+)?`?LegacyWorker`?\s+(?:is\s+)?(?:no longer used|retired|disabled)|(?:(?:且|并声明)\s*)?`?LegacyWorker`?\s*(?:已(?:停用|不再(?:使用|采用))|不再(?:使用|采用)))(?:\s*[:：]\s*\[[^\]\r\n]+\]\([^\)\r\n]+\))?\s*[.!?。！？]?\s*$/iu,
         '',
       );
     return normalized
@@ -1355,7 +1387,7 @@ export function containsApiWorkerBoundary(content) {
       .filter(Boolean);
   });
   const assertion =
-    /^(?:(?:verified(?:\s+stable)?\s+(?:fact|statement)|已验证(?:稳定)?事实)\s*[:：]\s*)?(?:(?:the\s+)?(?:(?:verified|current)\s+)*(?:service\s+)?boundary\s*(?:is|:)\s*(?:(?:now|currently)\s+)?API\s*(?:->|→)\s*([A-Za-z][A-Za-z0-9_-]*)|(?:(?:已验证|当前|目前)\s*)*(?:服务|架构)?边界\s*(?:确认\s*)?(?:是|确?为|：)\s*(?:(?:现在|目前)\s*)?API\s*(?:->|→)\s*([A-Za-z][A-Za-z0-9_-]*)|(?:(?:当前|目前)(?:架构|正式)?说明(?:中)?|(?:架构|正式)?说明(?:中)?仍明确|(?:当前|目前)?架构确认|(?:当前|目前)架构|(?:当前|目前)(?:架构|正式)?文档(?:中)?(?:明确)?确认边界)\s*(?:仍)?(?:明确)?(?:是|确?为|：)\s*API\s*(?:->|→)\s*([A-Za-z][A-Za-z0-9_-]*))\s*$/iu;
+        /^(?:(?:verified(?:\s+stable)?\s+(?:fact|statement)|已验证(?:稳定)?事实)\s*[:：]\s*)?(?:(?:the\s+)?(?:(?:verified|current)\s+)*(?:service\s+)?boundary\s*(?:is|:)\s*(?:(?:now|currently)\s+)?API\s*(?:->|→)\s*([A-Za-z][A-Za-z0-9_-]*)|(?:(?:已验证|当前|目前)\s*)*(?:服务|架构)?边界\s*(?:(?:已)?(?:核实|验证|确认)\s*)?(?:是|为|：)\s*(?:(?:现在|目前)\s*)?API\s*(?:->|→)\s*([A-Za-z][A-Za-z0-9_-]*)|(?:(?:当前|目前)(?:架构|正式)?说明(?:中)?|(?:架构|正式)?说明(?:中)?仍明确|(?:当前|目前)?架构确认|(?:当前|目前)架构|(?:当前|目前)(?:架构|正式)?文档(?:中)?(?:明确)?确认边界)\s*(?:仍)?(?:明确)?(?:是|确?为|：)\s*API\s*(?:->|→)\s*([A-Za-z][A-Za-z0-9_-]*))\s*$/iu;
   const targets = clauses.flatMap((clause) => {
     const match = assertion.exec(clause);
     return match ? [String(match[1] ?? match[2] ?? match[3]).toLowerCase()] : [];
@@ -1512,13 +1544,21 @@ function pathWithin(path, root) {
   return relation === '' || (!relation.startsWith(`..${sep}`) && relation !== '..' && !isAbsolute(relation));
 }
 
+export function canonicalPathWithin(path, root) {
+  try {
+    return pathWithin(realpathSync.native(resolve(path)), realpathSync.native(resolve(root)));
+  } catch {
+    return pathWithin(path, root);
+  }
+}
+
 export function inspectJsonPayloadPath(path, root) {
   const resolvedPath = resolve(path);
   const resolvedRoot = resolve(root);
   if (!resolvedPath.endsWith('.json')) {
     return { ok: false, resolvedPath, error: 'payload path must end in .json' };
   }
-  if (!pathWithin(resolvedPath, resolvedRoot)) {
+  if (!canonicalPathWithin(resolvedPath, resolvedRoot)) {
     return { ok: false, resolvedPath, error: 'payload path is outside the task temp root' };
   }
   try {
@@ -1526,8 +1566,13 @@ export function inspectJsonPayloadPath(path, root) {
     if (!rootEntry.isDirectory() || rootEntry.isSymbolicLink()) {
       return { ok: false, resolvedPath, error: 'task temp root is not a regular directory' };
     }
-    const relativePath = relative(resolvedRoot, resolvedPath);
-    let current = resolvedRoot;
+    const realRoot = realpathSync.native(resolvedRoot);
+    const realPath = realpathSync.native(resolvedPath);
+    if (!pathWithin(resolvedPath, resolvedRoot) && resolvedPath !== realPath) {
+      return { ok: false, resolvedPath, error: 'payload path contains a symlink component' };
+    }
+    const relativePath = relative(realRoot, realPath);
+    let current = realRoot;
     for (const segment of relativePath.split(sep).filter(Boolean)) {
       current = resolve(current, segment);
       if (lstatSync(current).isSymbolicLink()) {
@@ -1538,8 +1583,6 @@ export function inspectJsonPayloadPath(path, root) {
     if (!entry.isFile() || entry.isSymbolicLink()) {
       return { ok: false, resolvedPath, error: 'payload is not a regular non-symlink file' };
     }
-    const realRoot = realpathSync(resolvedRoot);
-    const realPath = realpathSync(resolvedPath);
     if (!pathWithin(realPath, realRoot)) {
       return { ok: false, resolvedPath, error: 'payload real path escapes the task temp root' };
     }
