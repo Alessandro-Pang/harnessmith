@@ -39,6 +39,7 @@ import {
   inspectJsonPayloadPath,
   inspectProjectScopePath,
   isExplicitProfileControlRoutingViolation,
+  isCodeReviewProfileKey,
   isRoutineMemoryAnnouncement,
   isRoutineMemoryMaintenanceDisclosure,
   isUnauditableCloseHandoffCommand,
@@ -2249,10 +2250,10 @@ if (scenarioId === 'memory-autopilot-unprompted') {
   const explicitPausedUpdateKey = String(
     explicitPausedUpdateInvocation?.payload?.value?.key ?? '',
   );
-  const safeExplicitPausedUpdateKey =
-    /^(?:communication|engineering)\.[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(
-      explicitPausedUpdateKey,
-    ) && explicitPausedUpdateKey !== reconciledProfileKey;
+  const safeExplicitPausedUpdateKey = isCodeReviewProfileKey(
+    explicitPausedUpdateKey,
+    reconciledProfileKey,
+  );
   const escapedExplicitPausedUpdateKey = explicitPausedUpdateKey.replace(
     /[.*+?^${}()|[\]\\]/g,
     '\\$&',
