@@ -27,6 +27,7 @@ export function withEphemeralJsonPayload(path, payload, invoke) {
 }
 
 export function sameCanonicalPath(left, right) {
+  if (typeof left !== 'string' || !left || typeof right !== 'string' || !right) return false;
   try {
     return realpathSync.native(resolve(left)) === realpathSync.native(resolve(right));
   } catch {
@@ -1162,13 +1163,14 @@ export function checkpointIdempotencyIsProven({
   });
   const followIdentityCompatible =
     !followOutputObserved ||
-    (followOutput?.path === expectedPath && followOutput?.reference === expectedReference);
+    (sameCanonicalPath(followOutput?.path, expectedPath) &&
+      followOutput?.reference === expectedReference);
   const repeatedOutputCompatible = repeatedOutputObserved
     ? Boolean(
         repeatedOutput?.version === 1 &&
           repeatedOutput?.action === 'unchanged' &&
           repeatedOutput?.kind === 'episode' &&
-          repeatedOutput?.path === expectedPath &&
+          sameCanonicalPath(repeatedOutput?.path, expectedPath) &&
           repeatedOutput?.reference === expectedReference,
       )
     : repeatedOutput == null;
@@ -1376,7 +1378,7 @@ export function containsApiWorkerBoundary(content) {
       .replace(/\*\*(API\s*(?:->|→)\s*[A-Za-z][A-Za-z0-9_-]*)\*\*/giu, '$1')
       .replace(/__(API\s*(?:->|→)\s*[A-Za-z][A-Za-z0-9_-]*)__/giu, '$1')
       .replace(
-        /\s*[,，]\s*(?:(?:and\s+)?`?LegacyWorker`?\s+(?:is\s+)?(?:no longer used|retired|disabled)|(?:(?:且|并声明)\s*)?`?LegacyWorker`?\s*(?:已停用|不再(?:使用|采用)))(?:\s*[:：]\s*\[[^\]\r\n]+\]\([^\)\r\n]+\))?\s*[.!?。！？]?\s*$/iu,
+        /\s*[,，]\s*(?:(?:and\s+)?`?LegacyWorker`?\s+(?:is\s+)?(?:no longer used|retired|disabled)|(?:(?:且|并声明)\s*)?`?LegacyWorker`?\s*(?:已(?:停用|不再(?:使用|采用))|不再(?:使用|采用)))(?:\s*[:：]\s*\[[^\]\r\n]+\]\([^\)\r\n]+\))?\s*[.!?。！？]?\s*$/iu,
         '',
       );
     return normalized
