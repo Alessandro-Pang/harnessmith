@@ -202,7 +202,6 @@ export function loadHarnessCorpus(size) {
       ...chunk,
       id: `chunk-${String(index).padStart(6, '0')}`,
       path: `replica-${String(replica).padStart(4, '0')}/${chunk.path}`,
-      body: `${chunk.body}\n\nbenchmark-replica-${index}`,
     };
   });
   return {
