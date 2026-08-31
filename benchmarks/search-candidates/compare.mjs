@@ -1,6 +1,6 @@
 import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { arch, cpus, platform, release, totalmem } from 'node:os';
+import { arch, cpus, homedir, platform, release, totalmem } from 'node:os';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -24,6 +24,12 @@ const repository = resolve(workspace, '..', '..');
 const commit = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: repository, encoding: 'utf8' }).trim();
 const results = [];
 
+function portableFailure(value) {
+  const redacted = value.replaceAll(repository, '<repository>').replaceAll(homedir(), '<home>');
+  if (redacted.length <= 8000) return redacted;
+  return `${redacted.slice(0, 4000)}\n... <failure output truncated> ...\n${redacted.slice(-4000)}`;
+}
+
 for (const size of sizes) {
   for (const candidate of ['minisearch', 'orama']) {
     const child = spawnSync(
@@ -46,7 +52,7 @@ for (const size of sizes) {
         status: child.error?.code === 'ETIMEDOUT' ? 'timeout' : 'failed',
         exitCode: child.status,
         signal: child.signal,
-        error: `${child.error?.message || ''}\n${child.stderr || ''}`.trim().slice(-8000),
+        error: portableFailure(`${child.error?.message || ''}\n${child.stderr || ''}`.trim()),
       });
     }
   }
