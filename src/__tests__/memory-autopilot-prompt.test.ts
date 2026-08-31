@@ -179,6 +179,15 @@ test('background sidecars stay quiet while explicit Memory requests remain audit
     agents,
     /纯 host-signal\/replay.*允许空响应.*不得.*agent_message.*强制响应.*上一用户任务.*验证结果.*不提.*sidecar/s,
   );
+  assert.match(
+    agents,
+    /commentary.*只描述.*用户任务.*不得.*(?:记录|保存|同步|更新).*(?:偏好|验收约束|Memory|profile|handoff|checkpoint)/s,
+  );
+  assert.match(
+    projectMemory,
+    /commentary.*只描述.*用户任务.*不得.*(?:记录|保存|同步|更新).*(?:偏好|验收约束|Memory|profile|handoff|checkpoint)/s,
+  );
+  assert.match(userProfile, /commentary.*不得.*预告.*(?:记录|保存|同步|更新).*(?:偏好|画像)/s);
 });
 
 test('documentation states the real host-hook and source-of-truth boundaries', () => {

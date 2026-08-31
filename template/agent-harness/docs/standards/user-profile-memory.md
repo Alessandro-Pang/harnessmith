@@ -123,7 +123,8 @@ paused 时，“以后/未来默认使用表格”等仍是普通偏好，不是
 明确遗忘时，从已读 canonical profile 按当前结论唯一匹配：唯一命中才原样使用其 exact key 执行
 `forget-profile`；0 个或多个候选时报告阻塞并请求澄清，禁止猜 key。唯一命中不得以“已替代”“无需删除”
 或相近理由跳过。自动 reconcile 的
-`created/updated/unchanged` 不预告/复述画像或偏好，`proposed/blocked` 仅简报阻塞；用户要求纠正、忘记、
+`created/updated/unchanged` 不预告/复述画像或偏好，commentary 不得预告记录、保存、同步或更新偏好/画像；
+`proposed/blocked` 仅简报阻塞；用户要求纠正、忘记、
 暂停或恢复时不发过程通知，仅在最终答复简短报告结果或阻塞；默认单句，但用户当前格式要求优先。
 paused 时普通偏好只作为当前指令执行；答复按当前格式只答`好的`，不得复述、确认或承诺偏好及其
 适用范围，也不提 profile、autopilot 或持久化。查看画像按用户请求完整回答。
