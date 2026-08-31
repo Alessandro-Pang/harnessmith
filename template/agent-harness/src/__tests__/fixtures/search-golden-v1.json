@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "description": "Versioned bilingual Harness retrieval regression corpus",
   "documents": [
     {
@@ -71,6 +71,31 @@
     {
       "path": "ranking/body.md",
       "lines": ["# Other topic", "", "The ranked term appears only in this body paragraph."]
+    },
+    {
+      "path": "ranking/alias.md",
+      "lines": [
+        "---",
+        "title: Other alias topic",
+        "aliases: [aliasprioritytoken]",
+        "---",
+        "",
+        "# Unrelated alias heading",
+        "",
+        "This paragraph does not repeat the weighted phrase."
+      ]
+    },
+    {
+      "path": "ranking/alias-body.md",
+      "lines": ["# Other alias body topic", "", "The aliasprioritytoken appears only in body text."]
+    },
+    {
+      "path": "ranking/heading.md",
+      "lines": ["# Other heading topic", "", "## Headingprioritytoken", "", "Unrelated explanation."]
+    },
+    {
+      "path": "ranking/heading-body.md",
+      "lines": ["# Other heading body topic", "", "The headingprioritytoken appears only in body text."]
     }
   ],
   "queries": [
@@ -132,11 +157,32 @@
       "relevant": ["core/retrieval.md"]
     },
     {
+      "id": "chinese-natural-sentence",
+      "category": "natural-language",
+      "query": "如何在没有网络时稳定搜索中文文档",
+      "relevant": ["core/retrieval.md"],
+      "scanMustMiss": true
+    },
+    {
       "id": "title-field-boost",
       "category": "ranking",
       "query": "ranked term",
       "relevant": ["ranking/title.md", "ranking/body.md"],
       "expectedFirst": "ranking/title.md"
+    },
+    {
+      "id": "alias-field-boost",
+      "category": "ranking",
+      "query": "aliasprioritytoken",
+      "relevant": ["ranking/alias.md", "ranking/alias-body.md"],
+      "expectedFirst": "ranking/alias.md"
+    },
+    {
+      "id": "heading-field-boost",
+      "category": "ranking",
+      "query": "headingprioritytoken",
+      "relevant": ["ranking/heading.md", "ranking/heading-body.md"],
+      "expectedFirst": "ranking/heading.md"
     }
   ]
 }

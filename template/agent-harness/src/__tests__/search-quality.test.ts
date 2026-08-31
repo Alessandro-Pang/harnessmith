@@ -43,9 +43,21 @@ function recallAt(report: SearchReport, root: string, query: GoldenQuery, limit:
   return query.relevant.filter((path) => paths.has(path)).length / query.relevant.length;
 }
 
+function precisionAt(
+  report: SearchReport,
+  root: string,
+  query: GoldenQuery,
+  limit: number,
+): number {
+  const paths = resultPaths(report, root, limit);
+  if (paths.length === 0) return 0;
+  const relevant = new Set(query.relevant);
+  return paths.filter((path) => relevant.has(path)).length / paths.length;
+}
+
 test('versioned golden queries improve recall without exact technical identifier regressions', () => {
   const golden = fixture();
-  assert.equal(golden.version, 1);
+  assert.equal(golden.version, 2);
   assert.match(golden.description, /versioned.*retrieval/i);
   const root = mkdtempSync(join(tmpdir(), 'harness-search-quality-'));
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
@@ -82,7 +94,12 @@ test('versioned golden queries improve recall without exact technical identifier
       assert.equal(resultPaths(fulltext, docs, 1)[0], query.expectedFirst, query.id);
     }
     if (query.category === 'exact-technical') {
+      assert.equal(resultPaths(fulltext, docs, 1)[0], query.relevant[0], `${query.id} Top-1`);
       assert.ok(indexedAt5 >= scanAt5, `${query.id} exact retrieval must not regress`);
+      assert.ok(
+        precisionAt(fulltext, docs, query, 5) >= precisionAt(scan, docs, query, 5),
+        `${query.id} exact precision must not regress`,
+      );
     }
   }
 

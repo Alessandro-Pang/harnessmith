@@ -217,6 +217,42 @@ test('context CLI exposes refresh and strict fulltext modes through JSON retriev
   assert.equal(JSON.parse(strict.logs[0]).retrieval.usedMode, 'fulltext');
 });
 
+test('context search excludes host-evals from scan and fulltext retrieval', () => {
+  const { root, docs, runtime } = fixture();
+  const projectMemory = join(root, '.agent-docs');
+  const hostEvals = join(projectMemory, 'host-evals');
+  mkdirSync(hostEvals, { recursive: true });
+  writeFileSync(join(docs, 'active.md'), '# Active\n\nactivecontextmarker\n');
+  writeFileSync(join(hostEvals, 'evidence.md'), '# Evidence\n\nhostevidenceleakmarker\n');
+
+  const scan = capturedIo();
+  assert.equal(
+    runCli(['search', '--project', root, '--mode', 'scan', '--json', 'hostevidenceleakmarker'], {
+      runtime,
+      io: scan,
+    }),
+    1,
+  );
+  assert.equal(JSON.parse(scan.logs[0]).matches.length, 0);
+
+  assert.equal(
+    runCli(['search', '--project', root, '--refresh-index', '--json', 'activecontextmarker'], {
+      runtime,
+      io: capturedIo(),
+    }),
+    0,
+  );
+  const fulltext = capturedIo();
+  assert.equal(
+    runCli(
+      ['search', '--project', root, '--mode', 'fulltext', '--json', 'hostevidenceleakmarker'],
+      { runtime, io: fulltext },
+    ),
+    1,
+  );
+  assert.equal(JSON.parse(fulltext.logs[0]).matches.length, 0);
+});
+
 test('index validation distinguishes malformed, unsupported, and backend-corrupt caches', () => {
   const { docs, runtime, sources } = fixture();
   writeFileSync(join(docs, 'guide.md'), '# Guide\n\nvalidationmarker\n');

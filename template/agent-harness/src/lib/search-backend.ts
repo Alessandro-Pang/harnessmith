@@ -6,6 +6,7 @@ import {
   prefixTerm,
   searchAnalyzerVersion,
   tokenizeSearchText,
+  tokenizeTechnicalSearchText,
 } from './search-tokenizer.js';
 
 export const searchBackendName = 'minisearch';
@@ -42,13 +43,14 @@ function backendOptions(): Options<SearchIndexDocument> {
 export const searchPolicyDigest = createHash('sha256')
   .update(
     JSON.stringify({
-      version: 1,
+      version: 2,
       analyzer: searchAnalyzerVersion,
+      queryTokenizer: 'technical-identifiers-preserve-whole-token',
       fields: indexedFields,
       storedFields,
       fieldBoosts,
       fuzzy: 'nontechnical-query-latin-alphanumeric-length>=5-distance=1',
-      prefix: 'last-term-latin>=3-han>=2',
+      prefix: 'technical-query-disabled;last-term-latin>=3-han>=2',
       weights: { fuzzy: 0.35, prefix: 0.7 },
       combineWith: 'OR',
     }),
@@ -85,7 +87,8 @@ export function searchBackend(backend: SearchBackend, query: string): SearchBack
   const technicalQuery = /[_.\-/$]/u.test(query) || /\p{Ll}\p{Lu}/u.test(query);
   return backend.search(query, {
     boost: fieldBoosts,
-    prefix: prefixTerm,
+    tokenize: technicalQuery ? tokenizeTechnicalSearchText : tokenizeSearchText,
+    prefix: technicalQuery ? false : prefixTerm,
     fuzzy: technicalQuery ? false : (term) => fuzzyDistance(term),
     maxFuzzy: 1,
     weights: { fuzzy: 0.35, prefix: 0.7 },

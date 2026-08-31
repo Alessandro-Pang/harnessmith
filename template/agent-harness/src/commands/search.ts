@@ -31,7 +31,7 @@ export function contextSearch(
         root: join(root, '.agent-docs'),
         label: 'project-memory',
         trust: 'untrusted',
-        excludeDirectories: ['_archive'],
+        excludeDirectories: ['_archive', 'host-evals'],
       },
     ],
     options,
