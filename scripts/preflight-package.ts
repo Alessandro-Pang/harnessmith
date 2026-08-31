@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { checkEvalRunSchemaAdapterEnum } from './eval-run-schema.js';
 
 type Check = (condition: unknown, message: string) => void;
 
@@ -25,6 +26,14 @@ function checkPublicGuidance(root: string, version: string, check: Check): void 
   for (const [path, content] of guidance) {
     check(!content.includes(version), `${path} must not duplicate the package version`);
   }
+}
+
+function checkEvalAdapterEnum(root: string, check: Check): void {
+  const result = checkEvalRunSchemaAdapterEnum(root);
+  check(
+    result.ok,
+    `evals/run.schema.json host.adapter.enum must match adapter registry: ${result.expected.join(', ')}`,
+  );
 }
 
 export function checkPackage(root: string, harnessRoot: string, check: Check): void {
@@ -109,4 +118,5 @@ export function checkPackage(root: string, harnessRoot: string, check: Check): v
   );
   check(!workflow.includes('npm ci'), 'CI must not install dependencies with npm');
   checkPublicGuidance(root, manifest.version || '', check);
+  checkEvalAdapterEnum(root, check);
 }
