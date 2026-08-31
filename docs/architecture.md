@@ -87,7 +87,11 @@ effort，而不是绝对安全声明。检测到路径替换时会 fail closed�
 
 ## Adapter 契约
 
-`createAdapter()` 生成的每个 Adapter 都带机器可读 capabilities，并出现在 dry-run、install result 和 status JSON。
+`src/adapter-registry.ts` 是宿主身份与 capability 的单一清单；`createAdapter()` 解析路径后挂上同一
+份 `capabilities`，并出现在 dry-run、install result 与 status JSON 中。CLI `all` 展开、交互选择、
+capabilities 输出与 Eval `host.adapter` 枚举都从该清单派生或与之对齐。新增内置 Adapter 时：先登记
+registry，再补 `src/adapters.ts` 路径解析，并保持 `evals/run.schema.json` 枚举与 registry 一致；
+共享生命周期由 `adapter-conformance` 套件覆盖，不引入动态插件加载。
 
 | Adapter | 范围 | 规则入口 | 原生激活 | 权限 owner |
 | --- | --- | --- | --- | --- |

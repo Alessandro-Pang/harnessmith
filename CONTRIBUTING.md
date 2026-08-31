@@ -22,8 +22,14 @@ host-neutrality test passing.
 
 ## Architecture boundaries
 
-- Host names, paths, formats, and environment variables belong in `src/adapters.ts` or other outer
-  installation code.
+- Host identity metadata (canonical name, label, aliases, capabilities) belongs in
+  `src/adapter-registry.ts`. Host paths, instruction file layout, environment variables, and ignore
+  rules belong in `src/adapters.ts`. Instruction render shapes for markdown/mdc (and future formats)
+  belong in `src/instruction-formats.ts`. Do not put host identity into `template/`.
+- To add a built-in Adapter: register it in `src/adapter-registry.ts`, add an exhaustive path
+  resolver in `src/adapters.ts`, align `evals/run.schema.json` `host.adapter.enum` (preflight
+  enforces this), and rely on `src/__tests__/adapter-conformance.test.ts` for shared lifecycle
+  coverage. Do not add a dynamic plugin loader or Pack Registry.
 - Runtime source is strict TypeScript under `src/` and `template/agent-harness/src/`. Generated `dist/`
   files are build products: change the TypeScript source and run `pnpm run build`; never edit them directly.
 - Biome is the shared formatter and linter, Knip rejects unreachable files or exports, and Secretlint scans
