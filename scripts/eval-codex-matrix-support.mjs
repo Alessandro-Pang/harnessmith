@@ -1217,7 +1217,12 @@ export function isRoutineMemoryAnnouncement({
     )
   ) {
     if (beforeMemoryMutation && hasRoutineMemoryMutation && text) return true;
-    if (/\baction\s*:/iu.test(text) && /\bpath\s*:/iu.test(text) && /\bvalidation\s*:/iu.test(text)) {
+    const inlineAudit =
+      /\baction\s*:/iu.test(text) &&
+      /\bpath\s*:/iu.test(text) &&
+      /\bvalidation\s*:/iu.test(text);
+    const tableAudit = /\|\s*action\s*\|\s*path\s*\|\s*validation\s*\|/iu.test(text);
+    if (inlineAudit || tableAudit) {
       return false;
     }
     return /memory|handoff|checkpoint|记忆|交接|沉淀/i.test(text);
@@ -1297,6 +1302,15 @@ export function isRoutineMemoryAnnouncement({
   if (hasRoutineMemoryMutation && explicitSidecarContext) return true;
   if (formalMemorySourceContext && !explicitSidecarContext) return false;
   return /memory|profile|sidecar|handoff|checkpoint|记忆|画像|交接|沉淀/i.test(text);
+}
+
+export function isCodeReviewProfileKey(key, existingKey) {
+  const value = String(key ?? '');
+  return Boolean(
+    value !== String(existingKey ?? '') &&
+      value.length <= 100 &&
+      /^(?:communication|engineering|review)\.[a-z0-9]+(?:[.-][a-z0-9]+)*$/u.test(value),
+  );
 }
 
 function assertedFencedApiBoundaryTargets(content) {
