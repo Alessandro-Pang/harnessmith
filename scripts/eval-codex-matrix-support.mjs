@@ -331,6 +331,21 @@ export function evaluateCodexTurnCompletion(result, { requireAgentCompletion = t
   };
 }
 
+export function classifyCodexScenarioHostFailures(turnResults) {
+  const transportFailed = turnResults.some(
+    (turn) =>
+      turn?.result?.captureKind === 'transport-failure' ||
+      turn?.completion?.transportFailure === true,
+  );
+  const hostEvaluatorFailed = turnResults.some(
+    (turn) =>
+      turn?.completion?.transportFailure !== true &&
+      (turn?.result?.captureKind === 'evaluator-failure' ||
+        (turn?.result?.captureKind !== 'transport-failure' && Boolean(turn?.result?.error))),
+  );
+  return { transportFailed, hostEvaluatorFailed };
+}
+
 function parseSingleJsonObject(value) {
   const trimmed = String(value ?? '').trim();
   if (!trimmed) return null;

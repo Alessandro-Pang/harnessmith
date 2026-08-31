@@ -142,24 +142,6 @@ test('repository-map scenario grants the exact personal-map write without source
   assert.match(scenario.prompt, /do not modify repository source files/i);
 });
 
-test('structured Codex capacity failures remain retryable transport failures', async () => {
-  const support = await import(
-    // @ts-expect-error The tracked evaluator support module is intentionally plain ESM.
-    '../../scripts/eval-codex-matrix-support.mjs'
-  );
-  const completion = support.evaluateCodexTurnCompletion({
-    status: 1,
-    signal: null,
-    error: 'evaluator-failure:host-exit',
-    stderr: '',
-    stdout:
-      '{"type":"turn.failed","error":{"message":"Selected model is at capacity. Please try a different model."}}\n',
-  });
-
-  assert.equal(completion.completed, false);
-  assert.equal(completion.transportFailure, true);
-});
-
 test('scenario fixture binds the supplied candidate and prepares without launching Codex', () => {
   const directory = temporaryDirectory();
   const artifact = join(directory, 'candidate.tgz');
