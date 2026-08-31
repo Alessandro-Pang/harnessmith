@@ -2140,7 +2140,7 @@ if (scenarioId === 'memory-autopilot-unprompted') {
     }) &&
       (captureInputInvocation?.output == null ||
         (matchingInput &&
-          captureInputInvocation.output.path === matchingInput.path &&
+          sameCanonicalPath(captureInputInvocation.output.path, matchingInput.path) &&
           captureInputInvocation.output.reference === matchingInputReference)),
   );
   const typedInputCaptureProven = typedInputCaptureIsProven({
@@ -2463,7 +2463,10 @@ if (scenarioId === 'memory-autopilot-unprompted') {
         tokens &&
         tokens.length === 6 &&
         (tokens[0] === nodeBin || tokens[0] === 'node') &&
-        (isAbsolute(tokens[1]) ? resolve(tokens[1]) : resolve(repo, tokens[1])) === harnessBin() &&
+        sameCanonicalPath(
+          isAbsolute(tokens[1]) ? resolve(tokens[1]) : resolve(repo, tokens[1]),
+          harnessBin(),
+        ) &&
         tokens[2] === 'memory' &&
         tokens[3] === 'profile-autopilot' &&
         tokens[4] === 'pause' &&
@@ -2512,7 +2515,10 @@ if (scenarioId === 'memory-autopilot-unprompted') {
         tokens &&
         tokens.length === 7 &&
         (tokens[0] === nodeBin || tokens[0] === 'node') &&
-        (isAbsolute(tokens[1]) ? resolve(tokens[1]) : resolve(repo, tokens[1])) === harnessBin() &&
+        sameCanonicalPath(
+          isAbsolute(tokens[1]) ? resolve(tokens[1]) : resolve(repo, tokens[1]),
+          harnessBin(),
+        ) &&
         tokens[2] === 'memory' &&
         tokens[3] === 'forget-profile' &&
         tokens[4] === '--key' &&
@@ -2587,14 +2593,20 @@ if (scenarioId === 'memory-autopilot-unprompted') {
       finalCloseAttempt.status === 'completed' &&
       finalCloseTokens?.length === 10 &&
       (finalCloseTokens[0] === nodeBin || finalCloseTokens[0] === 'node') &&
-      (isAbsolute(finalCloseTokens[1])
-        ? resolve(finalCloseTokens[1])
-        : resolve(repo, finalCloseTokens[1])) === harnessBin() &&
+      sameCanonicalPath(
+        isAbsolute(finalCloseTokens[1])
+          ? resolve(finalCloseTokens[1])
+          : resolve(repo, finalCloseTokens[1]),
+        harnessBin(),
+      ) &&
       finalCloseTokens[2] === 'memory' &&
       finalCloseTokens[3] === 'close-handoff' &&
-      (isAbsolute(finalCloseTokens[4])
-        ? resolve(finalCloseTokens[4])
-        : resolve(repo, finalCloseTokens[4])) === repo &&
+      sameCanonicalPath(
+        isAbsolute(finalCloseTokens[4])
+          ? resolve(finalCloseTokens[4])
+          : resolve(repo, finalCloseTokens[4]),
+        repo,
+      ) &&
       finalCloseTokens[5] === '--session' &&
       finalCloseTokens[6] === 'host-thread-42' &&
       finalCloseTokens[7] === '--outcome' &&
