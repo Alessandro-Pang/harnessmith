@@ -101,6 +101,37 @@ test('code-review profile keys accept stable review dimensions only', async () =
   );
 });
 
+test('multi-task checkpoint proof starts after the second verified task', async () => {
+  const { multiTaskCheckpointReplacementIsProven } = await support();
+  const afterSecond = {
+    path: '.agent-docs/sessions/2026/08/31/multi-thread-23.md',
+    digest: 'second',
+    reason: 'multi-task',
+  };
+  const afterThird = {
+    path: afterSecond.path,
+    digest: 'third',
+    reason: 'multi-task',
+  };
+
+  assert.equal(
+    multiTaskCheckpointReplacementIsProven({
+      afterSecond,
+      afterThird,
+      allVerifiersPassed: true,
+    }),
+    true,
+  );
+  assert.equal(
+    multiTaskCheckpointReplacementIsProven({
+      afterSecond,
+      afterThird: { ...afterThird, digest: afterSecond.digest },
+      allVerifiersPassed: true,
+    }),
+    false,
+  );
+});
+
 test('resumed Codex turns retain their additional writable roots through config', async () => {
   const { buildCodexTurn } = await support();
   const args = buildCodexTurn({

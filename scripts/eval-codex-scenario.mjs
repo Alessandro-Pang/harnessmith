@@ -50,6 +50,7 @@ import {
   memoryPayloadOutputIsCompatible,
   memoryPayloadAttemptViolatesBoundary,
   mentionsRetryInvestigationContext,
+  multiTaskCheckpointReplacementIsProven,
   parseCodexInputTokens,
   parseCodexThreadId,
   parseInstallCaptureEnvelope,
@@ -2743,18 +2744,12 @@ if (scenarioId === 'memory-autopilot-phase-only') {
 }
 if (scenarioId === 'memory-autopilot-multi-task') {
   const snapshots = ['initial', 'item-b', 'item-c'].map((label) => snapshot(label, 'multi-thread-23'));
-  const [afterA, afterB, afterC] = snapshots;
+  const [, afterB, afterC] = snapshots;
   const final = snapshots[2];
   const core = readFileSync(join(repo, '.agent-docs', 'core.md'), 'utf8');
   const completed = section(final?.content, '已完成');
   const next = section(final?.content, '下一步');
   const objective = section(final?.content, '当前目标');
-  const samePath = Boolean(
-    afterA && afterB && afterC && afterA.path === afterB.path && afterB.path === afterC.path,
-  );
-  const distinctDigests = Boolean(
-    afterA && afterB && afterC && afterA.digest !== afterB.digest && afterB.digest !== afterC.digest,
-  );
   const activeStates = ['initial', 'item-b', 'item-c'].map((label) => {
     const observation = turnByLabel.get(label)?.observation;
     const active = (observation?.handoffs['multi-thread-23'] ?? []).filter((item) => item.status === 'active');
@@ -2800,7 +2795,11 @@ if (scenarioId === 'memory-autopilot-multi-task') {
   const multiTaskBoundaryOk = memoryAutopilotBoundaryOk;
   setAssertions(
     [
-      Boolean(samePath && distinctDigests && afterB?.reason === 'multi-task' && afterC?.reason === 'multi-task' && verifiersPassed('initial', 'item-b', 'item-c')),
+      multiTaskCheckpointReplacementIsProven({
+        afterSecond: afterB,
+        afterThird: afterC,
+        allVerifiersPassed: verifiersPassed('initial', 'item-b', 'item-c'),
+      }),
       Boolean(structuredSnapshot && concreteNext && ['item-a.txt', 'item-b.txt', 'item-c.txt'].every((path) => completed.includes(path))),
       Boolean(final && finalActiveIndexInvariant && !containsRawTranscript && (core.match(new RegExp(final.reference.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'))?.length ?? 0) === 1),
     ],
