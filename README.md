@@ -86,6 +86,12 @@ node <harness-path>/bin/harness.mjs health --json
 [安全生命周期](https://alexpang.cn/harnessmith/guide/lifecycle)。Repository Map 的关系模型、证据门槛和维护命令见
 [运行时 CLI](https://alexpang.cn/harnessmith/reference/runtime-cli#repository-map-维护跨项目关系)。
 
+## 内嵌文档检索
+
+`search` / `memory search` 默认使用 `--mode auto`：存在有效的本地全文索引时执行加权 BM25 检索，否则安全回退到
+原有有界扫描。索引只在显式传入 `--refresh-index` 时于 `state/search/` 下原子构建或增量更新；它是可重建缓存，
+不是事实源。`--mode fulltext` 在索引不可用时 fail closed，`--mode scan` 可强制使用扫描。
+
 ## 安全边界
 
 | 状态 | Harnessmith 的承诺 |

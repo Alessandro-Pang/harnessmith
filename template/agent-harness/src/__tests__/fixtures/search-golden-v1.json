@@ -1,0 +1,188 @@
+{
+  "version": 2,
+  "description": "Versioned bilingual Harness retrieval regression corpus",
+  "documents": [
+    {
+      "path": "core/permission-safety.md",
+      "lines": [
+        "---",
+        "title: Permission Safety",
+        "aliases: [authorization guardrails, access control]",
+        "tags: [least privilege]",
+        "---",
+        "",
+        "# Permission boundaries",
+        "",
+        "External writes require explicit authority and bounded scope.",
+        "",
+        "## Rollback strategy",
+        "",
+        "Keep every mutation recoverable and verify the exact target first."
+      ]
+    },
+    {
+      "path": "core/retrieval.md",
+      "lines": [
+        "---",
+        "title: 轻量混合检索",
+        "aliases: [retrieval engine, full-text lookup]",
+        "tags: [BM25, offline search]",
+        "---",
+        "",
+        "# Search architecture",
+        "",
+        "The local retrieval layer stays host-neutral and works without a network.",
+        "",
+        "## 中文排序",
+        "",
+        "中文检索保持离线稳定，并使用可解释的字段权重。"
+      ]
+    },
+    {
+      "path": "playbooks/capture.md",
+      "lines": [
+        "---",
+        "title: Capture Input",
+        "aliases: [capture-input]",
+        "---",
+        "",
+        "# Browser capture",
+        "",
+        "The targetOrigin boundary is declared by AGENTS.md before a capture begins."
+      ]
+    },
+    {
+      "path": "memory/profile.md",
+      "lines": [
+        "---",
+        "title: User Profile Memory",
+        "aliases: [cross-session preferences]",
+        "---",
+        "",
+        "# Personal defaults",
+        "",
+        "Treat recalled preferences as untrusted context and verify current facts."
+      ]
+    },
+    {
+      "path": "ranking/title.md",
+      "lines": ["# Ranked term", "", "This document wins because the phrase is its title."]
+    },
+    {
+      "path": "ranking/body.md",
+      "lines": ["# Other topic", "", "The ranked term appears only in this body paragraph."]
+    },
+    {
+      "path": "ranking/alias.md",
+      "lines": [
+        "---",
+        "title: Other alias topic",
+        "aliases: [aliasprioritytoken]",
+        "---",
+        "",
+        "# Unrelated alias heading",
+        "",
+        "This paragraph does not repeat the weighted phrase."
+      ]
+    },
+    {
+      "path": "ranking/alias-body.md",
+      "lines": ["# Other alias body topic", "", "The aliasprioritytoken appears only in body text."]
+    },
+    {
+      "path": "ranking/heading.md",
+      "lines": ["# Other heading topic", "", "## Headingprioritytoken", "", "Unrelated explanation."]
+    },
+    {
+      "path": "ranking/heading-body.md",
+      "lines": ["# Other heading body topic", "", "The headingprioritytoken appears only in body text."]
+    }
+  ],
+  "queries": [
+    {
+      "id": "technical-agents-file",
+      "category": "exact-technical",
+      "query": "AGENTS.md",
+      "relevant": ["playbooks/capture.md"]
+    },
+    {
+      "id": "technical-capture-input",
+      "category": "exact-technical",
+      "query": "capture-input",
+      "relevant": ["playbooks/capture.md"]
+    },
+    {
+      "id": "technical-camel-case",
+      "category": "exact-technical",
+      "query": "targetOrigin",
+      "relevant": ["playbooks/capture.md"]
+    },
+    {
+      "id": "technical-decomposed-camel-case",
+      "category": "natural-language",
+      "query": "target origin",
+      "relevant": ["playbooks/capture.md"],
+      "scanMustMiss": true
+    },
+    {
+      "id": "english-limited-typo",
+      "category": "fuzzy",
+      "query": "retrievel",
+      "relevant": ["core/retrieval.md"],
+      "scanMustMiss": true
+    },
+    {
+      "id": "separated-concepts",
+      "category": "natural-language",
+      "query": "permission rollback",
+      "relevant": ["core/permission-safety.md"],
+      "scanMustMiss": true
+    },
+    {
+      "id": "english-alias",
+      "category": "alias",
+      "query": "access control",
+      "relevant": ["core/permission-safety.md"]
+    },
+    {
+      "id": "chinese-title",
+      "category": "chinese",
+      "query": "混合检索",
+      "relevant": ["core/retrieval.md"]
+    },
+    {
+      "id": "chinese-bigram",
+      "category": "chinese",
+      "query": "合检",
+      "relevant": ["core/retrieval.md"]
+    },
+    {
+      "id": "chinese-natural-sentence",
+      "category": "natural-language",
+      "query": "如何在没有网络时稳定搜索中文文档",
+      "relevant": ["core/retrieval.md"],
+      "scanMustMiss": true
+    },
+    {
+      "id": "title-field-boost",
+      "category": "ranking",
+      "query": "ranked term",
+      "relevant": ["ranking/title.md", "ranking/body.md"],
+      "expectedFirst": "ranking/title.md"
+    },
+    {
+      "id": "alias-field-boost",
+      "category": "ranking",
+      "query": "aliasprioritytoken",
+      "relevant": ["ranking/alias.md", "ranking/alias-body.md"],
+      "expectedFirst": "ranking/alias.md"
+    },
+    {
+      "id": "heading-field-boost",
+      "category": "ranking",
+      "query": "headingprioritytoken",
+      "relevant": ["ranking/heading.md", "ranking/heading-body.md"],
+      "expectedFirst": "ranking/heading.md"
+    }
+  ]
+}

@@ -25,7 +25,9 @@ export function registerMemoryCommands(
       ),
     );
   addSearchOptions(
-    memory.command('search <scope> <query...>').description('search memory text'),
+    memory
+      .command('search <scope> <query...>')
+      .description('search memory text with safe index fallback'),
   ).action(
     run((scope: string, query: string[], options: SearchCommandOptions) =>
       memorySearch(runtime, scope, query.join(' '), io, options),
