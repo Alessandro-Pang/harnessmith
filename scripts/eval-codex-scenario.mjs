@@ -2358,6 +2358,7 @@ if (scenarioId === 'memory-autopilot-unprompted') {
   );
   const followOutput = followInvocation?.parsedOutput;
   const repeatedOutput = repeatedInvocation?.parsedOutput;
+  const repeatedOutputObserved = Boolean(repeatedInvocation?.output.trim());
   const initialVerifier = {
     script: 'verify-autopilot.mjs',
     target: 'docs/status.txt',
@@ -2404,6 +2405,7 @@ if (scenarioId === 'memory-autopilot-unprompted') {
     followOutput,
     followOutputObserved,
     repeatedOutput,
+    repeatedOutputObserved,
     expectedPath: follow?.path,
     expectedReference: follow?.reference,
     preToFollowChanged: Boolean(
@@ -2609,6 +2611,7 @@ if (scenarioId === 'memory-autopilot-unprompted') {
     followOutput: followOutput ?? null,
     followOutputObserved,
     repeatedOutput: repeatedOutput ?? null,
+    repeatedOutputObserved,
     proven: idempotencyProven,
   };
   observationArtifact.closeTiming = {

@@ -44,6 +44,16 @@ export function buildCodexTurn({
   ephemeral = false,
 }) {
   if (threadId) {
+    const resumeSandboxOverrides = writable
+      ? [
+          'sandbox_mode="workspace-write"',
+          ...(additionalDirs.length > 0
+            ? [
+                `sandbox_workspace_write.writable_roots=${JSON.stringify(additionalDirs)}`,
+              ]
+            : []),
+        ]
+      : ['sandbox_mode="read-only"'];
     return [
       'exec',
       'resume',
@@ -51,6 +61,7 @@ export function buildCodexTurn({
       '--model',
       model,
       ...configOverrides.flatMap((value) => ['-c', value]),
+      ...resumeSandboxOverrides.flatMap((value) => ['-c', value]),
       threadId,
       '-',
     ];
@@ -1133,6 +1144,7 @@ export function checkpointIdempotencyIsProven({
   followOutput,
   followOutputObserved,
   repeatedOutput,
+  repeatedOutputObserved,
   expectedPath,
   expectedReference,
   preToFollowChanged,
@@ -1141,6 +1153,8 @@ export function checkpointIdempotencyIsProven({
 }) {
   const parsedFollowOutputObserved = Boolean(followOutput);
   if (Boolean(followOutputObserved) !== parsedFollowOutputObserved) return false;
+  const parsedRepeatedOutputObserved = Boolean(repeatedOutput);
+  if (Boolean(repeatedOutputObserved) !== parsedRepeatedOutputObserved) return false;
   const followOutputCompatible = memoryPayloadOutputIsCompatible(followOutput, {
     kind: 'episode',
     actions: ['created', 'updated'],
@@ -1149,13 +1163,15 @@ export function checkpointIdempotencyIsProven({
   const followIdentityCompatible =
     !followOutputObserved ||
     (followOutput?.path === expectedPath && followOutput?.reference === expectedReference);
-  const repeatedOutputCompatible = Boolean(
-    repeatedOutput?.version === 1 &&
-      repeatedOutput?.action === 'unchanged' &&
-      repeatedOutput?.kind === 'episode' &&
-      repeatedOutput?.path === expectedPath &&
-      repeatedOutput?.reference === expectedReference,
-  );
+  const repeatedOutputCompatible = repeatedOutputObserved
+    ? Boolean(
+        repeatedOutput?.version === 1 &&
+          repeatedOutput?.action === 'unchanged' &&
+          repeatedOutput?.kind === 'episode' &&
+          repeatedOutput?.path === expectedPath &&
+          repeatedOutput?.reference === expectedReference,
+      )
+    : repeatedOutput == null;
   return Boolean(
     followCommandExact &&
       repeatedCommandExact &&
@@ -1369,7 +1385,7 @@ export function containsApiWorkerBoundary(content) {
       .filter(Boolean);
   });
   const assertion =
-    /^(?:(?:verified(?:\s+stable)?\s+(?:fact|statement)|已验证(?:稳定)?事实)\s*[:：]\s*)?(?:(?:the\s+)?(?:(?:verified|current)\s+)*(?:service\s+)?boundary\s*(?:is|:)\s*(?:(?:now|currently)\s+)?API\s*(?:->|→)\s*([A-Za-z][A-Za-z0-9_-]*)|(?:(?:已验证|当前|目前)\s*)*(?:服务|架构)?边界\s*(?:确认\s*)?(?:是|确?为|：)\s*(?:(?:现在|目前)\s*)?API\s*(?:->|→)\s*([A-Za-z][A-Za-z0-9_-]*)|(?:(?:当前|目前)(?:架构|正式)?说明(?:中)?|(?:架构|正式)?说明(?:中)?仍明确|(?:当前|目前)?架构确认|(?:当前|目前)架构|(?:当前|目前)(?:架构|正式)?文档(?:中)?(?:明确)?确认边界)\s*(?:仍)?(?:明确)?(?:是|确?为|：)\s*API\s*(?:->|→)\s*([A-Za-z][A-Za-z0-9_-]*))\s*$/iu;
+        /^(?:(?:verified(?:\s+stable)?\s+(?:fact|statement)|已验证(?:稳定)?事实)\s*[:：]\s*)?(?:(?:the\s+)?(?:(?:verified|current)\s+)*(?:service\s+)?boundary\s*(?:is|:)\s*(?:(?:now|currently)\s+)?API\s*(?:->|→)\s*([A-Za-z][A-Za-z0-9_-]*)|(?:(?:已验证|当前|目前)\s*)*(?:服务|架构)?边界\s*(?:(?:已)?(?:核实|验证|确认)\s*)?(?:是|为|：)\s*(?:(?:现在|目前)\s*)?API\s*(?:->|→)\s*([A-Za-z][A-Za-z0-9_-]*)|(?:(?:当前|目前)(?:架构|正式)?说明(?:中)?|(?:架构|正式)?说明(?:中)?仍明确|(?:当前|目前)?架构确认|(?:当前|目前)架构|(?:当前|目前)(?:架构|正式)?文档(?:中)?(?:明确)?确认边界)\s*(?:仍)?(?:明确)?(?:是|确?为|：)\s*API\s*(?:->|→)\s*([A-Za-z][A-Za-z0-9_-]*))\s*$/iu;
   const targets = clauses.flatMap((clause) => {
     const match = assertion.exec(clause);
     return match ? [String(match[1] ?? match[2] ?? match[3]).toLowerCase()] : [];
