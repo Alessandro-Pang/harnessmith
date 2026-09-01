@@ -118,6 +118,16 @@ export function memoryMaintenance(
     for (const path of report.genericActionInputs) io.log(`  ${path}`);
     io.log(`Active workstream inputs: ${report.workstreamInputs.length}`);
     for (const path of report.workstreamInputs) io.log(`  ${path}`);
+    io.log(`Generic descriptions: ${report.genericDescriptions.length}`);
+    for (const path of report.genericDescriptions) io.log(`  ${path}`);
+    io.log(`Duplicate purposes: ${report.duplicatePurposes.length}`);
+    for (const candidate of report.duplicatePurposes) {
+      io.log(`  ${candidate.purpose}: ${candidate.paths.join(', ')}`);
+    }
+    io.log(`Split proposals: ${report.splitProposals.length}`);
+    for (const proposal of report.splitProposals) {
+      io.log(`  ${proposal.path}: ${proposal.reasons.join(', ')}`);
+    }
     io.log(
       `Core budget: ${report.coreBudget.status} (${report.coreBudget.lines} lines, ${report.coreBudget.bytes} bytes)`,
     );

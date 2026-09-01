@@ -3,6 +3,7 @@ import { basename, dirname, join } from 'node:path';
 import { stringify } from 'yaml';
 import { parseFrontmatterDocument } from '../lib/frontmatter.js';
 import { escapeCoreLabel, upsertCoreReference } from '../lib/memory-core.js';
+import { documentPurposeMetadata } from '../lib/memory-document-purpose.js';
 import {
   type InputSource,
   inputContentDigest,
@@ -195,6 +196,7 @@ export function captureInput(
       const content = `${frontmatter({
         title,
         description: `${summary ? '用户输入可靠摘要' : '用户输入'}：${title}`,
+        ...documentPurposeMetadata(title),
         type: 'user-input',
         'memory-kind': 'input',
         status: 'active',

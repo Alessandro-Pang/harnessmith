@@ -54,6 +54,8 @@ test('task initialization validates required fields and creates a queryable ledg
   );
   const core = readFileSync(join(project, '.agent-docs', 'core.md'), 'utf8');
   assert.match(progress, /^expires: \d{4}-\d{2}-\d{2}$/m);
+  assert.match(progress, /^document-purpose: "Add quality gates"$/m);
+  assert.match(progress, /^document-purpose-schema-version: 1$/m);
   assert.match(core, /memory:working\/quality-gates\/progress/);
   assert.doesNotThrow(() => memoryCheck(runtime, project, capturedIo()));
   const current = taskStatus({ project, id: task.id }, capturedIo());

@@ -170,6 +170,12 @@ lifecycle 负责过期；旧文档保持可读，缺少分类时不自动猜测�
 `current-state`/`recovery-state` 标记重新验证。Handoff 字段与 reconcile/close 语义以
 [long-running task protocol](long-running-tasks.md) 为准，画像命令以
 [user profile standard](../standards/user-profile-memory.md) 为准。
+
+新 typed Memory 文档同时写入 `document-purpose-schema-version: 1` 与单一
+`document-purpose`。purpose 与 title 必须一致，description 必须包含该 title；`相关内容`、`任务信息`、
+`related content`、`task information` 等低信息 title/description 对新文档属于校验失败，对 legacy 文档仅
+产生 warning。`memory maintain` 检测重复 canonical purpose 和多个 purpose/结论标题，输出可解释的 split
+proposal，但不得自动拆分或改写历史正文。缺少 purpose 的 legacy 文档继续可读，migration 不自动猜测。
 所有 coordinated write 在读取或写入任何 entry 前对整组路径执行 SafePath preflight，再使用
 secret scan、共享锁、原子写、托管 Memory 校验和失败回滚；`core.md` 按完整 `memory:` token 更新，
 不能用前缀匹配。

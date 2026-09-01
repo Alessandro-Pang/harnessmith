@@ -1,6 +1,7 @@
 import { relative } from 'node:path';
 import { parseFrontmatterDocument } from './frontmatter.js';
 import { type MemoryCoreBudgetReport, memoryCoreBudget } from './memory-core-budget.js';
+import { purposeMaintenanceDiagnostics } from './memory-document-purpose.js';
 import { parseInputBody } from './memory-input.js';
 import { markdownFiles, readMemoryDocument } from './memory-path.js';
 import {
@@ -22,6 +23,9 @@ export interface MemoryMaintenanceReport {
   legacyInputs: string[];
   genericActionInputs: string[];
   workstreamInputs: string[];
+  genericDescriptions: string[];
+  duplicatePurposes: Array<{ purpose: string; paths: string[] }>;
+  splitProposals: Array<{ path: string; reasons: string[] }>;
   coreBudget: MemoryCoreBudgetReport;
 }
 
@@ -197,6 +201,7 @@ export function memoryMaintenanceReport(root: string, today: string): MemoryMain
     if (closedStatuses.has(status)) closed.push(name);
   }
   const inputs = inputDiagnostics(documents);
+  const purposes = purposeMaintenanceDiagnostics(documents);
   const corePath = files.find((path) => portablePath(root, path) === 'core.md');
   if (!corePath) throw new Error(`Memory core is missing: ${root}`);
 
@@ -213,28 +218,9 @@ export function memoryMaintenanceReport(root: string, today: string): MemoryMain
     legacyInputs: inputs.legacyInputs.sort(),
     genericActionInputs: inputs.genericActionInputs.sort(),
     workstreamInputs: inputs.workstreamInputs.sort(),
+    ...purposes,
     coreBudget: memoryCoreBudget(readMemoryDocument(corePath)),
   };
 }
 
-export function memoryMaintenanceWarnings(report: MemoryMaintenanceReport): string[] {
-  return [
-    ...(report.coreBudget.status === 'ok'
-      ? []
-      : [
-          `core context budget: ${report.coreBudget.status} (${report.coreBudget.lines} lines, ${report.coreBudget.bytes} bytes)`,
-        ]),
-    ...report.coreBudget.compressionCandidates.map(
-      (reference) => `core compression candidate: ${reference}`,
-    ),
-    ...report.expiredWorking.map((path) => `expired: ${path}`),
-    ...report.closed.map((path) => `archive candidate: ${path}`),
-    ...report.duplicateTitles.map(
-      ({ title, paths }) => `duplicate title: ${title} (${paths.join(', ')})`,
-    ),
-    ...report.supersessionCycles.map((cycle) => `supersession cycle: ${cycle.join(' -> ')}`),
-    ...report.legacyInputs.map((path) => `legacy input: ${path}`),
-    ...report.genericActionInputs.map((path) => `generic action input: ${path}`),
-    ...report.workstreamInputs.map((path) => `active workstream input: ${path}`),
-  ];
-}
+export { memoryMaintenanceWarnings } from './memory-maintenance-warnings.js';

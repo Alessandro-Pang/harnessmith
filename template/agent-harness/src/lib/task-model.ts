@@ -121,7 +121,7 @@ export function progressDocument(task: TaskRecord, owner: string): string {
   const objective = escapeCoreLabel(task.objective);
   return `---
 title: ${JSON.stringify(objective)}
-description: ${JSON.stringify(`Long-running task progress for ${task.id}`)}
+description: ${JSON.stringify(`Long-running task progress: ${objective}`)}
 type: working-note
 memory-kind: working
 status: ${taskMemoryStatus(task.status)}
@@ -134,6 +134,8 @@ tags: ["task-ledger"]
 scope: []
 source-refs: [${JSON.stringify(`task:${task.id}`)}]
 source-of-truth: false
+document-purpose: ${JSON.stringify(objective)}
+document-purpose-schema-version: 1
 schema-version: 1
 ---
 
