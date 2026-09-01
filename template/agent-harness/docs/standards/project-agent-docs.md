@@ -196,13 +196,16 @@ proposed 或 blocked 时同时说明原因和所需决策。普通任务仍只�
 未满足条件；输出不会创建或修改目标。目标已承接结论时，只有显式 adoption evidence 才能形成 supersede candidate，
 该 candidate 仍不是已采纳事实，也不能绕过 owner 确认、正式 verifier 或 typed lifecycle mutation。
 
-任务或阶段结束后可运行 `memory curate <project> --task <id> --json` 获取只读、proposal-first 策展报告。
+任务或阶段结束后可运行 `memory curate <project> --task <id> --json` 获取默认只读、proposal-first 策展报告。
 报告把 `phase-complete`、`task-complete`、`workstream-complete` 与 `user-cancel` 分开，并只检查当前
 task/workstream 关联的 Memory；输出 promote、close、supersede、archive、skipped 候选或 `result: none`。
 task complete 不自动表示 workstream complete，不能据此关闭仍有效的 input 或 handoff。报告不证明任务完成，
-不执行 mutation；promotion 仍需 owner、授权与事实源验证，close/supersede/archive 仍走现有 typed lifecycle
-命令及其 inbound reference、状态和 cycle 门禁。多个 `task:` source ref 表示共享 owner；只结束其中一个
-task/workstream 时不得关闭或归档该文档。
+也不会自动 mutation。候选必须包含稳定 proposal identity、source digest、workspace digest、`expiresOn`、前置条件与 verifier。
+只有显式选择有界 proposal 集并提供 `--yes` 才能进入 apply；执行前重新验证 source、Task、引用、cycle、权限和 dirty drift，
+stale、changed 或 expired proposal 必须重新生成。promotion 只调用正式 promotion proposal，不写事实源；close、supersede、
+archive 仍走现有 typed lifecycle 及其 inbound reference、状态、cycle、lock 与 rollback 门禁。输出逐项 action、reason、
+validation、recovery path 和 remaining proposals；partial failure 不冒充整批成功。curation apply 与 acceptance gate 独立。
+多个 `task:` source ref 表示共享 owner；只结束其中一个 task/workstream 时不得关闭或归档该文档。
 
 `memory relationships <project> --json` 只读汇总 Task、默认 phase/workstream、Memory、session 与 owner 关系，
 并报告 orphan task reference 和 cross-workstream binding。关系报告不是新的权威状态层；Task ledger 继续拥有
