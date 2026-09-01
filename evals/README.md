@@ -5,6 +5,27 @@ recording a maintainer-observed Codex, Cursor, Claude Code, OpenCode, or Kimi Co
 current release policy requires Codex; Cursor, Claude Code, OpenCode, and Kimi Code CLI records remain supported optional evidence. A schema
 fixture, scenario catalog, mocked transcript, or passing unit test is never real host evidence.
 
+## Multi-Host capability matrix
+
+`host-capability-matrix.v1.json` maps the current first-startup, read-only analysis, typed-writer,
+uninitialized-project, compaction, second-task, sidecar-failure, dirty-worktree, local-write prohibition,
+and replay capabilities across all five distribution adapters. `pnpm run eval:host-matrix` binds that
+contract and every accepted record to one exact candidate tarball:
+
+```bash
+pnpm run eval:host-matrix -- \
+  --package-artifact /absolute/path/harnessmith-x.y.z.tgz \
+  --runs-dir /absolute/path/to/host-eval-runs
+```
+
+The report keeps `not-executed`, `unsupported`, `inconclusive`, `infra-inconclusive`,
+`evaluator-failed`, and `behavior-failed` separate. A `passed` cell requires a schema-valid exact-candidate
+record, tool actions, filesystem evidence, passing positive and forbidden assertions, and an independent
+test/file/log/observation artifact. Missing concrete Host transports or dedicated verifier scenarios remain
+explicitly `inconclusive`; installed CLIs, mock evaluators, catalog validation, preflight, and successful
+Harness installation never upgrade those cells. The report is candidate-bound maintainer-attested structure,
+not trusted proof that a third-party Host performed the run.
+
 ## Deterministic Prompt and route benchmark
 
 `pnpm run bench:prompt-route` runs the versioned bilingual corpus in

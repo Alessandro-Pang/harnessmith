@@ -37,6 +37,8 @@ const requiredDistributionFiles = [
   'template/agent-harness/schemas/task.schema.json',
   'evals/scenarios.json',
   'evals/scenarios.schema.json',
+  'evals/host-capability-matrix.v1.json',
+  'evals/host-capability-matrix.schema.json',
   'evals/run.schema.json',
 ];
 
@@ -124,6 +126,14 @@ function assertCurrentReleaseContract(tarball: NpmPackageTarball): RuleFingerpri
   if (!candidateRunSchema.equals(currentRunSchema)) {
     throw new Error('Candidate evaluation run schema does not match the release worktree');
   }
+  for (const path of [
+    'evals/host-capability-matrix.v1.json',
+    'evals/host-capability-matrix.schema.json',
+  ]) {
+    if (!requiredFile(tarball, path).equals(readFileSync(join(repositoryRoot, path)))) {
+      throw new Error(`Candidate ${path} does not match the release worktree`);
+    }
+  }
   assertCandidatePackageFiles(repositoryRoot, tarball);
   return rules;
 }
@@ -148,6 +158,9 @@ export function evaluationFingerprint(packageArtifactPath = releaseArtifactPath(
     harnessVersion: harnessManifest.harnessVersion,
     packageArtifactSha256: tarball.sha256,
     behaviorSha256: sha256(JSON.stringify({ schemaVersion: 1, rulesSha256: rules.rulesSha256 })),
+    hostCapabilityMatrixSha256: sha256(
+      requiredFile(tarball, 'evals/host-capability-matrix.v1.json'),
+    ),
     ...rules,
     scenarios: scenarioFingerprints(catalog),
     scenarioDependencies: scenarioDependencyFingerprints(catalog, repositoryRoot),

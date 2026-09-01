@@ -63,11 +63,13 @@ export function candidateEntries(
     harnessVersion,
     rule,
     scenarios,
+    hostMatrix,
   }: {
     packageVersion?: string;
     harnessVersion?: string;
     rule?: string;
     scenarios?: unknown;
+    hostMatrix?: unknown;
   } = {},
 ): TarEntry[] {
   const packageManifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
@@ -104,6 +106,12 @@ export function candidateEntries(
     }
     if (packagePath === 'package/evals/scenarios.json' && scenarios !== undefined) {
       content = JSON.stringify(scenarioCatalog);
+    }
+    if (
+      packagePath === 'package/evals/host-capability-matrix.v1.json' &&
+      hostMatrix !== undefined
+    ) {
+      content = JSON.stringify(hostMatrix);
     }
     entries.push({ path: packagePath, content });
   }

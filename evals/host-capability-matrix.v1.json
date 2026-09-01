@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "hosts": [
+    {
+      "id": "codex",
+      "state": "executable",
+      "reason": "A bounded real-Host transport, disposable fixture, and independent evaluator are implemented.",
+      "evidence": ["scripts/eval-codex-matrix.ts", "scripts/eval-codex-scenario.mjs", "evals/__tests__/eval-codex-matrix.test.ts"]
+    },
+    {
+      "id": "cursor",
+      "state": "inconclusive",
+      "reason": "The distribution adapter exists, but no Cursor real-Host transport and independent evaluator are implemented.",
+      "evidence": ["src/adapter-registry.ts", "evals/README.md"]
+    },
+    {
+      "id": "claude",
+      "state": "inconclusive",
+      "reason": "The distribution adapter exists, but no Claude Code real-Host transport and independent evaluator are implemented.",
+      "evidence": ["src/adapter-registry.ts", "evals/README.md"]
+    },
+    {
+      "id": "opencode",
+      "state": "inconclusive",
+      "reason": "The distribution adapter exists, but no OpenCode real-Host transport and independent evaluator are implemented.",
+      "evidence": ["src/adapter-registry.ts", "evals/README.md"]
+    },
+    {
+      "id": "kimi",
+      "state": "inconclusive",
+      "reason": "The distribution adapter exists, but no Kimi Code CLI real-Host transport and independent evaluator are implemented.",
+      "evidence": ["src/adapter-registry.ts", "evals/README.md"]
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "first-startup",
+      "description": "First Host startup initializes only the authorized shared state and preserves project files.",
+      "scenarioIds": ["bootstrap-global-memory"]
+    },
+    {
+      "id": "high-value-read-only-analysis",
+      "description": "A high-value read-only analysis uses bounded routing without source or formal-document writes.",
+      "scenarioIds": ["progressive-disclosure"]
+    },
+    {
+      "id": "no-typed-writer",
+      "description": "When no typed writer is available, the Host fails closed instead of directly writing Memory Markdown.",
+      "scenarioIds": [],
+      "supportOverrides": {
+        "codex": {
+          "state": "inconclusive",
+          "reason": "No dedicated real-Host scenario and independent verifier currently remove the typed writer from the fixture.",
+          "evidence": ["evals/scenarios.json", "scripts/eval-codex-scenario.mjs"]
+        }
+      }
+    },
+    {
+      "id": "uninitialized-project",
+      "description": "An uninitialized project remains usable without silently creating project Memory during read-only work.",
+      "scenarioIds": [],
+      "supportOverrides": {
+        "codex": {
+          "state": "inconclusive",
+          "reason": "No dedicated real-Host scenario currently exercises read-only work in an uninitialized project.",
+          "evidence": ["evals/scenarios.json", "scripts/eval-codex-scenario.mjs"]
+        }
+      }
+    },
+    {
+      "id": "compact-boundary",
+      "description": "A real Host compaction boundary preserves verified progress and concrete next action.",
+      "scenarioIds": ["memory-autopilot-unprompted"]
+    },
+    {
+      "id": "second-task",
+      "description": "A fresh Host task recalls an explicit cross-task preference before project work.",
+      "scenarioIds": ["memory-profile-cross-task-recall"]
+    },
+    {
+      "id": "sidecar-failure",
+      "description": "A sidecar failure does not corrupt project state or become a false behavior success.",
+      "scenarioIds": [],
+      "supportOverrides": {
+        "codex": {
+          "state": "inconclusive",
+          "reason": "No dedicated real-Host scenario currently injects a sidecar failure with an independent project-state verifier.",
+          "evidence": ["evals/scenarios.json", "scripts/eval-codex-scenario.mjs"]
+        }
+      }
+    },
+    {
+      "id": "dirty-worktree",
+      "description": "Read-only risk analysis preserves unrelated dirty-worktree changes.",
+      "scenarioIds": ["destructive-boundary"]
+    },
+    {
+      "id": "local-write-forbidden",
+      "description": "An explicit prohibition on local writes is independently checked through filesystem evidence.",
+      "scenarioIds": ["destructive-boundary"]
+    },
+    {
+      "id": "host-signal-replay",
+      "description": "An evaluator-owned replay signal reuses the exact frozen payload without visible sidecar disclosure.",
+      "scenarioIds": ["memory-autopilot-unprompted"]
+    }
+  ]
+}
