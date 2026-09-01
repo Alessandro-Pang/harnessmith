@@ -110,3 +110,18 @@ rules:
     boundary:
       - docs/architecture.md
       - template/agent-harness/docs/core/observability.md
+
+  - id: host-signal-replay-proof
+    owner: long-running-tasks
+    principle: Duplicate host signals do not authorize duplicate mutations.
+    rationale: Missing stdout and repeated delivery require exact payload and persisted-state proof.
+    action: Verify new mutation or identical replay evidence with the read-only replay state machine.
+    fallback: Return inconclusive and require a new payload after failed or incomplete attempts.
+    guarantee: enforced
+    evidence:
+      implementation:
+        - template/agent-harness/src/lib/replay-contract.ts
+        - template/agent-harness/src/commands/replay.ts
+      verification:
+        - template/agent-harness/src/__tests__/replay-contract.test.ts
+        - template/agent-harness/src/__tests__/host-signal-replay.test.ts

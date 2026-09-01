@@ -12,6 +12,7 @@ import { validate } from './commands/validate.js';
 import { containsHighConfidenceSecret } from './lib/secret-hygiene.js';
 import { registerAuditCommands } from './program/audit.js';
 import { registerMemoryCommands } from './program/memory.js';
+import { registerReplayCommands } from './program/replay.js';
 import { registerRepositoryMapCommands } from './program/repository-map.js';
 import { addSearchOptions, type SearchCommandOptions } from './program/search-options.js';
 import { registerTaskCommands } from './program/task.js';
@@ -215,6 +216,7 @@ export function createHarnessProgram(runtime: Runtime = createRuntime(), outputI
   registerTaskCommands(program, runtime, io, run);
   registerMemoryCommands(program, runtime, io, run);
   registerRepositoryMapCommands(program, runtime, io, run);
+  registerReplayCommands(program, io, run);
 
   addSearchOptions(
     program
