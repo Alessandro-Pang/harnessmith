@@ -29,6 +29,15 @@ npx harnessmith adopt --agent codex --proposal <proposalId> --yes --json
 `adopt` 只导入可移植规则正文；Host-specific 配置只保留在原文件备份中。扫描或确认阶段发现 secret、symlink、未知格式、
 路径越界、受管文件被修改，或提案后内容发生变化时都会停止。实际写入与安装共享预检、锁、备份和事务回滚。
 
+## 配置迁移
+
+`export` / `import` 只迁移 user-owned personal overlay，不复制 managed Runtime、state、Memory、credential、cache 或
+workspace 内容。export 可先在 stdout 预览，再用 `--output` 写入新文件；import 首次只返回冲突 plan 和内容绑定的
+`proposalId`，审阅后才以 `--proposal <id> --yes` 提交。
+
+目标已有不同内容时 import 固定拒绝，不能成为静默跨 root 合并或覆盖入口。写入期间持有 personal root lock；失败按
+写前快照回滚。未知版本、篡改 digest、越界路径和 symlink bundle 都会在写入前停止。
+
 ## 只读预览与状态
 
 ```bash

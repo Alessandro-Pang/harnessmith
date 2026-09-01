@@ -24,6 +24,7 @@
     "template/agent-harness/schemas",
     "template/agent-harness/templates",
     "diagnostics/report.schema.json",
+    "portable-config/bundle.schema.json",
     "evals/scenarios.json",
     "evals/scenarios.schema.json",
     "evals/host-capability-matrix.v1.json",

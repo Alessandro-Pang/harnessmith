@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 2,
+  "kind": "harnessmith-portable-config",
+  "rootKind": "personal-overlay",
+  "collectionResult": "complete",
+  "resources": [],
+  "exclusions": [],
+  "excludedCategories": [
+    "managed-distribution",
+    "mutable-state",
+    "global-memory",
+    "project-memory",
+    "host-credentials",
+    "cache-and-temporary-files",
+    "workspace-content"
+  ],
+  "bundleDigest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+}

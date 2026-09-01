@@ -9,6 +9,8 @@ export type HarnessmithCommand =
   | 'setup'
   | 'adopt'
   | 'diagnostics'
+  | 'export'
+  | 'import'
   | 'install'
   | 'status'
   | 'restore'
@@ -84,6 +86,19 @@ export function createProgram(
     .command('diagnostics')
     .description('preview a redacted, local-only diagnostic report');
   diagnostics.action(() => execute('diagnostics', diagnostics.optsWithGlobals<CliOptions>()));
+
+  const exportCommand = program
+    .command('export')
+    .description('preview or write a versioned personal-overlay bundle')
+    .option('--output <file>', 'write the reviewed bundle to a new local file');
+  exportCommand.action(() => execute('export', exportCommand.optsWithGlobals<CliOptions>()));
+
+  const importCommand = program
+    .command('import')
+    .description('validate and plan or apply a versioned personal-overlay bundle')
+    .requiredOption('--input <file>', 'read a local portable-config bundle')
+    .option('--proposal <id>', 'confirm the exact proposal id from a prior preview');
+  importCommand.action(() => execute('import', importCommand.optsWithGlobals<CliOptions>()));
 
   for (const [name, description] of [
     ['status', 'inspect installation ownership and integrity'],
