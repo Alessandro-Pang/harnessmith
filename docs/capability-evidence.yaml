@@ -194,6 +194,17 @@ claims:
       - evals/__tests__/release-publish.test.ts
       - evals/__tests__/release-risk-integrity.test.ts
 
+  - id: multi-host-capability-matrix-audit
+    status: implemented
+    owner: Host Eval evidence reporting
+    claim: Bind the current Prompt and Memory capability matrix to one candidate while preserving unsupported, inconclusive, unexecuted, infrastructure, evaluator, behavior, and passing outcomes as distinct evidence states.
+    implementation:
+      - evals/host-capability-matrix.v1.json
+      - evals/host-capability-matrix.schema.json
+      - scripts/eval-host-capability-matrix.ts
+    verification:
+      - evals/__tests__/host-capability-matrix.test.ts
+
   - id: post-publish-registry-verification
     status: implemented
     owner: release verification scripts and publish workflow
