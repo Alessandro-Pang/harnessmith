@@ -1,9 +1,18 @@
-import { relative } from 'node:path';
+import { existsSync } from 'node:fs';
+import { basename, dirname, isAbsolute, relative, resolve } from 'node:path';
 import { parseFrontmatterDocument } from './frontmatter.js';
 import { type MemoryCoreBudgetReport, memoryCoreBudget } from './memory-core-budget.js';
 import { purposeMaintenanceDiagnostics } from './memory-document-purpose.js';
-import { parseInputBody } from './memory-input.js';
-import { markdownFiles, readMemoryDocument } from './memory-path.js';
+import {
+  analyzeMaintenanceDocuments,
+  type MaintenanceParsedDocument,
+} from './memory-maintenance-analysis.js';
+import {
+  buildMemoryMaintenanceCandidates,
+  type MemoryMaintenanceCandidate,
+  summarizeMemoryMaintenance,
+} from './memory-maintenance-candidates.js';
+import { isInside, markdownFiles, readMemoryDocument } from './memory-path.js';
 import {
   contentMemoryReferences,
   isOpaqueMemoryContent,
@@ -11,9 +20,23 @@ import {
 } from './memory-validation.js';
 
 export interface MemoryMaintenanceReport {
-  version: 1;
+  version: 2;
+  mode: 'report-only';
   root: string;
   totalFiles: number;
+  scan: { status: 'complete'; filesExamined: number };
+  execution: { status: 'succeeded'; reasonCode: 'report-generated' };
+  mutation: { status: 'unchanged'; reasonCode: 'report-only' };
+  summary: ReturnType<typeof summarizeMemoryMaintenance>;
+  candidates: MemoryMaintenanceCandidate[];
+  eligibility: {
+    status: 'not-evaluated';
+    evaluated: 0;
+    notEvaluated: number;
+    total: number;
+    coverage: 0;
+    reasonCode: 'maintenance-eligibility-input-unavailable';
+  };
   unindexed: string[];
   expiredWorking: string[];
   closed: string[];
@@ -29,33 +52,6 @@ export interface MemoryMaintenanceReport {
   coreBudget: MemoryCoreBudgetReport;
 }
 
-interface MemoryDocument {
-  name: string;
-  metadata: Map<string, unknown>;
-  references: string[];
-  body: string;
-}
-
-interface InputDiagnostics {
-  activeInputCount: number;
-  legacyInputs: string[];
-  genericActionInputs: string[];
-  workstreamInputs: string[];
-}
-
-const genericActions = new Set([
-  '提交',
-  '发布',
-  '继续',
-  '推送',
-  '合并',
-  'commit',
-  'publish',
-  'continue',
-  'push',
-  'merge',
-]);
-
 function portablePath(root: string, path: string): string {
   return relative(root, path).replaceAll('\\', '/');
 }
@@ -67,92 +63,8 @@ function referenceIdentity(value: string): string {
     .toLowerCase();
 }
 
-function supersededBy(metadata: Map<string, unknown>): string | null {
-  const value = metadata.get('superseded-by');
-  return typeof value === 'string' && value.startsWith('memory:') ? referenceIdentity(value) : null;
-}
-
-function normalizedCycle(nodes: string[]): string[] {
-  const start = nodes.reduce((best, value, index) => (value < nodes[best] ? index : best), 0);
-  const rotated = [...nodes.slice(start), ...nodes.slice(0, start)];
-  return [...rotated, rotated[0]];
-}
-
-function duplicateActiveTitles(documents: MemoryDocument[]) {
-  const titles = new Map<string, string[]>();
-  for (const { name, metadata } of documents) {
-    if (!['active', 'blocked'].includes(String(metadata.get('status') || ''))) continue;
-    const title = String(metadata.get('title') || '').trim();
-    if (title) titles.set(title, [...(titles.get(title) || []), name]);
-  }
-  return [...titles]
-    .filter(([, paths]) => paths.length > 1)
-    .map(([title, paths]) => ({ title, paths: paths.sort() }))
-    .sort((left, right) => left.title.localeCompare(right.title));
-}
-
-function findSupersessionCycles(documents: MemoryDocument[]): string[][] {
-  const next = new Map<string, string>();
-  const names = new Map<string, string>();
-  for (const { name, metadata } of documents) {
-    const reference = referenceIdentity(name);
-    names.set(reference, name);
-    const target = supersededBy(metadata);
-    if (target) next.set(reference, target);
-  }
-  const cycleKeys = new Set<string>();
-  const cycles: string[][] = [];
-  for (const start of [...next.keys()].sort()) {
-    const order: string[] = [];
-    const seen = new Map<string, number>();
-    let current: string | undefined = start;
-    while (current && next.has(current)) {
-      const index = seen.get(current);
-      if (index !== undefined) {
-        const cycle = normalizedCycle(order.slice(index));
-        const key = cycle.join('\0');
-        if (!cycleKeys.has(key)) {
-          cycleKeys.add(key);
-          cycles.push(cycle.map((reference) => names.get(reference) || reference));
-        }
-        break;
-      }
-      seen.set(current, order.length);
-      order.push(current);
-      current = next.get(current);
-    }
-  }
-  return cycles;
-}
-
-function inputDiagnostics(documents: MemoryDocument[]): InputDiagnostics {
-  const result: InputDiagnostics = {
-    activeInputCount: 0,
-    legacyInputs: [],
-    genericActionInputs: [],
-    workstreamInputs: [],
-  };
-  for (const { name, metadata, body } of documents) {
-    if (
-      !['active', 'blocked'].includes(String(metadata.get('status') || '')) ||
-      metadata.get('memory-kind') !== 'input'
-    ) {
-      continue;
-    }
-    result.activeInputCount += 1;
-    if (metadata.get('input-schema-version') !== 2) result.legacyInputs.push(name);
-    if (metadata.get('retention') === 'workstream') result.workstreamInputs.push(name);
-    const parsed = parseInputBody(body);
-    if (parsed && genericActions.has(parsed.content.trim().normalize('NFKC').toLowerCase())) {
-      result.genericActionInputs.push(name);
-    }
-  }
-  return result;
-}
-
-export function memoryMaintenanceReport(root: string, today: string): MemoryMaintenanceReport {
-  const files = markdownFiles(root, { archive: false });
-  const documents = files.map((path) => {
+function readDocuments(root: string, files: string[]): MaintenanceParsedDocument[] {
+  return files.map((path) => {
     const content = readMemoryDocument(path);
     const parsed = parseFrontmatterDocument(content);
     const metadata = parsed.metadata;
@@ -164,6 +76,9 @@ export function memoryMaintenanceReport(root: string, today: string): MemoryMain
     );
     return { name: portablePath(root, path), metadata, references, body: parsed.body };
   });
+}
+
+function reachableReferences(documents: MaintenanceParsedDocument[]): Set<string> {
   const byReference = new Map(
     documents.map((document) => [referenceIdentity(document.name), document]),
   );
@@ -179,47 +94,111 @@ export function memoryMaintenanceReport(root: string, today: string): MemoryMain
       if (byReference.has(child) && !reachable.has(child)) pending.push(child);
     }
   }
+  return reachable;
+}
 
-  const active = new Set(['active', 'blocked']);
-  const closedStatuses = new Set(['complete', 'superseded']);
+function lifecycleLists(documents: MaintenanceParsedDocument[], today: string) {
+  const reachable = reachableReferences(documents);
   const unindexed: string[] = [];
   const expiredWorking: string[] = [];
   const closed: string[] = [];
   for (const { name, metadata } of documents) {
     if (name === 'README.md' || name === 'core.md') continue;
     const status = String(metadata.get('status') || '');
-    const reference = referenceIdentity(name);
-    if (active.has(status) && !reachable.has(reference)) unindexed.push(name);
+    const active = ['active', 'blocked'].includes(status);
+    if (active && !reachable.has(referenceIdentity(name))) unindexed.push(name);
     if (
-      active.has(status) &&
+      active &&
       metadata.get('memory-kind') === 'working' &&
       typeof metadata.get('expires') === 'string' &&
       String(metadata.get('expires')) < today
     ) {
       expiredWorking.push(name);
     }
-    if (closedStatuses.has(status)) closed.push(name);
+    if (['complete', 'superseded'].includes(status)) closed.push(name);
   }
-  const inputs = inputDiagnostics(documents);
+  return {
+    unindexed: unindexed.sort(),
+    expiredWorking: expiredWorking.sort(),
+    closed: closed.sort(),
+  };
+}
+
+function missingSourceRefs(root: string, sourceRefs: string[]): string[] {
+  if (basename(root) !== '.agent-docs') return [];
+  const project = dirname(root);
+  return sourceRefs.filter((reference) => {
+    if (
+      !reference ||
+      isAbsolute(reference) ||
+      reference.includes(':') ||
+      /^<.*>$/u.test(reference)
+    ) {
+      return false;
+    }
+    const target = resolve(project, reference);
+    return isInside(project, target) && !existsSync(target);
+  });
+}
+
+export function memoryMaintenanceReport(root: string, today: string): MemoryMaintenanceReport {
+  const files = markdownFiles(root, { archive: false });
+  const documents = readDocuments(root, files);
+  const lifecycle = lifecycleLists(documents, today);
+  const analysis = analyzeMaintenanceDocuments(documents);
   const purposes = purposeMaintenanceDiagnostics(documents);
   const corePath = files.find((path) => portablePath(root, path) === 'core.md');
   if (!corePath) throw new Error(`Memory core is missing: ${root}`);
 
-  return {
-    version: 1,
-    root,
-    totalFiles: files.length,
-    unindexed: unindexed.sort(),
-    expiredWorking: expiredWorking.sort(),
-    closed: closed.sort(),
-    duplicateTitles: duplicateActiveTitles(documents),
-    supersessionCycles: findSupersessionCycles(documents),
-    activeInputCount: inputs.activeInputCount,
-    legacyInputs: inputs.legacyInputs.sort(),
-    genericActionInputs: inputs.genericActionInputs.sort(),
-    workstreamInputs: inputs.workstreamInputs.sort(),
+  const legacy = {
+    ...lifecycle,
+    ...analysis,
     ...purposes,
     coreBudget: memoryCoreBudget(readMemoryDocument(corePath)),
+  };
+  const candidates = buildMemoryMaintenanceCandidates(
+    legacy,
+    documents.map(({ name, metadata, references }) => ({
+      name,
+      documentType: String(metadata.get('type') || ''),
+      status: String(metadata.get('status') || ''),
+      memoryKind: String(metadata.get('memory-kind') || ''),
+      sourceRefs: Array.isArray(metadata.get('source-refs'))
+        ? (metadata.get('source-refs') as unknown[]).filter(
+            (value): value is string => typeof value === 'string' && value.trim().length > 0,
+          )
+        : [],
+      missingSourceRefs: missingSourceRefs(
+        root,
+        Array.isArray(metadata.get('source-refs'))
+          ? (metadata.get('source-refs') as unknown[]).filter(
+              (value): value is string => typeof value === 'string' && value.trim().length > 0,
+            )
+          : [],
+      ),
+      references,
+    })),
+  );
+
+  return {
+    version: 2,
+    mode: 'report-only',
+    root,
+    totalFiles: files.length,
+    scan: { status: 'complete', filesExamined: files.length },
+    execution: { status: 'succeeded', reasonCode: 'report-generated' },
+    mutation: { status: 'unchanged', reasonCode: 'report-only' },
+    summary: summarizeMemoryMaintenance(candidates),
+    candidates,
+    eligibility: {
+      status: 'not-evaluated',
+      evaluated: 0,
+      notEvaluated: candidates.length,
+      total: candidates.length,
+      coverage: 0,
+      reasonCode: 'maintenance-eligibility-input-unavailable',
+    },
+    ...legacy,
   };
 }
 

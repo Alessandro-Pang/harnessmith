@@ -211,6 +211,9 @@ task complete 不自动表示 workstream complete，不能据此关闭仍有效�
   重复；soft limit 产生压缩候选，hard limit、长条目或正文式入口由 `memory check` 拒绝。该预算不声明
   任一宿主的固定上下文窗口，也不会自动删除被引用文档。
 - `memory maintain` 应报告 legacy input、仅含通用动作的 input 和仍 active 的 workstream input，供关闭或迁移审计；报告不自动删除或改写。
+- `memory maintain` 的 typed candidate 必须同时给出 category、outcome、reason code、证据、建议动作、风险及 eligibility 状态；
+  汇总层分开表达 `none`、`proposed`、`unchanged` mutation、`not-evaluated` coverage、`inconclusive` scan/source
+  与 execution failure。缺失或未执行不是阴性结论，任何候选都不授权自动修复、关闭或归档。
 - `working` 应有过期时间；过期后选择续期、提炼、提升或可恢复归档，不自动删除 input 与 evidence manifest。
 - 维护报告默认只读；迁移、替代和归档写入必须走对应 typed 命令与共享 memory-root lock。
 - Memory 扫描必须有文件数、单文件、总字节、深度和时间预算；扫描截断时，未命中只能是 `inconclusive`。
