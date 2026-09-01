@@ -87,6 +87,22 @@ rules:
       verification:
         - template/agent-harness/src/__tests__/docs-routing.test.ts
 
+  - id: multilingual-routing-and-response
+    owner: operating-model
+    principle: Action intent and response language remain correct across CJK and mixed-language requests.
+    rationale: Translation targets, quotations, and English keyword overlap are not durable preferences or requested actions.
+    action: Match action and concept aliases separately, then resolve current explicit language before persisted evidence and detection.
+    fallback: Return unmatched, ambiguous, or undetermined without guessing or mutating the user profile.
+    guarantee: enforced
+    evidence:
+      implementation:
+        - template/agent-harness/src/lib/docs-routing.ts
+        - template/agent-harness/src/lib/response-language.ts
+        - template/agent-harness/docs/manifest.yaml
+      verification:
+        - template/agent-harness/src/__tests__/docs-routing.test.ts
+        - src/__tests__/multilingual-prompt.test.ts
+
   - id: payload-consumption-boundary
     owner: harness-cli-architecture
     principle: Typed payloads are consumed only after the owning domain command succeeds.

@@ -98,13 +98,16 @@ test('Harness search CLI emits bounded provenance-rich JSON', () => {
   assert.equal(report.matches[0].trust, 'untrusted');
 });
 
-test('Harness route CLI consumes manifest triggers without loading document bodies', () => {
+test('Harness route CLI consumes manifest aliases without loading document bodies', () => {
   const { runtime } = installedFixture();
   const output = capturedIo();
 
   assert.equal(runCli(['route', '--json', 'review', 'permissions'], { runtime, io: output }), 0);
   const report = JSON.parse(output.logs[0]);
-  assert.equal(report.version, 1);
+  assert.equal(report.version, 2);
+  assert.equal(report.status, 'matched');
+  assert.equal(report.top1.name, 'review');
+  assert.ok(report.top1.matchedAliases.includes('review'));
   assert.equal(
     report.routes.some((route: { name: string }) => route.name === 'review'),
     true,
@@ -117,6 +120,23 @@ test('Harness route CLI consumes manifest triggers without loading document bodi
     report.routes.every((route: { content?: string }) => route.content === undefined),
     true,
   );
+});
+
+test('Harness route CLI fails closed for unmatched and ambiguous action intent', () => {
+  const { runtime } = installedFixture();
+  const unmatched = capturedIo();
+  assert.equal(runCli(['route', '--json', 'digital'], { runtime, io: unmatched }), 2);
+  assert.equal(JSON.parse(unmatched.logs[0]).status, 'unmatched');
+
+  const ambiguous = capturedIo();
+  assert.equal(
+    runCli(['route', '--json', '请检查代码；请诊断失败'], { runtime, io: ambiguous }),
+    2,
+  );
+  const report = JSON.parse(ambiguous.logs[0]);
+  assert.equal(report.status, 'ambiguous');
+  assert.equal(report.top1, null);
+  assert.deepEqual(report.ambiguity, ['diagnose', 'review']);
 });
 
 test('Harness explain uses the same progressive-disclosure routing contract', () => {

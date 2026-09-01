@@ -11,11 +11,13 @@ export function route(
   assertNoHighConfidenceSecret(query, 'Documentation route query');
   const report = routeDocumentation(runtime.docsRoot, query);
   if (json) io.log(JSON.stringify(report, null, 2));
-  else if (report.routes.length === 0) io.log('No matching documentation routes');
-  else {
+  else if (report.status === 'unmatched') io.log('No matching documentation routes');
+  else if (report.status === 'ambiguous') {
+    io.log(`Ambiguous documentation playbooks: ${report.ambiguity.join(', ')}`);
+  } else {
     for (const match of report.routes) {
-      io.log(`${match.name}: ${match.path} [${match.matchedTriggers.join(', ')}]`);
+      io.log(`${match.name}: ${match.path} [${match.matchedAliases.join(', ')}]`);
     }
   }
-  return 0;
+  return report.status === 'matched' ? 0 : 2;
 }
