@@ -24,6 +24,9 @@ updated: 2026-08-31
 入口 Prompt 可以保留高损失摘要和 owner 指针，不复制 owner 文档的字段、状态机或命令细节。新增规则前先检查
 现有 ID、owner 和 `confusingWith`，避免用同义规则覆盖同一个失败模式。
 
+入口 Prompt 采用 50 行硬预算，只容纳每次任务都必须看到且遗漏代价高的边界。字段级输出、状态转换、重试和
+Host 事件响应由 owner 文档完整定义；契约测试同时验证入口预算、必要摘要和详细协议的唯一 owner。
+
 ## 保证等级
 
 - `enforced`：代码、schema、validator、锁或事务可机械拒绝违规；必须同时提供实现与 executable verification。

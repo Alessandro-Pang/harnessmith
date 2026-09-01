@@ -42,7 +42,7 @@ test('top-level rules preserve only durable trust authorization and delivery bou
 
 test('top-level prompt is a compact bootstrap instead of a Memory CLI manual', () => {
   const lines = agents.trimEnd().split('\n');
-  assert.ok(lines.length <= 60, `template/AGENTS.md has ${lines.length} lines`);
+  assert.ok(lines.length <= 50, `template/AGENTS.md has ${lines.length} lines`);
   assert.ok(Math.max(...lines.map((line) => line.length)) <= 160);
   assert.doesNotMatch(
     agents,
@@ -151,30 +151,27 @@ test('the bounded output-visibility read retains the ordinary-sidecar classifier
 
 test('background sidecars stay quiet while explicit Memory requests remain auditable', () => {
   assert.match(agents, /自动.*sidecar.*静默/s);
-  assert.match(agents, /明确.*Memory.*action.*path.*validation/s);
+  assert.doesNotMatch(agents, /action.*path.*validation/s);
   assert.match(projectMemory, /自动后台.*静默/s);
   assert.match(projectMemory, /用户明确请求.*action.*path.*validation/s);
   assert.match(projectMemory, /字段名.*原样.*action.*path.*validation/s);
   assert.match(projectMemory, /正式结论.*handoff.*不能替代.*path/s);
-  assert.match(agents, /普通任务.*Memory.*恢复.*检索.*修复.*归档.*校验.*不得.*commentary\/final/s);
+  assert.doesNotMatch(agents, /恢复.*检索.*修复.*归档.*校验/s);
   assert.match(
     projectMemory,
     /普通任务.*Memory.*恢复.*检索.*修复.*归档.*校验.*不得.*commentary\/final/s,
   );
-  assert.match(agents, /普通任务.*不得.*action.*path.*validation.*\.agent-docs/s);
+  assert.doesNotMatch(agents, /action.*path.*validation.*\.agent-docs/s);
   assert.match(projectMemory, /普通任务.*不得.*action.*path.*validation.*\.agent-docs/s);
   assert.match(projectMemory, /即使触发自动 sidecar.*不等于索要操作/s);
   assert.match(projectMemory, /prior memory.*preserve expensive finding.*后台 sidecar/s);
   assert.match(projectMemory, /普通任务.*final.*不得.*持久保留.*已保存.*归档.*Memory.*校验/s);
   assert.match(projectMemory, /final.*独立句.*直接陈述.*不.*结论/s);
   assert.match(projectMemory, /final.*事实本身.*主语.*当前架构边界为.*不.*正式文档确认/s);
+  assert.doesNotMatch(agents, /host-signal\/replay|agent_message/);
   assert.match(
-    agents,
+    longRunning,
     /纯 host-signal\/replay.*允许空响应.*不得.*agent_message.*强制响应.*上一用户任务.*验证结果.*不提.*sidecar/s,
-  );
-  assert.match(
-    agents,
-    /commentary.*只描述.*用户任务.*不得.*(?:记录|保存|同步|更新).*(?:偏好|验收约束|Memory|profile|handoff|checkpoint)/s,
   );
   assert.match(
     projectMemory,

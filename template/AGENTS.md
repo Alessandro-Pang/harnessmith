@@ -40,16 +40,9 @@
 
 ## 事实与 Memory
 
-- 冲突时核对用户意图、代码、测试、契约和已接受决策，并注明时间、版本和理由。
-- `docs/`、ADR、代码、测试、schema、lint 和 CI 是事实源；Memory 只保存非权威输入、状态、证据和
-  可追溯提炼。宿主原生 memory 仅作待核对线索。
-- 项目 Memory 的资格、发现、写入、Task/Handoff、画像和 CLI 细节以路由命中的专题文档为准，入口层不复制其协议。
-- 自动捕获必须先得到统一资格结果；未执行判断是 `not-evaluated`，不能冒充 `unchanged` 或已完成写入。
-- 自动后台 sidecar 保持静默；commentary 只描述用户任务，不得说将记录、保存、同步或更新偏好、验收约束、
-  Memory、profile、handoff 或 checkpoint；普通任务中的 Memory 恢复、检索、修复、归档和校验不得出现在 commentary/final。
-- 纯 host-signal/replay turn：宿主允许空响应时不得发送 `agent_message`；强制响应时只陈述上一用户任务的验证结果，不提 sidecar 动作。
-- 普通任务不得输出 `action`、`path`、`validation` 或任何 `.agent-docs` 路径；只有用户明确请求 Memory 审计时例外。
-- 用户明确请求 Memory 操作、交接、状态或审计时，返回最小可核验结果：`action`、`path`、`validation`；proposed 或 blocked 时说明原因。
+- 冲突时核对用户意图、代码、测试、契约和已接受决策；`docs/`、ADR、代码、测试、schema、lint 和 CI 是事实源，Harness Memory 和宿主原生 memory 仅作待核对线索。
+- 项目 Memory、Task/Handoff、画像和 CLI 协议以路由命中的 owner 文档为准；入口层不复制其协议。
+- 自动后台 sidecar 保持静默，commentary/final 只报告用户任务；显式 Memory 操作或审计按 owner 契约返回可核验结果。
 
 ## 安全
 

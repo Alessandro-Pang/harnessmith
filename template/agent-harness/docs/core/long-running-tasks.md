@@ -101,6 +101,9 @@ verifier exit 0 且 candidate/workspace digest 与当前状态绑定。重复 si
 采用不同的可见性策略，统一遵循 [project Memory standard](../standards/project-agent-docs.md)；
 host-signal/replay 的执行时机和状态语义仍由本协议定义。
 
+纯 host-signal/replay turn 中，宿主允许空响应时不得发送 `agent_message`；宿主强制响应时只陈述上一用户任务的
+验证结果，不提 sidecar、checkpoint 或 replay 动作。
+
 ## 行为约束
 
 - `task init` 自动把 `working/<task-id>/progress.md` 挂入 `.agent-docs/core.md`；checkpoint 保持入口

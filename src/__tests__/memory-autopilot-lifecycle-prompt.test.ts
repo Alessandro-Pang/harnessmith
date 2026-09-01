@@ -33,6 +33,12 @@ test('payload and profile command contracts have dedicated owners', () => {
   assert.deepEqual(owners(/profile-autopilot pause/), ['user-profile']);
 });
 
+test('entry output summaries route field and host-signal protocols to dedicated owners', () => {
+  assert.deepEqual(owners(/action.*path.*validation/), ['project-memory']);
+  assert.deepEqual(owners(/恢复.*检索.*修复.*归档.*校验/), ['project-memory']);
+  assert.deepEqual(owners(/允许空响应.*agent_message.*强制响应/), ['long-running-tasks']);
+});
+
 test('supporting documents route to owners instead of restating their protocols', () => {
   assert.match(documents.get('project-memory') ?? '', /long-running-tasks\.md/);
   assert.match(documents.get('project-memory') ?? '', /harness-cli-architecture\.md/);
