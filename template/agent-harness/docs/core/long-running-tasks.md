@@ -90,6 +90,13 @@ handoff JSON payload 中旧 `open` 全部 resolved 时只接受布尔字段 `cle
 不得覆盖或复用，重试必须创建新路径。只有宿主明确要求的跨 turn identical replay 例外：原样复用上一回合
 已成功 checkpoint 的相同路径和内容，且不得重写文件。
 
+Host 或评测器要求 replay 时，先用 `replay verify --payload-file <evidence> --json` 核验状态机。`new-mutation`
+只允许没有 previous payload 的新 identity；started/failed attempt 固定返回 `new-payload-required`。
+`identical-replay` 必须同时满足 payload path 与 digest 相同、命令相同、目标 artifact 和 workspace 未变化、
+verifier exit 0 且 candidate/workspace digest 与当前状态绑定。重复 signal 的 signal id 相同只改变 reason code，
+不授权再次执行 mutation。stdout 缺失时仅可依赖上述 persisted-state proof；任一字段缺失或漂移均为
+`inconclusive`，不得从 `completed` 文本或预期结果推断成功。
+
 自动命令必须单独执行且不得通过 shell 插值传递自由文本。自动 sidecar 与用户明确请求的 Memory 操作
 采用不同的可见性策略，统一遵循 [project Memory standard](../standards/project-agent-docs.md)；
 host-signal/replay 的执行时机和状态语义仍由本协议定义。
