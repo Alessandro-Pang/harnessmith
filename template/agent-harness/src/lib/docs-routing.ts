@@ -1,9 +1,16 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { parse } from 'yaml';
+import {
+  type ResponseLanguageContext,
+  type ResponseLanguageDecision,
+  resolveResponseLanguage,
+} from './response-language.js';
 import { isPathInside } from './safe-path.js';
 
 interface ManifestEntry {
+  actionAliases?: unknown;
+  conceptAliases?: unknown;
   kind?: unknown;
   path?: unknown;
   priority?: unknown;
@@ -20,15 +27,19 @@ interface DocumentationRoute {
   name: string;
   path: string;
   priority: number;
-  matchedTriggers: string[];
+  matchedAliases: string[];
 }
 
 export interface DocumentationRouteReport {
-  version: 1;
+  version: 2;
+  status: 'matched' | 'unmatched' | 'ambiguous';
   query: string[];
   routes: DocumentationRoute[];
   primaryPlaybook: DocumentationRoute | null;
+  top1: DocumentationRoute | null;
+  ambiguity: string[];
   topics: DocumentationRoute[];
+  responseLanguage: ResponseLanguageDecision;
 }
 
 function normalizedTerms(query: string[]): string[] {
@@ -90,9 +101,29 @@ function routingMatchIsRequestedAction(term: string, position: number): boolean 
       .at(-1) ?? '';
   const prefix = clause.trim();
   if (prefix === '') return true;
-  return /(?:\b(?:please|can you|could you|would you|i want you to|i need you to|let(?:'s| us)|now|then|also)\s+(?:\p{L}+\s+){0,4}|(?:请|请你|帮我|给我|现在|继续|重新|开始|进行|执行|来|需要|要求|希望|想要|逐个|并)\s*)$/u.test(
+  return /^(?:(?:please|can you|could you|would you|i want you to|i need you to|let(?:'s| us)|now|then|also)(?:\s+\p{L}+){0,4}|(?:请|请你|帮我|给我|现在|继续|重新|开始|进行|执行|来|需要|要求|希望|想要|逐个|并)|(?:结合|基于|根据)[\p{L}\p{N} ._-]{0,40}(?:来)?)$/u.test(
     prefix,
   );
+}
+
+function routingMatchIsQuoted(term: string, position: number): boolean {
+  for (const [open, close] of [
+    ['“', '”'],
+    ['‘', '’'],
+    ['「', '」'],
+    ['『', '』'],
+  ] as const) {
+    const opening = term.lastIndexOf(open, position);
+    if (opening !== -1) {
+      const closing = term.indexOf(close, opening + open.length);
+      if (closing >= position) return true;
+    }
+  }
+  for (const quote of ['"', "'"] as const) {
+    const before = term.slice(0, position).split(quote).length - 1;
+    if (before % 2 === 1 && term.indexOf(quote, position) !== -1) return true;
+  }
+  return false;
 }
 
 function matchesRoutingTerm(trigger: string, term: string): boolean {
@@ -108,8 +139,25 @@ function matchesPlaybookIntent(trigger: string, term: string): boolean {
   if (!candidate) return false;
   return routingMatchPositions(candidate, term).some(
     (position) =>
-      !routingMatchIsNegated(term, position) && routingMatchIsRequestedAction(term, position),
+      !routingMatchIsNegated(term, position) &&
+      !routingMatchIsQuoted(term, position) &&
+      routingMatchIsRequestedAction(term, position),
   );
+}
+
+function aliasList(entry: ManifestEntry, kind: DocumentationRoute['kind'], name: string): string[] {
+  const canonicalField = kind === 'playbook' ? 'actionAliases' : 'conceptAliases';
+  const usesLegacyTriggers = entry[canonicalField] === undefined && entry.triggers !== undefined;
+  const field = usesLegacyTriggers ? 'triggers' : canonicalField;
+  const aliases = entry[field];
+  if (
+    !Array.isArray(aliases) ||
+    aliases.length === 0 ||
+    aliases.some((item) => typeof item !== 'string' || item.trim() === '')
+  ) {
+    throw new Error(`Documentation manifest entry ${name} has invalid ${field}`);
+  }
+  return aliases as string[];
 }
 
 function manifestEntries(value: unknown): Record<string, ManifestEntry> {
@@ -127,7 +175,11 @@ function routedPath(docsRoot: string, path: string): string {
   return target;
 }
 
-export function routeDocumentation(docsRoot: string, query: string[]): DocumentationRouteReport {
+export function routeDocumentation(
+  docsRoot: string,
+  query: string[],
+  languageContext: ResponseLanguageContext = {},
+): DocumentationRouteReport {
   const terms = normalizedTerms(query);
   const manifestPath = resolve(docsRoot, 'manifest.yaml');
   const manifest = parse(readFileSync(manifestPath, 'utf8')) as DocsManifest;
@@ -150,28 +202,20 @@ export function routeDocumentation(docsRoot: string, query: string[]): Documenta
     ) {
       throw new Error(`Documentation manifest entry ${name} has invalid priority`);
     }
-    if (
-      !Array.isArray(rawEntry.triggers) ||
-      rawEntry.triggers.some((item) => typeof item !== 'string')
-    ) {
-      throw new Error(`Documentation manifest entry ${name} has invalid triggers`);
-    }
-    const triggers = rawEntry.triggers as string[];
     const kind = rawEntry.kind as DocumentationRoute['kind'];
-    const matchedTriggers = triggers.filter((trigger) =>
+    const aliases = aliasList(rawEntry, kind, name);
+    const matchedAliases = aliases.filter((alias) =>
       terms.some((term) =>
-        kind === 'playbook'
-          ? matchesPlaybookIntent(trigger, term)
-          : matchesRoutingTerm(trigger, term),
+        kind === 'playbook' ? matchesPlaybookIntent(alias, term) : matchesRoutingTerm(alias, term),
       ),
     );
-    if (matchedTriggers.length === 0) continue;
+    if (matchedAliases.length === 0) continue;
     routes.push({
       kind,
       name,
       path: routedPath(docsRoot, rawEntry.path),
       priority: rawEntry.priority ?? 0,
-      matchedTriggers,
+      matchedAliases,
     });
   }
 
@@ -180,16 +224,18 @@ export function routeDocumentation(docsRoot: string, query: string[]): Documenta
     .sort((left, right) => right.priority - left.priority || left.name.localeCompare(right.name));
   const highest = playbooks[0]?.priority;
   const highestRanked = playbooks.filter(({ priority }) => priority === highest);
-  if (highestRanked.length > 1) {
-    throw new Error(
-      `Ambiguous documentation playbooks: ${highestRanked.map(({ name }) => name).join(', ')}`,
-    );
-  }
+  const ambiguity = highestRanked.length > 1 ? highestRanked.map(({ name }) => name) : [];
+  const primaryPlaybook = ambiguity.length === 0 ? (playbooks[0] ?? null) : null;
+  const status = ambiguity.length > 0 ? 'ambiguous' : routes.length > 0 ? 'matched' : 'unmatched';
   return {
-    version: 1,
+    version: 2,
+    status,
     query: terms,
     routes,
-    primaryPlaybook: playbooks[0] ?? null,
+    primaryPlaybook,
+    top1: primaryPlaybook,
+    ambiguity,
     topics: routes.filter(({ kind }) => kind !== 'playbook'),
+    responseLanguage: resolveResponseLanguage(terms.join(' '), languageContext),
   };
 }

@@ -114,6 +114,8 @@ node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory profile-autopilot res
 `evidence`、`confidence` 与可选 `userDirected`，日期由 CLI 维护，不得自行加入 `date` 或其他字段。自动
 reconcile 的 `evidence` 只接受 `explicit` 或 `observed`，不得写用户原话、来源说明或其他解释文本；用户
 明确表达的偏好固定使用 `explicit` 与 `high`，不得先试错再重试 mutation。
+单次翻译、改写、目标语言或“本次用某语言回复”属于当前输出约束，不是 `communication.language` 的长期
+证据；只有明确的跨任务默认才按 `explicit/high` 处理，自动检测结果本身不得写入画像。
 `reconcile-profile` 必须单独执行并带 `--payload-file` 与 `--json`，不得与验证命令拼接。
 `forget-profile` 与 `profile-autopilot` 也必须单独执行并带 `--json`。
 `profile-autopilot: paused` 会机械拒绝自动 reconcile；

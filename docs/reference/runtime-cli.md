@@ -29,8 +29,10 @@ node <harness-path>/bin/harness.mjs --help
 
 ## 文档路由与检索
 
-`route` 和 `explain` 根据 manifest trigger 返回命中的文档名称、路径和 trigger，不加载正文。它们适合先确定“这类任务
-由哪份规则负责”：
+`route` 和 `explain` 根据 manifest 的 `actionAliases` 与 `conceptAliases` 返回命中的文档名称、路径和 alias，
+不加载正文。JSON 报告显式区分 `matched`、`unmatched` 与 `ambiguous`，并只在唯一命中时给出 `top1`；未命中或
+最高优先级动作歧义返回 exit 2，不猜测执行动作。该结构化契约为 version 2。它们适合先确定“这类任务由哪份
+规则负责”：
 
 ```bash
 node <harness-path>/bin/harness.mjs route diagnose payment callback --json

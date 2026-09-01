@@ -7,73 +7,73 @@ entries:
   operating-model:
     kind: topic
     path: core/operating-model.md
-    triggers: [workflow, ambiguity, evidence, handoff, trust, authorization, prompt-injection, read-only, readonly, memory-policy, sidecar, 工作流, 歧义, 证据, 交接, 信任, 授权, 提示词注入, 只读, 只读任务, 记忆策略]
+    conceptAliases: [workflow, ambiguity, evidence, handoff, trust, authorization, prompt-injection, read-only, readonly, memory-policy, sidecar, response-language, language-policy, multilingual-routing, 工作流, 歧义, 证据, 交接, 信任, 授权, 提示词注入, 只读, 只读任务, 记忆策略, 回复语言, 语言策略, 多语言路由]
   tool-routing:
     kind: topic
     path: core/tool-routing.md
-    triggers: [mcp, browser, figma, documentation, connector, search, provenance, 工具, 浏览器, 设计稿, 文档, 连接器, 搜索, 来源]
+    conceptAliases: [mcp, browser, figma, documentation, connector, search, provenance, 工具, 浏览器, 设计稿, 文档, 连接器, 搜索, 来源]
   safety-and-verification:
     kind: topic
     path: core/safety-and-verification.md
-    triggers: [permissions, destructive, verification, secrets, 权限, 安全, 破坏性操作, 验证, 密钥]
+    conceptAliases: [permissions, destructive, verification, secrets, 权限, 安全, 破坏性操作, 验证, 密钥]
   git-conventions:
     kind: topic
     path: core/git-conventions.md
-    triggers: [git, branch, commit, commitlint, conventional-commits, 分支, 提交, 提交规范]
+    conceptAliases: [git, branch, commit, commitlint, conventional-commits, 分支, 提交, 提交规范]
   harness-cli-architecture:
     kind: topic
     path: core/harness-cli-architecture.md
-    triggers: [harness-cli, install, init, memory-command, memory-autopilot, capture-input, close-input, payload-file, handoff, close-handoff, reconcile-profile, forget-profile, profile-autopilot, acceptance, local-harness, harness-profile, profile-autopilot-control, doctor, health, route, memory-migrate, 安装, 初始化, 记忆命令, 自动记忆, 验收, 本地-harness, harness-画像, 画像控制, 健康检查, 路由, 记忆迁移]
+    conceptAliases: [harness-cli, install, init, memory-command, memory-autopilot, capture-input, close-input, payload-file, handoff, close-handoff, reconcile-profile, forget-profile, profile-autopilot, acceptance, local-harness, harness-profile, profile-autopilot-control, doctor, health, route, memory-migrate, 安装, 初始化, 记忆命令, 自动记忆, 验收, 本地-harness, harness-画像, 画像控制, 健康检查, 路由, 记忆迁移]
   observability:
     kind: topic
     path: core/observability.md
-    triggers: [runtime-audit, audit-record, trace-id, policy-decision, token-cost, latency, observability, 运行审计, 审计事件, 追踪标识, 策略决策, 令牌成本, 耗时, 可观测性]
+    conceptAliases: [runtime-audit, audit-record, trace-id, policy-decision, token-cost, latency, observability, 运行审计, 审计事件, 追踪标识, 策略决策, 令牌成本, 耗时, 可观测性]
   long-running-tasks:
     kind: topic
     path: core/long-running-tasks.md
-    triggers: [long-running, multi-stage, phase, verified-phase, phase-handoff, multi-task, checkpoint, compaction, context-budget, acceptance, resume, task-ledger, 长任务, 阶段, 多阶段, 多阶段任务, 阶段交接, 阶段已验证仍有后续, 多任务, 检查点, 压缩, 上下文预算, 上下文预算信号, 验收, 恢复任务, 任务账本]
+    conceptAliases: [long-running, multi-stage, phase, verified-phase, phase-handoff, multi-task, checkpoint, compaction, context-budget, acceptance, resume, task-ledger, 长任务, 阶段, 多阶段, 多阶段任务, 阶段交接, 阶段已验证仍有后续, 多任务, 检查点, 压缩, 上下文预算, 上下文预算信号, 验收, 恢复任务, 任务账本]
   change:
     kind: playbook
     priority: 40
     path: playbooks/change.md
-    triggers: [change, implement, modify, refactor, build, 变更, 实现, 修改, 重构, 构建]
+    actionAliases: [change, implement, modify, refactor, build, 变更, 实现, 修改, 重构, 构建]
   diagnose:
     kind: playbook
     priority: 50
     path: playbooks/diagnose.md
-    triggers: [diagnose, debug, bug, incident, ci-failure, 诊断, 排障, 调试, 缺陷, 事故, ci失败]
+    actionAliases: [diagnose, debug, bug, incident, ci-failure, 诊断, 排障, 调试, 缺陷, 事故, ci失败]
   review:
     kind: playbook
     priority: 50
     path: playbooks/review.md
-    triggers: [review, audit, assess, inspect, check, risk, 评审, 审视, 审查, 审计, 评估, 检查, 风险]
+    actionAliases: [review, audit, assess, inspect, check, risk, 评审, 审视, 审查, 审计, 评估, 检查, 风险]
   research-and-design:
     kind: playbook
     priority: 30
     path: playbooks/research-and-design.md
-    triggers: [research, analyze, analysis, plan, design, compare, 调研, 分析, 计划, 设计, 对比]
+    actionAliases: [research, analyze, analysis, plan, design, compare, 调研, 分析, 计划, 设计, 对比]
   release-and-external:
     kind: playbook
     priority: 60
     path: playbooks/release-and-external.md
-    triggers: [release, migration, publish, remote-write, 发布, 迁移, 远端写入]
+    actionAliases: [release, migration, publish, remote-write, 发布, 迁移, 远端写入]
   repository-map:
     kind: topic
     path: projects/repository-map.md
-    triggers: [cross-repository, repository-map, repository-owner, release-order, contract, reconcile, repository-map-check, 跨仓, 仓库关系图, 仓库所有者, 发布顺序, 契约, 自动维护]
+    conceptAliases: [cross-repository, repository-map, repository-owner, release-order, contract, reconcile, repository-map-check, 跨仓, 仓库关系图, 仓库所有者, 发布顺序, 契约, 自动维护]
   project-agents:
     kind: standard
     path: standards/project-agents.md
-    triggers: [AGENTS.md, project-rules, 项目规则]
+    conceptAliases: [AGENTS.md, project-rules, 项目规则]
   project-agent-docs:
     kind: standard
     path: standards/project-agent-docs.md
-    triggers: [.agent-docs, project-memory, memory-policy, memory-writeback, high-value-analysis, session, evidence, handoff, acceptance, future-tasks, multi-stage, phase, verified-phase, phase-handoff, multi-task, compaction, context-budget, close-handoff, memory-autopilot, capture-input, payload-file, memory-list, memory-check, memory-migrate, secret-hygiene, host-evals, 项目记忆, 记忆沉淀, 记忆策略, 高价值内容, 只读任务, 会话, 验收, 未来所有任务, 以后所有任务, 阶段, 多阶段, 多阶段任务, 阶段交接, 阶段已验证仍有后续, 多任务, 压缩, 上下文预算, 上下文预算信号, 自动记忆, 记忆列表, 记忆检查, 记忆迁移, 凭据卫生]
+    conceptAliases: [.agent-docs, project-memory, memory-policy, memory-writeback, high-value-analysis, session, evidence, handoff, acceptance, future-tasks, multi-stage, phase, verified-phase, phase-handoff, multi-task, compaction, context-budget, close-handoff, memory-autopilot, capture-input, payload-file, memory-list, memory-check, memory-migrate, secret-hygiene, host-evals, 项目记忆, 记忆沉淀, 记忆策略, 高价值内容, 只读任务, 会话, 验收, 未来所有任务, 以后所有任务, 阶段, 多阶段, 多阶段任务, 阶段交接, 阶段已验证仍有后续, 多任务, 压缩, 上下文预算, 上下文预算信号, 自动记忆, 记忆列表, 记忆检查, 记忆迁移, 凭据卫生]
   prompt-rule-contract:
     kind: standard
     path: standards/prompt-rule-contract.md
-    triggers: [prompt-rule, prompt-contract, guarantee-level, confusing-pair, rule-owner, 提示词规则, 提示词契约, 保证等级, 混淆规则, 规则所有者]
+    conceptAliases: [prompt-rule, prompt-contract, guarantee-level, confusing-pair, rule-owner, 提示词规则, 提示词契约, 保证等级, 混淆规则, 规则所有者]
   user-profile-memory:
     kind: standard
     path: standards/user-profile-memory.md
-    triggers: [user-profile, reconcile-profile, forget-profile, profile-autopilot, future-tasks, local-harness, harness-profile, profile-autopilot-control, preference, identity, coding-style, research-interest, 用户画像, 画像合并, 画像暂停, 画像遗忘, 未来所有任务, 以后所有任务, 本地-harness, harness-画像, 画像控制, 偏好, 身份, 编码风格, 研究兴趣]
+    conceptAliases: [user-profile, reconcile-profile, forget-profile, profile-autopilot, future-tasks, local-harness, harness-profile, profile-autopilot-control, preference, identity, coding-style, research-interest, 用户画像, 画像合并, 画像暂停, 画像遗忘, 未来所有任务, 以后所有任务, 本地-harness, harness-画像, 画像控制, 偏好, 身份, 编码风格, 研究兴趣]
