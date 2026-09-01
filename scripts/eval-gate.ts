@@ -1,4 +1,5 @@
 import { Command, InvalidArgumentError } from 'commander';
+import { compareHostEvaluationEvidence } from './eval-comparison.js';
 import { gateEvaluationRecords, validateEvaluationRecords } from './eval-contract.js';
 import { evaluationFingerprint, releaseArtifactPath } from './eval-fingerprint.js';
 import { EvaluationGateError } from './eval-gate-failure.js';
@@ -12,11 +13,46 @@ function positiveNumber(value: string): number {
   return parsed;
 }
 
+function addCompareCommand(program: Command): void {
+  program
+    .command('compare')
+    .description('compare paired baseline and candidate Host evaluation evidence')
+    .requiredOption('--baseline-runs-dir <path>', 'baseline Host evaluation records directory')
+    .requiredOption('--baseline-artifact <path>', 'exact baseline npm tarball')
+    .requiredOption('--candidate-runs-dir <path>', 'candidate Host evaluation records directory')
+    .requiredOption('--candidate-artifact <path>', 'exact candidate npm tarball')
+    .requiredOption('--json', 'write the deterministic comparison as JSON')
+    .action(
+      ({
+        baselineArtifact,
+        baselineRunsDir,
+        candidateArtifact,
+        candidateRunsDir,
+      }: {
+        baselineArtifact: string;
+        baselineRunsDir: string;
+        candidateArtifact: string;
+        candidateRunsDir: string;
+      }) => {
+        const result = compareHostEvaluationEvidence({
+          baselineArtifact,
+          baselineRunsDirectory: baselineRunsDir,
+          candidateArtifact,
+          candidateRunsDirectory: candidateRunsDir,
+        });
+        process.stdout.write(`${JSON.stringify(result)}\n`);
+        if (result.status !== 'passed') process.exitCode = 1;
+      },
+    );
+}
+
 function main(): void {
   const program = new Command()
     .name('eval-gate')
     .description('Validate maintainer-attested Harness host evaluation evidence')
     .showHelpAfterError();
+
+  addCompareCommand(program);
 
   program
     .command('plan')

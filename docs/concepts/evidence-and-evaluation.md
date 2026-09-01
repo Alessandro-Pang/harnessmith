@@ -75,6 +75,18 @@ transport failure 最多自动重试一次，即总尝试次数不超过两次�
 evaluator 崩溃归为 evaluator failure。退出码为 0 仍必须交给独立 evaluator，不能自动升级成行为通过。该能力不会自动
 登录、启动或持久化第三方 Host 证据，真实 RC 演练仍需维护者显式执行与复核。
 
+#### 候选—基线 Host A/B 比较
+
+`pnpm run eval:compare -- --baseline-runs-dir <dir> --baseline-artifact <tgz> --candidate-runs-dir <dir>
+--candidate-artifact <tgz>` 会先复用现有 schema、artifact 与 secret 检查，再按 Adapter、Host 产品与版本、模型与模型版本、
+场景 ID 和场景 fingerprint 一一配对。两侧 tarball SHA-256 必须分别匹配记录；dependency、rules 与 artifact fingerprint
+作为被测实现分别保留，允许不同，不能被误当成环境漂移。
+
+每个单元固定分类为 `improved`、`unchanged-passed`、`regressed`、`unchanged-failed` 或 `inconclusive`。任一侧出现
+transport/evaluator 不可判定时只能得到 `inconclusive`；总体通过要求所有候选单元都通过且没有回归。报告给出断言、禁止
+行为、工具动作数和耗时 delta；当前记录没有稳定 token 字段，因此明确写 `not-measured`。该比较减少人工对照错误，
+但不启动 Host、不生成证据，也不替代 release gate 或人工语义复核。
+
 发布证据按矩阵单元区分 `exact`、`inherited`、`infra-blocked`。`exact` 绑定当前候选 artifact；`inherited` 额外绑定来源
 版本与 artifact digest；`infra-blocked` 不计入 passing coverage。release state 和 release attestation 会保留这三类清单，
 并校验它们与聚合计数、`inheritedFrom` 和完整 release matrix 一致。正常发布不得含 `infra-blocked`；风险例外只能记录

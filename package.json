@@ -69,6 +69,7 @@
     "eval:fingerprint": "node --import tsx scripts/eval-gate.ts fingerprint --json",
     "eval:plan": "node --import tsx scripts/eval-gate.ts plan --json",
     "eval:host-matrix": "node --import tsx scripts/eval-host-capability-matrix-cli.ts",
+    "eval:compare": "node --import tsx scripts/eval-gate.ts compare --json",
     "eval:first-value": "pnpm run build:emit && node --import tsx scripts/first-value-loop.ts",
     "eval:codex-matrix": "node --import tsx scripts/eval-codex-matrix.ts",
     "eval:validate": "node --import tsx scripts/eval-gate.ts validate",
