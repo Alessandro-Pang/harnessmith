@@ -48,6 +48,20 @@ claims:
       - src/__tests__/args.test.ts
       - src/__tests__/adapter-conformance.test.ts
 
+  - id: explainable-installation-status
+    status: implemented
+    owner: outer installer lifecycle
+    claim: Explain observed installation state, ownership evidence, backup state, risk, and non-automatic safe next actions while preserving Host-dependent conclusions as inconclusive.
+    implementation:
+      - src/status-inspection.ts
+      - src/status-explanation.ts
+      - src/command-executor.ts
+      - src/program.ts
+    verification:
+      - src/__tests__/status-explain.test.ts
+      - src/__tests__/args.test.ts
+      - src/__tests__/adapter-conformance.test.ts
+
   - id: temporary-resource-lifecycle
     status: implemented
     owner: outer lifecycle and verification tooling

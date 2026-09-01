@@ -22,7 +22,11 @@ recovery commands, and Host-owned boundaries. Reuse that plan interactively, or 
 npx harnessmith setup --agent codex
 npx harnessmith setup --agent codex --yes --json
 npx harnessmith status --agent codex
+npx harnessmith status --agent codex --explain
 ```
+
+Use `--explain` when raw integrity status is not enough to choose a next step. It reports observed state, owner, evidence,
+risk, and stable action codes without executing them. Host-limited checks remain explicitly `inconclusive`.
 
 Every interactive step can be cancelled before writing. Setup still refuses unmanaged and modified targets by default;
 confirmation does not bypass ownership safeguards. Unsupported hosts stop before destination resolution or writes.

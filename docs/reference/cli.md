@@ -28,6 +28,7 @@ owner: maintainers
 | `-y, --yes` | 禁用提示；未指定宿主时默认 Codex |
 | `--dry-run` | 只预览目标，不执行写入 |
 | `--no-init-global` | 跳过共享全局 Memory 初始化 |
+| `--explain` | 仅用于 `status`；解释状态、证据、风险和安全下一步 |
 | `-v, --version` | 输出版本 |
 | `-h, --help` | 输出帮助 |
 
@@ -52,6 +53,20 @@ npx harnessmith setup --agent cursor --project /path/to/project --yes --json
 成功报告中的 `installed-and-healthy` 只表示安装所有权与内嵌 Runtime 的确定性检查通过；不代表真实 Host 中的模型行为、
 工具权限、认证或运行时事件已经通过。
 
+## 可解释状态 `status --explain`
+
+```bash
+npx harnessmith status --agent codex --explain
+npx harnessmith status --agent codex --explain --json
+```
+
+解释输出使用稳定的 `observedState`、`reasonCode` 和 action `code`，逐项列出安装记录、受管理输出与备份证据。
+本地状态可判定为 `managed`、`modified`、`unmanaged`、`partial` 或 `missing`；`unsupported` 表示没有 Adapter
+契约并在路径解析前停止。Harness capability、Host configuration 和真实 Host behavior 分开报告，无法从本地证明的 Host
+结论固定为 `inconclusive` / `host-dependent`，不会误报为 healthy。
+
+建议动作只作为下一步展示，带有 `automatic: false`、`destructive: false` 和授权要求，不会由 `status` 自动执行。
+
 ## 示例
 
 ```bash
@@ -70,6 +85,7 @@ npx harnessmith install --agent cursor --project /path/to/project
 
 # 自动化检查
 npx harnessmith status --agent codex --json
+npx harnessmith status --agent codex --explain --json
 npx harnessmith capabilities --json
 
 # 回退生命周期

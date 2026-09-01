@@ -15,14 +15,13 @@ import {
 import { withAdapterLocks } from './operation-lock.js';
 import {
   assertNonOverlappingAdapters,
-  digestManagedOutput,
   managedBlockMarker,
   readInstallRecord,
   restoreSnapshots,
   snapshotFiles,
 } from './records.js';
 import { assertSafePath, ignoreRoot } from './safe-path.js';
-import type { Adapter, AdapterStatus, InstallOptions, InstallRecord } from './types.js';
+import type { Adapter, InstallOptions, InstallRecord } from './types.js';
 import { errorMessage, HarnessmithError } from './types.js';
 
 interface RestoreState {
@@ -157,36 +156,7 @@ function restoreOnce(
   }
 }
 
-export function statusAll(adapters: Adapter[]): AdapterStatus[] {
-  assertNonOverlappingAdapters(adapters);
-  return withAdapterLocks(
-    adapters,
-    () =>
-      adapters.map((adapter) => {
-        assertLifecyclePaths(adapter);
-        const record = readInstallRecord(adapter);
-        if (record) assertLifecyclePaths(adapter, [{ path: adapter.record, record }]);
-        return {
-          adapter: adapter.name,
-          installed: Boolean(record),
-          record: adapter.record,
-          capabilities: adapter.capabilities,
-          packageVersion: record?.packageVersion || null,
-          installedAt: record?.installedAt || null,
-          outputs:
-            record?.outputs.map(({ path, checksum }) => ({
-              path,
-              status: !existsSync(path)
-                ? 'missing'
-                : digestManagedOutput(adapter, path) === checksum
-                  ? 'managed'
-                  : 'modified',
-            })) || [],
-        };
-      }),
-    { createHomes: false },
-  );
-}
+export { inspectStatusAll, statusAll } from './status-inspection.js';
 
 export function restoreAll(adapters: Adapter[], options: Pick<InstallOptions, 'force'> = {}) {
   assertNonOverlappingAdapters(adapters);

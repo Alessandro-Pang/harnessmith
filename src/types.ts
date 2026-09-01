@@ -118,6 +118,13 @@ export interface AdapterStatus {
   outputs: Array<{ path: string; status: ManagedStatus }>;
 }
 
+export interface AdapterStatusInspection {
+  adapter: Adapter;
+  status: AdapterStatus;
+  record: InstallRecord | null;
+  plan: InstallPlan;
+}
+
 export type LifecycleCommand = 'restore' | 'uninstall';
 export type LifecycleChangeAction = 'remove' | 'restore-backup' | 'remove-managed-block';
 
@@ -148,6 +155,7 @@ export interface CliOptions {
   yes?: boolean;
   dryRun?: boolean;
   initGlobal?: boolean;
+  explain?: boolean;
 }
 
 export interface RunContext {

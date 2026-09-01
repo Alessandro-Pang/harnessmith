@@ -3,6 +3,7 @@ import { confirm, intro, isCancel, log, multiselect, note, outro } from '@clack/
 import pc from 'picocolors';
 import { supportedAgents } from './agents.js';
 import type { SetupGuide, SetupVerification } from './setup.js';
+import type { StatusExplanation } from './status-explanation.js';
 import type { AdapterStatus, InstallPlan, InstallResult, Io } from './types.js';
 
 type PromptInput = Readable & { isTTY?: boolean };
@@ -134,6 +135,20 @@ export function printStatuses(statuses: AdapterStatus[], io: Io = console): void
             : pc.red(label);
       io.log(`  ${state} ${output.path}`);
     }
+  }
+}
+
+export function printStatusExplanations(explanations: StatusExplanation[], io: Io = console): void {
+  for (const explanation of explanations) {
+    io.log(
+      `${explanation.adapter}: state=${explanation.observedState}, reason=${explanation.reasonCode}, owner=${explanation.owner}`,
+    );
+    for (const next of explanation.actions) {
+      io.log(`  next ${next.code}  ${next.command} (not executed automatically)`);
+    }
+    io.log(
+      `  Host behavior: ${explanation.boundaries.hostBehavior.conclusion} (${explanation.boundaries.hostBehavior.reasonCode})`,
+    );
   }
 }
 

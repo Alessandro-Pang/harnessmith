@@ -2,11 +2,12 @@ import type { Readable, Writable } from 'node:stream';
 import { adapterCapabilities, createAdapter } from './adapters.js';
 import { normalizeAgents } from './agents.js';
 import { installAll } from './install.js';
-import { restoreAll, statusAll, uninstallAll } from './lifecycle.js';
+import { inspectStatusAll, restoreAll, statusAll, uninstallAll } from './lifecycle.js';
 import { describeLifecycle } from './lifecycle-plan.js';
 import type { HarnessmithCommand } from './program.js';
 import { assertNonOverlappingAdapters, describeInstall } from './records.js';
 import { executeSetup } from './setup-command.js';
+import { explainStatus, explainUnsupportedStatus } from './status-explanation.js';
 import type { Adapter, CliOptions, Io, LifecycleCommand, LifecyclePlan } from './types.js';
 import { HarnessmithError } from './types.js';
 import {
@@ -14,6 +15,7 @@ import {
   finishInteractive,
   printInstallResults,
   printPlans,
+  printStatusExplanations,
   printStatuses,
   selectAgents,
   startInteractive,
@@ -97,8 +99,18 @@ function executeLifecycle(
   interactive: boolean,
 ): number {
   if (command === 'status') {
-    const statuses = statusAll(adapters);
-    if (options.json || !interactive) {
+    const inspections = options.explain ? inspectStatusAll(adapters) : [];
+    const statuses = options.explain
+      ? inspections.map(({ status }) => status)
+      : statusAll(adapters);
+    const explanations = inspections.map(explainStatus);
+    if (options.explain && options.json) {
+      explanations.forEach((explanation) => {
+        context.io.log(JSON.stringify(explanation));
+      });
+    } else if (options.explain) {
+      printStatusExplanations(explanations, context.io);
+    } else if (options.json || !interactive) {
       statuses.forEach((status) => {
         context.io.log(JSON.stringify(status));
       });
@@ -206,7 +218,24 @@ export async function executeCommand(
     !options.yes && isTty(context.input) && isTty(context.output) && !options.json;
   if (interactive) startInteractive(context.output);
   if (command === 'capabilities') return executeCapabilities(options, context);
-  const adapters = await resolveAdapters(options, context);
+  let adapters: Adapter[];
+  try {
+    adapters = await resolveAdapters(options, context);
+  } catch (error) {
+    if (
+      command === 'status' &&
+      options.explain &&
+      error instanceof HarnessmithError &&
+      error.code === 'CLI_USAGE' &&
+      error.message.startsWith('Unsupported agent:')
+    ) {
+      const explanation = explainUnsupportedStatus(options.agent);
+      if (options.json) context.io.log(JSON.stringify(explanation));
+      else printStatusExplanations([explanation], context.io);
+      return 2;
+    }
+    throw error;
+  }
   if (command === 'setup') return executeSetup(adapters, options, context, interactive);
   return command === 'install'
     ? executeInstall(adapters, options, context, interactive)

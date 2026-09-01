@@ -50,7 +50,11 @@ npx harnessmith setup --agent codex --yes --json
 
 ```bash
 npx harnessmith status --agent codex
+npx harnessmith status --agent codex --explain
 ```
+
+当普通 `status` 的校验结果不足以决定下一步时，`--explain` 会显示 observed state、owner、证据、风险与稳定 action code；
+这些动作不会自动执行。受限于 Host 的检查明确返回 `inconclusive`，而不是把安装完整误报成真实会话 healthy。
 
 安装失败时，事务会尝试回滚；按错误中的指引先重新 dry-run 并检查 `status`，只有存在上一安装层时才使用
 `restore`。安装成功或确定性健康检查通过，不等于真实 Host 行为已经通过：模型行为、工具权限、认证与运行时事件均为

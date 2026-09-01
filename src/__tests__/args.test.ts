@@ -51,6 +51,19 @@ test('Commander supports lifecycle commands and safety flags', async () => {
   assert.equal(result.force, true);
 });
 
+test('Commander exposes explain mode only through status options', async () => {
+  let result: (CliOptions & { command: HarnessmithCommand }) | undefined;
+  const program = createProgram(async (command, options) => {
+    result = { command, ...options };
+  });
+  await program.parseAsync(['status', '--agent', 'codex', '--explain', '--json'], {
+    from: 'user',
+  });
+  assert.ok(result);
+  assert.equal(result.command, 'status');
+  assert.equal(result.explain, true);
+});
+
 test('Commander exposes guided setup through the shared install options', async () => {
   let result: (CliOptions & { command: HarnessmithCommand }) | undefined;
   const program = createProgram(async (command, options) => {
