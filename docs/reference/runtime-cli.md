@@ -32,7 +32,8 @@ node <harness-path>/bin/harness.mjs --help
 `route` 和 `explain` 根据显式 intent、manifest 的 `actionAliases` 与 `conceptAliases` 返回命中的文档名称、路径和
 alias，不加载正文。能够可靠判断动作时使用受限 `--intent`；未提供时只做保守自动推断。JSON 报告显式区分
 `matched`、`unmatched` 与 `ambiguous`，并只在唯一动作时给出 `top1`；未命中或多个真实动作返回 exit 2，
-不按 priority 猜测。该结构化契约为 version 3。路由只负责文档发现，不传递授权：
+不按 priority 猜测。Supporting topics 按匹配 alias 数量稳定排序并最多返回四个，超出的候选进入 `omittedTopics`，
+避免入口上下文无界增长且不把截断伪装成未命中。该结构化契约为 version 3。路由只负责文档发现，不传递授权：
 
 ```bash
 node <harness-path>/bin/harness.mjs route --intent diagnose payment callback --json

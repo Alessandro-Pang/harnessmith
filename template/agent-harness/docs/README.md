@@ -45,8 +45,8 @@ updated: 2026-08-28
 
 ## 读取原则
 
-1. 能够可靠判断当前动作时显式传入受限 intent 并选择唯一 playbook；Runtime 验证 `--intent` 后返回至多一个
-   `primaryPlaybook` 和零个或多个 `topics`。先加载 primary playbook，再按任务所需加载 supporting topics。
+1. 能够可靠判断当前动作时显式传入受限 intent 并选择唯一 playbook；Runtime 验证 `--intent`，返回至多一个 `primaryPlaybook` 和四个按证据强度排序的 `topics`。
+   先加载 primary playbook，再按返回顺序加载 supporting topics；`omittedTopics` 非空表示还有候选因上下文上限未返回，不得解释为不存在。
 2. 未传 intent 时只做保守自动推断；多个动作返回歧义，低置信度返回 `unmatched`，不靠 priority 或文档顺序决定。
 3. 项目内存在更具体的 `AGENTS.md`、skill 或文档索引时，优先读取项目事实源。
 4. 检索先返回文件名、标题、元信息或命中段落；只有确认相关后才读取全文。

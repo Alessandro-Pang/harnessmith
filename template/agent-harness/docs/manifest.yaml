@@ -23,7 +23,7 @@ entries:
   harness-cli-architecture:
     kind: topic
     path: core/harness-cli-architecture.md
-    conceptAliases: [harness-cli, install, init, memory-command, memory-autopilot, capture-input, close-input, payload-file, handoff, close-handoff, reconcile-profile, forget-profile, profile-autopilot, acceptance, local-harness, harness-profile, profile-autopilot-control, doctor, health, route, memory-migrate, memory-curate, curation-apply, 安装, 初始化, 记忆命令, 自动记忆, 验收, 本地-harness, harness-画像, 画像控制, 健康检查, 路由, 记忆迁移, 记忆策展, 策展执行]
+    conceptAliases: [harness-cli, architecture-design, implementation-architecture, implementation-principle, install, init, memory-command, memory-autopilot, capture-input, close-input, payload-file, handoff, close-handoff, reconcile-profile, forget-profile, profile-autopilot, acceptance, local-harness, harness-profile, profile-autopilot-control, doctor, health, route, memory-migrate, memory-curate, curation-apply, 架构设计, 实现架构, 实现原理, 实现思想, 安装, 初始化, 记忆命令, 自动记忆, 验收, 本地-harness, harness-画像, 画像控制, 健康检查, 路由, 记忆迁移, 记忆策展, 策展执行]
   observability:
     kind: topic
     path: core/observability.md
@@ -72,7 +72,7 @@ entries:
   prompt-rule-contract:
     kind: standard
     path: standards/prompt-rule-contract.md
-    conceptAliases: [prompt-rule, prompt-contract, guarantee-level, confusing-pair, rule-owner, 提示词规则, 提示词契约, 保证等级, 混淆规则, 规则所有者]
+    conceptAliases: [prompt-rule, prompt-contract, prompt-design, prompt-optimization, prompt-设计, prompt-优化, guarantee-level, confusing-pair, rule-owner, 提示词规则, 提示词契约, 提示词设计, 提示词优化, 保证等级, 混淆规则, 规则所有者]
   user-profile-memory:
     kind: standard
     path: standards/user-profile-memory.md

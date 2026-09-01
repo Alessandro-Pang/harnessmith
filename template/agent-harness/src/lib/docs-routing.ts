@@ -45,6 +45,8 @@ export const documentationIntents = [
 
 export type DocumentationIntent = (typeof documentationIntents)[number];
 
+const maximumDocumentationTopics = 4;
+
 export interface DocumentationRouteOptions {
   intent?: DocumentationIntent;
   languageContext?: ResponseLanguageContext;
@@ -59,6 +61,7 @@ export interface DocumentationRouteReport {
   top1: DocumentationRoute | null;
   ambiguity: string[];
   topics: DocumentationRoute[];
+  omittedTopics: DocumentationRoute[];
   intent: {
     requested: string | null;
     source: 'explicit' | 'inferred' | 'none';
@@ -127,6 +130,24 @@ function validatedManifestEntry(name: string, rawEntry: ManifestEntry) {
   };
 }
 
+function boundedDocumentationTopics(routes: DocumentationRoute[]): {
+  topics: DocumentationRoute[];
+  omittedTopics: DocumentationRoute[];
+} {
+  const ranked = routes
+    .map((route, index) => ({ index, route }))
+    .sort(
+      (left, right) =>
+        right.route.matchedAliases.length - left.route.matchedAliases.length ||
+        left.index - right.index,
+    )
+    .map(({ route }) => route);
+  return {
+    topics: ranked.slice(0, maximumDocumentationTopics),
+    omittedTopics: ranked.slice(maximumDocumentationTopics),
+  };
+}
+
 export function routeDocumentation(
   docsRoot: string,
   query: string[],
@@ -136,7 +157,7 @@ export function routeDocumentation(
   const manifestPath = resolve(docsRoot, 'manifest.yaml');
   const manifest = parse(readFileSync(manifestPath, 'utf8')) as DocsManifest;
   const entries = manifestEntries(manifest?.entries);
-  const routes: DocumentationRoute[] = [];
+  const supportingRoutes: DocumentationRoute[] = [];
   const playbookEvidence = new Map<
     string,
     { route: DocumentationRoute; mentioned: boolean; negated: boolean; requested: boolean }
@@ -171,7 +192,7 @@ export function routeDocumentation(
       terms.some((term) => matchesRoutingTerm(alias, term)),
     );
     if (matchedAliases.length === 0) continue;
-    routes.push({
+    supportingRoutes.push({
       kind,
       name,
       path: routedPath(docsRoot, path),
@@ -186,12 +207,13 @@ export function routeDocumentation(
     throw new Error(`Documentation intent has no playbook route: ${options.intent}`);
   }
   const selected = explicit ? [explicit] : inferred;
-  routes.unshift(...selected.map(({ route }) => route));
   const ambiguity =
     !explicit && selected.length > 1
       ? selected.map(({ route }) => route.name).sort((left, right) => left.localeCompare(right))
       : [];
   const primaryPlaybook = ambiguity.length === 0 ? (selected[0]?.route ?? null) : null;
+  const { topics, omittedTopics } = boundedDocumentationTopics(supportingRoutes);
+  const routes = [...selected.map(({ route }) => route), ...topics];
   const status = ambiguity.length > 0 ? 'ambiguous' : routes.length > 0 ? 'matched' : 'unmatched';
   const mentionedActions = [...playbookEvidence.entries()]
     .filter(([, { mentioned }]) => mentioned)
@@ -207,7 +229,8 @@ export function routeDocumentation(
     primaryPlaybook,
     top1: primaryPlaybook,
     ambiguity,
-    topics: routes.filter(({ kind }) => kind !== 'playbook'),
+    topics,
+    omittedTopics,
     intent: {
       requested: primaryPlaybook?.name ?? null,
       source: options.intent ? 'explicit' : selected.length > 0 ? 'inferred' : 'none',

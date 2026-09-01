@@ -75,6 +75,69 @@ test('documentation routing chooses research when the user explicitly asks to an
   assert.equal(report.primaryPlaybook?.name, 'research-and-design');
 });
 
+test('documentation routing maps architecture and prompt design to their exact owners', () => {
+  const report = routeDocumentation(
+    docsRoot,
+    ['通过第一性原理分析当前项目的架构设计、Prompt 设计和实现原理。'],
+    { intent: 'research-and-design' },
+  );
+
+  assert.deepEqual(
+    report.topics.map(({ name }) => name),
+    ['harness-cli-architecture', 'prompt-rule-contract'],
+  );
+  assert.deepEqual(report.omittedTopics, []);
+});
+
+test('documentation routing ranks supporting evidence and reports topics beyond its context bound', () => {
+  const root = mkdtempSync(join(tmpdir(), 'harness-doc-topic-routes-'));
+  onTestFinished(() => rmSync(root, { recursive: true, force: true }));
+  writeFileSync(
+    join(root, 'manifest.yaml'),
+    `version: 1
+entries:
+  change:
+    kind: playbook
+    path: change.md
+    actionAliases: [change]
+  first:
+    kind: topic
+    path: first.md
+    conceptAliases: [shared]
+  exact-owner:
+    kind: standard
+    path: exact-owner.md
+    conceptAliases: [shared, exact concept]
+  third:
+    kind: topic
+    path: third.md
+    conceptAliases: [shared]
+  fourth:
+    kind: topic
+    path: fourth.md
+    conceptAliases: [shared]
+  fifth:
+    kind: topic
+    path: fifth.md
+    conceptAliases: [shared]
+`,
+  );
+
+  const report = routeDocumentation(root, ['change shared exact concept']);
+  assert.deepEqual(
+    report.topics.map(({ name }) => name),
+    ['exact-owner', 'first', 'third', 'fourth'],
+  );
+  assert.deepEqual(
+    report.omittedTopics.map(({ name }) => name),
+    ['fifth'],
+  );
+  assert.deepEqual(
+    report.routes.map(({ name }) => name),
+    ['change', 'exact-owner', 'first', 'third', 'fourth'],
+  );
+});
+
 test.each([
   '这里引用了“review、design、research”三个词，但没有要求执行这些任务。',
   '文档举例包含评审、设计和调研，不代表当前要执行其中任何一项。',
@@ -91,7 +154,7 @@ test('documentation routing keeps Git and safety as topics without giving either
   assert.equal(report.primaryPlaybook?.name, 'review');
   assert.deepEqual(
     report.topics.map(({ name }) => name),
-    ['safety-and-verification', 'git-conventions'],
+    ['git-conventions', 'safety-and-verification'],
   );
 });
 
@@ -253,7 +316,7 @@ test('an exact multi-turn acceptance prompt routes every required autopilot owne
   assert.equal(report.primaryPlaybook?.name, 'change');
   assert.deepEqual(
     report.topics.map(({ name }) => name),
-    ['harness-cli-architecture', 'long-running-tasks', 'project-agent-docs', 'user-profile-memory'],
+    ['project-agent-docs', 'harness-cli-architecture', 'long-running-tasks', 'user-profile-memory'],
   );
 });
 
