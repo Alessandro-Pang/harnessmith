@@ -101,6 +101,9 @@ export interface InstallOptions {
   env?: NodeJS.ProcessEnv;
   force?: boolean;
   noInitGlobal?: boolean;
+  stamp?: string;
+  expectedOutputChecksums?: Record<string, string | null>;
+  afterUserDataInitialize?: () => void;
 }
 
 export interface InstallResult extends InstallPlan {
@@ -156,6 +159,7 @@ export interface CliOptions {
   dryRun?: boolean;
   initGlobal?: boolean;
   explain?: boolean;
+  proposal?: string;
 }
 
 export interface RunContext {

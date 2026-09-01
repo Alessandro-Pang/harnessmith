@@ -72,6 +72,10 @@ npx harnessmith status --agent codex
 # Explain observed state, evidence, risk, and safe actions that are not auto-run
 npx harnessmith status --agent codex --explain
 
+# Inventory existing rules without writes, then confirm the exact returned proposalId
+npx harnessmith adopt --agent codex --json
+npx harnessmith adopt --agent codex --proposal <proposalId> --yes --json
+
 # Restore the previous installation layer
 npx harnessmith restore --agent codex
 

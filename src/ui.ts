@@ -1,6 +1,7 @@
 import type { Readable, Writable } from 'node:stream';
 import { confirm, intro, isCancel, log, multiselect, note, outro } from '@clack/prompts';
 import pc from 'picocolors';
+import type { AdoptReport } from './adopt.js';
 import { supportedAgents } from './agents.js';
 import type { SetupGuide, SetupVerification } from './setup.js';
 import type { StatusExplanation } from './status-explanation.js';
@@ -80,6 +81,22 @@ export async function confirmSetup({
   return isCancel(value) ? false : value;
 }
 
+export async function confirmAdopt(
+  report: AdoptReport,
+  {
+    input = process.stdin,
+    output = process.stdout,
+  }: { input?: PromptInput; output?: PromptOutput } = {},
+): Promise<boolean> {
+  const value = await confirm({
+    message: `Apply proposal ${report.proposalId} with ${report.backups.length} exact backup target(s)?`,
+    initialValue: false,
+    input,
+    output,
+  });
+  return isCancel(value) ? false : value;
+}
+
 export function startInteractive(output: PromptOutput): void {
   intro(pc.bgCyan(pc.black(' Harnessmith ')), { output });
 }
@@ -110,6 +127,15 @@ export function printSetupGuide(guide: SetupGuide, io: Io = console): void {
   for (const boundary of guide.willNotChange) io.log(`    - ${boundary}`);
   io.log(`  recovery preview  ${guide.recovery.restore}`);
   io.log(`  real Host behavior  ${guide.hostBehavior.status}`);
+}
+
+export function printAdoptPlan(report: AdoptReport, io: Io = console): void {
+  io.log(`Adopt proposal ${report.proposalId}`);
+  for (const item of report.inventory) {
+    io.log(`  ${item.classification}  ${item.path}  ${item.reasonCode}`);
+  }
+  if (report.diff) io.log(report.diff);
+  for (const backup of report.backups) io.log(`  backup  ${backup.source} -> ${backup.path}`);
 }
 
 export function printSetupVerification(verification: SetupVerification, io: Io = console): void {

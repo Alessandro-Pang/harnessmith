@@ -40,11 +40,26 @@ function assertInstallable(adapter: Adapter, force: boolean): void {
   }
 }
 
-export function prepareInstall(
+function assertExpectedOutputs(
   adapter: Adapter,
-  { env = process.env, force = false }: InstallOptions = {},
-): PreparedInstall {
+  expected: Record<string, string | null> | undefined,
+): void {
+  if (!expected) return;
+  for (const path of [adapter.harness, ...adapter.instructions.map(({ path }) => path)]) {
+    if (!(path in expected) || digestManagedOutput(adapter, path) !== expected[path]) {
+      throw new HarnessmithError(
+        'STATE_CONFLICT',
+        `Adopt proposal changed before installation: ${path}`,
+        3,
+      );
+    }
+  }
+}
+
+export function prepareInstall(adapter: Adapter, options: InstallOptions = {}): PreparedInstall {
+  const { env = process.env, force = false } = options;
   assertSafeAdapterPaths(adapter);
+  assertExpectedOutputs(adapter, options.expectedOutputChecksums);
   assertInstallable(adapter, force);
   mkdirSync(adapter.home, { recursive: true });
   assertSafeAdapterPaths(adapter);
@@ -183,12 +198,13 @@ export function installAll(adapters: Adapter[], options: InstallOptions = {}): I
     const prepared: PreparedInstall[] = [];
     try {
       for (const adapter of adapters) prepared.push(prepareInstall(adapter, options));
-      const stamp = timestamp();
+      const stamp = options.stamp || timestamp();
       for (const item of prepared) commitInstall(item, stamp);
       const initialization =
         prepared.length > 0
           ? initializeUserData(prepared[0], options.env || process.env, {
               global: !options.noInitGlobal,
+              afterInitialize: options.afterUserDataInitialize,
             })
           : '';
       return prepared.map(({ adapter, backups }) => ({

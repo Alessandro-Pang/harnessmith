@@ -7,6 +7,7 @@ import type { CliOptions } from './types.js';
 
 export type HarnessmithCommand =
   | 'setup'
+  | 'adopt'
   | 'install'
   | 'status'
   | 'restore'
@@ -63,6 +64,12 @@ export function createProgram(
     .command('setup')
     .description('preview, confirm, install, and verify a first Harness');
   setup.action(() => execute('setup', setup.optsWithGlobals<CliOptions>()));
+
+  const adopt = program
+    .command('adopt')
+    .description('inventory and safely adopt existing Host rules')
+    .option('--proposal <id>', 'confirm the exact proposal id from a prior preview');
+  adopt.action(() => execute('adopt', adopt.optsWithGlobals<CliOptions>()));
 
   const install = program.command('install').description('install or upgrade the harness');
   install.action(() => execute('install', install.optsWithGlobals<CliOptions>()));

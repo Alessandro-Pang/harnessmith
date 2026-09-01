@@ -18,6 +18,17 @@ npx harnessmith install --agent codex
 目标不存在或仍与上一层安装记录一致时可安全接管。遇到 unmanaged 或已修改文件默认拒绝；`--force` 会先备份再替换，
 应在理解差异后显式使用。
 
+已有规则不应直接用 `--force` 覆盖。先运行 `adopt` 获取只读 inventory 和内容绑定提案，审阅导入 diff、备份与回滚路径后，
+再确认同一个 `proposalId`：
+
+```bash
+npx harnessmith adopt --agent codex --json
+npx harnessmith adopt --agent codex --proposal <proposalId> --yes --json
+```
+
+`adopt` 只导入可移植规则正文；Host-specific 配置只保留在原文件备份中。扫描或确认阶段发现 secret、symlink、未知格式、
+路径越界、受管文件被修改，或提案后内容发生变化时都会停止。实际写入与安装共享预检、锁、备份和事务回滚。
+
 ## 只读预览与状态
 
 ```bash

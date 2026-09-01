@@ -48,6 +48,21 @@ claims:
       - src/__tests__/args.test.ts
       - src/__tests__/adapter-conformance.test.ts
 
+  - id: safe-existing-rule-adoption
+    status: implemented
+    owner: outer installer adoption workflow
+    claim: Inventory existing global or project Host rules without writes, classify importability, bind confirmation to an exact proposal, and transactionally preserve portable rules in the user-owned personal overlay with provenance and rollback.
+    implementation:
+      - src/adopt.ts
+      - src/adopt-inventory.ts
+      - src/adopt-command.ts
+      - src/install.ts
+      - src/user-data.ts
+    verification:
+      - src/__tests__/adopt.test.ts
+      - src/__tests__/args.test.ts
+      - src/__tests__/adapter-conformance.test.ts
+
   - id: explainable-installation-status
     status: implemented
     owner: outer installer lifecycle
