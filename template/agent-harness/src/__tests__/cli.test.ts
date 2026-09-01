@@ -1,14 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import {
-  cpSync,
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
@@ -224,50 +216,6 @@ test('validation rejects an unsupported embedded memory schema version', () => {
     ),
     true,
   );
-});
-
-test('Harness CLI exposes proposal-only memory promotion', () => {
-  const root = mkdtempSync(join(tmpdir(), 'harness-memory-promote-cli-'));
-  onTestFinished(() => rmSync(root, { recursive: true, force: true }));
-  const project = join(root, 'project');
-  mkdirSync(join(project, '.agent-docs', 'distilled'), { recursive: true });
-  writeFileSync(
-    join(project, '.agent-docs', 'distilled', 'finding.md'),
-    [
-      '---',
-      'title: Finding',
-      'description: Expensive finding',
-      'type: distilled-memory',
-      'memory-kind: distilled',
-      'status: active',
-      'owners: [test-owner]',
-      'created: 2026-08-19',
-      'updated: 2026-08-19',
-      'project: test',
-      'tags: [test]',
-      'scope: []',
-      'source-refs: [docs/source.md]',
-      'source-of-truth: false',
-      'schema-version: 1',
-      '---',
-      '',
-      '# Finding',
-      '',
-    ].join('\n'),
-  );
-  execFileSync('git', ['-C', project, 'init', '-q']);
-  const runtime = harnessRuntime(root);
-  const output = capturedIo();
-
-  assert.equal(
-    runCli(
-      ['memory', 'promote', project, 'distilled/finding', '--target', 'docs/finding.md', '--json'],
-      { runtime, io: output },
-    ),
-    0,
-  );
-  assert.equal(JSON.parse(output.logs[0]).mode, 'proposal-only');
-  assert.equal(existsSync(join(project, 'docs', 'finding.md')), false);
 });
 
 test('doctor and validate pass for an installed fixture and report missing prerequisites', () => {

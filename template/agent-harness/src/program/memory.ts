@@ -3,7 +3,10 @@ import { memoryCheck, memoryList, memorySearch } from '../commands/memory.js';
 import { type CurationOptions, curateMemory } from '../commands/memory-curation.js';
 import { archiveMemory, memoryMaintenance, supersedeMemory } from '../commands/memory-lifecycle.js';
 import { memoryMigrate } from '../commands/memory-migration.js';
-import { memoryPromotionProposal } from '../commands/memory-promotion.js';
+import {
+  type MemoryPromotionOptions,
+  memoryPromotionProposal,
+} from '../commands/memory-promotion.js';
 import type { Io, Runtime } from '../types.js';
 import { registerMemoryAutopilotCommands } from './memory-autopilot.js';
 import { registerMemoryCaptureEligibilityCommand } from './memory-capture-eligibility.js';
@@ -112,10 +115,18 @@ function registerMemoryMutationCommands(
     .command('promote <scope> <memory>')
     .description('emit a proposal for promoting memory into an authoritative project document')
     .requiredOption('--target <path>', 'project-relative authoritative document path')
+    .requiredOption('--artifact-type <type>', 'adr, docs, tests, schema, lint, or ci')
+    .requiredOption('--owner <owner>', 'owner of the authoritative target')
+    .requiredOption('--reason <reason>', 'bounded reason for promotion')
+    .requiredOption('--verifier <command>', 'exact verifier required after adoption')
+    .option(
+      '--adoption-evidence <reference...>',
+      'evidence that the target already carries the fact',
+    )
     .option('--json', 'write the proposal as JSON')
     .action(
-      run((scope: string, name: string, options: { target: string }) =>
-        memoryPromotionProposal(runtime, scope, name, options.target, io),
+      run((scope: string, name: string, options: MemoryPromotionOptions) =>
+        memoryPromotionProposal(runtime, scope, name, options, io),
       ),
     );
 }
