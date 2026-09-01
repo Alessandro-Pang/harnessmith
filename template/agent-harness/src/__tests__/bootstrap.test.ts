@@ -30,9 +30,11 @@ test('bootstrap distinguishes an uninitialized non-Git project without writing',
   const { project, runtime } = fixture({ git: false });
   const before = tree(project);
   const report = bootstrapProject(runtime, project, { json: true }, capturedIo());
+  assert.equal(report.version, 2);
+  assert.equal(report.detail, 'brief');
   assert.equal(report.project.isGitRepository, false);
   assert.equal(report.memory.state, 'uninitialized');
-  assert.deepEqual(report.memory.metadata, []);
+  assert.equal('metadata' in report.memory, false);
   assert.deepEqual(report.tasks.active, []);
   assert.equal(report.truncated, false);
   assert.deepEqual(tree(project), before);
@@ -59,7 +61,7 @@ test('bootstrap aggregates dirty Git state, core pointers, maintenance, and mult
   writeFileSync(join(project, 'dirty.txt'), 'dirty');
   const before = tree(project);
 
-  const report = bootstrapProject(runtime, project, { json: true }, capturedIo());
+  const report = bootstrapProject(runtime, project, { detail: 'full', json: true }, capturedIo());
   assert.equal(report.project.dirty, true);
   assert.equal(report.memory.state, 'valid');
   assert.equal(report.memory.core?.budget.status, 'ok');
@@ -78,7 +80,8 @@ test('bootstrap distinguishes partial, invalid, and over-budget Memory', () => {
   mkdirSync(join(partial.project, '.agent-docs'));
   writeFileSync(join(partial.project, '.agent-docs', 'README.md'), '# partial');
   assert.equal(
-    bootstrapProject(partial.runtime, partial.project, {}, capturedIo()).memory.state,
+    bootstrapProject(partial.runtime, partial.project, { detail: 'full' }, capturedIo()).memory
+      .state,
     'partial',
   );
 
@@ -87,7 +90,12 @@ test('bootstrap distinguishes partial, invalid, and over-budget Memory', () => {
   const corePath = join(invalid.project, '.agent-docs', 'core.md');
   const core = readFileSync(corePath, 'utf8');
   writeFileSync(corePath, `${core}${'界'.repeat(Math.ceil(memoryCoreHardByteLimit / 3))}`);
-  const report = bootstrapProject(invalid.runtime, invalid.project, {}, capturedIo());
+  const report = bootstrapProject(
+    invalid.runtime,
+    invalid.project,
+    { detail: 'full' },
+    capturedIo(),
+  );
   assert.equal(report.memory.state, 'inconclusive');
   assert.equal(report.memory.core?.budget.status, 'hard-limit');
   assert.ok(report.reasons.some((reason) => /budget/i.test(reason)));
@@ -115,9 +123,12 @@ test('bootstrap exposes fact semantics and reverification requirements', () => {
     capturedIo(),
   );
 
-  const finding = bootstrapProject(runtime, project, {}, capturedIo()).memory.metadata.find(
-    ({ type }) => type === 'analytical-finding',
-  );
+  const finding = bootstrapProject(
+    runtime,
+    project,
+    { detail: 'full' },
+    capturedIo(),
+  ).memory.metadata.find(({ type }) => type === 'analytical-finding');
   assert.equal(finding?.factClass, 'current-state');
   assert.equal(finding?.classification, 'explicit');
   assert.equal(finding?.requiresReverification, true);
@@ -141,11 +152,50 @@ test('bootstrap caps metadata and reports truncation without reading archive bod
   mkdirSync(join(memoryRoot, '_archive'), { recursive: true });
   writeFileSync(archive, 'ARCHIVE_BODY_MUST_NOT_LOAD');
 
-  const report = bootstrapProject(runtime, project, {}, capturedIo());
+  const report = bootstrapProject(runtime, project, { detail: 'full' }, capturedIo());
   assert.equal(report.memory.metadata.length, bootstrapMetadataLimit);
   assert.equal(report.truncated, true);
   assert.ok(report.reasons.some((reason) => /metadata.*truncated/i.test(reason)));
   assert.doesNotMatch(JSON.stringify(report), /ARCHIVE_BODY_MUST_NOT_LOAD/);
+});
+
+test('bootstrap defaults to a compact brief and preserves full audit detail on request', () => {
+  const { project, runtime } = fixture();
+  initProject(runtime, project, capturedIo());
+  for (let index = 0; index < 6; index += 1) {
+    initTask(
+      runtime,
+      {
+        project,
+        id: `brief-task-${index}`,
+        objective: `Resume task ${index}`,
+        acceptance: [`Task ${index} passes`],
+      },
+      capturedIo(),
+    );
+  }
+
+  const brief = bootstrapProject(runtime, project, { json: true }, capturedIo());
+  const full = bootstrapProject(runtime, project, { detail: 'full', json: true }, capturedIo());
+
+  assert.equal(brief.version, 2);
+  assert.equal(brief.detail, 'brief');
+  assert.equal('metadata' in brief.memory, false);
+  assert.equal('core' in brief.memory, false);
+  assert.equal('maintenance' in brief.memory, false);
+  assert.equal(brief.tasks.active.length, 4);
+  assert.deepEqual(brief.omitted, {
+    sections: ['memory.metadata', 'memory.core', 'memory.maintenance'],
+    activeTasks: 2,
+  });
+
+  assert.equal(full.detail, 'full');
+  assert.ok(Array.isArray(full.memory.metadata));
+  assert.ok(full.memory.core);
+  assert.ok(full.memory.maintenance);
+  assert.equal(full.tasks.active.length, 6);
+  assert.deepEqual(full.omitted, { sections: [], activeTasks: 0 });
+  assert.ok(JSON.stringify(brief).length < JSON.stringify(full).length / 2);
 });
 
 test('bootstrap reports invalid reads when initialized Memory changes after snapshot', () => {

@@ -17,28 +17,53 @@ import type { Io, ProjectSnapshot, Runtime, TaskSummary } from '../types.js';
 export { bootstrapMetadataLimit } from '../lib/bootstrap-memory.js';
 
 const bootstrapTaskLimit = 32;
+const bootstrapBriefTaskLimit = 4;
 
-export interface BootstrapReport {
-  version: 1;
+type BootstrapDetail = 'brief' | 'full';
+
+interface BootstrapReportBase {
+  version: 2;
+  detail: BootstrapDetail;
   project: ProjectSnapshot;
-  memory: {
-    state: BootstrapState;
-    root: string;
-    metadata: BootstrapMetadata[];
-    core: BootstrapMemoryRead['core'];
-    maintenance: BootstrapMemoryRead['maintenance'];
-    recommended: string[];
-  };
   tasks: { state: 'ok' | 'skipped' | 'inconclusive'; active: TaskSummary[] };
   scan: {
     maxMetadata: number;
     maxTasks: number;
+    maxBriefTasks: number;
     maxRecommendations: number;
     discoveredMetadata: number;
     discoveredTasks: number;
   };
+  omitted: { sections: string[]; activeTasks: number };
   truncated: boolean;
   reasons: string[];
+}
+
+interface BootstrapMemorySummary {
+  state: BootstrapState;
+  root: string;
+  recommended: string[];
+}
+
+export interface BootstrapBriefReport extends BootstrapReportBase {
+  detail: 'brief';
+  memory: BootstrapMemorySummary;
+}
+
+export interface BootstrapFullReport extends BootstrapReportBase {
+  detail: 'full';
+  memory: BootstrapMemorySummary & {
+    metadata: BootstrapMetadata[];
+    core: BootstrapMemoryRead['core'];
+    maintenance: BootstrapMemoryRead['maintenance'];
+  };
+}
+
+export type BootstrapReport = BootstrapBriefReport | BootstrapFullReport;
+
+export interface BootstrapOptions {
+  detail?: BootstrapDetail;
+  json?: boolean;
 }
 
 function readBootstrapTasks(snapshot: ProjectSnapshot, reasons: string[]) {
@@ -79,6 +104,7 @@ function outputBootstrap(report: BootstrapReport, json: boolean, io: Io): void {
     return;
   }
   io.log(`Bootstrap: ${report.project.root}`);
+  io.log(`Detail: ${report.detail}`);
   io.log(`Project: ${report.project.isGitRepository ? 'git' : 'non-git'}`);
   io.log(`Memory: ${report.memory.state}`);
   io.log(`Active tasks: ${report.tasks.active.length}`);
@@ -89,7 +115,25 @@ function outputBootstrap(report: BootstrapReport, json: boolean, io: Io): void {
 export function bootstrapProject(
   runtime: Runtime,
   project: string,
-  { json = false }: { json?: boolean } = {},
+  options: BootstrapOptions & { detail: 'full' },
+  io?: Io,
+): BootstrapFullReport;
+export function bootstrapProject(
+  runtime: Runtime,
+  project: string,
+  options?: BootstrapOptions & { detail?: 'brief' },
+  io?: Io,
+): BootstrapBriefReport;
+export function bootstrapProject(
+  runtime: Runtime,
+  project: string,
+  options: BootstrapOptions,
+  io?: Io,
+): BootstrapReport;
+export function bootstrapProject(
+  runtime: Runtime,
+  project: string,
+  { detail = 'brief', json = false }: BootstrapOptions = {},
   io: Io = console,
 ): BootstrapReport {
   assertNoHighConfidenceSecret([project], 'Bootstrap request');
@@ -98,28 +142,46 @@ export function bootstrapProject(
   const memory = readBootstrapMemory(runtime, snapshot, reasons);
   const tasks = readBootstrapTasks(snapshot, reasons);
   const recommended = recommendedBootstrapReads(snapshot.memory.root, memory, reasons);
-  const report: BootstrapReport = {
-    version: 1,
+  const activeTaskLimit = detail === 'brief' ? bootstrapBriefTaskLimit : bootstrapTaskLimit;
+  const activeTasks = tasks.active.slice(0, activeTaskLimit);
+  const memorySummary: BootstrapMemorySummary = {
+    state: memory.state,
+    root: snapshot.memory.root,
+    recommended,
+  };
+  const common = {
+    version: 2 as const,
     project: snapshot,
-    memory: {
-      state: memory.state,
-      root: snapshot.memory.root,
-      metadata: memory.metadata,
-      core: memory.core,
-      maintenance: memory.maintenance,
-      recommended,
-    },
-    tasks: { state: tasks.state, active: tasks.active },
+    tasks: { state: tasks.state, active: activeTasks },
     scan: {
       maxMetadata: bootstrapMetadataLimit,
       maxTasks: bootstrapTaskLimit,
+      maxBriefTasks: bootstrapBriefTaskLimit,
       maxRecommendations: bootstrapRecommendationLimit,
       discoveredMetadata: memory.discoveredMetadata,
       discoveredTasks: tasks.discovered,
     },
+    omitted: {
+      sections: detail === 'brief' ? ['memory.metadata', 'memory.core', 'memory.maintenance'] : [],
+      activeTasks: Math.max(0, tasks.discovered - activeTasks.length),
+    },
     truncated: reasons.some((reason) => /truncated/i.test(reason)),
     reasons,
   };
+  const report: BootstrapReport =
+    detail === 'full'
+      ? {
+          ...common,
+          detail: 'full',
+          memory: {
+            ...memorySummary,
+            metadata: memory.metadata,
+            core: memory.core,
+            maintenance: memory.maintenance,
+          },
+          omitted: { ...common.omitted, sections: [] },
+        }
+      : { ...common, detail: 'brief', memory: memorySummary };
   outputBootstrap(report, json, io);
   return report;
 }

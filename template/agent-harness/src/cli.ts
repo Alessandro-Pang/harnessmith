@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Command, Option } from 'commander';
-import { bootstrapProject } from './commands/bootstrap.js';
+import { type BootstrapOptions, bootstrapProject } from './commands/bootstrap.js';
 import { doctor } from './commands/doctor.js';
 import { health } from './commands/health.js';
 import { initGlobal, initPersonal, initProject } from './commands/init.js';
@@ -22,6 +22,10 @@ import type { Io, Runtime } from './types.js';
 
 interface JsonProjectOptions {
   json?: boolean;
+  project?: string;
+}
+
+interface BootstrapCommandOptions extends BootstrapOptions {
   project?: string;
 }
 
@@ -85,9 +89,14 @@ function registerBootstrapCommand(
     .command('bootstrap')
     .description('read one bounded project and Memory startup summary')
     .requiredOption('--project <path>', 'project path')
+    .addOption(
+      new Option('--detail <level>', 'startup detail level')
+        .choices(['brief', 'full'])
+        .default('brief'),
+    )
     .option('--json', 'write a machine-readable startup summary')
     .action(
-      run((options: JsonProjectOptions) =>
+      run((options: BootstrapCommandOptions) =>
         bootstrapProject(runtime, options.project as string, options, io),
       ),
     );

@@ -100,11 +100,11 @@ test('startup rules retain progressive project discovery without copying its com
   const personal = agents.indexOf('AGENTS.md', profile + 1);
   const bootstrap = agents.indexOf('bootstrap', personal + 1);
   assert.ok(profile >= 0 && personal > profile && bootstrap > personal);
-  assert.match(agents, /bootstrap.*--project.*--json/s);
+  assert.match(agents, /bootstrap.*--project.*--detail brief.*--json/s);
   assert.doesNotMatch(agents, /rg -n -C 12.*输出可见性/);
   assert.match(
     projectMemory,
-    /bootstrap.*metadata.*core.*预算.*active.*task.*维护候选.*推荐.*正文.*截断/s,
+    /brief.*metadata.*core.*maintenance.*推荐.*active task.*recommended.*omitted.*full.*完整.*截断/s,
   );
   assert.doesNotMatch(projectMemory, /memory list.*task status.*memory maintain/s);
   assert.doesNotMatch(agents, /memory list|task status|memory maintain/);
@@ -132,7 +132,7 @@ test('startup deterministically discovers one explicitly referenced project cont
 });
 
 test('the project-memory standard delegates deterministic startup discovery to bootstrap', () => {
-  assert.match(projectMemory, /bootstrap --project <absolute-project-root> --json/);
+  assert.match(projectMemory, /bootstrap --project <absolute-project-root> --detail brief --json/);
   assert.match(projectMemory, /只读.*不.*修复.*归档.*迁移.*索引/s);
   assert.match(projectMemory, /recommended.*active\/blocked.*事实源/s);
   assert.doesNotMatch(projectMemory, /sed -n '1,260p' \.agent-docs\/core\.md/);

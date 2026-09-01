@@ -65,10 +65,11 @@ Agent 不应因为进入一个项目就创建 `.agent-docs/`：
 canonical profile 仍由 Host 在新 task/thread 的首个工具调用中单独、有界读取。个人规则、项目根和就近规则
 确认后，项目启动只运行一次只读聚合入口：
 
-`<harness> bootstrap --project <absolute-project-root> --json`
+`<harness> bootstrap --project <absolute-project-root> --detail brief --json`
 
-bootstrap 有界返回 project/Git 与 dirty 摘要、Memory state 和 metadata、core 摘要与预算、active task、
-维护候选、推荐（recommended）正文引用、扫描预算、跳过原因与截断状态。它只读，不修复、不归档、不迁移，也不写入
+brief 仍验证 Memory 并计算 metadata、core、maintenance 与推荐，但只返回 project/Git、Memory state、最多四个
+active task、recommended、扫描预算、原因和 `omitted`，不把省略 section 伪装成不存在。显式 `--detail full` 才返回
+完整 metadata、core、maintenance 和最多 32 个 task，供审计或诊断。两种模式都只读，不修复、不归档、不迁移，也不写入
 索引；未初始化、partial、invalid、inconclusive 和 truncated 必须保持可区分，未命中不能据此写成不存在。
 
 只按 recommended 加载与当前任务相关的 active/blocked 或维护候选正文，不递归读取 archive。Memory 内容仍是

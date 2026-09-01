@@ -27,6 +27,19 @@ node <harness-path>/bin/harness.mjs --help
 | 维护多个仓库的职责与关系 | `repository-map` | 检查只读；写操作需显式参数 |
 | 接收和汇总受限运行元数据 | `audit` | `record` 写入；查询只读 |
 
+## 启动摘要
+
+`bootstrap` 的 version 2 默认输出 `brief`：它仍执行完整的只读 Memory 验证和推荐计算，但只呈现启动决策需要的
+project/Git 状态、Memory state、最多四个 active task、recommended、扫描预算与原因。被有意省略的
+metadata/core/maintenance 和 active task 数量通过 `omitted` 报告，不与“没有数据”混淆。审计或诊断时显式请求完整结构：
+
+```bash
+node <harness-path>/bin/harness.mjs bootstrap --project /path/to/project --detail brief --json
+node <harness-path>/bin/harness.mjs bootstrap --project /path/to/project --detail full --json
+```
+
+`truncated` 只表示底层有界扫描截断；detail 模式的主动省略只进入 `omitted`。两种模式都不执行修复、归档、迁移或索引写入。
+
 ## 文档路由与检索
 
 `route` 和 `explain` 根据显式 intent、manifest 的 `actionAliases` 与 `conceptAliases` 返回命中的文档名称、路径和
