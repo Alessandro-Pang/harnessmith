@@ -212,6 +212,7 @@ function validateUserProfile(
 export function validateMemoryDocumentRules(
   root: string,
   path: string,
+  content: string,
   body: string,
   metadata: Map<string, unknown>,
   io: Io,
@@ -221,6 +222,6 @@ export function validateMemoryDocumentRules(
   failures += validateLifecycle(path, metadata, io);
   failures += validateUserProfile(root, path, body, metadata, rootKind, io);
   failures += validateTaskLedgerMemory(root, path, metadata, io);
-  failures += validateAutopilotDocumentRules(root, path, body, metadata, rootKind, io);
+  failures += validateAutopilotDocumentRules(root, path, content, body, metadata, rootKind, io);
   return failures;
 }

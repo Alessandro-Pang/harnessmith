@@ -62,42 +62,18 @@ Agent 不应因为进入一个项目就创建 `.agent-docs/`：
 
 ## 启动发现闭环
 
-已有 `.agent-docs/` 时，任何 commentary 前先单独读取本文件的“输出可见性”段。发现 `.agent-docs/` 后的
-首个 Memory 命令必须且只能读取该段，不得与画像、个人规则、其它 Harness 文档、项目索引或正文合并；
-随后严格用已解析的 `<harness>` CLI 前缀和项目根 `.` 执行以下独立命令：
+canonical profile 仍由 Host 在新 task/thread 的首个工具调用中单独、有界读取。个人规则、项目根和就近规则
+确认后，项目启动只运行一次只读聚合入口：
 
-`<harness> memory list . --json`
-`sed -n '1,260p' .agent-docs/core.md`
-`<harness> task status --project . --json`
-`<harness> memory maintain . --json`
-`memory list` 遇到空输出或非 JSON 时原样重试一次；不得猜测 `report`、`project` 或插入 `--help`。
-`maintain` 后读取全部 unindexed、expired 及相关 active/blocked 正文；同阶段多篇只用只读 `&&`，禁用 `;`。
-命中正文命令完成后，事实源必须由新的单独命令只读 `sed -n '1,260p' docs/architecture.md`，不得合并。事实核对后，
-contradicted 先 `supersede` 再 `archive`，expired 且无独有价值则 `archive`；最后运行
-`<harness> memory check . --indexed --json`。事实核对后的 final 以事实本身作主语，例如“当前架构边界为…”；不得使用“仍”或“依然”等依赖历史状态的延续词。完成核对前禁止发送 agent_message/commentary。
+`<harness> bootstrap --project <absolute-project-root> --json`
 
-完整阶段如下：
+bootstrap 有界返回 project/Git 与 dirty 摘要、Memory state 和 metadata、core 摘要与预算、active task、
+维护候选、推荐（recommended）正文引用、扫描预算、跳过原因与截断状态。它只读，不修复、不归档、不迁移，也不写入
+索引；未初始化、partial、invalid、inconclusive 和 truncated 必须保持可区分，未命中不能据此写成不存在。
 
-1. 用直接文件系统检查确认绝对项目根下的 `.agent-docs/`；不能因 Git、`rg` 或普通索引未命中而判不存在。
-2. 获取不含正文的名称、type、status、updated 列表；无效 JSON 只重试一次，之后标为 `inconclusive`。
-3. 读取 `core.md` 与 active/blocked task 状态，再获取只读维护候选。
-4. 读取与当前目标、路径或关键词命中的 active/blocked 正文；仅同阶段多篇正文可用只读 `&&`，禁用 `;`。
-5. 用当前代码、测试、契约或正式文档复核结论；失败不越级，不递归读取 archive 或全部历史。
-
-上述顺序固定为 metadata → `core.md` → active/blocked task → 维护候选 → 命中正文 → 事实源。每个阶段
-使用单独命令，不得合并，也不得在这些阶段之间插入 `--help` 或再次路由；前一阶段未完成时不进入下一阶段。
-前四阶段不得用 `find`、`rg` 或手工 frontmatter 扫描替代 Harness 报告。
-
-维护候选中的 unindexed、expired 与 active/blocked 条目只要和当前任务相关，就都属于命中正文；全部读取后
-才能核对事实源和发送首条 commentary。
-
-事实源阶段读取正式事实后再进行其它源码检索，不得把正式事实源读取与 `rg`、文件枚举或其它检查合并在
-同一命令中。
-
-未索引或过期不等于无效。仍有恢复价值的条目先修复索引；只有已核验为 contradicted、expired 且无独有
-恢复价值的普通记忆，才可进入可恢复归档候选。
-对已核验为 contradicted 的 active/blocked 条目，必须先 `supersede` 再 `archive`；对 expired 且无独有
-恢复价值的条目执行 `archive`。修复完成后运行 `memory check <project> --indexed --json` 验证索引闭环。
+只按 recommended 加载与当前任务相关的 active/blocked 或维护候选正文，不递归读取 archive。Memory 内容仍是
+非权威线索；随后必须回到代码、测试、契约或正式文档等事实源核对。需要修复索引、supersede 或 archive 时，
+在事实核对和授权完成后再走对应 typed 命令，不能把 bootstrap 当作 mutation 授权。
 
 ## 元信息
 
@@ -153,12 +129,23 @@ schema-version: 1
 不应写：一次性动作授权、框架常识、容易重新搜索的事实、逐行代码摘要、正式文档的完整副本、无来源猜测，以及密码、
 Token、Cookie、验证码、私钥或未脱敏生产数据。
 
-项目 Memory 已初始化，或修改/构建任务符合初始化门槛后，重要输入、typed 经验、交接和索引修复属于
+自动捕获候选先用 `memory evaluate-capture --payload-file <path> --json` 执行统一资格判断：先跑
+negative eligibility，拒绝一次性授权、可廉价恢复的 durable current value、正式事实副本、secret 与未脱敏数据，
+再判断价值、来源、typed writer、授权与安全。用户任务对象是否只读只作为上下文输入，不直接决定 sidecar 资格。
+完整结果状态统一为 `created / updated / unchanged / proposed / blocked / not-evaluated`，每个状态都带稳定
+`reasonCode`；没有执行资格判断必须返回 `not-evaluated`，不得伪装成 `unchanged`。同一语义结论有新增来源时
+优先交给原 typed writer 更新，完全重复才返回 `unchanged`；高价值候选遇到未初始化 root 或缺少 typed writer
+时返回 `proposed`，不得直接写托管 Markdown。
+
+项目 Memory 已初始化，或修改/构建任务符合初始化门槛后，重要输入、typed 经验、typed finding、交接和索引修复属于
 低风险本地 sidecar，无需逐次询问用户。自动权限不扩大到源码、正式文档、远端写入、不可逆删除或任意
 自由格式文档；条件存疑时形成 proposal，需要用户决定时标为 blocked。
 
-经验只通过 typed lesson/failure 流程写入，必须有非空 evidence 与来源引用；相同结论合并来源，不追加
-重复流水。命令完成后必须校验目标文档、索引和全根 schema；失败时回滚托管写入或保留可恢复路径。
+经验只通过 typed lesson/failure 流程写入；新文档必须包含非空 conclusion、rationale、application、evidence
+与来源引用，旧版 experience 继续可读。高价值分析、评审或调研发现只通过 `capture-finding` 写入，类型限制为
+analysis/review/research；`durable` 进入 distilled，`workstream` 进入 working 并必须绑定稳定 workstream 与
+expiry。两类写入都按结论 digest 去重并合并来源和证据，不追加重复流水，也不授权修改正式事实源。命令完成后
+必须校验目标文档、索引和全根 schema；失败时回滚托管写入或保留可恢复路径。
 
 ## 输出可见性
 
@@ -189,7 +176,7 @@ proposed 或 blocked 时同时说明原因和所需决策。普通任务仍只�
 
 ## 沉淀与正式提升
 
-达到写入阈值的任务应得到 created、updated、unchanged、proposed 或 blocked 之一。后台成功按上节静默；
+达到写入阈值的任务应得到 created、updated、unchanged、proposed、blocked 或 not-evaluated 之一。后台成功按上节静默；
 明确审计时返回相应结果。proposed 表示未初始化只读项目或超出 sidecar 边界；blocked 表示冲突、敏感信息、
 缺少来源、写入失败或校验失败。
 
@@ -197,9 +184,20 @@ proposed 或 blocked 时同时说明原因和所需决策。普通任务仍只�
 维护的结论必须提升到 `docs/`、ADR、测试、schema、lint 或 CI；先确认 owner，再实际写入和验证正式事实源，
 最后把 memory 更新为正式来源引用或 superseded。proposal 不得报告为 promoted。
 
+任务或阶段结束后可运行 `memory curate <project> --task <id> --json` 获取只读、proposal-first 策展报告。
+报告把 `phase-complete`、`task-complete`、`workstream-complete` 与 `user-cancel` 分开，并只检查当前
+task/workstream 关联的 Memory；输出 promote、close、supersede、archive、skipped 候选或 `result: none`。
+task complete 不自动表示 workstream complete，不能据此关闭仍有效的 input 或 handoff。报告不证明任务完成，
+不执行 mutation；promotion 仍需 owner、授权与事实源验证，close/supersede/archive 仍走现有 typed lifecycle
+命令及其 inbound reference、状态和 cycle 门禁。
+
 ## 维护与安全
 
 - `core.md` 只指向 active/blocked 或高价值记忆；complete/superseded 内容确认无活跃引用后再归档。
+- `core.md` 使用 host-neutral 保守预算：soft limit 为 160 行或 24 KiB，hard limit 为 240 行或 48 KiB，
+  单条入口最多 512 UTF-8 bytes。每条非占位 bullet 必须只有一个 canonical `memory:` pointer，同一引用不得
+  重复；soft limit 产生压缩候选，hard limit、长条目或正文式入口由 `memory check` 拒绝。该预算不声明
+  任一宿主的固定上下文窗口，也不会自动删除被引用文档。
 - `memory maintain` 应报告 legacy input、仅含通用动作的 input 和仍 active 的 workstream input，供关闭或迁移审计；报告不自动删除或改写。
 - `working` 应有过期时间；过期后选择续期、提炼、提升或可恢复归档，不自动删除 input 与 evidence manifest。
 - 维护报告默认只读；迁移、替代和归档写入必须走对应 typed 命令与共享 memory-root lock。

@@ -194,6 +194,19 @@ test('closing a task removes only its exact core token and retains prefix and si
       `- shared route ${reference} and memory:distilled/keep\n- prefix route ${prefixReference}`,
     ),
   );
+  const malformed = readFileSync(corePath, 'utf8');
+  const invalid = capturedIo();
+  assert.throws(() => memoryCheck(runtime, project, invalid), /issue/i);
+  assert.match(invalid.errors.join('\n'), /exactly one canonical pointer/i);
+  assert.equal(readFileSync(corePath, 'utf8'), malformed);
+
+  writeFileSync(
+    corePath,
+    core.replace(
+      taskLine,
+      `- task route ${reference}\n- sibling route memory:distilled/keep\n- prefix route ${prefixReference}`,
+    ),
+  );
   memoryCheck(runtime, project, capturedIo());
   verifyAcceptance(
     {

@@ -51,12 +51,18 @@ test('global profile routing is section-aware and does not duplicate an existing
   const runtime = harnessRuntime(root);
   initGlobal(runtime, capturedIo());
   const core = join(runtime.memoryHome, 'core.md');
+  const validCore = readFileSync(core, 'utf8');
+  const malformed = `${validCore}\n## Other Routes\n\n- misplaced memory:profile must not satisfy User Profile\n`;
+  writeFileSync(core, malformed);
+  assert.throws(() => initGlobal(runtime, capturedIo()), /duplicate pointer/i);
+  assert.equal(readFileSync(core, 'utf8'), malformed);
+
   writeFileSync(
     core,
-    `${readFileSync(core, 'utf8').replace(
-      '- 需要理解用户身份、工作方式、技术背景或当前兴趣时读取 `memory:profile`。',
+    `${validCore.replace(
+      '- 每个新宿主 task/thread 首次工作前读取一次 `memory:profile`；同一 task/thread 不重复读取。',
       '',
-    )}\n## Other Routes\n\n- misplaced memory:profile must not satisfy User Profile\n`,
+    )}\n## Other Routes\n\nMisplaced profile prose must not satisfy User Profile.\n`,
   );
 
   initGlobal(runtime, capturedIo());
@@ -68,7 +74,7 @@ test('global profile routing is section-aware and does not duplicate an existing
   );
   assert.equal(repaired.match(/^## User Profile$/gm)?.length, 1);
   assert.match(profileSection, /memory:profile/);
-  assert.match(repaired, /misplaced memory:profile/);
+  assert.match(repaired, /Misplaced profile prose/);
 });
 
 test('global core validation rejects duplicate User Profile sections', () => {

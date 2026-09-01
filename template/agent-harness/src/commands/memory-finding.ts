@@ -1,9 +1,13 @@
-import { createHash } from 'node:crypto';
-import { existsSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { stringify } from 'yaml';
 import { parseFrontmatterDocument } from '../lib/frontmatter.js';
 import { escapeCoreLabel, upsertCoreReference } from '../lib/memory-core.js';
+import {
+  type FindingKind,
+  type FindingRetention,
+  findingDigest,
+  findingSection,
+} from '../lib/memory-finding.js';
 import { normalizedInputContent } from '../lib/memory-input.js';
 import { markdownFiles, memoryReference, readMemoryDocument } from '../lib/memory-path.js';
 import {
@@ -18,21 +22,18 @@ import { assertNoHighConfidenceSecret } from '../lib/secret-hygiene.js';
 import { assertRuntimeCanMutate, calendarDate } from '../runtime.js';
 import type { Io, Runtime } from '../types.js';
 
-export interface ExperienceOptions {
-  kind: 'lesson' | 'failure';
+export interface FindingOptions {
+  kind: FindingKind;
+  retention: FindingRetention;
   title: string;
   conclusion: string;
   rationale: string;
   application: string;
   evidence: string[];
   sourceRefs: string[];
+  workstream?: string;
+  expires?: string;
   json?: boolean;
-}
-
-function digest(kind: ExperienceOptions['kind'], conclusion: string): string {
-  return createHash('sha256')
-    .update(`${kind}\0${normalizedInputContent(conclusion)}`)
-    .digest('hex');
 }
 
 function slug(value: string): string {
@@ -42,56 +43,77 @@ function slug(value: string): string {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '')
-      .slice(0, 48) || 'experience'
+      .slice(0, 48) || 'finding'
   );
 }
 
-function assertOptions(options: ExperienceOptions): void {
+function validDate(value: string | undefined): value is string {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
+function assertOptions(options: FindingOptions): void {
   assertNoHighConfidenceSecret(
     [
       options.kind,
+      options.retention,
       options.title,
       options.conclusion,
       options.rationale,
       options.application,
+      options.workstream ?? '',
+      options.expires ?? '',
       ...(options.evidence ?? []),
       ...(options.sourceRefs ?? []),
     ],
-    'Memory experience',
+    'Memory finding',
   );
-  if (!['lesson', 'failure'].includes(options.kind)) {
-    throw new Error(`Invalid experience kind: ${String(options.kind)}`);
+  if (!['analysis', 'review', 'research'].includes(options.kind)) {
+    throw new Error(`Invalid finding kind: ${String(options.kind)}`);
   }
-  if (
-    !options.title?.trim() ||
-    !options.conclusion?.trim() ||
-    !options.rationale?.trim() ||
-    !options.application?.trim()
-  ) {
-    throw new Error('Experience title, conclusion, rationale, and application are required');
+  if (!['workstream', 'durable'].includes(options.retention)) {
+    throw new Error(`Invalid finding retention: ${String(options.retention)}`);
   }
-  if (/\r|\n/.test(options.title) || options.title.length > 200) {
-    throw new Error('Experience title must be one bounded line');
+  for (const [name, value] of [
+    ['title', options.title],
+    ['conclusion', options.conclusion],
+    ['rationale', options.rationale],
+    ['application', options.application],
+  ] as const) {
+    if (!value?.trim()) throw new Error(`Finding ${name} is required`);
+    if (/\r|\n/.test(value) && name === 'title') {
+      throw new Error('Finding title must be one bounded line');
+    }
   }
-  if (!Array.isArray(options.evidence) || !Array.isArray(options.sourceRefs)) {
-    throw new Error('Experience evidence and source references are required');
+  if (options.title.length > 200) throw new Error('Finding title must be one bounded line');
+  if (!Array.isArray(options.evidence) || options.evidence.length === 0) {
+    throw new Error('Finding evidence is required');
   }
-  if (options.evidence.length === 0 || options.sourceRefs.length === 0) {
-    throw new Error('Experience evidence and source references are required');
+  if (!Array.isArray(options.sourceRefs) || options.sourceRefs.length === 0) {
+    throw new Error('Finding source references are required');
   }
   if (
     [...options.evidence, ...options.sourceRefs].some(
       (entry) => !entry?.trim() || /\r|\n/.test(entry) || entry.length > 500,
     )
   ) {
-    throw new Error('Experience evidence and source references must be bounded single lines');
+    throw new Error('Finding evidence and source references must be bounded single lines');
+  }
+  if (options.retention === 'workstream') {
+    if (!options.workstream || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(options.workstream)) {
+      throw new Error('Finding workstream is required and must be a stable identifier');
+    }
+    if (!validDate(options.expires)) {
+      throw new Error('Finding expires is required and must be a calendar date');
+    }
+  } else if (options.workstream !== undefined || options.expires !== undefined) {
+    throw new Error('Durable finding must not declare workstream or expires');
   }
 }
 
-function existingEvidence(body: string): string[] {
-  const match = body.match(/(?:^|\n)# 证据\n\n([\s\S]*?)(?=\n# |$)/u);
-  if (!match) return [];
-  return match[1]
+function listSection(body: string, heading: string): string[] {
+  return (findingSection(body, heading) ?? '')
     .split('\n')
     .filter((line) => line.startsWith('- '))
     .map((line) => line.slice(2));
@@ -100,72 +122,78 @@ function existingEvidence(body: string): string[] {
 function render(
   runtime: Runtime,
   projectName: string,
-  options: ExperienceOptions,
-  experienceDigest: string,
+  options: FindingOptions,
+  digest: string,
   created: string,
   updated: string,
   evidence: string[],
   sourceRefs: string[],
 ): string {
+  const memoryKind = options.retention === 'durable' ? 'distilled' : 'working';
   const derivedFrom = sourceRefs.filter((reference) => reference.startsWith('memory:'));
   return `---\n${stringify(
     {
       title: options.title.trim(),
-      description: `${options.kind === 'failure' ? '失败经验' : '可复用经验'}：${options.title.trim()}`,
-      type: 'operational-experience',
-      'memory-kind': 'distilled',
+      description: `分析发现：${options.title.trim()}`,
+      type: 'analytical-finding',
+      'memory-kind': memoryKind,
       status: 'active',
       owners: [runtime.owner],
       created,
       updated,
       project: projectName,
-      tags: ['experience', options.kind, 'autopilot'],
+      tags: ['finding', options.kind, 'autopilot'],
       scope: [],
       'source-refs': sourceRefs,
       'source-of-truth': false,
       'schema-version': 1,
-      'experience-kind': options.kind,
-      'experience-schema-version': 2,
-      'experience-digest': `sha256:${experienceDigest}`,
+      'finding-schema-version': 1,
+      'finding-kind': options.kind,
+      'finding-digest': `sha256:${digest}`,
+      retention: options.retention,
+      ...(options.workstream ? { workstream: options.workstream } : {}),
+      ...(options.expires ? { expires: options.expires } : {}),
       ...(derivedFrom.length > 0 ? { 'derived-from': derivedFrom } : {}),
     },
     { lineWidth: 0 },
   )}---\n\n# 结论\n\n${options.conclusion.trim()}\n\n# 理由\n\n${options.rationale.trim()}\n\n# 应用\n\n${options.application.trim()}\n\n# 证据\n\n${evidence.map((item) => `- ${item}`).join('\n')}\n`;
 }
 
-export function captureExperience(
+export function captureFinding(
   runtime: Runtime,
   project: string,
-  options: ExperienceOptions,
+  options: FindingOptions,
   io: Io = console,
 ): MemoryWriteResult {
   assertRuntimeCanMutate(runtime);
   assertOptions(options);
   const conclusion = normalizedInputContent(options.conclusion);
-  const experienceDigest = digest(options.kind, conclusion);
+  const digest = findingDigest(options.kind, conclusion);
   const date = calendarDate(runtime);
   const result = withProjectMemoryTransaction(runtime, project, ({ memoryRoot }) => {
     const matches = markdownFiles(memoryRoot).filter((path) => {
       const metadata = parseFrontmatterDocument(readMemoryDocument(path)).metadata;
-      return metadata.get('experience-digest') === `sha256:${experienceDigest}`;
+      return metadata.get('finding-digest') === `sha256:${digest}`;
     });
-    if (matches.length > 1) {
-      throw new Error(`Ambiguous experience identity sha256:${experienceDigest}`);
+    if (matches.length > 1) throw new Error(`Ambiguous finding identity sha256:${digest}`);
+    const existing = matches[0];
+    const existingDocument = existing ? readMemoryDocument(existing) : '';
+    const parsed = parseFrontmatterDocument(existingDocument);
+    if (existing && parsed.metadata.get('retention') !== options.retention) {
+      throw new Error('Finding retention cannot change for an existing identity');
     }
+    if (existing && parsed.metadata.get('workstream') !== options.workstream) {
+      throw new Error('Finding workstream cannot change for an existing identity');
+    }
+    const memoryKind = options.retention === 'durable' ? 'distilled' : 'working';
     const path =
-      matches[0] ??
-      join(
-        memoryRoot,
-        'distilled',
-        `${date}-${slug(options.title)}-${experienceDigest.slice(0, 16)}.md`,
-      );
+      existing ??
+      join(memoryRoot, memoryKind, `${date}-${slug(options.title)}-${digest.slice(0, 16)}.md`);
     assertSafePath(memoryRoot, path);
-    const existing = existsSync(path) ? readMemoryDocument(path) : '';
-    const parsed = parseFrontmatterDocument(existing);
     const created = String(parsed.metadata.get('created') || date);
     const evidence = [
       ...new Set([
-        ...existingEvidence(parsed.body),
+        ...listSection(parsed.body, '证据'),
         ...options.evidence.map((item) => item.trim()),
       ]),
     ];
@@ -182,9 +210,9 @@ export function captureExperience(
       runtime,
       basename(dirname(memoryRoot)),
       { ...options, conclusion },
-      experienceDigest,
+      digest,
       created,
-      existing ? date : created,
+      existingDocument ? date : created,
       evidence,
       sourceRefs,
     );
@@ -193,14 +221,14 @@ export function captureExperience(
     const currentCore = readMemoryDocument(corePath);
     const core = upsertCoreReference(
       currentCore,
-      'Distilled Memory',
+      options.retention === 'durable' ? 'Distilled Memory' : 'Active Work',
       `- ${escapeCoreLabel(options.title.trim())}；${reference}`,
       reference,
       date,
     );
-    const action = !existing
+    const action = !existingDocument
       ? 'created'
-      : existing === candidate && currentCore === core
+      : existingDocument === candidate && currentCore === core
         ? 'unchanged'
         : 'updated';
     if (action === 'unchanged') validateUnchanged(memoryRoot, io, { rootKind: 'project' });
@@ -208,14 +236,14 @@ export function captureExperience(
       writeValidated(
         memoryRoot,
         [
-          ...(existing === candidate ? [] : [{ path, content: candidate }]),
+          ...(existingDocument === candidate ? [] : [{ path, content: candidate }]),
           ...(currentCore === core ? [] : [{ path: corePath, content: core }]),
         ],
         io,
         { rootKind: 'project' },
       );
     }
-    return { version: 1, action, kind: 'distilled', path, reference } as const;
+    return { version: 1, action, kind: memoryKind, path, reference } as const;
   });
   return output(result, Boolean(options.json), io);
 }

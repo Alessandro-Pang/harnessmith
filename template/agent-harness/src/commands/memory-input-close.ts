@@ -4,6 +4,7 @@ import { removeCoreReference } from '../lib/memory-core.js';
 import { singleLine } from '../lib/memory-input-policy.js';
 import { memoryDocumentPath, memoryReference, readMemoryDocument } from '../lib/memory-path.js';
 import {
+  type MemoryWriteCandidate,
   type MemoryWriteResult,
   output,
   validateUnchanged,
@@ -56,7 +57,7 @@ export function closeInput(
   }
   const evidenceRef = singleLine(options.evidenceRef, 'Input evidence reference');
   assertNoHighConfidenceSecret([project, input, options.reason, evidenceRef], 'Memory input close');
-  const result = withProjectMemoryTransaction<MemoryWriteResult>(
+  const result = withProjectMemoryTransaction<MemoryWriteCandidate>(
     runtime,
     project,
     ({ memoryRoot }) => {

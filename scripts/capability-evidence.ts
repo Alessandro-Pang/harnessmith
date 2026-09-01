@@ -21,6 +21,10 @@ const CAPABILITY_STATES = ['implemented', 'delegated', 'unsupported'] as const;
 const CANONICAL_POSITIONING =
   'cross-host Personal Harness distribution and work-state control plane';
 
+export function isExecutableVerificationPath(path: string): boolean {
+  return /(?:^|\/)__tests__\/.+\.[cm]?[jt]s$|\.(?:test|spec)\.[cm]?[jt]s$/u.test(path);
+}
+
 function evidencePaths(value: unknown): string[] {
   return Array.isArray(value)
     ? value.filter((path): path is string => typeof path === 'string' && path.length > 0)
@@ -49,6 +53,10 @@ function claimEvidenceIssues(root: string, claim: CapabilityClaim, index: number
       issues.push(`implemented claim ${id} has no implementation evidence`);
     if (groups[1][1].length === 0)
       issues.push(`implemented claim ${id} has no verification evidence`);
+    for (const path of groups[1][1]) {
+      if (!isExecutableVerificationPath(path))
+        issues.push(`implemented claim ${id} verification evidence is not executable: ${path}`);
+    }
   } else if (groups[2][1].length === 0) {
     issues.push(`claim ${id} has no boundary evidence`);
   }
@@ -82,6 +90,12 @@ export function capabilityEvidenceIssues(root: string, evidence: unknown): strin
   for (const status of CAPABILITY_STATES) {
     if (!claims.some((claim) => claim.status === status))
       issues.push(`capability evidence is missing status: ${status}`);
+  }
+  const seenIds = new Set<string>();
+  for (const claim of claims) {
+    if (typeof claim.id !== 'string' || claim.id.length === 0) continue;
+    if (seenIds.has(claim.id)) issues.push(`capability claim id is duplicated: ${claim.id}`);
+    else seenIds.add(claim.id);
   }
   for (const [index, claim] of claims.entries()) {
     issues.push(...claimEvidenceIssues(root, claim, index));

@@ -51,7 +51,7 @@ Handoff 的 `reason` 取值为 `phase`、`compaction`、`multi-task`、`manual`�
 跳过当前阶段 checkpoint。每个阶段完成、已验证且仍有后续时，最终答复前若已有 active task ledger，
 先写 task checkpoint；没有 ledger 时不得仅为 handoff 临时初始化 task，直接以 `reason: phase` 用
 `memory handoff` 更新并校验可恢复快照，不得留到下一条用户消息。同一 open thread
-完成第二个独立任务并验证后，最终答复前以 `reason: multi-task` 累计写入，后续任务原位更新；发现上下文接近
+完成第二个独立已验证任务后，最终答复前以 `reason: multi-task` 累计写入，后续任务原位更新；发现上下文接近
 宿主限制或收到压缩信号时，压缩前必须以 `reason: compaction` 完成 handoff。reason 优先级为
 `compaction > multi-task > phase`；仅预判压缩时，快照相同或只有措辞变化不写。
 

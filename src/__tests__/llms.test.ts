@@ -365,7 +365,9 @@ test('read-only requests allow only narrow local Autopilot and qualified reposit
     'utf8',
   );
 
-  assert.match(operatingModel, /只读任务不得修改项目源码、配置或正式文档/);
+  assert.match(operatingModel, /任务是否只读.*不决定.*Memory 资格/s);
+  assert.match(operatingModel, /用户任务对象.*Harness sidecar/s);
+  assert.match(operatingModel, /没有匹配.*typed.*proposal.*不得.*直接.*Markdown/s);
   assert.match(operatingModel, /明确用户画像信号.*自动 reconcile/s);
   assert.match(operatingModel, /跨仓分析.*personal `repository-map\.yaml`.*默认维护/s);
   assert.match(projectMemory, /未初始化的只读项目.*不自动创建/);
