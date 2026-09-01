@@ -139,11 +139,17 @@ export function assertNonOverlappingAdapters(adapters: Adapter[]): void {
   }
 }
 
-function outputState(adapter: Adapter, path: string, record: InstallRecord | null): OutputAction {
-  if (!existsSync(path)) return 'create';
+function outputState(
+  adapter: Adapter,
+  path: string,
+  record: InstallRecord | null,
+): { action: OutputAction; state: InstallPlan['outputs'][number]['state'] } {
+  if (!existsSync(path)) return { action: 'create', state: 'missing' };
   const managed = record?.outputs?.find((item) => item.path === path);
-  if (managed && managed.checksum === digestManagedOutput(adapter, path)) return 'replace-managed';
-  return 'conflict';
+  if (managed && managed.checksum === digestManagedOutput(adapter, path)) {
+    return { action: 'replace-managed', state: 'managed' };
+  }
+  return { action: 'conflict', state: managed ? 'modified' : 'unmanaged' };
 }
 
 export function describeInstall(adapter: Adapter): InstallPlan {
@@ -158,7 +164,7 @@ export function describeInstall(adapter: Adapter): InstallPlan {
     initializeGlobalMemory: true,
     outputs: plannedOutputs(adapter).map((path) => ({
       path,
-      action: outputState(adapter, path, record),
+      ...outputState(adapter, path, record),
     })),
   };
 }

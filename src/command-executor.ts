@@ -6,6 +6,7 @@ import { restoreAll, statusAll, uninstallAll } from './lifecycle.js';
 import { describeLifecycle } from './lifecycle-plan.js';
 import type { HarnessmithCommand } from './program.js';
 import { assertNonOverlappingAdapters, describeInstall } from './records.js';
+import { executeSetup } from './setup-command.js';
 import type { Adapter, CliOptions, Io, LifecycleCommand, LifecyclePlan } from './types.js';
 import { HarnessmithError } from './types.js';
 import {
@@ -89,7 +90,7 @@ function previewLifecycle(
 }
 
 function executeLifecycle(
-  command: Exclude<HarnessmithCommand, 'install' | 'capabilities'>,
+  command: Exclude<HarnessmithCommand, 'setup' | 'install' | 'capabilities'>,
   adapters: Adapter[],
   options: CliOptions,
   context: ExecuteContext,
@@ -206,6 +207,7 @@ export async function executeCommand(
   if (interactive) startInteractive(context.output);
   if (command === 'capabilities') return executeCapabilities(options, context);
   const adapters = await resolveAdapters(options, context);
+  if (command === 'setup') return executeSetup(adapters, options, context, interactive);
   return command === 'install'
     ? executeInstall(adapters, options, context, interactive)
     : executeLifecycle(command, adapters, options, context, interactive);

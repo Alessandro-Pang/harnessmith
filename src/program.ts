@@ -5,7 +5,13 @@ import { Command, Option } from 'commander';
 import { collectAgents } from './agents.js';
 import type { CliOptions } from './types.js';
 
-export type HarnessmithCommand = 'install' | 'status' | 'restore' | 'uninstall' | 'capabilities';
+export type HarnessmithCommand =
+  | 'setup'
+  | 'install'
+  | 'status'
+  | 'restore'
+  | 'uninstall'
+  | 'capabilities';
 export type CommandExecutor = (
   command: HarnessmithCommand,
   options: CliOptions,
@@ -52,6 +58,11 @@ export function createProgram(
     });
 
   program.action(() => execute('install', program.opts<CliOptions>()));
+
+  const setup = program
+    .command('setup')
+    .description('preview, confirm, install, and verify a first Harness');
+  setup.action(() => execute('setup', setup.optsWithGlobals<CliOptions>()));
 
   const install = program.command('install').description('install or upgrade the harness');
   install.action(() => execute('install', install.optsWithGlobals<CliOptions>()));

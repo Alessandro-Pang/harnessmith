@@ -10,6 +10,7 @@ owner: maintainers
 
 | 命令 | 作用 | 是否写入 |
 | --- | --- | --- |
+| `setup` | 预览、确认、安装并验证首个 Harness | dry-run 否；确认后是 |
 | `harnessmith` / `install` | 安装或升级 Harness | 是 |
 | `status` | 检查安装所有权与完整性 | 否 |
 | `restore` | 恢复上一安装层 | 是 |
@@ -33,11 +34,33 @@ owner: maintainers
 `--yes` 只关闭交互，并在未指定宿主时选择 Codex；它不会自动接受文件冲突。`--force` 会接管 unmanaged 或已修改文件，
 使用前必须先审阅 dry-run/status 和备份目标。
 
+## 首次配置 `setup`
+
+`setup` 将 Host 选择、目标根、Adapter 能力边界、文件状态、预期变更、不变项和恢复命令组织成一份共享计划。
+`--dry-run`、交互确认和 `--json` 使用相同的计划结构；非交互实际写入必须显式提供 `--yes`。
+
+```bash
+npx harnessmith setup --agent codex --dry-run --json
+npx harnessmith setup --agent codex
+npx harnessmith setup --agent cursor --project /path/to/project --yes --json
+```
+
+计划将目标区分为 `missing`、`managed`、`unmanaged` 和 `modified`，并明确 `unsupported` 与 `host-dependent` 边界。
+确认不会绕过安全策略：`unmanaged` / `modified` 默认拒绝，只有审阅所有权和备份行为后才能显式使用 `--force`。
+安装事务失败会尝试回滚并给出 dry-run、status、restore 恢复顺序。
+
+成功报告中的 `installed-and-healthy` 只表示安装所有权与内嵌 Runtime 的确定性检查通过；不代表真实 Host 中的模型行为、
+工具权限、认证或运行时事件已经通过。
+
 ## 示例
 
 ```bash
 # 交互式安装
 npx harnessmith
+
+# 首次配置引导
+npx harnessmith setup --agent codex --dry-run
+npx harnessmith setup --agent codex
 
 # 多宿主安装前预览
 npx harnessmith --dry-run --agent codex,opencode,kimi-code
