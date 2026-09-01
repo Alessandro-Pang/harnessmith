@@ -133,6 +133,15 @@ Memory maintenance 遵循非权威边界：`migrate` 默认只输出 proposal，
 仍被 active index 引用的记忆，`promote` 只输出 proposal。`check --indexed` 要求 active/blocked
 文档可从 index 到达，`maintain` 只读报告候选。Runtime 不得自动写项目正式文档或删除记忆。
 
+`memory repair` 采用 diagnose-only → content-bound proposal → explicit apply → independent verifier。partial
+initialization、core index 压缩、derived search reindex、exact orphan marker 清理和 interrupted transaction restore
+是不同 action，不能由一个通用 clean 混合执行。proposal 声明 authority、精确路径、backup/recovery、前置条件、风险与
+verifier；apply 必须同时提供精确 `--proposal` 与 `--yes`，并复用 runtime identity、SafePath、memory/search lock、
+atomic write 与 rollback。core mutation 先写 owner/proposal/before-after digest 绑定的 journal 和 byte backup；只对完整匹配
+的自有 marker 生成清理或恢复 proposal。unknown files、ownerless backup、身份不完整 marker、failed sidecar 与无法机械归类的
+validation failure 保留并报告 `inconclusive`。active locks 直接拒绝；stale locks 只由同一 typed lock acquisition 按锁契约回收，
+不存在 glob 或宽泛 lock 删除入口。
+
 `memory promote` 输出 version 2 typed proposal，并由
 `schemas/memory-promotion.schema.json` 约束。调用方必须声明 ADR、docs、tests、schema、lint 或 CI
 目标类型、目标 owner、理由与精确 verifier；报告同时给出 source freshness、目标 dirty state、证据、授权缺口

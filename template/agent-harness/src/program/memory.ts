@@ -8,6 +8,7 @@ import {
   type MemoryPromotionOptions,
   memoryPromotionProposal,
 } from '../commands/memory-promotion.js';
+import { memoryRepair } from '../commands/memory-repair.js';
 import { workflowRelations } from '../commands/workflow-relations.js';
 import type { Io, Runtime } from '../types.js';
 import { registerMemoryAutopilotCommands } from './memory-autopilot.js';
@@ -79,6 +80,17 @@ export function registerMemoryCommands(
     .action(
       run((scope: string = '.', options: { json?: boolean }) =>
         memoryMaintenance(runtime, scope, options, io),
+      ),
+    );
+  memory
+    .command('repair [scope]')
+    .description('diagnose bounded repairs or apply one exact proposal')
+    .option('--proposal <id>', 'apply the exact proposal from a prior diagnosis')
+    .option('--yes', 'confirm the selected repair proposal')
+    .option('--json', 'write the repair plan or result as JSON')
+    .action(
+      run((scope: string = '.', options: { proposal?: string; yes?: boolean; json?: boolean }) =>
+        memoryRepair(runtime, scope, options, io),
       ),
     );
   registerMemoryCaptureEligibilityCommand(memory, io, run);
