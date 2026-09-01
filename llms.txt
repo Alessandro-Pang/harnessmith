@@ -138,8 +138,15 @@ unfinished work, or redacted evidence:
 ```bash
 node <harness-path>/bin/harness.mjs init project <absolute-project-path>
 node <harness-path>/bin/harness.mjs memory check <absolute-project-path>
+node <harness-path>/bin/harness.mjs memory repair <absolute-project-path> --json
 node <harness-path>/bin/harness.mjs validate --project <absolute-project-path>
 ```
+
+`memory repair` is diagnose-only by default. Apply exactly one content-bound repair with both
+`--proposal <sha256:...> --yes`; never substitute a generic clean command. Unknown files, ownerless markers or
+backups, failed sidecars without a typed transaction, and unclassified validation failures remain unchanged and
+`inconclusive`. A repair must report exact paths, authority, backup/recovery, risk, prerequisites, and an independent
+verifier. Active locks fail closed; stale locks are handled only by the typed lock acquisition contract.
 
 If project-memory need is uncertain, ask the user. Do not initialize `.agent-docs` merely because the command
 exists. Initialization creates `.agent-docs/.gitignore` and `.agent-docs/.ignore` with `*`; it does not modify

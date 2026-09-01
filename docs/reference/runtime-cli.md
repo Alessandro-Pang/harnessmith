@@ -91,6 +91,7 @@ node <harness-path>/bin/harness.mjs memory search project "npm cache" --json
 node <harness-path>/bin/harness.mjs memory check project --indexed --json
 node <harness-path>/bin/harness.mjs memory relationships /absolute/project/path --json
 node <harness-path>/bin/harness.mjs memory maintain project --json
+node <harness-path>/bin/harness.mjs memory repair project --json
 ```
 
 `memory relationships` 是项目级只读报告：统一列出 Task、默认 phase/workstream、Memory owner、session 与
@@ -100,6 +101,13 @@ lifecycle role，并报告 orphan task reference 和 cross-workstream binding。
 `memory maintain` 只报告未索引、过期、重复、可归档和替代关系异常，不会自行删除或改写。旧 metadata 通过
 `memory migrate` 先生成 proposal；只有提案状态为 ready 且显式传入 `--apply` 才写入。`supersede` 建立替代关系，
 `archive` 只处理已关闭内容，`promote` 只输出提升到权威事实层的提案。
+
+`memory repair` 默认是零写入诊断，只为 partial initialization、可机械压缩的 core index、损坏或缺失的派生检索索引，
+以及具备完整 owner、proposal、目标与内容 digest 的中断事务分别生成独立 proposal。实际修复必须同时传入上次诊断得到的
+`--proposal <sha256:...> --yes`；任一目标变化都会使 proposal 失效。每项 proposal 都列出 authority、精确影响路径、
+backup/recovery path、前置条件、风险和 verifier。它没有通用 `clean`：unknown files、无 owner identity 的 marker/backup、
+普通 validation failure 与 failed sidecar 只报告 `inconclusive`，不会删除或猜测修复。active locks 会拒绝操作；只有 typed
+lock 获取同一把锁时，底层锁实现才按其 owner/age 契约处理 stale locks，不提供宽泛 lock 清理命令。
 
 ### Memory Autopilot 的窄写入口
 

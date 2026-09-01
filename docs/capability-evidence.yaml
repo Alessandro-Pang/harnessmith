@@ -305,6 +305,19 @@ claims:
       - evals/__tests__/registry-verification.test.ts
       - src/__tests__/github-templates.test.ts
 
+  - id: bounded-memory-repair
+    status: implemented
+    owner: embedded Harness Memory lifecycle
+    claim: Diagnose repair candidates without writing, apply one content-bound proposal with exact authority and paths, and retain or roll back unverifiable recovery state.
+    implementation:
+      - template/agent-harness/src/commands/memory-repair.ts
+      - template/agent-harness/src/lib/memory-repair-plan.ts
+      - template/agent-harness/src/lib/memory-repair-apply.ts
+      - template/agent-harness/src/lib/memory-repair-journal.ts
+      - template/agent-harness/src/lib/memory-repair-transaction.ts
+    verification:
+      - template/agent-harness/src/__tests__/memory-repair.test.ts
+
   - id: model-loop-tools-and-permissions
     status: delegated
     owner: host Agent Runtime
