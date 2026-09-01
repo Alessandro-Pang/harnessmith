@@ -11,6 +11,21 @@ Harnesssmith 不把“命令退出码为 0”“Agent 最终说完成了”和�
 
 ## 两条互补验证链
 
+### Prompt 与 route 的确定性基准
+
+`pnpm run bench:prompt-route` 使用 `evals/prompt-route-corpus.v1.json` 的同一批输入运行 version 1 benchmark。
+报告绑定 corpus digest、仅含 id/query 的 input digest、规则 fingerprint 和当前 router candidate digest；使用
+`--baseline-report <path>` 比较时要求 corpus 与 input digest 完全相同，否则拒绝生成 delta。
+
+确定性指标包括 action routing Top-1 accuracy、topic recall、ambiguity precision/recall/rate、forbidden action
+count 与整例 rule-adherence rate。阈值保存在 versioned corpus 中；每个 case 保留 expected/actual、failure code
+和 `false-positive-guard` / `false-negative-guard` 分类，不能只保留聚合分数。deterministic router 不读取项目事实，
+也没有模型 token 或 Host tool-call 遥测，因此 fact verification、token cost 和 tool-call cost 必须报告
+`not-measured`，不得估算为 0。mock/evaluator 与 real Host 层没有证据时同样报告 `not-provided`。
+
+benchmark `passed` 只证明当前源码对该 corpus 的确定性契约达标，`sourceOfTruth` 与 `hostProof` 均为 false；它
+不能替代下述真实 Host Eval，也不能证明 Agent 实际遵从 Prompt、回查事实或控制 token/tool 成本。
+
 ### 确定性仓库验证
 
 单元测试、类型检查、lint、schema、`preflight`、覆盖率门禁和 `npm pack --dry-run` 在受控仓库环境中运行。

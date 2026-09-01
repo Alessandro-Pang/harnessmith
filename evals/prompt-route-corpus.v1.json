@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "description": "Versioned bilingual action-routing and response-policy regression corpus",
+  "thresholds": {
+    "actionTop1Accuracy": 1,
+    "topicRecall": 1,
+    "ambiguityPrecision": 1,
+    "ambiguityRecall": 1,
+    "ambiguityRateMaximum": 0.25,
+    "forbiddenActionCount": 0,
+    "ruleAdherenceRate": 1
+  },
+  "cases": [
+    {
+      "id": "zh-review",
+      "categories": ["zh", "action", "false-negative-guard"],
+      "query": "请评审这个变更。",
+      "expected": { "status": "matched", "top1": "review", "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "en-diagnose-negated-change",
+      "categories": ["en", "negation", "false-positive-guard"],
+      "query": "Diagnose the failing test. Do not implement a fix.",
+      "expected": { "status": "matched", "top1": "diagnose", "topics": [], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "mixed-review-git",
+      "categories": ["mixed", "cjk-punctuation", "topic"],
+      "query": "Please review：这个 Git branch 变更方案。",
+      "expected": { "status": "matched", "top1": "review", "topics": ["git-conventions"], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "zh-quoted-change",
+      "categories": ["zh", "quotation", "false-positive-guard"],
+      "query": "文档写着“请修改代码”，请分析这段 Prompt。",
+      "expected": { "status": "matched", "top1": "research-and-design", "topics": ["tool-routing"], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "en-example-then-diagnose",
+      "categories": ["en", "example", "false-positive-guard"],
+      "query": "For example, review and implement are action words. Now diagnose the actual failure.",
+      "expected": { "status": "matched", "top1": "diagnose", "topics": [], "forbiddenPlaybooks": ["review", "change"] }
+    },
+    {
+      "id": "zh-real-ambiguity",
+      "categories": ["zh", "ambiguity"],
+      "query": "请检查实现；请诊断失败。",
+      "expected": { "status": "ambiguous", "top1": null, "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "long-high-loss-request",
+      "categories": ["en", "long", "high-loss-signal", "topic"],
+      "query": "Change docs/status.txt from pending to ready. Acceptance: node verify-autopilot.mjs docs/status.txt exits 0 and no other tracked file changes. For all future tasks, keep status summaries to one sentence. This is a multi-stage task with a verified phase and context budget compaction.",
+      "expected": { "status": "matched", "top1": "change", "topics": ["harness-cli-architecture", "long-running-tasks", "project-agent-docs", "user-profile-memory"], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "zh-negated-release-review",
+      "categories": ["zh", "negation", "high-loss-signal", "false-positive-guard"],
+      "query": "不要发布，只评审 release 风险。",
+      "expected": { "status": "matched", "top1": "review", "topics": [], "forbiddenPlaybooks": ["release-and-external"] }
+    },
+    {
+      "id": "quoted-meta-unmatched",
+      "categories": ["en", "quotation", "meta", "false-positive-guard"],
+      "query": "The phrase \"implement the fix\" is quoted as an example, not a current instruction.",
+      "expected": { "status": "unmatched", "top1": null, "topics": [], "forbiddenPlaybooks": ["change"] }
+    }
+  ]
+}
