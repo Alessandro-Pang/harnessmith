@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-harness:schema:workflow-relations:v1",
+  "title": "Workflow relationship report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "schema", "mode", "sourceOfTruth", "tasks", "memory", "conflicts", "summary"],
+  "properties": {
+    "version": { "const": 1 },
+    "schema": { "const": "urn:agent-harness:schema:workflow-relations:v1" },
+    "mode": { "const": "report-only" },
+    "sourceOfTruth": { "const": false },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["task", "workstream", "phase", "status"],
+        "properties": {
+          "task": { "type": "string", "minLength": 1 },
+          "workstream": { "type": "string", "minLength": 1 },
+          "phase": { "type": "string", "minLength": 1 },
+          "status": { "enum": ["pending", "in_progress", "blocked", "complete", "superseded"] }
+        }
+      }
+    },
+    "memory": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["reference", "lifecycleRole", "owners", "taskRefs", "workstream", "session"],
+        "properties": {
+          "reference": { "type": "string", "pattern": "^memory:" },
+          "lifecycleRole": { "enum": ["task-progress", "workstream-state", "durable-knowledge", "recovery-state", "other"] },
+          "owners": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+          "taskRefs": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+          "workstream": { "type": ["string", "null"] },
+          "session": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "conflicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "reference", "evidence", "risk"],
+        "properties": {
+          "code": { "enum": ["orphan-task-reference", "cross-workstream-binding", "session-task-conflict"] },
+          "reference": { "type": "string", "pattern": "^memory:" },
+          "evidence": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
+          "risk": { "enum": ["medium", "high"] }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tasks", "memory", "conflicts"],
+      "properties": {
+        "tasks": { "type": "integer", "minimum": 0 },
+        "memory": { "type": "integer", "minimum": 0 },
+        "conflicts": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

@@ -7,6 +7,7 @@ import { documentPurposeMetadata } from './memory-document-purpose.js';
 import type { HandoffOptions } from './memory-handoff.js';
 import type { HandoffIdentity } from './memory-handoff-identity.js';
 import { canonicalHandoffSectionTitles } from './memory-handoff-options.js';
+import { assertHandoffTaskTransition } from './workflow-relations.js';
 
 const canonicalHeadingTitles = new Set<string>(canonicalHandoffSectionTitles);
 const recognizedHeadingTitles = new Set<string>([
@@ -108,11 +109,13 @@ export function reconcileHandoffOptions(options: HandoffOptions, existing: strin
   if (existing && status !== 'active' && status !== 'blocked') {
     throw new Error(`Cannot update ${String(status || 'unknown')} handoff: ${options.session}`);
   }
+  const previousTaskId =
+    typeof metadata.get('task-id') === 'string' ? String(metadata.get('task-id')) : undefined;
+  const taskId = options.taskId ?? previousTaskId;
+  assertHandoffTaskTransition(previousTaskId, taskId, options.reason);
   return {
     ...options,
-    taskId:
-      options.taskId ??
-      (typeof metadata.get('task-id') === 'string' ? String(metadata.get('task-id')) : undefined),
+    taskId,
     status:
       options.status ??
       (existing && (status === 'active' || status === 'blocked') ? status : 'active'),

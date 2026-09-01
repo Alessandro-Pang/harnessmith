@@ -74,6 +74,22 @@ test('handoff reconciliation rejects conflicting clear and replacement values', 
   );
 });
 
+test('changing a task-bound handoff requires the multi-task checkpoint reason', () => {
+  const existing = legacyGenerationOneDocument('# Current goal\n\nResume.').replace(
+    'session-id: document-boundary',
+    'session-id: document-boundary\ntask-id: first-task',
+  );
+  assert.throws(
+    () => reconcileHandoffOptions({ ...base, taskId: 'second-task', reason: 'phase' }, existing),
+    /multi-task.*task transition/i,
+  );
+  assert.equal(
+    reconcileHandoffOptions({ ...base, taskId: 'second-task', reason: 'multi-task' }, existing)
+      .taskId,
+    'second-task',
+  );
+});
+
 test('handoff reconciliation requires explicit clear operations for blank values', () => {
   assert.throws(
     () => reconcileHandoffOptions({ ...base, facts: '  ' }, ''),

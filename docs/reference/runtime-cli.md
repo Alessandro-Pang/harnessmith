@@ -73,8 +73,13 @@ Memory 不是事实数据库。它保存来源、上下文、任务恢复信息�
 node <harness-path>/bin/harness.mjs memory list project --json
 node <harness-path>/bin/harness.mjs memory search project "npm cache" --json
 node <harness-path>/bin/harness.mjs memory check project --indexed --json
+node <harness-path>/bin/harness.mjs memory relationships /absolute/project/path --json
 node <harness-path>/bin/harness.mjs memory maintain project --json
 ```
+
+`memory relationships` 是项目级只读报告：统一列出 Task、默认 phase/workstream、Memory owner、session 与
+lifecycle role，并报告 orphan task reference 和 cross-workstream binding。它不把 Task 完成推断为 workstream
+完成，也不把 Handoff 当作 acceptance evidence 或事实源。
 
 `memory maintain` 只报告未索引、过期、重复、可归档和替代关系异常，不会自行删除或改写。旧 metadata 通过
 `memory migrate` 先生成 proposal；只有提案状态为 ready 且显式传入 `--apply` 才写入。`supersede` 建立替代关系，

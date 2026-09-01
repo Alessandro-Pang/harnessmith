@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
@@ -131,6 +131,39 @@ test('task completion does not close workstream state, while workstream completi
   assert.ok(workstreamComplete.closeCandidates[0].reference.includes('inputs/'));
   assert.doesNotMatch(JSON.stringify(workstreamComplete), /Parallel workstream input/);
   assert.equal(digestPath(memoryRoot), before);
+});
+
+test('workstream completion does not close Memory shared by another task reference', () => {
+  const { project, runtime, taskId } = fixture('shared-owner-task');
+  const created = captureInput(
+    runtime,
+    project,
+    {
+      title: 'Shared workstream constraint',
+      content: 'Keep this while either related task remains active.',
+      source: 'chat',
+      mode: 'verbatim',
+      purpose: 'constraint',
+      retention: 'workstream',
+      workstream: taskId,
+    },
+    capturedIo(),
+  );
+  const content = readFileSync(created.path, 'utf8');
+  writeFileSync(
+    created.path,
+    content.replace(`source-refs: []`, `source-refs: [task:${taskId}, task:parallel-task]`),
+  );
+
+  const report = curateMemory(
+    runtime,
+    project,
+    { task: taskId, workstream: taskId, outcome: 'workstream-complete' },
+    capturedIo(),
+  );
+
+  assert.equal(report.closeCandidates.length, 0);
+  assert.ok(report.skipped.some(({ reason }) => /shared task owner.*parallel-task/i.test(reason)));
 });
 
 test('curation handles expired and superseded candidates but blocks active inbound references', () => {

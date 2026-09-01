@@ -45,6 +45,8 @@ node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs task close --project /absolu
 
 Task ledger 是任务验收状态与当前 `nextAction` 的唯一事实源；handoff 只保存跨上下文恢复快照。
 Handoff 的 `reason` 取值为 `phase`、`compaction`、`multi-task`、`manual`，触发与优先级均由本节定义。
+已有 Handoff 从一个 `task-id` 切换到另一个 `task-id` 时，Runtime 机械要求 `multi-task`；`phase`、
+`compaction` 或 `manual` 不能掩盖独立任务切换。
 
 长任务不等待宿主会话结束事件。当前 workstream 的 plan/backlog 已核验有具体后续阶段即属“仍有后续”；
 陈旧或不相关 backlog 不触发 phase checkpoint。即使该阶段尚未获本轮执行授权，也只是不执行后续，不得
