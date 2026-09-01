@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:harnessmith:host-capability-matrix:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "hosts", "capabilities"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "hosts": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": { "$ref": "#/$defs/host" }
+    },
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": { "$ref": "#/$defs/capability" }
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "maxLength": 128
+    },
+    "text": { "type": "string", "minLength": 1, "maxLength": 2048 },
+    "support": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "reason", "evidence"],
+      "properties": {
+        "state": { "enum": ["executable", "inconclusive", "unsupported"] },
+        "reason": { "$ref": "#/$defs/text" },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^(?:docs|evals|scripts|src|template)/(?!.*/(?:\\.\\.?)(?:/|$))[^\\\\]+$",
+            "maxLength": 512
+          }
+        }
+      }
+    },
+    "host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "state", "reason", "evidence"],
+      "properties": {
+        "id": { "enum": ["codex", "cursor", "claude", "opencode", "kimi"] },
+        "state": { "enum": ["executable", "inconclusive", "unsupported"] },
+        "reason": { "$ref": "#/$defs/text" },
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^(?:docs|evals|scripts|src|template)/(?!.*/(?:\\.\\.?)(?:/|$))[^\\\\]+$",
+            "maxLength": 512
+          }
+        }
+      }
+    },
+    "capability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "description", "scenarioIds"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "description": { "$ref": "#/$defs/text" },
+        "scenarioIds": {
+          "type": "array",
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/id" }
+        },
+        "supportOverrides": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "codex": { "$ref": "#/$defs/support" },
+            "cursor": { "$ref": "#/$defs/support" },
+            "claude": { "$ref": "#/$defs/support" },
+            "opencode": { "$ref": "#/$defs/support" },
+            "kimi": { "$ref": "#/$defs/support" }
+          }
+        }
+      }
+    }
+  }
+}
