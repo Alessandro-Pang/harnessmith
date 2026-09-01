@@ -30,15 +30,19 @@ node <harness-path>/bin/harness.mjs --help
 ## 启动摘要
 
 `bootstrap` 的 version 2 默认输出 `brief`：它仍执行完整的只读 Memory 验证和推荐计算，但只呈现启动决策需要的
-project/Git 状态、Memory state、最多四个 active task、recommended、扫描预算与原因。被有意省略的
-metadata/core/maintenance 和 active task 数量通过 `omitted` 报告，不与“没有数据”混淆。审计或诊断时显式请求完整结构：
+project/Git 状态、Memory state、最多四个 active task、最多八个 recommendations、扫描预算与原因。`recommended`
+保留兼容的引用字符串；`recommendations` 额外提供 `reasonCodes`、`sources`、当前 `status` 与
+`requiresReverification`。推荐按恢复价值稳定排序：blocked/active core 优先于维护候选，过期和已关闭输入不能挤占当前工作。
+被有意省略的 metadata/core/maintenance、active task 和 recommendation 数量通过 `omitted` 报告，不与“没有数据”
+混淆。审计或诊断时显式请求完整结构（最多 32 个 recommendations）：
 
 ```bash
 node <harness-path>/bin/harness.mjs bootstrap --project /path/to/project --detail brief --json
 node <harness-path>/bin/harness.mjs bootstrap --project /path/to/project --detail full --json
 ```
 
-`truncated` 只表示底层有界扫描截断；detail 模式的主动省略只进入 `omitted`。两种模式都不执行修复、归档、迁移或索引写入。
+`truncated` 只表示底层有界扫描或推荐结果截断；detail 模式的主动省略进入 `omitted`。两种模式都不执行修复、归档、
+迁移或索引写入。
 
 ## 文档路由与检索
 

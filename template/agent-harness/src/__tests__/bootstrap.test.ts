@@ -187,6 +187,7 @@ test('bootstrap defaults to a compact brief and preserves full audit detail on r
   assert.deepEqual(brief.omitted, {
     sections: ['memory.metadata', 'memory.core', 'memory.maintenance'],
     activeTasks: 2,
+    recommendations: 0,
   });
 
   assert.equal(full.detail, 'full');
@@ -194,7 +195,7 @@ test('bootstrap defaults to a compact brief and preserves full audit detail on r
   assert.ok(full.memory.core);
   assert.ok(full.memory.maintenance);
   assert.equal(full.tasks.active.length, 6);
-  assert.deepEqual(full.omitted, { sections: [], activeTasks: 0 });
+  assert.deepEqual(full.omitted, { sections: [], activeTasks: 0, recommendations: 0 });
   assert.ok(JSON.stringify(brief).length < JSON.stringify(full).length / 2);
 });
 

@@ -1,7 +1,9 @@
 import {
   type BootstrapMemoryRead,
   type BootstrapMetadata,
+  type BootstrapRecommendation,
   type BootstrapState,
+  bootstrapBriefRecommendationLimit,
   bootstrapMetadataLimit,
   bootstrapRecommendationLimit,
   readBootstrapMemory,
@@ -31,10 +33,12 @@ interface BootstrapReportBase {
     maxTasks: number;
     maxBriefTasks: number;
     maxRecommendations: number;
+    maxBriefRecommendations: number;
     discoveredMetadata: number;
     discoveredTasks: number;
+    discoveredRecommendations: number;
   };
-  omitted: { sections: string[]; activeTasks: number };
+  omitted: { sections: string[]; activeTasks: number; recommendations: number };
   truncated: boolean;
   reasons: string[];
 }
@@ -43,6 +47,7 @@ interface BootstrapMemorySummary {
   state: BootstrapState;
   root: string;
   recommended: string[];
+  recommendations: BootstrapRecommendation[];
 }
 
 export interface BootstrapBriefReport extends BootstrapReportBase {
@@ -141,13 +146,21 @@ export function bootstrapProject(
   const reasons: string[] = [];
   const memory = readBootstrapMemory(runtime, snapshot, reasons);
   const tasks = readBootstrapTasks(snapshot, reasons);
-  const recommended = recommendedBootstrapReads(snapshot.memory.root, memory, reasons);
+  const recommendationLimit =
+    detail === 'brief' ? bootstrapBriefRecommendationLimit : bootstrapRecommendationLimit;
+  const recommendationRead = recommendedBootstrapReads(
+    snapshot.memory.root,
+    memory,
+    reasons,
+    recommendationLimit,
+  );
   const activeTaskLimit = detail === 'brief' ? bootstrapBriefTaskLimit : bootstrapTaskLimit;
   const activeTasks = tasks.active.slice(0, activeTaskLimit);
   const memorySummary: BootstrapMemorySummary = {
     state: memory.state,
     root: snapshot.memory.root,
-    recommended,
+    recommended: recommendationRead.recommendations.map(({ reference }) => reference),
+    recommendations: recommendationRead.recommendations,
   };
   const common = {
     version: 2 as const,
@@ -158,12 +171,18 @@ export function bootstrapProject(
       maxTasks: bootstrapTaskLimit,
       maxBriefTasks: bootstrapBriefTaskLimit,
       maxRecommendations: bootstrapRecommendationLimit,
+      maxBriefRecommendations: bootstrapBriefRecommendationLimit,
       discoveredMetadata: memory.discoveredMetadata,
       discoveredTasks: tasks.discovered,
+      discoveredRecommendations: recommendationRead.discovered,
     },
     omitted: {
       sections: detail === 'brief' ? ['memory.metadata', 'memory.core', 'memory.maintenance'] : [],
       activeTasks: Math.max(0, tasks.discovered - activeTasks.length),
+      recommendations: Math.max(
+        0,
+        recommendationRead.discovered - recommendationRead.recommendations.length,
+      ),
     },
     truncated: reasons.some((reason) => /truncated/i.test(reason)),
     reasons,

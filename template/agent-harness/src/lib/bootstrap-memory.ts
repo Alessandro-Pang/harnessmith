@@ -9,11 +9,17 @@ import {
   type MemoryFactClassification,
 } from './memory-fact-semantics.js';
 import { type MemoryMaintenanceReport, memoryMaintenanceReport } from './memory-maintenance.js';
-import { markdownFiles, memoryReference, readMemoryDocument } from './memory-path.js';
+import { markdownFiles, readMemoryDocument } from './memory-path.js';
 import { validateMemoryRoot } from './memory-validation.js';
 
+export {
+  type BootstrapRecommendation,
+  bootstrapBriefRecommendationLimit,
+  bootstrapRecommendationLimit,
+  recommendedBootstrapReads,
+} from './bootstrap-recommendations.js';
+
 export const bootstrapMetadataLimit = 64;
-export const bootstrapRecommendationLimit = 32;
 
 export type BootstrapState = 'uninitialized' | 'partial' | 'valid' | 'invalid' | 'inconclusive';
 
@@ -147,44 +153,4 @@ export function readBootstrapMemory(
     maintenance,
     discoveredMetadata: metadataResult.discovered,
   };
-}
-
-function candidateReferences(maintenance: MemoryMaintenanceReport | null): string[] {
-  if (!maintenance) return [];
-  const paths = [
-    ...maintenance.unindexed,
-    ...maintenance.expiredWorking,
-    ...maintenance.closed,
-    ...maintenance.legacyInputs,
-    ...maintenance.genericActionInputs,
-    ...maintenance.workstreamInputs,
-  ];
-  return paths.map((path) => `memory:${path.replace(/\.md$/, '')}`);
-}
-
-export function recommendedBootstrapReads(
-  memoryRoot: string,
-  memory: BootstrapMemoryRead,
-  reasons: string[],
-): string[] {
-  const statusByReference = new Map(
-    memory.metadata.map((document) => [
-      `memory:${memoryReference(memoryRoot, join(memoryRoot, document.path))}`,
-      document.status,
-    ]),
-  );
-  const recommended = [
-    ...new Set([
-      ...(memory.core?.references.filter((reference) =>
-        ['active', 'blocked'].includes(statusByReference.get(reference) || ''),
-      ) ?? []),
-      ...candidateReferences(memory.maintenance),
-    ]),
-  ];
-  if (recommended.length > bootstrapRecommendationLimit) {
-    reasons.push(
-      `Recommended reads truncated: ${recommended.length} discovered, ${bootstrapRecommendationLimit} returned`,
-    );
-  }
-  return recommended.slice(0, bootstrapRecommendationLimit);
 }

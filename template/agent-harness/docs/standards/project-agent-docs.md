@@ -68,11 +68,14 @@ canonical profile 仍由 Host 在新 task/thread 的首个工具调用中单独�
 `<harness> bootstrap --project <absolute-project-root> --detail brief --json`
 
 brief 仍验证 Memory 并计算 metadata、core、maintenance 与推荐，但只返回 project/Git、Memory state、最多四个
-active task、recommended、扫描预算、原因和 `omitted`，不把省略 section 伪装成不存在。显式 `--detail full` 才返回
-完整 metadata、core、maintenance 和最多 32 个 task，供审计或诊断。两种模式都只读，不修复、不归档、不迁移，也不写入
-索引；未初始化、partial、invalid、inconclusive 和 truncated 必须保持可区分，未命中不能据此写成不存在。
+active task、最多八个 recommendations、扫描预算、原因和 `omitted`，不把省略 section 伪装成不存在。`recommended`
+保留引用字符串兼容层，`recommendations` 提供 reason codes、来源、状态与是否需要重新核验。显式 `--detail full` 才返回
+完整 metadata、core、maintenance、最多 32 个 task 和最多 32 个 recommendations，供审计或诊断。两种模式都只读，
+不修复、不归档、不迁移，也不写入索引；未初始化、partial、invalid、inconclusive 和 truncated 必须保持可区分，未命中
+不能据此写成不存在。
 
-只按 recommended 加载与当前任务相关的 active/blocked 或维护候选正文，不递归读取 archive。Memory 内容仍是
+只按 recommendations 的稳定顺序加载与当前任务相关的正文：blocked/active core 优先，维护候选次之，过期和已关闭输入
+不能挤占当前工作；同一引用合并所有原因和来源。不得仅因被推荐就读取与当前任务无关的正文，也不递归读取 archive。Memory 内容仍是
 非权威线索；随后必须回到代码、测试、契约或正式文档等事实源核对。需要修复索引、supersede 或 archive 时，
 在事实核对和授权完成后再走对应 typed 命令，不能把 bootstrap 当作 mutation 授权。
 
