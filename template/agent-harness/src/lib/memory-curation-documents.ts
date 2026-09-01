@@ -16,6 +16,7 @@ export interface CurationDocument {
   retention?: string;
   workstream?: string;
   session?: string;
+  taskId?: string;
   sourceRefs: string[];
   references: string[];
 }
@@ -49,7 +50,11 @@ export function loadCurationDocuments(memoryRoot: string): CurationDocument[] {
       expires: optionalString(parsed.metadata, 'expires'),
       retention: optionalString(parsed.metadata, 'retention'),
       workstream: optionalString(parsed.metadata, 'workstream'),
-      session: optionalString(parsed.metadata, 'session'),
+      session:
+        optionalString(parsed.metadata, 'session-base') ??
+        optionalString(parsed.metadata, 'session-id') ??
+        optionalString(parsed.metadata, 'session'),
+      taskId: optionalString(parsed.metadata, 'task-id'),
       sourceRefs: Array.isArray(sourceRefs)
         ? sourceRefs.filter((entry): entry is string => typeof entry === 'string')
         : [],

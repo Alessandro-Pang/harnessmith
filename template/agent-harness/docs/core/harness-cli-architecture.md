@@ -139,7 +139,14 @@ supersede candidate，仍须 owner 确认并走 typed lifecycle，不能报告�
 
 `memory curate <project> --task <id>` 是只读的 task/workstream 策展报告。它只输出 proposal 候选并显式区分
 phase、task、workstream 完成与用户取消；不得嵌入 `task close`，也不得代替 `promote`、`close-input`、
-`supersede` 或 `archive` 的 mutation 与门禁。
+`supersede` 或 `archive` 的 mutation 与门禁。具有多个 `task:` owner 的共享文档不得因单个 task/workstream
+结束而进入 close 或 archive candidate。
+
+`memory relationships <project>` 输出 version 1、`report-only` 的关系视图。Task ledger 继续拥有验收状态；
+关系视图只确定性派生默认 workstream 与 current phase，并把 Memory 的 task/workstream/session owner 及
+lifecycle role 归一化。报告检测 orphan task reference 与 cross-workstream binding，但不写回 Task 或 Memory，
+也不把 Handoff `recovery-state` 当作 acceptance evidence。`memory maintain` 与 bootstrap 复用同一关系报告，
+避免各入口分别猜测生命周期。
 
 `memory maintain` 输出 version 2 read-only audit：统一列出 duplicate、stale、contradicted、expired、
 unindexed、broken-reference、cycle、budget、来源缺口及现有 input/purpose review 候选。每项包含稳定

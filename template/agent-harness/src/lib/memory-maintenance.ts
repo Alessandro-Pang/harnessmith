@@ -18,6 +18,11 @@ import {
   isOpaqueMemoryContent,
   metadataReferences,
 } from './memory-validation.js';
+import {
+  buildWorkflowRelationReport,
+  type WorkflowRelationReport,
+  workflowRelationsForProject,
+} from './workflow-relations.js';
 
 export interface MemoryMaintenanceReport {
   version: 2;
@@ -50,6 +55,7 @@ export interface MemoryMaintenanceReport {
   duplicatePurposes: Array<{ purpose: string; paths: string[] }>;
   splitProposals: Array<{ path: string; reasons: string[] }>;
   coreBudget: MemoryCoreBudgetReport;
+  relations: WorkflowRelationReport;
 }
 
 function portablePath(root: string, path: string): string {
@@ -198,6 +204,10 @@ export function memoryMaintenanceReport(root: string, today: string): MemoryMain
       coverage: 0,
       reasonCode: 'maintenance-eligibility-input-unavailable',
     },
+    relations:
+      basename(root) === '.agent-docs'
+        ? workflowRelationsForProject(dirname(root), root)
+        : buildWorkflowRelationReport([], []),
     ...legacy,
   };
 }
