@@ -17,7 +17,8 @@ import { initProject } from '../commands/init.js';
 import { memoryCheck, memoryList, memorySearch } from '../commands/memory.js';
 import { captureHandoff, closeHandoff } from '../commands/memory-autopilot.js';
 import { captureInput } from '../commands/memory-input.js';
-import { archiveMemory, memoryMaintenance } from '../commands/memory-lifecycle.js';
+import { archiveMemory } from '../commands/memory-lifecycle.js';
+import { memoryMaintenance } from '../commands/memory-maintenance.js';
 import {
   reconcileProfile,
   removeProfileEntry,

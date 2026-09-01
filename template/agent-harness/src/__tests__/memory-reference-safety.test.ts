@@ -16,7 +16,8 @@ import { onTestFinished, test } from 'vitest';
 import { initGlobal, initProject } from '../commands/init.js';
 import { memoryCheck, memoryList, memorySearch } from '../commands/memory.js';
 import { captureInput } from '../commands/memory-input.js';
-import { archiveMemory, memoryMaintenance } from '../commands/memory-lifecycle.js';
+import { archiveMemory } from '../commands/memory-lifecycle.js';
+import { memoryMaintenance } from '../commands/memory-maintenance.js';
 import { maximumMemoryDocumentBytes } from '../lib/memory-path.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 

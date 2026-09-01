@@ -1,7 +1,8 @@
 import type { Command } from 'commander';
 import { memoryCheck, memoryList, memorySearch } from '../commands/memory.js';
 import { type CurationOptions, curateMemory } from '../commands/memory-curation.js';
-import { archiveMemory, memoryMaintenance, supersedeMemory } from '../commands/memory-lifecycle.js';
+import { archiveMemory, supersedeMemory } from '../commands/memory-lifecycle.js';
+import { memoryMaintenance } from '../commands/memory-maintenance.js';
 import { memoryMigrate } from '../commands/memory-migration.js';
 import {
   type MemoryPromotionOptions,
@@ -63,7 +64,7 @@ export function registerMemoryCommands(
     );
   memory
     .command('maintain [scope]')
-    .description('report unindexed, expired, and closed memory candidates')
+    .description('report typed Memory maintenance candidates and audit coverage')
     .option('--json', 'write the report as JSON')
     .action(
       run((scope: string = '.', options: { json?: boolean }) =>
