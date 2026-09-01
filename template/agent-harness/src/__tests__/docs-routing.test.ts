@@ -116,6 +116,7 @@ test('CJK punctuation and mixed-language requests preserve action intent', () =>
 test.each([
   '不要评审，只分析这个方案。',
   'Do not review; analyze the design instead.',
+  'For example, review and implement are action words. Now diagnose the actual failure.',
   '“请评审这个方案”只是引用，不是当前请求。',
   'The phrase "implement the fix" is an example, not an instruction.',
 ])(
@@ -124,10 +125,16 @@ test.each([
     const report = routeDocumentation(docsRoot, [query]);
     assert.notEqual(
       report.primaryPlaybook?.name,
-      query.includes('implement') ? 'change' : 'review',
+      query.includes('implement the fix') ? 'change' : 'review',
     );
   },
 );
+
+test('Chinese exclusive action prefix selects the requested action after a negated one', () => {
+  const report = routeDocumentation(docsRoot, ['不要发布，只评审 release 风险。']);
+  assert.equal(report.primaryPlaybook?.name, 'review');
+  assert.ok(!report.routes.some(({ name }) => name === 'release-and-external'));
+});
 
 test('response language priority is current explicit, persisted evidence, then detection', () => {
   assert.deepEqual(

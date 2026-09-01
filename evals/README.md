@@ -5,6 +5,16 @@ recording a maintainer-observed Codex, Cursor, Claude Code, OpenCode, or Kimi Co
 current release policy requires Codex; Cursor, Claude Code, OpenCode, and Kimi Code CLI records remain supported optional evidence. A schema
 fixture, scenario catalog, mocked transcript, or passing unit test is never real host evidence.
 
+## Deterministic Prompt and route benchmark
+
+`pnpm run bench:prompt-route` runs the versioned bilingual corpus in
+`prompt-route-corpus.v1.json`. The JSON report includes corpus/input digests, rule and candidate fingerprints,
+threshold metrics, per-case false-positive/false-negative audit data, and provenance. A prior JSON report can be
+passed with `--baseline-report`; comparison fails unless both reports use the exact same corpus inputs.
+
+This deterministic layer does not manufacture evaluator or Host telemetry. Fact verification, model tokens, and
+Host tool calls stay `not-measured` until exact evidence exists, and a passing benchmark is not real Host proof.
+
 ## Evidence contract
 
 `scenarios.schema.json` validates the versioned `scenarios.json` catalog, which contains the exact prompt,
