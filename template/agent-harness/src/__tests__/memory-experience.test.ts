@@ -65,6 +65,8 @@ test('typed experience deduplicates one conclusion and accumulates sourced evide
   assert.match(document, /^memory-kind: distilled$/m);
   assert.match(document, /^experience-kind: lesson$/m);
   assert.match(document, /^experience-schema-version: 2$/m);
+  assert.match(document, /^document-purpose: Keep prompt rules atomic$/m);
+  assert.match(document, /^document-purpose-schema-version: 1$/m);
   assert.match(document, /# 理由\n\nAtomic rules preserve intent boundaries/);
   assert.match(document, /# 应用\n\nKeep one enforceable constraint/);
   assert.match(document, /docs\/prompt-review\.md/);
