@@ -96,6 +96,7 @@ export function explainStatus({ adapter, status, record, plan }: AdapterStatusIn
           : ('requires-review' as const),
     evidence: {
       record: { path: adapter.record, state: record ? ('present' as const) : ('missing' as const) },
+      contentFingerprint: status.contentFingerprint,
       outputs: status.installed
         ? status.outputs
         : plan.outputs.map(({ path, state: outputState }) => ({ path, status: outputState })),

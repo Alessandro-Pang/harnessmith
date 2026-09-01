@@ -77,6 +77,12 @@ export function readInstallRecordAt(adapter: Adapter, recordPath: string): Insta
         assertSafePath(adapter.home, output.backup);
       }
     }
+    if (
+      record.contentFingerprint !== undefined &&
+      !/^sha256:[a-f0-9]{64}$/.test(record.contentFingerprint)
+    ) {
+      throw new Error('invalid content fingerprint');
+    }
     if (record.recordBackup) {
       const validRecordBackup =
         resolve(record.recordBackup) === record.recordBackup &&

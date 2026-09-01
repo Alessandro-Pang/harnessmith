@@ -91,9 +91,14 @@ npx harnessmith status --agent codex --explain --json
 ```
 
 解释输出使用稳定的 `observedState`、`reasonCode` 和 action `code`，逐项列出安装记录、受管理输出与备份证据。
+`status --json` 与 `--explain` 还返回 `contentFingerprint`：`recorded` 绑定安装时实际渲染的受管理内容，`current`
+绑定当前内容；二者一致为 `matched`，差异为 `drifted`，旧记录或未接管目标为 `unrecorded`。计算按逻辑输出角色排序，
+并把安装时展开的绝对路径还原为占位符，因此同一 Adapter 的等价安装可以跨主目录比较。
 本地状态可判定为 `managed`、`modified`、`unmanaged`、`partial` 或 `missing`；`unsupported` 表示没有 Adapter
 契约并在路径解析前停止。Harness capability、Host configuration 和真实 Host behavior 分开报告，无法从本地证明的 Host
 结论固定为 `inconclusive` / `host-dependent`，不会误报为 healthy。
+
+内容指纹只证明 Harnessmith 受管理 Prompt/配置的内容身份，不证明 Host 已加载这些文件，也不证明模型行为、权限或认证状态。
 
 `status` 的 First Value 投影只把 `managed` 映射为 `installed: passed`；因为该命令不运行 Runtime health，`healthy`
 仍为 `not-checked`。managed 状态的统一下一步是 `diagnostics --agent <agent> --json`。

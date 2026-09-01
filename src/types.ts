@@ -1,5 +1,6 @@
 import type { Readable, Writable } from 'node:stream';
 import type { AgentName } from './adapter-registry.js';
+import type { ManagedContentFingerprint } from './content-fingerprint-types.js';
 
 export type { AgentName };
 export type OutputAction = 'create' | 'replace-managed' | 'conflict';
@@ -64,6 +65,7 @@ export interface InstallRecord {
   packageVersion: string;
   adapter: AgentName;
   installedAt: string;
+  contentFingerprint?: string;
   outputs: RecordOutput[];
   ignoreFiles: string[];
   recordBackup: string | null;
@@ -125,6 +127,7 @@ export interface AdapterStatus {
   capabilities: AdapterCapabilities;
   packageVersion: string | null;
   installedAt: string | null;
+  contentFingerprint: ManagedContentFingerprint;
   outputs: Array<{ path: string; status: ManagedStatus }>;
 }
 

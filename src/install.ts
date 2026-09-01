@@ -1,5 +1,6 @@
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
+import { effectiveContentFingerprint } from './effective-content-fingerprint.js';
 import {
   atomicWrite,
   copyRenderedTree,
@@ -148,6 +149,7 @@ export function commitInstall(prepared: PreparedInstall, stamp = timestamp()): P
     packageVersion,
     adapter: prepared.adapter.name,
     installedAt: new Date().toISOString(),
+    contentFingerprint: effectiveContentFingerprint(prepared.adapter),
     outputs: prepared.outputs.map(({ destination }) => ({
       path: destination,
       checksum: digestManagedOutput(prepared.adapter, destination),
