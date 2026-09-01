@@ -14,7 +14,10 @@ import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { initGlobal, initProject } from '../commands/init.js';
 import { memoryMigrate } from '../commands/memory-migration.js';
-import { memoryPromotionProposal } from '../commands/memory-promotion.js';
+import {
+  type MemoryPromotionOptions,
+  memoryPromotionProposal,
+} from '../commands/memory-promotion.js';
 import { maximumMemoryDocumentBytes } from '../lib/memory-path.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
@@ -66,6 +69,16 @@ function distilledDocument({
     'Finding body.',
     '',
   ].join('\n');
+}
+
+function promotionOptions(target = 'docs/finding.md'): MemoryPromotionOptions {
+  return {
+    target,
+    artifactType: 'docs',
+    owner: 'docs-owner',
+    reason: 'Promote the bounded finding.',
+    verifier: 'pnpm run check:docs',
+  };
 }
 
 test('migration rejects high-confidence secrets at any nested metadata depth before reporting', () => {
@@ -159,7 +172,7 @@ test('promotion rejects secrets in every serialized metadata field before loggin
     writeFileSync(path, distilledDocument(metadata));
     const io = capturedIo();
     assert.throws(
-      () => memoryPromotionProposal(runtime, project, 'distilled/finding', 'docs/finding.md', io),
+      () => memoryPromotionProposal(runtime, project, 'distilled/finding', promotionOptions(), io),
       /promotion proposal.*high-confidence secret|memory preflight failed/i,
     );
     assert.deepEqual(io.logs, []);
@@ -174,7 +187,13 @@ test('promotion rejects a secret-bearing request target before serializing its p
   let message = '';
 
   try {
-    memoryPromotionProposal(runtime, project, 'distilled/finding', `docs/${token}.md`, io);
+    memoryPromotionProposal(
+      runtime,
+      project,
+      'distilled/finding',
+      promotionOptions(`docs/${token}.md`),
+      io,
+    );
   } catch (error) {
     message = error instanceof Error ? error.message : String(error);
   }
@@ -191,7 +210,7 @@ test('promotion preflight redacts a malformed secret-bearing source document', (
   let message = '';
 
   try {
-    memoryPromotionProposal(runtime, project, 'distilled/finding', 'docs/finding.md', io);
+    memoryPromotionProposal(runtime, project, 'distilled/finding', promotionOptions(), io);
   } catch (error) {
     message = error instanceof Error ? error.message : String(error);
   }
@@ -212,7 +231,7 @@ test('promotion bounds memory reads before parsing frontmatter', () => {
         runtime,
         project,
         'distilled/finding',
-        'docs/finding.md',
+        promotionOptions(),
         capturedIo(),
       ),
     /memory document.*exceeds|byte budget/i,
@@ -232,7 +251,7 @@ test('promotion preflights authoritative target paths against project symlinks',
         runtime,
         project,
         'distilled/finding',
-        'docs/finding.md',
+        promotionOptions(),
         capturedIo(),
       ),
     /symbolic link|resolves outside/i,
@@ -247,7 +266,7 @@ test('promotion validates the full managed root before serializing a proposal', 
   const io = capturedIo();
 
   assert.throws(
-    () => memoryPromotionProposal(runtime, project, 'distilled/finding', 'docs/finding.md', io),
+    () => memoryPromotionProposal(runtime, project, 'distilled/finding', promotionOptions(), io),
     /memory (?:check|preflight) failed/i,
   );
   assert.deepEqual(io.logs, []);
@@ -261,7 +280,14 @@ test('promotion rejects a global memory root reached through its parent path', (
   initGlobal(runtime, capturedIo());
 
   assert.throws(
-    () => memoryPromotionProposal(runtime, parent, 'profile', 'docs/profile.md', capturedIo()),
+    () =>
+      memoryPromotionProposal(
+        runtime,
+        parent,
+        'profile',
+        promotionOptions('docs/profile.md'),
+        capturedIo(),
+      ),
     /promotion requires a project memory scope/i,
   );
 });

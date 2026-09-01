@@ -191,6 +191,11 @@ proposed 或 blocked 时同时说明原因和所需决策。普通任务仍只�
 维护的结论必须提升到 `docs/`、ADR、测试、schema、lint 或 CI；先确认 owner，再实际写入和验证正式事实源，
 最后把 memory 更新为正式来源引用或 superseded。proposal 不得报告为 promoted。
 
+`memory promote` 的 typed proposal 只允许 ADR、docs、tests、schema、lint 与 CI 六类正式载体。它必须列出
+候选 Memory、目标路径与 owner、理由、原始证据、精确 verifier、source freshness、目标 dirty state、授权状态与
+未满足条件；输出不会创建或修改目标。目标已承接结论时，只有显式 adoption evidence 才能形成 supersede candidate，
+该 candidate 仍不是已采纳事实，也不能绕过 owner 确认、正式 verifier 或 typed lifecycle mutation。
+
 任务或阶段结束后可运行 `memory curate <project> --task <id> --json` 获取只读、proposal-first 策展报告。
 报告把 `phase-complete`、`task-complete`、`workstream-complete` 与 `user-cancel` 分开，并只检查当前
 task/workstream 关联的 Memory；输出 promote、close、supersede、archive、skipped 候选或 `result: none`。

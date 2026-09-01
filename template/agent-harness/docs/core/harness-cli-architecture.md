@@ -131,6 +131,12 @@ Memory maintenance 遵循非权威边界：`migrate` 默认只输出 proposal，
 仍被 active index 引用的记忆，`promote` 只输出 proposal。`check --indexed` 要求 active/blocked
 文档可从 index 到达，`maintain` 只读报告候选。Runtime 不得自动写项目正式文档或删除记忆。
 
+`memory promote` 输出 version 2 typed proposal，并由
+`schemas/memory-promotion.schema.json` 约束。调用方必须声明 ADR、docs、tests、schema、lint 或 CI
+目标类型、目标 owner、理由与精确 verifier；报告同时给出 source freshness、目标 dirty state、证据、授权缺口
+和未满足条件。proposal 自身永远不构成正式写入授权；只有目标已存在且提供 adoption evidence 时才产生可追踪的
+supersede candidate，仍须 owner 确认并走 typed lifecycle，不能报告为已采纳或已 supersede。
+
 `memory curate <project> --task <id>` 是只读的 task/workstream 策展报告。它只输出 proposal 候选并显式区分
 phase、task、workstream 完成与用户取消；不得嵌入 `task close`，也不得代替 `promote`、`close-input`、
 `supersede` 或 `archive` 的 mutation 与门禁。

@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-harness:schema:memory-promotion:v2",
+  "title": "Agent Harness Memory Promotion Proposal",
+  "type": "object",
+  "required": [
+    "version",
+    "schema",
+    "mode",
+    "memory",
+    "source",
+    "target",
+    "title",
+    "description",
+    "reason",
+    "evidence",
+    "verification",
+    "authorization",
+    "unmetConditions",
+    "supersedeCandidate",
+    "sourceOfTruth"
+  ],
+  "properties": {
+    "version": { "const": 2 },
+    "schema": { "const": "urn:agent-harness:schema:memory-promotion:v2" },
+    "mode": { "const": "proposal-only" },
+    "memory": { "type": "string", "minLength": 1 },
+    "source": {
+      "type": "object",
+      "required": ["kind", "status", "updated", "freshness", "owners"],
+      "properties": {
+        "kind": { "type": "string", "minLength": 1 },
+        "status": { "type": "string", "minLength": 1 },
+        "updated": { "type": ["string", "null"], "format": "date" },
+        "freshness": { "enum": ["current", "stale", "unknown"] },
+        "owners": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      },
+      "additionalProperties": false
+    },
+    "target": {
+      "type": "object",
+      "required": ["path", "reference", "artifactType", "owner", "exists", "dirty"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "reference": { "type": "string", "minLength": 1 },
+        "artifactType": { "enum": ["adr", "docs", "tests", "schema", "lint", "ci"] },
+        "owner": { "type": "string", "minLength": 1 },
+        "exists": { "type": "boolean" },
+        "dirty": { "type": ["boolean", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "title": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "reason": { "type": "string", "minLength": 1 },
+    "evidence": {
+      "type": "object",
+      "required": ["items", "sourceRefs"],
+      "properties": {
+        "items": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "sourceRefs": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      },
+      "additionalProperties": false
+    },
+    "verification": {
+      "type": "object",
+      "required": ["command", "status"],
+      "properties": {
+        "command": { "type": "string", "minLength": 1 },
+        "status": { "const": "required" }
+      },
+      "additionalProperties": false
+    },
+    "authorization": {
+      "type": "object",
+      "required": ["formalWrite"],
+      "properties": {
+        "formalWrite": { "const": "not-authorized-by-proposal" }
+      },
+      "additionalProperties": false
+    },
+    "unmetConditions": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "uniqueItems": true
+    },
+    "supersedeCandidate": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": [
+            "status",
+            "memory",
+            "authoritativeTarget",
+            "evidence",
+            "requiredLifecycle"
+          ],
+          "properties": {
+            "status": { "const": "candidate" },
+            "memory": { "type": "string", "pattern": "^memory:.+" },
+            "authoritativeTarget": { "type": "string", "minLength": 1 },
+            "evidence": {
+              "type": "array",
+              "minItems": 1,
+              "items": { "type": "string", "minLength": 1 }
+            },
+            "requiredLifecycle": { "const": "owner-confirmed-typed-supersede" }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "sourceOfTruth": { "const": false }
+  },
+  "additionalProperties": false
+}
