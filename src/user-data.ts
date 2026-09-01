@@ -9,7 +9,7 @@ import { withUserDataCoordinationLocks } from './user-data-lock.js';
 export function initializeUserData(
   prepared: PreparedInstall,
   env: NodeJS.ProcessEnv,
-  { global }: { global: boolean },
+  { global, afterInitialize }: { global: boolean; afterInitialize?: () => void },
 ): string {
   const values = installationValues(prepared.adapter, env);
   const memoryFiles = global
@@ -59,6 +59,7 @@ export function initializeUserData(
           ).stdout.trim(),
         );
       }
+      afterInitialize?.();
       return output.filter(Boolean).join('\n');
     } catch (error) {
       restoreSnapshots(snapshots);

@@ -71,6 +71,10 @@ npx harnessmith status --agent codex
 # 解释观察状态、证据、风险和不会自动执行的安全下一步
 npx harnessmith status --agent codex --explain
 
+# 只读盘点已有规则并生成接管提案；确认时复用返回的 proposalId
+npx harnessmith adopt --agent codex --json
+npx harnessmith adopt --agent codex --proposal <proposalId> --yes --json
+
 # 恢复上一安装层
 npx harnessmith restore --agent codex
 

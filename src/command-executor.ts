@@ -1,5 +1,6 @@
 import type { Readable, Writable } from 'node:stream';
 import { adapterCapabilities, createAdapter } from './adapters.js';
+import { executeAdopt } from './adopt-command.js';
 import { normalizeAgents } from './agents.js';
 import { installAll } from './install.js';
 import { inspectStatusAll, restoreAll, statusAll, uninstallAll } from './lifecycle.js';
@@ -92,7 +93,7 @@ function previewLifecycle(
 }
 
 function executeLifecycle(
-  command: Exclude<HarnessmithCommand, 'setup' | 'install' | 'capabilities'>,
+  command: Exclude<HarnessmithCommand, 'setup' | 'adopt' | 'install' | 'capabilities'>,
   adapters: Adapter[],
   options: CliOptions,
   context: ExecuteContext,
@@ -237,6 +238,7 @@ export async function executeCommand(
     throw error;
   }
   if (command === 'setup') return executeSetup(adapters, options, context, interactive);
+  if (command === 'adopt') return executeAdopt(adapters, options, context, interactive);
   return command === 'install'
     ? executeInstall(adapters, options, context, interactive)
     : executeLifecycle(command, adapters, options, context, interactive);

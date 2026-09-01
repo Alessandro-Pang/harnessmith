@@ -81,6 +81,21 @@ test('Commander exposes guided setup through the shared install options', async 
   assert.equal(result.json, true);
 });
 
+test('Commander exposes proposal-bound adopt options', async () => {
+  let result: (CliOptions & { command: HarnessmithCommand }) | undefined;
+  const program = createProgram(async (command, options) => {
+    result = { command, ...options };
+  });
+  await program.parseAsync(
+    ['adopt', '--agent', 'codex', '--proposal', 'sha256:abc', '--yes', '--json'],
+    { from: 'user' },
+  );
+  assert.ok(result);
+  assert.equal(result.command, 'adopt');
+  assert.equal(result.proposal, 'sha256:abc');
+  assert.equal(result.yes, true);
+});
+
 test('Commander exposes adapter capabilities as a read-only command', async () => {
   let result: (CliOptions & { command: HarnessmithCommand }) | undefined;
   const program = createProgram(async (command, options) => {

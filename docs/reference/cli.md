@@ -11,6 +11,7 @@ owner: maintainers
 | 命令 | 作用 | 是否写入 |
 | --- | --- | --- |
 | `setup` | 预览、确认、安装并验证首个 Harness | dry-run 否；确认后是 |
+| `adopt` | 盘点并安全导入已有 Host 规则 | 默认否；确认精确提案后是 |
 | `harnessmith` / `install` | 安装或升级 Harness | 是 |
 | `status` | 检查安装所有权与完整性 | 否 |
 | `restore` | 恢复上一安装层 | 是 |
@@ -29,6 +30,7 @@ owner: maintainers
 | `--dry-run` | 只预览目标，不执行写入 |
 | `--no-init-global` | 跳过共享全局 Memory 初始化 |
 | `--explain` | 仅用于 `status`；解释状态、证据、风险和安全下一步 |
+| `--proposal <id>` | 仅用于 `adopt`；绑定先前只读扫描返回的精确提案 |
 | `-v, --version` | 输出版本 |
 | `-h, --help` | 输出帮助 |
 
@@ -52,6 +54,25 @@ npx harnessmith setup --agent cursor --project /path/to/project --yes --json
 
 成功报告中的 `installed-and-healthy` 只表示安装所有权与内嵌 Runtime 的确定性检查通过；不代表真实 Host 中的模型行为、
 工具权限、认证或运行时事件已经通过。
+
+## 安全接管 `adopt`
+
+`adopt` 默认只读扫描已有 Host 规则，将内容逐项分类为 managed-compatible、user-owned overlay、冲突规则、
+Host-specific 配置或不可导入内容，并返回导入 diff、备份目标、owner、回滚路径与内容绑定的 `proposalId`。
+
+```bash
+# 第一步只读预览
+npx harnessmith adopt --agent codex --json
+npx harnessmith adopt --agent cursor --project /path/to/project --json
+
+# 审阅后，以原样 proposalId 明确确认
+npx harnessmith adopt --agent codex --proposal <proposalId> --yes --json
+```
+
+非交互写入必须同时提供 `--yes` 和精确 `--proposal`。文件在预览后发生变化时，提案失效并停止；secret、symlink、
+未知格式、越界路径与已修改的受管文件 fail closed。确认后的接管复用安装事务的完整预检、operation lock、精确备份与
+回滚，并只把可移植规则追加到用户所有的 personal overlay；Host frontmatter、受管理分发、可变 state 与项目
+`.agent-docs` 不会混入 overlay。成功后再次运行只返回幂等的 `already-adopted`。
 
 ## 可解释状态 `status --explain`
 
@@ -86,6 +107,7 @@ npx harnessmith install --agent cursor --project /path/to/project
 # 自动化检查
 npx harnessmith status --agent codex --json
 npx harnessmith status --agent codex --explain --json
+npx harnessmith adopt --agent codex --json
 npx harnessmith capabilities --json
 
 # 回退生命周期

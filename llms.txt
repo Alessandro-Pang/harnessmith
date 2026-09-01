@@ -88,6 +88,18 @@ use the published `npx --yes harnessmith` commands below.
 6. Report every installed instruction path, Harness path, backup path, ownership result, and deterministic health result.
    Never report `installed-and-healthy` as proof of behavior in a real Host session.
 
+If the preview reports unmanaged rules that must be preserved, do not jump to `--force`. Use the proposal-bound adoption flow:
+
+```bash
+npx --yes harnessmith adopt --agent <agents> --project <project-path> --json
+npx --yes harnessmith adopt --agent <agents> --project <project-path> --proposal <proposalId> --yes --json
+```
+
+Omit `--project` when Cursor is not selected. The first command is read-only. Review every classification, blocked item,
+import diff, backup target, owner, and rollback path. The second command is allowed only after the user approves that exact
+proposal. Never retry with `--force` when adoption reports a secret, symlink, unknown format, path escape, modified managed
+file, or proposal mismatch. Host-specific frontmatter is backup-only; only portable rule content enters the personal overlay.
+
 ## Post-install verification
 
 Harnessmith always initializes the user-owned personal overlay after a successful install and initializes
