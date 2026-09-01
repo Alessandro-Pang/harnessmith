@@ -23,6 +23,7 @@ node <harness-path>/bin/harness.mjs --help
 | 检查安装与本地状态 | `doctor`、`health`、`validate`、`version` | 只读 |
 | 查找或维护历史线索 | `memory` | 查询只读；写操作显式执行 |
 | 续接长任务并验证验收项 | `task` | 修改 Task ledger |
+| 核验 Host signal replay | `replay` | 只读，证据不足返回非零 |
 | 维护多个仓库的职责与关系 | `repository-map` | 检查只读；写操作需显式参数 |
 | 接收和汇总受限运行元数据 | `audit` | `record` 写入；查询只读 |
 
@@ -62,6 +63,19 @@ node <harness-path>/bin/harness.mjs validate --project /path/to/project --json
 - `validate` 检查内容、文档路由、结构和可选项目接入；未知 schema 会 fail closed。
 
 warning 不等于失败；受限环境中无法完成的阴性检查应解释为 `inconclusive`，而不是直接认定安装损坏。
+
+## Host signal replay：只读幂等判定
+
+```bash
+node <harness-path>/bin/harness.mjs replay verify --payload-file /absolute/replay-evidence.json --json
+```
+
+`replay verify` 区分 `new-mutation` 与 `identical-replay`。新 mutation 只能使用没有 previous payload 的新
+identity；失败或未完成 attempt 必须换新 payload。identical replay 必须复用相同 path 与 SHA-256、相同命令，
+并证明目标 artifact、workspace 和 verifier candidate 未漂移。stdout 不可见时不会自动判失败或成功：只有上述
+持久化状态和精确 identity 全部成立才返回 `verified / skip-duplicate`；证据不足返回 `inconclusive` 与非零退出码。
+报告本身只读，不执行或重放 mutation，也不把 Host signal 视为额外授权。
+报告校验调用方提供的证据一致性，`sourceOfTruth: false`；事件真实性仍由 Host/evaluator attestation 负责。
 
 ## Memory：保存待核对线索
 

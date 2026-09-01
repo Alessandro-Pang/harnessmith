@@ -172,6 +172,12 @@ Memory Autopilot 只有五类窄写入口：`capture-input`、`capture-experienc
 托管结果完成校验后才删除文件；schema、身份、领域写入或结果校验失败时保留文件供诊断。调用方不能把
 “已读取”或“schema 已通过”误当成消费成功，也不能用独立清理掩盖领域失败。
 
+`replay verify` 是 Host-neutral、read-only 的跨 turn 幂等判定器，不是事件 hook 或 mutation executor。
+version 1 报告把 `execute`、`skip-duplicate`、`new-payload-required` 与 `ready`、`verified`、`inconclusive`
+正交表达。相同 signal、相同 payload path/digest、相同命令、未漂移的 persisted artifact/workspace 以及绑定
+当前 candidate/workspace 的 verifier 是可判定输入；stdout 仅是可选证据，缺失时不能替代持久化状态证明。
+失败或中断 attempt 的 payload 永久冻结，重试必须使用新路径；报告不扩大 Host 权限。
+
 Harnesssmith 外层临时 workspace 使用带 owner、purpose、创建时间和 lifecycle 的受管理 marker；成功与
 普通失败通过统一 disposer 清理，只有明确的 recovery 需要才保留并返回精确路径。release 候选与 Host Eval
 证据属于 workstream/evidence，不得当作匿名 `/tmp` 内容通配删除。历史维护先运行仓库的 `pnpm run

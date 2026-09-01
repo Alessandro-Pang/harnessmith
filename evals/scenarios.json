@@ -266,6 +266,8 @@
         "template/agent-harness/src/__tests__/memory-autopilot.test.ts#Harness memory autopilot reconciles explicit profile signals in place",
         "template/agent-harness/src/__tests__/memory-autopilot.test.ts#Handoff snapshots preserve recovery fields unless an update explicitly clears them",
         "template/agent-harness/src/__tests__/memory-autopilot.test.ts#Closing a handoff completes the document and the same base continues in a new generation",
+        "template/agent-harness/src/__tests__/host-signal-replay.test.ts#a duplicate host signal replay leaves the persisted Handoff unchanged",
+        "template/agent-harness/src/__tests__/replay-contract.test.ts#an identical replay is proven without stdout only by exact persisted state",
         "template/agent-harness/src/__tests__/memory-input-profile.test.ts#profile autopilot can be paused, still allows forgetting, and resumes explicitly",
         "src/__tests__/llms.test.ts#routed prompts keep Memory policy and command contracts with their designated owners",
         "src/__tests__/memory-autopilot-prompt.test.ts#background sidecars stay quiet while explicit Memory requests remain auditable"

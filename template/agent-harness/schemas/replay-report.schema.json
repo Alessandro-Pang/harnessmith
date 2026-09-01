@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:agent-harness:schema:replay-report:v1",
+  "title": "Host signal replay verification report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "schema", "mode", "sourceOfTruth", "result", "decision", "reasonCode", "checks"],
+  "properties": {
+    "version": { "const": 1 },
+    "schema": { "const": "urn:agent-harness:schema:replay-report:v1" },
+    "mode": { "const": "verify-only" },
+    "sourceOfTruth": { "const": false },
+    "result": { "enum": ["ready", "verified", "inconclusive"] },
+    "decision": { "enum": ["execute", "skip-duplicate", "new-payload-required"] },
+    "reasonCode": {
+      "enum": [
+        "new-mutation-ready",
+        "new-mutation-reuses-payload",
+        "new-mutation-command-inexact",
+        "failed-attempt-frozen",
+        "incomplete-attempt-frozen",
+        "duplicate-signal-state-proven",
+        "identical-replay-state-proven",
+        "replay-proof-incomplete"
+      ]
+    },
+    "checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["payloadIdentity", "commandIdentity", "persistedState", "generationIdentity", "verifierBinding", "outputCompatibility"],
+      "properties": {
+        "payloadIdentity": { "type": "boolean" },
+        "commandIdentity": { "type": "boolean" },
+        "persistedState": { "type": "boolean" },
+        "generationIdentity": { "type": "boolean" },
+        "verifierBinding": { "type": "boolean" },
+        "outputCompatibility": { "type": "boolean" }
+      }
+    }
+  }
+}
