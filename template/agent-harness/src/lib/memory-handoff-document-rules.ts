@@ -32,6 +32,12 @@ export function validateTypedHandoff(
   if (metadata.get('type') !== 'session-handoff' || metadata.get('memory-kind') !== 'episode') {
     issues.push('type and memory-kind');
   }
+  if (metadata.has('fact-class') && metadata.get('fact-class') !== 'recovery-state') {
+    issues.push('fact-class');
+  }
+  if (metadata.has('fact-class') && metadata.get('expiry-policy') !== 'handoff-lifecycle') {
+    issues.push('expiry-policy');
+  }
   const session = metadata.get('session-id');
   let validSession = true;
   try {

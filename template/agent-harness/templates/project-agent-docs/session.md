@@ -15,6 +15,8 @@ project: |-
 scope: ["<repo/relative/path>"]
 source-refs: ["<docs/path-or-commit>"]
 source-of-truth: false
+fact-class: recovery-state
+expiry-policy: handoff-lifecycle
 schema-version: 1
 host-adapter: "<adapter-name>"
 session-id: "<stable-id-or-YYYYMMDD-HHmm-topic>"
