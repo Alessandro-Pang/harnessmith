@@ -11,7 +11,7 @@ const docsRoot = join(sourceHarnessRoot, 'docs');
 
 test('documentation routing accepts canonical Chinese task aliases', () => {
   const report = routeDocumentation(docsRoot, ['评审']);
-  assert.equal(report.version, 2);
+  assert.equal(report.version, 3);
   assert.equal(report.status, 'matched');
   assert.deepEqual(
     report.routes.map(({ name }) => name),
@@ -19,6 +19,32 @@ test('documentation routing accepts canonical Chinese task aliases', () => {
   );
   assert.equal(report.primaryPlaybook?.name, 'review');
   assert.deepEqual(report.topics, []);
+});
+
+test('documentation routing maps an explicit intent without re-inferring it from mentioned actions', () => {
+  const report = routeDocumentation(docsRoot, ['通过第一性原理分析当前项目，实现方面是否合理？'], {
+    intent: 'research-and-design',
+  });
+
+  assert.equal(report.version, 3);
+  assert.deepEqual(report.intent, {
+    requested: 'research-and-design',
+    source: 'explicit',
+    mentionedActions: ['change', 'research-and-design'],
+    negatedActions: [],
+  });
+  assert.equal(report.status, 'matched');
+  assert.equal(report.primaryPlaybook?.name, 'research-and-design');
+});
+
+test.each([
+  ['分析当前项目，实现方面是否合理。', 'research-and-design'],
+  ['实现思想是否合理？', null],
+  ['根据评审结果，形成对应的解决方案。', null],
+  ['进行逐个实施。', 'change'],
+])('documentation routing conservatively classifies real request %s', (query, expected) => {
+  const report = routeDocumentation(docsRoot, [query]);
+  assert.equal(report.primaryPlaybook?.name ?? null, expected);
 });
 
 test('documentation routing separates one task playbook from supporting topics', () => {

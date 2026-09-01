@@ -75,6 +75,7 @@ test('operating model separates target mutability from managed sidecar eligibili
 });
 
 test('top-level routing uses one primary playbook plus supporting topics without category exceptions', () => {
+  assert.match(agents, /route.*--intent.*用户当前原文/s);
   assert.match(agents, /primaryPlaybook/);
   assert.match(agents, /topics/);
   assert.match(agents, /加载.*primaryPlaybook.*全部.*返回.*topics/s);
@@ -89,6 +90,9 @@ test('top-level routing uses one primary playbook plus supporting topics without
   );
   assert.match(docsIndex, /primaryPlaybook/);
   assert.match(docsIndex, /topics/);
+  assert.match(docsIndex, /显式.*intent.*唯一.*playbook/s);
+  assert.match(docsIndex, /自动推断.*歧义.*unmatched/s);
+  assert.doesNotMatch(docsIndex, /最高优先级.*playbook/);
 });
 
 test('startup rules retain progressive project discovery without copying its command sequence', () => {

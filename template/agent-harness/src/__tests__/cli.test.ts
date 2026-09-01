@@ -104,7 +104,7 @@ test('Harness route CLI consumes manifest aliases without loading document bodie
 
   assert.equal(runCli(['route', '--json', 'review', 'permissions'], { runtime, io: output }), 0);
   const report = JSON.parse(output.logs[0]);
-  assert.equal(report.version, 2);
+  assert.equal(report.version, 3);
   assert.equal(report.status, 'matched');
   assert.equal(report.top1.name, 'review');
   assert.ok(report.top1.matchedAliases.includes('review'));
@@ -120,6 +120,23 @@ test('Harness route CLI consumes manifest aliases without loading document bodie
     report.routes.every((route: { content?: string }) => route.content === undefined),
     true,
   );
+});
+
+test('Harness route CLI accepts a validated explicit documentation intent', () => {
+  const { runtime } = installedFixture();
+  const output = capturedIo();
+
+  assert.equal(
+    runCli(
+      ['route', '--json', '--intent', 'research-and-design', '根据评审结果，形成对应的解决方案。'],
+      { runtime, io: output },
+    ),
+    0,
+  );
+  const report = JSON.parse(output.logs[0]);
+  assert.equal(report.intent.source, 'explicit');
+  assert.equal(report.intent.requested, 'research-and-design');
+  assert.equal(report.primaryPlaybook.name, 'research-and-design');
 });
 
 test('Harness route CLI fails closed for unmatched and ambiguous action intent', () => {

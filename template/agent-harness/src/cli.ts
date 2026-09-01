@@ -6,11 +6,11 @@ import { doctor } from './commands/doctor.js';
 import { health } from './commands/health.js';
 import { initGlobal, initPersonal, initProject } from './commands/init.js';
 import { inspectProject } from './commands/project.js';
-import { route } from './commands/route.js';
 import { contextSearch } from './commands/search.js';
 import { validate } from './commands/validate.js';
 import { containsHighConfidenceSecret } from './lib/secret-hygiene.js';
 import { registerAuditCommands } from './program/audit.js';
+import { registerDocumentationCommands } from './program/documentation.js';
 import { registerMemoryCommands } from './program/memory.js';
 import { registerReplayCommands } from './program/replay.js';
 import { registerRepositoryMapCommands } from './program/repository-map.js';
@@ -101,6 +101,7 @@ function registerCoreCommands(
   manifest: HarnessManifest,
 ): void {
   registerBootstrapCommand(program, runtime, io, run);
+  registerDocumentationCommands(program, runtime, io, run);
   program
     .command('version')
     .description('print the Harness version')
@@ -136,21 +137,6 @@ function registerCoreCommands(
     .option('--project <path>', 'project path')
     .option('--json', 'write machine-readable JSON')
     .action(run((options: JsonProjectOptions) => validate(runtime, options, io)));
-  program
-    .command('route <query...>')
-    .description('route task terms to relevant Harness documentation')
-    .option('--json', 'write machine-readable routes without document bodies')
-    .action(
-      run((query: string[], options: { json?: boolean }) => route(runtime, query, options, io)),
-    );
-  program
-    .command('explain <query...>')
-    .description('explain which Harness documents govern a topic without loading their bodies')
-    .option('--json', 'write machine-readable routes without document bodies')
-    .action(
-      run((query: string[], options: { json?: boolean }) => route(runtime, query, options, io)),
-    );
-
   const project = program.command('project').description('inspect project context');
   project
     .command('inspect [path]')

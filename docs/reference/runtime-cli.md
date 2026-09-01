@@ -29,14 +29,14 @@ node <harness-path>/bin/harness.mjs --help
 
 ## 文档路由与检索
 
-`route` 和 `explain` 根据 manifest 的 `actionAliases` 与 `conceptAliases` 返回命中的文档名称、路径和 alias，
-不加载正文。JSON 报告显式区分 `matched`、`unmatched` 与 `ambiguous`，并只在唯一命中时给出 `top1`；未命中或
-最高优先级动作歧义返回 exit 2，不猜测执行动作。该结构化契约为 version 2。它们适合先确定“这类任务由哪份
-规则负责”：
+`route` 和 `explain` 根据显式 intent、manifest 的 `actionAliases` 与 `conceptAliases` 返回命中的文档名称、路径和
+alias，不加载正文。能够可靠判断动作时使用受限 `--intent`；未提供时只做保守自动推断。JSON 报告显式区分
+`matched`、`unmatched` 与 `ambiguous`，并只在唯一动作时给出 `top1`；未命中或多个真实动作返回 exit 2，
+不按 priority 猜测。该结构化契约为 version 3。路由只负责文档发现，不传递授权：
 
 ```bash
-node <harness-path>/bin/harness.mjs route diagnose payment callback --json
-node <harness-path>/bin/harness.mjs explain release external write
+node <harness-path>/bin/harness.mjs route --intent diagnose payment callback --json
+node <harness-path>/bin/harness.mjs explain --intent release-and-external release external write
 ```
 
 `search` 才会扫描 Harness 文档、项目文档和项目 Memory：
