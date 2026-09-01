@@ -84,10 +84,13 @@ verifier 证据绑定到精确候选 tarball；仓库中的 `eval:validate` 与 
 - Task 的 `complete` 路径必须在持久化之前调用 `assertTaskCanComplete`；该检查是 acceptance gate 的机械入口，不能由
   Prompt、completion curation 或普通 checkpoint 代替。
 - Host identity、专属路径、环境变量与 hook 只能由外层 Adapter 拥有；portable template 的静态检查拒绝这些身份泄漏。
+- `preflight` 从 Adapter registry 派生完整目标集，并在隔离 clean room 中通过已构建外层 CLI 执行 dry-run、安装、
+  状态、内嵌 Runtime 校验和卸载；新增 Adapter 若未进入这条 package-facing 生命周期会直接失败。
 - `docs/capability-evidence.yaml` 中每个 capability claim 必须使用唯一 ID。`implemented` 不仅要指向实现，还必须指向
   executable verification；`delegated` 和 `unsupported` 则必须指向公开边界，不能靠措辞强度提升保证等级。
 
-这些检查证明仓库内的确定性结构没有漂移，不证明真实 Host 已执行规则，也不把自然语言 guidance 升级为权限强制。
+这些检查证明仓库内的确定性结构与 Adapter 安装事务没有漂移，不证明真实 Host 已执行规则，也不把自然语言 guidance
+升级为权限强制。
 
 ## 一次安装的事务边界
 

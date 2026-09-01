@@ -141,6 +141,15 @@ test('preflight mode parsing uses Commander choices', () => {
   assert.doesNotMatch(source, /\['all', 'cli', 'docs'\]\.includes\(mode\)/);
 });
 
+test('built CLI preflight derives and exercises the complete Adapter set', () => {
+  const source = readFileSync(join(root, 'scripts', 'preflight-adapters.ts'), 'utf8');
+
+  assert.match(source, /supportedAgentNames/);
+  assert.match(source, /\['install', '--agent', 'all'/);
+  assert.match(source, /\['status', '--agent', 'all'/);
+  assert.match(source, /\['uninstall', '--agent', 'all'/);
+});
+
 test('release manifest comparison uses Node deep equality', () => {
   const source = readFileSync(join(root, 'scripts', 'eval-fingerprint.ts'), 'utf8');
 
