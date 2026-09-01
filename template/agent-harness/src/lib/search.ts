@@ -1,5 +1,10 @@
 import type { Io } from '../types.js';
 import {
+  classifyMemoryDocument,
+  type MemoryFactClass,
+  type MemoryFactClassification,
+} from './memory-fact-semantics.js';
+import {
   discoverSearchableFiles,
   type SearchScanLimits,
   type SearchScanStats,
@@ -38,6 +43,9 @@ interface SearchMatch {
   truncated: boolean;
   score?: number;
   matchedFields?: string[];
+  factClass: MemoryFactClass | null;
+  classification: MemoryFactClassification;
+  requiresReverification: boolean;
 }
 
 export interface SearchRetrieval {
@@ -166,6 +174,7 @@ export function searchText(
       continue;
     }
     const lines = content.split(/\r?\n/);
+    const semantics = classifyMemoryDocument(content);
     if (searchDeadlineExceeded(discovery, candidate.source, candidate.path)) break;
     for (const [index, line] of lines.entries()) {
       if (searchDeadlineExceeded(discovery, candidate.source, candidate.path)) break candidateLoop;
@@ -185,6 +194,7 @@ export function searchText(
         line: index + 1,
         text: bounded.text,
         truncated: bounded.truncated,
+        ...semantics,
       });
     }
   }
@@ -221,8 +231,11 @@ export function outputSearch(
     return;
   }
   for (const match of report.matches) {
+    const semantics = match.factClass
+      ? `[fact=${match.factClass} reverify=${String(match.requiresReverification)}] `
+      : '';
     io.log(
-      `[${match.trust}:${match.source}] ${JSON.stringify(match.path)}:${match.line}:${JSON.stringify(match.text)}`,
+      `[${match.trust}:${match.source}] ${semantics}${JSON.stringify(match.path)}:${match.line}:${JSON.stringify(match.text)}`,
     );
   }
   if (report.truncated) {

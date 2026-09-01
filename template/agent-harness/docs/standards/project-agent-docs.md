@@ -143,8 +143,11 @@ negative eligibility，拒绝一次性授权、可廉价恢复的 durable curren
 
 经验只通过 typed lesson/failure 流程写入；新文档必须包含非空 conclusion、rationale、application、evidence
 与来源引用，旧版 experience 继续可读。高价值分析、评审或调研发现只通过 `capture-finding` 写入，类型限制为
-analysis/review/research；`durable` 进入 distilled，`workstream` 进入 working 并必须绑定稳定 workstream 与
-expiry。两类写入都按结论 digest 去重并合并来源和证据，不追加重复流水，也不授权修改正式事实源。命令完成后
+analysis/review/research，并显式标注 `settled-fact`、`current-state`、`verification-pointer`、
+`recovery-state` 或 `formal-fact`。非权威 finding 不得自称 `formal-fact`；`durable` 进入 distilled，且不得
+保存易漂移的 current/recovery state，可保存用于重取状态的 verifier pointer；`workstream` 进入 working 并
+必须绑定稳定 workstream 与 expiry。Handoff 是由 lifecycle 过期的非权威 recovery state。旧文档缺少分类时
+保持可读并标为 legacy unclassified，迁移不得猜测。两类写入都按结论 digest 去重并合并来源和证据，不追加重复流水，也不授权修改正式事实源。命令完成后
 必须校验目标文档、索引和全根 schema；失败时回滚托管写入或保留可恢复路径。
 
 ## 输出可见性

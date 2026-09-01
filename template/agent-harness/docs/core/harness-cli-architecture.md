@@ -162,9 +162,12 @@ Input schema v2 要求显式 `mode: verbatim|summary`、五类 `purpose` 与 `re
 workstream retention 必须绑定稳定 workstream。Input 对 verbatim 绑定原始文本，对可靠摘要绑定规范化文本，
 并同时绑定来源和模式。`close-input` 原子写入完成原因和可选消费证据，并从 `core.md` 移除 active 引用；
 typed experience 要求 lesson/failure、结论、理由、应用、证据与来源；旧的 v1 experience 文档继续可读。
-`capture-finding` 只接受 analysis/review/research，并要求结论、理由、应用、证据与来源；`durable` 映射到
-distilled，`workstream` 映射到 working，后者必须绑定稳定 workstream 和明确 expiry。二者都按结论 digest
-去重并合并来源与证据，不开放任意 Markdown 写入。Handoff 字段与 reconcile/close 语义以
+`capture-finding` 只接受 analysis/review/research，并要求结论、理由、应用、证据、来源与显式 `fact-class`；
+`durable` 映射到 distilled，只接受 `settled-fact` 或 `verification-pointer`，拒绝易漂移的 `current-state`
+和恢复态。`workstream` 映射到 working，必须绑定稳定 workstream 和明确 expiry。二者都按结论 digest
+去重并合并来源与证据，不开放任意 Markdown 写入。Handoff 固定为非权威 `recovery-state`，并由 handoff
+lifecycle 负责过期；旧文档保持可读，缺少分类时不自动猜测。搜索与 bootstrap 输出分类，并对
+`current-state`/`recovery-state` 标记重新验证。Handoff 字段与 reconcile/close 语义以
 [long-running task protocol](long-running-tasks.md) 为准，画像命令以
 [user profile standard](../standards/user-profile-memory.md) 为准。
 所有 coordinated write 在读取或写入任何 entry 前对整组路径执行 SafePath preflight，再使用

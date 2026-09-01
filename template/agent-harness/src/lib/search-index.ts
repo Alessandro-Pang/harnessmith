@@ -1,5 +1,6 @@
 import type { Runtime } from '../types.js';
 import { readBoundedRegularFile } from './bounded-file.js';
+import { classifyMemoryDocument } from './memory-fact-semantics.js';
 import {
   boundedLine,
   positiveInteger,
@@ -101,6 +102,7 @@ export function queryLoadedIndex(
           );
     const lineIndex = globalLine >= 0 ? globalLine : result.lineStart - 1;
     const bounded = boundedLine(lines[lineIndex] || '', maxLineLength);
+    const semantics = classifyMemoryDocument(lines.join('\n'));
     return {
       source: sources[result.sourceIndex].label,
       trust: sources[result.sourceIndex].trust,
@@ -110,6 +112,7 @@ export function queryLoadedIndex(
       truncated: bounded.truncated,
       score: result.score,
       matchedFields: [...new Set(Object.values(result.match).flat())].sort(),
+      ...semantics,
     };
   });
   return {

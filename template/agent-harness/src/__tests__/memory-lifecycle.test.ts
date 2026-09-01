@@ -191,6 +191,7 @@ test('memory migration is proposal-only by default and preserves replaced legacy
   assert.equal(report.ready, true);
   assert.equal(report.proposedUpdates['legacy-status'], 'Draft for Maintainer Review');
   assert.equal(report.proposedUpdates['legacy-schema-version'], 0);
+  assert.equal(Object.hasOwn(report.proposedUpdates, 'fact-class'), false);
   assert.equal(readFileSync(source, 'utf8'), before);
 
   const applied = memoryMigrate(
@@ -203,6 +204,7 @@ test('memory migration is proposal-only by default and preserves replaced legacy
   );
   assert.equal(applied.mode, 'applied');
   assert.match(readFileSync(source, 'utf8'), /legacy-status: Draft for Maintainer Review/);
+  assert.doesNotMatch(readFileSync(source, 'utf8'), /^fact-class:/m);
   memoryCheck(runtime, 'global', capturedIo());
 });
 

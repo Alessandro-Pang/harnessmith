@@ -3,10 +3,16 @@ import { stringify } from 'yaml';
 import { parseFrontmatterDocument } from '../lib/frontmatter.js';
 import { escapeCoreLabel, upsertCoreReference } from '../lib/memory-core.js';
 import {
+  assertFindingFactSemantics,
+  type MemoryFactClass,
+  validFactExpiry,
+} from '../lib/memory-fact-semantics.js';
+import {
   type FindingKind,
   type FindingRetention,
   findingDigest,
   findingSection,
+  findingSlug,
 } from '../lib/memory-finding.js';
 import { normalizedInputContent } from '../lib/memory-input.js';
 import { markdownFiles, memoryReference, readMemoryDocument } from '../lib/memory-path.js';
@@ -25,6 +31,7 @@ import type { Io, Runtime } from '../types.js';
 export interface FindingOptions {
   kind: FindingKind;
   retention: FindingRetention;
+  factClass: MemoryFactClass;
   title: string;
   conclusion: string;
   rationale: string;
@@ -36,28 +43,12 @@ export interface FindingOptions {
   json?: boolean;
 }
 
-function slug(value: string): string {
-  return (
-    value
-      .normalize('NFKC')
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      .slice(0, 48) || 'finding'
-  );
-}
-
-function validDate(value: string | undefined): value is string {
-  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  const date = new Date(`${value}T00:00:00Z`);
-  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
-}
-
 function assertOptions(options: FindingOptions): void {
   assertNoHighConfidenceSecret(
     [
       options.kind,
       options.retention,
+      options.factClass,
       options.title,
       options.conclusion,
       options.rationale,
@@ -75,6 +66,7 @@ function assertOptions(options: FindingOptions): void {
   if (!['workstream', 'durable'].includes(options.retention)) {
     throw new Error(`Invalid finding retention: ${String(options.retention)}`);
   }
+  assertFindingFactSemantics(options.retention, options.factClass);
   for (const [name, value] of [
     ['title', options.title],
     ['conclusion', options.conclusion],
@@ -104,7 +96,7 @@ function assertOptions(options: FindingOptions): void {
     if (!options.workstream || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(options.workstream)) {
       throw new Error('Finding workstream is required and must be a stable identifier');
     }
-    if (!validDate(options.expires)) {
+    if (!validFactExpiry(options.expires)) {
       throw new Error('Finding expires is required and must be a calendar date');
     }
   } else if (options.workstream !== undefined || options.expires !== undefined) {
@@ -147,8 +139,9 @@ function render(
       'source-refs': sourceRefs,
       'source-of-truth': false,
       'schema-version': 1,
-      'finding-schema-version': 1,
+      'finding-schema-version': 2,
       'finding-kind': options.kind,
+      'fact-class': options.factClass,
       'finding-digest': `sha256:${digest}`,
       retention: options.retention,
       ...(options.workstream ? { workstream: options.workstream } : {}),
@@ -185,10 +178,17 @@ export function captureFinding(
     if (existing && parsed.metadata.get('workstream') !== options.workstream) {
       throw new Error('Finding workstream cannot change for an existing identity');
     }
+    if (existing && parsed.metadata.get('fact-class') !== options.factClass) {
+      throw new Error('Finding fact class cannot change for an existing identity');
+    }
     const memoryKind = options.retention === 'durable' ? 'distilled' : 'working';
     const path =
       existing ??
-      join(memoryRoot, memoryKind, `${date}-${slug(options.title)}-${digest.slice(0, 16)}.md`);
+      join(
+        memoryRoot,
+        memoryKind,
+        `${date}-${findingSlug(options.title)}-${digest.slice(0, 16)}.md`,
+      );
     assertSafePath(memoryRoot, path);
     const created = String(parsed.metadata.get('created') || date);
     const evidence = [

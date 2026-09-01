@@ -166,6 +166,8 @@ export function renderHandoff(
     scope: options.scope || [],
     'source-refs': options.sourceRefs || [],
     'source-of-truth': false,
+    'fact-class': 'recovery-state',
+    'expiry-policy': 'handoff-lifecycle',
     'schema-version': 1,
     'host-adapter': runtime.hostAdapter,
     'session-id': identity.sessionId,
