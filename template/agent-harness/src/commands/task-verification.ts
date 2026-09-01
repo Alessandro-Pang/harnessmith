@@ -10,6 +10,7 @@ import {
 import { outputTask } from '../lib/task-output.js';
 import { projectRoot, readTask, withTaskLock, writeTask } from '../lib/task-store.js';
 import { mechanicallyVerifyEvidence } from '../lib/task-verification.js';
+import { assertAcceptanceEvidenceRole } from '../lib/workflow-relations.js';
 import type { Io, TaskRecord } from '../types.js';
 
 export function verifyAcceptance(
@@ -43,6 +44,7 @@ export function verifyAcceptance(
     assertTaskMutable(task);
     const target = task.acceptance.find((item) => item.id === criterion);
     if (!target) throw new Error(`Acceptance criterion does not exist: ${criterion}`);
+    if (type === 'file' && file) assertAcceptanceEvidenceRole(root, file);
     validateMemoryPreflight(join(root, '.agent-docs'), 'project');
     const time = now();
     const result = mechanicallyVerifyEvidence(

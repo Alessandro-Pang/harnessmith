@@ -8,6 +8,7 @@ import {
   type MemoryPromotionOptions,
   memoryPromotionProposal,
 } from '../commands/memory-promotion.js';
+import { workflowRelations } from '../commands/workflow-relations.js';
 import type { Io, Runtime } from '../types.js';
 import { registerMemoryAutopilotCommands } from './memory-autopilot.js';
 import { registerMemoryCaptureEligibilityCommand } from './memory-capture-eligibility.js';
@@ -61,6 +62,15 @@ export function registerMemoryCommands(
     .option('--json', 'write a machine-readable curation report')
     .action(
       run((scope: string, options: CurationOptions) => curateMemory(runtime, scope, options, io)),
+    );
+  memory
+    .command('relationships <scope>')
+    .description('report Task, workstream, session, and Memory relationships')
+    .option('--json', 'write a machine-readable relationship report')
+    .action(
+      run((scope: string, options: { json?: boolean }) =>
+        workflowRelations(runtime, scope, options, io),
+      ),
     );
   memory
     .command('maintain [scope]')

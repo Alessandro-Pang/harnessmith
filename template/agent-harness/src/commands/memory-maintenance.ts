@@ -79,6 +79,7 @@ function renderReport(report: MemoryMaintenanceReport, io: Io): void {
     );
   }
   io.log(`Eligibility coverage: ${report.eligibility.evaluated}/${report.eligibility.total}`);
+  io.log(`Workflow relation conflicts: ${report.relations.summary.conflicts}`);
   renderLegacyDetails(report, io);
 }
 

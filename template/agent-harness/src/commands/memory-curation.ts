@@ -6,6 +6,7 @@ import {
 import { validateMemoryRoot } from '../lib/memory-validation.js';
 import { assertNoHighConfidenceSecret } from '../lib/secret-hygiene.js';
 import { projectRoot, readTask } from '../lib/task-store.js';
+import { otherTaskOwners, taskReferences } from '../lib/workflow-relations.js';
 import { calendarDate } from '../runtime.js';
 import type { Io, Runtime, TaskStatus } from '../types.js';
 
@@ -77,7 +78,6 @@ interface CandidateBuckets {
 }
 
 const activeStatuses = new Set(['active', 'blocked']);
-
 function addArchiveCandidate(
   document: CurationDocument,
   all: CurationDocument[],
@@ -90,6 +90,16 @@ function addArchiveCandidate(
     document.expires !== undefined &&
     document.expires < today;
   if (!expired && !['complete', 'superseded'].includes(document.status)) return false;
+  const owners = taskReferences(document.sourceRefs);
+  if (owners.length > 1) {
+    buckets.skipped.push(
+      candidate(
+        document,
+        `shared task owners remain: ${owners.map((owner) => `task:${owner}`).join(', ')}`,
+      ),
+    );
+    return false;
+  }
   const identity = canonicalMemoryReference(document.reference);
   const inbound = all.filter(
     (source) =>
@@ -121,6 +131,7 @@ function analyzeDocument(
   outcome: CurationOutcome,
   today: string,
   buckets: CandidateBuckets,
+  task: string,
 ): void {
   let actionable = false;
   if (
@@ -137,8 +148,18 @@ function analyzeDocument(
     document.type === 'session-handoff';
   const closesWithWorkstream = ['workstream-complete', 'user-cancel'].includes(outcome);
   if (activeStatuses.has(document.status) && workstreamState && closesWithWorkstream) {
-    buckets.close.push(candidate(document, `workstream outcome is ${outcome}`));
-    actionable = true;
+    const sharedOwners = otherTaskOwners(document.sourceRefs, task);
+    if (sharedOwners.length > 0) {
+      buckets.skipped.push(
+        candidate(
+          document,
+          `shared task owner remains: ${sharedOwners.map((owner) => `task:${owner}`).join(', ')}`,
+        ),
+      );
+    } else {
+      buckets.close.push(candidate(document, `workstream outcome is ${outcome}`));
+      actionable = true;
+    }
   } else if (activeStatuses.has(document.status) && workstreamState) {
     buckets.skipped.push(candidate(document, 'workstream continues after this task or phase'));
   }
@@ -200,7 +221,7 @@ export function curateMemory(
     skipped: [],
   };
   const today = calendarDate(runtime);
-  for (const document of scoped) analyzeDocument(document, all, outcome, today, buckets);
+  for (const document of scoped) analyzeDocument(document, all, outcome, today, buckets, task.id);
 
   const result =
     buckets.promote.length +

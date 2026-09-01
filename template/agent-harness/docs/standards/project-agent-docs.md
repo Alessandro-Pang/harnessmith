@@ -201,7 +201,13 @@ proposed 或 blocked 时同时说明原因和所需决策。普通任务仍只�
 task/workstream 关联的 Memory；输出 promote、close、supersede、archive、skipped 候选或 `result: none`。
 task complete 不自动表示 workstream complete，不能据此关闭仍有效的 input 或 handoff。报告不证明任务完成，
 不执行 mutation；promotion 仍需 owner、授权与事实源验证，close/supersede/archive 仍走现有 typed lifecycle
-命令及其 inbound reference、状态和 cycle 门禁。
+命令及其 inbound reference、状态和 cycle 门禁。多个 `task:` source ref 表示共享 owner；只结束其中一个
+task/workstream 时不得关闭或归档该文档。
+
+`memory relationships <project> --json` 只读汇总 Task、默认 phase/workstream、Memory、session 与 owner 关系，
+并报告 orphan task reference 和 cross-workstream binding。关系报告不是新的权威状态层；Task ledger 继续拥有
+acceptance，Handoff 只拥有 recovery state。任务切换到同一 Handoff 的第二个独立 task 时必须使用
+`checkpoint-reason: multi-task`。
 
 ## 维护与安全
 
