@@ -9,6 +9,8 @@ import { capabilityEvidenceIssues } from './capability-evidence.js';
 import { promptRuleContractIssues } from './prompt-rule-contract.js';
 
 interface ManifestEntry {
+  actionAliases?: unknown;
+  conceptAliases?: unknown;
   kind?: unknown;
   path?: unknown;
   priority?: unknown;
@@ -107,14 +109,18 @@ function manifestRoutes(docsRoot: string, manifest: DocsManifest, check: Check):
     check(validEntry, `docs route ${name} must be an object`);
     check(!invalidMetadata.has(name), `docs route ${name} has invalid kind or priority`);
     const routePath = validEntry && typeof entry.path === 'string' ? entry.path.trim() : '';
-    const triggers = validEntry && Array.isArray(entry.triggers) ? entry.triggers : [];
+    const aliasField = entry.kind === 'playbook' ? 'actionAliases' : 'conceptAliases';
+    const aliases = validEntry && Array.isArray(entry[aliasField]) ? entry[aliasField] : [];
     check(Boolean(routePath), `docs route ${name} has no path`);
-    check(triggers.length > 0, `docs route ${name} has no triggers`);
+    check(aliases.length > 0, `docs route ${name} has no ${aliasField}`);
     check(
-      triggers.every((trigger) => typeof trigger === 'string' && trigger.trim().length > 0),
-      `docs route ${name} has invalid triggers`,
+      aliases.every((alias) => typeof alias === 'string' && alias.trim().length > 0),
+      `docs route ${name} has invalid ${aliasField}`,
     );
-    check(new Set(triggers).size === triggers.length, `docs route ${name} has duplicate triggers`);
+    check(
+      new Set(aliases).size === aliases.length,
+      `docs route ${name} has duplicate ${aliasField}`,
+    );
     if (!routePath) continue;
     const target = resolve(docsRoot, routePath);
     check(target.startsWith(`${docsRoot}${sep}`), `docs route ${name} escapes the docs directory`);

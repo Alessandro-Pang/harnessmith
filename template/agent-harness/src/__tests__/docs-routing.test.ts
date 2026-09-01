@@ -4,12 +4,15 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { routeDocumentation } from '../lib/docs-routing.js';
+import { resolveResponseLanguage } from '../lib/response-language.js';
 import { sourceHarnessRoot } from './helpers/harness.js';
 
 const docsRoot = join(sourceHarnessRoot, 'docs');
 
 test('documentation routing accepts canonical Chinese task aliases', () => {
   const report = routeDocumentation(docsRoot, ['评审']);
+  assert.equal(report.version, 2);
+  assert.equal(report.status, 'matched');
   assert.deepEqual(
     report.routes.map(({ name }) => name),
     ['review'],
@@ -66,7 +69,7 @@ test('documentation routing keeps Git and safety as topics without giving either
   );
 });
 
-test('documentation routing rejects equally ranked playbook ambiguity', () => {
+test('documentation routing reports equally ranked playbook ambiguity without guessing', () => {
   const root = mkdtempSync(join(tmpdir(), 'harness-doc-routes-'));
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
   writeFileSync(
@@ -77,20 +80,88 @@ entries:
     kind: playbook
     priority: 10
     path: first.md
-    triggers: [检查]
+    actionAliases: [检查]
   second:
     kind: playbook
     priority: 10
     path: second.md
-    triggers: [检查]
+    actionAliases: [检查]
 `,
   );
 
-  assert.throws(() => routeDocumentation(root, ['检查']), /ambiguous documentation playbooks/i);
+  const report = routeDocumentation(root, ['检查']);
+  assert.equal(report.status, 'ambiguous');
+  assert.equal(report.primaryPlaybook, null);
+  assert.deepEqual(report.ambiguity, ['first', 'second']);
 });
 
 test('documentation routing rejects trigger substrings inside unrelated words', () => {
-  assert.deepEqual(routeDocumentation(docsRoot, ['digital']).routes, []);
+  const report = routeDocumentation(docsRoot, ['digital']);
+  assert.equal(report.status, 'unmatched');
+  assert.deepEqual(report.routes, []);
+});
+
+test('CJK punctuation and mixed-language requests preserve action intent', () => {
+  for (const query of [
+    '请评审这个 change plan。',
+    'Please review 这个变更方案。',
+    '请检查：Git branch 命名。',
+  ]) {
+    const report = routeDocumentation(docsRoot, [query]);
+    assert.equal(report.primaryPlaybook?.name, 'review', query);
+    assert.equal(report.status, 'matched', query);
+  }
+});
+
+test.each([
+  '不要评审，只分析这个方案。',
+  'Do not review; analyze the design instead.',
+  '“请评审这个方案”只是引用，不是当前请求。',
+  'The phrase "implement the fix" is an example, not an instruction.',
+])(
+  'negation, quotation, and meta discussion do not select the mentioned action for %s',
+  (query) => {
+    const report = routeDocumentation(docsRoot, [query]);
+    assert.notEqual(
+      report.primaryPlaybook?.name,
+      query.includes('implement') ? 'change' : 'review',
+    );
+  },
+);
+
+test('response language priority is current explicit, persisted evidence, then detection', () => {
+  assert.deepEqual(
+    resolveResponseLanguage('Please inspect this change.', {
+      currentExplicit: 'zh-CN',
+      persisted: { language: 'en', evidence: 'explicit' },
+    }),
+    { language: 'zh-CN', source: 'current-explicit', profileMutation: 'none' },
+  );
+  assert.deepEqual(
+    resolveResponseLanguage('请检查这个 change。', {
+      persisted: { language: 'en', evidence: 'observed' },
+    }),
+    { language: 'en', source: 'persistent-observed', profileMutation: 'none' },
+  );
+  assert.deepEqual(resolveResponseLanguage('请检查这个 change。'), {
+    language: 'zh-CN',
+    source: 'detected',
+    profileMutation: 'none',
+  });
+});
+
+test('one-turn translation and rewrite requests never become persistent language evidence', () => {
+  const report = routeDocumentation(docsRoot, ['Translate this sentence into Chinese.']);
+  assert.equal(report.responseLanguage.profileMutation, 'none');
+  assert.equal(report.responseLanguage.source, 'detected');
+
+  assert.throws(
+    () =>
+      resolveResponseLanguage('Rewrite this in English.', {
+        persisted: { language: 'en', evidence: 'transient' as 'explicit' },
+      }),
+    /persistent language evidence/i,
+  );
 });
 
 test.each(['创建分支', '给我创建一个分支名', '请检查这个提交规范'])(

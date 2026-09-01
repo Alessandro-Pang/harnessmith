@@ -62,8 +62,10 @@ frontmatter，Ajv 负责 JSON Schema，`write-file-atomic` 负责原子写。路
 映射、staging、备份和回滚属于外层 adapter，不进入通用 Harness 命令层。
 
 `health --json` 聚合 Runtime、安装、全局记忆、运行审计和可选项目记忆；未配置审计不是故障，warning 不等于失败，任一 failed check
-使退出码非零。`route` 与 `explain` 只读取 manifest trigger 并返回名称、路径和 matched triggers，不
-加载文档正文。`search` 与 `memory search` 的 `auto|scan|fulltext` 模式共享同一 provenance 契约：
+使退出码非零。`route` 与 `explain` 只读取 manifest 的 action/concept aliases 并返回名称、路径和 matched
+aliases，不加载文档正文。动作 alias 只选择 primary playbook，概念 alias 只加载 supporting topic/standard；
+JSON 报告显式给出 `matched | unmatched | ambiguous`、唯一 `top1` 和歧义候选，后两种状态 exit 2。
+`search` 与 `memory search` 的 `auto|scan|fulltext` 模式共享同一 provenance 契约：
 `auto` 只在索引格式、backend、analyzer、ICU、policy、scope 和源文件身份全部有效时使用全文索引，
 否则回退有界扫描；`fulltext` 对同一条件 fail closed；`scan` 保留原路径。只有显式
 `--refresh-index` 是写操作，并先验证 Runtime 身份。
