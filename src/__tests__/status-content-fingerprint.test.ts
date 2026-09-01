@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { createAdapter } from '../adapters.js';
+import { effectiveContentFingerprint } from '../effective-content-fingerprint.js';
 import { installAll } from '../install.js';
 import { inspectStatusAll, statusAll } from '../lifecycle.js';
 import { explainStatus } from '../status-explanation.js';
@@ -102,4 +103,40 @@ test('a malformed install context is reported as drift instead of breaking statu
 
   assert.equal(status.contentFingerprint.state, 'drifted');
   assert.ok(status.outputs.some(({ status: value }) => value === 'modified'));
+});
+
+test('fingerprint normalization handles JSON-escaped Windows paths', () => {
+  const left = fixture('harnessmith-fingerprint-windows-left-');
+  const right = fixture('harnessmith-fingerprint-windows-right-');
+  for (const [fixtureValue, root] of [
+    [left, 'C:\\Users\\left'],
+    [right, 'C:\\Users\\right'],
+  ] as const) {
+    mkdirSync(fixtureValue.adapter.harness, { recursive: true });
+    const harnessHome = `${root}\\.codex`;
+    const instruction = `${harnessHome}\\AGENTS.md`;
+    writeFileSync(
+      join(fixtureValue.adapter.harness, 'install-context.json'),
+      `${JSON.stringify(
+        {
+          version: 1,
+          adapter: 'codex',
+          harnessHome,
+          instructionFiles: [instruction],
+          memoryHome: `${root}\\.agent-docs`,
+          personalHome: `${root}\\.agent-harness`,
+          repositoryRoot: `${root}\\git-repo`,
+          owner: 'fingerprint-test',
+        },
+        null,
+        2,
+      )}\n`,
+    );
+    writeFileSync(fixtureValue.adapter.instructions[0].path, `Read ${harnessHome}\\docs\n`);
+  }
+
+  assert.equal(
+    effectiveContentFingerprint(left.adapter),
+    effectiveContentFingerprint(right.adapter),
+  );
 });

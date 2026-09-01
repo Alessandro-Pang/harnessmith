@@ -68,13 +68,35 @@ function normalizedContent(
   const text = content.toString('utf8');
   if (!Buffer.from(text, 'utf8').equals(content)) return content;
   const isContext = portable(relative) === 'install-context.json';
-  return substitutions.reduce(
-    (value, replacement) =>
-      replacement.contextOnly && !isContext
-        ? value
-        : value.replaceAll(replacement.value, replacement.token),
-    text,
-  );
+  const normalize = (value: string, context: boolean) =>
+    substitutions.reduce(
+      (result, replacement) =>
+        replacement.contextOnly && !context
+          ? result
+          : result.replaceAll(replacement.value, replacement.token),
+      value,
+    );
+  if (isContext) {
+    try {
+      const normalizeJson = (value: unknown): unknown => {
+        if (typeof value === 'string') return normalize(value, true);
+        if (Array.isArray(value)) return value.map(normalizeJson);
+        if (value && typeof value === 'object') {
+          return Object.fromEntries(
+            Object.entries(value as Record<string, unknown>).map(([key, item]) => [
+              key,
+              normalizeJson(item),
+            ]),
+          );
+        }
+        return value;
+      };
+      return JSON.stringify(normalizeJson(JSON.parse(text)));
+    } catch {
+      return text;
+    }
+  }
+  return normalize(text, false);
 }
 
 function reserve(budget: FingerprintBudget, path: string, depth: number, bytes = 0): void {
