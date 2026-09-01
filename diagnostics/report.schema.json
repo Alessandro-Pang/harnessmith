@@ -1,0 +1,374 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:harnessmith:schema:diagnostics-report:v1",
+  "title": "Harnessmith redacted diagnostics report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "command",
+    "collectionResult",
+    "privacy",
+    "budget",
+    "package",
+    "adapters",
+    "failures",
+    "verification"
+  ],
+  "properties": {
+    "version": {
+      "const": 1,
+      "x-owner": "harnessmith",
+      "x-purpose": "identify the report schema",
+      "x-retention": "user-controlled ephemeral output"
+    },
+    "command": {
+      "const": "diagnostics",
+      "x-owner": "harnessmith",
+      "x-purpose": "identify the producing command",
+      "x-retention": "user-controlled ephemeral output"
+    },
+    "collectionResult": {
+      "enum": ["complete", "partial", "inconclusive"],
+      "x-owner": "harnessmith diagnostics collector",
+      "x-purpose": "preserve aggregate collection outcome",
+      "x-retention": "user-controlled ephemeral output"
+    },
+    "privacy": {
+      "$ref": "#/$defs/privacy",
+      "x-owner": "harnessmith diagnostics collector",
+      "x-purpose": "state upload and persistence behavior",
+      "x-retention": "user-controlled ephemeral output"
+    },
+    "budget": {
+      "$ref": "#/$defs/budget",
+      "x-owner": "harnessmith diagnostics collector",
+      "x-purpose": "expose bounded collection limits",
+      "x-retention": "user-controlled ephemeral output"
+    },
+    "package": {
+      "$ref": "#/$defs/package",
+      "x-owner": "harnessmith package",
+      "x-purpose": "identify the reporting implementation version",
+      "x-retention": "user-controlled ephemeral output"
+    },
+    "adapters": {
+      "type": "array",
+      "maxItems": 5,
+      "items": { "$ref": "#/$defs/adapter" },
+      "x-owner": "outer installer adapters",
+      "x-purpose": "summarize bounded Host-specific evidence",
+      "x-retention": "user-controlled ephemeral output"
+    },
+    "failures": {
+      "type": "array",
+      "maxItems": 20,
+      "items": { "$ref": "#/$defs/failure" },
+      "x-owner": "harnessmith diagnostics collector",
+      "x-purpose": "preserve partial collection failures",
+      "x-retention": "user-controlled ephemeral output"
+    },
+    "verification": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 8,
+      "items": { "type": "string", "maxLength": 256 },
+      "x-owner": "harnesssmith maintainers",
+      "x-purpose": "provide path-redacted reproduction commands",
+      "x-retention": "user-controlled ephemeral output"
+    }
+  },
+  "$defs": {
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["uploaded", "persisted", "previewOnly"],
+      "properties": {
+        "uploaded": {
+          "const": false,
+          "x-owner": "harnessmith diagnostics collector",
+          "x-purpose": "declare that the command performs no upload",
+          "x-retention": "user-controlled ephemeral output"
+        },
+        "persisted": {
+          "const": false,
+          "x-owner": "harnessmith diagnostics collector",
+          "x-purpose": "declare that the command writes no bundle",
+          "x-retention": "user-controlled ephemeral output"
+        },
+        "previewOnly": {
+          "const": true,
+          "x-owner": "user",
+          "x-purpose": "require review before any external sharing",
+          "x-retention": "user-controlled ephemeral output"
+        }
+      }
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maxAdapters", "maxCommandBytes", "timeoutMs", "truncated"],
+      "properties": {
+        "maxAdapters": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5,
+          "x-owner": "harnessmith diagnostics collector",
+          "x-purpose": "bound Adapter fanout",
+          "x-retention": "user-controlled ephemeral output"
+        },
+        "maxCommandBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 262144,
+          "x-owner": "harnessmith diagnostics collector",
+          "x-purpose": "bound subprocess output reads",
+          "x-retention": "user-controlled ephemeral output"
+        },
+        "timeoutMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000,
+          "x-owner": "harnessmith diagnostics collector",
+          "x-purpose": "bound each subprocess duration",
+          "x-retention": "user-controlled ephemeral output"
+        },
+        "truncated": {
+          "type": "boolean",
+          "x-owner": "harnessmith diagnostics collector",
+          "x-purpose": "distinguish incomplete collection from absence",
+          "x-retention": "user-controlled ephemeral output"
+        }
+      }
+    },
+    "package": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version"],
+      "properties": {
+        "version": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+",
+          "x-owner": "harnessmith package",
+          "x-purpose": "correlate diagnostics with implementation version",
+          "x-retention": "user-controlled ephemeral output"
+        }
+      }
+    },
+    "capability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope", "instructionFormat", "nativeRuleActivation"],
+      "properties": {
+        "scope": {
+          "enum": ["global", "project"],
+          "x-owner": "outer installer Adapter",
+          "x-purpose": "identify destination scope without a path",
+          "x-retention": "user-controlled ephemeral output"
+        },
+        "instructionFormat": {
+          "enum": ["markdown", "mdc"],
+          "x-owner": "outer installer Adapter",
+          "x-purpose": "identify the instruction contract",
+          "x-retention": "user-controlled ephemeral output"
+        },
+        "nativeRuleActivation": {
+          "enum": ["host-default", "always"],
+          "x-owner": "Host Adapter contract",
+          "x-purpose": "identify Host activation ownership",
+          "x-retention": "user-controlled ephemeral output"
+        }
+      }
+    },
+    "outputCounts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["managed", "modified", "missing", "unmanaged"],
+      "properties": {
+        "managed": {
+          "type": "integer",
+          "minimum": 0,
+          "x-owner": "outer installer lifecycle",
+          "x-purpose": "count checksum-matching outputs",
+          "x-retention": "user-controlled ephemeral output"
+        },
+        "modified": {
+          "type": "integer",
+          "minimum": 0,
+          "x-owner": "outer installer lifecycle",
+          "x-purpose": "count checksum-mismatched outputs",
+          "x-retention": "user-controlled ephemeral output"
+        },
+        "missing": {
+          "type": "integer",
+          "minimum": 0,
+          "x-owner": "outer installer lifecycle",
+          "x-purpose": "count absent outputs",
+          "x-retention": "user-controlled ephemeral output"
+        },
+        "unmanaged": {
+          "type": "integer",
+          "minimum": 0,
+          "x-owner": "outer installer lifecycle",
+          "x-purpose": "count outputs without ownership evidence",
+          "x-retention": "user-controlled ephemeral output"
+        }
+      }
+    },
+    "installation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "reasonCode", "outputCounts"],
+      "properties": {
+        "status": {
+          "enum": ["managed", "modified", "partial", "unmanaged", "missing", "inconclusive"],
+          "x-owner": "outer installer lifecycle",
+          "x-purpose": "summarize installation ownership",
+          "x-retention": "user-controlled ephemeral output"
+        },
+        "reasonCode": {
+          "type": "string",
+          "pattern": "^[A-Z0-9_]+$",
+          "maxLength": 96,
+          "x-owner": "harnessmith diagnostics collector",
+          "x-purpose": "provide a stable non-content failure class",
+          "x-retention": "user-controlled ephemeral output"
+        },
+        "outputCounts": {
+          "$ref": "#/$defs/outputCounts",
+          "x-owner": "outer installer lifecycle",
+          "x-purpose": "report aggregate output states without paths",
+          "x-retention": "user-controlled ephemeral output"
+        }
+      }
+    },
+    "runtimeCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "status"],
+      "properties": {
+        "id": {
+          "enum": ["runtime", "installation", "global-memory", "project-memory", "audit"],
+          "x-owner": "embedded Harness runtime",
+          "x-purpose": "identify an allowlisted health check",
+          "x-retention": "user-controlled ephemeral output"
+        },
+        "status": {
+          "enum": ["passed", "warning", "failed"],
+          "x-owner": "embedded Harness runtime",
+          "x-purpose": "report health without raw messages or details",
+          "x-retention": "user-controlled ephemeral output"
+        }
+      }
+    },
+    "subsystem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "status", "reasonCode", "artifactDigest"],
+      "properties": {
+        "id": {
+          "enum": ["memory", "task", "routing", "host"],
+          "x-owner": "Harness or Host boundary",
+          "x-purpose": "identify the diagnosed subsystem",
+          "x-retention": "user-controlled ephemeral output"
+        },
+        "status": {
+          "enum": ["passed", "warning", "failed", "inconclusive"],
+          "x-owner": "harnessmith diagnostics collector",
+          "x-purpose": "preserve subsystem outcome semantics",
+          "x-retention": "user-controlled ephemeral output"
+        },
+        "reasonCode": {
+          "type": "string",
+          "pattern": "^[A-Z0-9_]+$",
+          "maxLength": 96,
+          "x-owner": "harnessmith diagnostics collector",
+          "x-purpose": "provide a stable non-content classification",
+          "x-retention": "user-controlled ephemeral output"
+        },
+        "artifactDigest": {
+          "type": ["string", "null"],
+          "pattern": "^sha256:[a-f0-9]{64}$",
+          "x-owner": "harnessmith diagnostics collector",
+          "x-purpose": "correlate evidence without retaining raw output",
+          "x-retention": "user-controlled ephemeral output"
+        }
+      }
+    },
+    "adapter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["adapter", "capability", "installation", "runtimeChecks", "subsystems"],
+      "properties": {
+        "adapter": {
+          "enum": ["codex", "cursor", "claude", "opencode", "kimi"],
+          "x-owner": "outer installer Adapter",
+          "x-purpose": "identify the Host contract without user identifiers",
+          "x-retention": "user-controlled ephemeral output"
+        },
+        "capability": {
+          "$ref": "#/$defs/capability",
+          "x-owner": "outer installer Adapter",
+          "x-purpose": "report stable Adapter boundaries",
+          "x-retention": "user-controlled ephemeral output"
+        },
+        "installation": {
+          "$ref": "#/$defs/installation",
+          "x-owner": "outer installer lifecycle",
+          "x-purpose": "report redacted installation status",
+          "x-retention": "user-controlled ephemeral output"
+        },
+        "runtimeChecks": {
+          "type": "array",
+          "maxItems": 5,
+          "items": { "$ref": "#/$defs/runtimeCheck" },
+          "x-owner": "embedded Harness runtime",
+          "x-purpose": "report allowlisted health statuses only",
+          "x-retention": "user-controlled ephemeral output"
+        },
+        "subsystems": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": { "$ref": "#/$defs/subsystem" },
+          "x-owner": "Harness and Host boundary owners",
+          "x-purpose": "summarize Memory, Task, routing, and Host evidence",
+          "x-retention": "user-controlled ephemeral output"
+        }
+      }
+    },
+    "failure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["adapter", "source", "errorCode", "result"],
+      "properties": {
+        "adapter": {
+          "enum": ["codex", "cursor", "claude", "opencode", "kimi"],
+          "x-owner": "outer installer Adapter",
+          "x-purpose": "attribute collection failure without a path",
+          "x-retention": "user-controlled ephemeral output"
+        },
+        "source": {
+          "enum": ["installation", "health", "task", "routing"],
+          "x-owner": "harnessmith diagnostics collector",
+          "x-purpose": "identify the failed collection stage",
+          "x-retention": "user-controlled ephemeral output"
+        },
+        "errorCode": {
+          "type": "string",
+          "pattern": "^[A-Z0-9_]+$",
+          "maxLength": 96,
+          "x-owner": "harnessmith diagnostics collector",
+          "x-purpose": "report a stable classification without raw errors",
+          "x-retention": "user-controlled ephemeral output"
+        },
+        "result": {
+          "const": "inconclusive",
+          "x-owner": "harnessmith diagnostics collector",
+          "x-purpose": "prevent a failed collection from appearing successful",
+          "x-retention": "user-controlled ephemeral output"
+        }
+      }
+    }
+  }
+}

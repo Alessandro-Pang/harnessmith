@@ -96,6 +96,17 @@ test('Commander exposes proposal-bound adopt options', async () => {
   assert.equal(result.yes, true);
 });
 
+test('Commander exposes read-only diagnostics reports', async () => {
+  let result: (CliOptions & { command: HarnessmithCommand }) | undefined;
+  const program = createProgram(async (command, options) => {
+    result = { command, ...options };
+  });
+  await program.parseAsync(['diagnostics', '--agent', 'codex', '--json'], { from: 'user' });
+  assert.ok(result);
+  assert.equal(result.command, 'diagnostics');
+  assert.equal(result.json, true);
+});
+
 test('Commander exposes adapter capabilities as a read-only command', async () => {
   let result: (CliOptions & { command: HarnessmithCommand }) | undefined;
   const program = createProgram(async (command, options) => {

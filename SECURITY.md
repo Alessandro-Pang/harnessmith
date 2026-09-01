@@ -23,6 +23,9 @@ reproduction without secrets or personal memory content.
 - Install, status, restore, and uninstall serialize each Adapter through a cross-process operation lock. Do
   not delete a live lock to force progress.
 - Backups and installation records remain local.
+- `diagnostics` emits only schema-allowlisted metadata to stdout. It does not persist or upload reports, and it
+  excludes raw prompts, model output, tool arguments, file bodies, environment variables, secrets, local paths,
+  and user identifiers. Review the preview before sharing it.
 - Uninstall does not delete shared or project `.agent-docs` memory.
 - A future custom-template feature must treat templates as executable trusted input because installed
   Harness JavaScript can run with the user's permissions.

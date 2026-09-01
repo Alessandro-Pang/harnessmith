@@ -161,6 +161,20 @@ claims:
     verification:
       - template/agent-harness/src/__tests__/audit.test.ts
 
+  - id: privacy-safe-diagnostics-preview
+    status: implemented
+    owner: outer diagnostics collector
+    claim: Preview bounded, schema-allowlisted installation and embedded Runtime diagnostics without persisting or uploading raw content, secrets, local paths, environment variables, or user identifiers, while preserving partial failures and Host-dependent conclusions.
+    implementation:
+      - src/diagnostics.ts
+      - src/diagnostics-runtime.ts
+      - src/diagnostics-process.ts
+      - src/diagnostics-command.ts
+      - diagnostics/report.schema.json
+    verification:
+      - src/__tests__/diagnostics.test.ts
+      - src/__tests__/args.test.ts
+
   - id: candidate-bound-host-eval-gate
     status: implemented
     owner: release verification scripts

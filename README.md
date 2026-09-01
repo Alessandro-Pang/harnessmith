@@ -84,6 +84,9 @@ npx harnessmith uninstall --agent codex
 # 查看 Adapter 的机器可读边界
 npx harnessmith capabilities --json
 
+# 预览本地脱敏诊断报告；命令不上传或持久化报告
+npx harnessmith diagnostics --agent codex --json
+
 # 检查个人 Repository Map 中的跨仓库关系
 node <harness-path>/bin/harness.mjs repository-map check --json
 
@@ -105,12 +108,12 @@ node <harness-path>/bin/harness.mjs health --json
 
 | 状态 | Harnessmith 的承诺 |
 | --- | --- |
-| 已实现（Implemented） | Adapter 分发、预检、备份、锁、回滚、非权威 Memory、Task gate 与隐私安全的 `audit record` |
+| 已实现（Implemented） | Adapter 分发、预检、备份、锁、回滚、非权威 Memory、Task gate、隐私安全的 `audit record` 与脱敏诊断预览 |
 | 由宿主负责（Delegated to the Host） | 模型循环、工具/MCP 调度、sandbox、权限批准、token 与成本 |
 | 不支持（Unsupported） | 通用 Runtime、Policy Engine、Pack/Registry、多 Agent 调度和自动规则提升 |
 
-Markdown 规则是行为指导，不是权限强制。审计 schema 拒绝原始 prompt、模型输出和 tool arguments；事件真实性仍由
-宿主或外部 attestation 保证。逐项 owner、状态与证据路径见
+Markdown 规则是行为指导，不是权限强制。审计与诊断 schema 拒绝原始 prompt、模型输出、tool arguments、文件正文、
+环境变量和 secret；事件真实性仍由宿主或外部 attestation 保证。逐项 owner、状态与证据路径见
 [docs/capability-evidence.yaml](./docs/capability-evidence.yaml)。
 
 ## 深入了解

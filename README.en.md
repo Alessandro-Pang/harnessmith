@@ -85,6 +85,9 @@ npx harnessmith uninstall --agent codex
 # Inspect machine-readable Adapter boundaries
 npx harnessmith capabilities --json
 
+# Preview a local redacted diagnostics report; the command neither uploads nor persists it
+npx harnessmith diagnostics --agent codex --json
+
 # Check cross-repository relationships in your personal Repository Map
 node <harness-path>/bin/harness.mjs repository-map check --json
 
@@ -108,12 +111,12 @@ fails closed when the index is unavailable, while `--mode scan` forces scanning.
 
 | State | Harnessmith's contract |
 | --- | --- |
-| Implemented | Adapter distribution, preflight, backups, locks, rollback, non-authoritative Memory, Task gates, and a privacy-safe `audit record` |
+| Implemented | Adapter distribution, preflight, backups, locks, rollback, non-authoritative Memory, Task gates, a privacy-safe `audit record`, and redacted diagnostics previews |
 | Delegated to the Host | Model loops, tool/MCP scheduling, sandboxing, approvals, tokens, and cost |
 | Unsupported | A universal Runtime, Policy Engine, Pack/Registry, multi-agent orchestration, and automatic rule promotion |
 
-Markdown instructions are guidance, not permission enforcement. The audit schema rejects raw prompt content, model output,
-and tool arguments; event authenticity still belongs to the host or external attestation. See
+Markdown instructions are guidance, not permission enforcement. The audit and diagnostics schemas reject raw prompt content,
+model output, tool arguments, file bodies, environment variables, and secrets; event authenticity still belongs to the host or external attestation. See
 [docs/capability-evidence.yaml](./docs/capability-evidence.yaml) for per-capability owners, states, and evidence.
 
 ## Learn more
