@@ -181,6 +181,8 @@ test('the shipped session template uses the canonical typed handoff contract', (
   for (const metadata of [
     'session-base:',
     'handoff-generation: 1',
+    'fact-class: recovery-state',
+    'expiry-policy: handoff-lifecycle',
     'checkpoint-reason:',
     'snapshot-mode: replace',
   ]) {

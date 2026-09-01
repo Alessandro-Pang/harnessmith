@@ -3,6 +3,11 @@ import { calendarDate } from '../runtime.js';
 import type { Io, ProjectSnapshot, Runtime } from '../types.js';
 import { parseFrontmatterDocument } from './frontmatter.js';
 import { type MemoryCoreBudgetReport, memoryCoreBudget } from './memory-core-budget.js';
+import {
+  classifyMemoryFact,
+  type MemoryFactClass,
+  type MemoryFactClassification,
+} from './memory-fact-semantics.js';
 import { type MemoryMaintenanceReport, memoryMaintenanceReport } from './memory-maintenance.js';
 import { markdownFiles, memoryReference, readMemoryDocument } from './memory-path.js';
 import { validateMemoryRoot } from './memory-validation.js';
@@ -19,6 +24,9 @@ export interface BootstrapMetadata {
   status: string;
   updated: string;
   title: string;
+  factClass: MemoryFactClass | null;
+  classification: MemoryFactClassification;
+  requiresReverification: boolean;
 }
 
 export interface BootstrapMemoryRead {
@@ -84,6 +92,7 @@ function readBootstrapMetadata(memoryRoot: string, reasons: string[]) {
     const files = markdownFiles(memoryRoot, { archive: false });
     const metadata = files.slice(0, bootstrapMetadataLimit).map((path) => {
       const parsed = parseFrontmatterDocument(readMemoryDocument(path));
+      const semantics = classifyMemoryFact(parsed.metadata);
       return {
         path: relative(memoryRoot, path).replaceAll('\\', '/'),
         type: String(parsed.metadata.get('type') || 'unknown'),
@@ -91,6 +100,7 @@ function readBootstrapMetadata(memoryRoot: string, reasons: string[]) {
         status: String(parsed.metadata.get('status') || 'unknown'),
         updated: String(parsed.metadata.get('updated') || 'unknown'),
         title: String(parsed.metadata.get('title') || 'untitled'),
+        ...semantics,
       };
     });
     if (files.length > bootstrapMetadataLimit) {

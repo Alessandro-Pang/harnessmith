@@ -13,6 +13,7 @@ const findingPayloadSchema = {
   fields: {
     kind: 'string',
     retention: 'string',
+    factClass: 'string',
     title: 'string',
     conclusion: 'string',
     rationale: 'string',
@@ -25,6 +26,7 @@ const findingPayloadSchema = {
   required: [
     'kind',
     'retention',
+    'factClass',
     'title',
     'conclusion',
     'rationale',
@@ -46,6 +48,10 @@ export function registerMemoryFindingCommand(
     .description('capture or reconcile one sourced analysis, review, or research finding')
     .option('--kind <kind>', 'analysis, review, or research')
     .option('--retention <retention>', 'workstream or durable')
+    .option(
+      '--fact-class <class>',
+      'settled-fact, current-state, verification-pointer, recovery-state, or formal-fact',
+    )
     .option('--title <title>', 'bounded finding title')
     .option('--conclusion <text>', 'stable finding conclusion')
     .option('--rationale <text>', 'why the conclusion follows')

@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { bootstrapMetadataLimit, bootstrapProject } from '../commands/bootstrap.js';
 import { initProject } from '../commands/init.js';
+import { captureFinding } from '../commands/memory-finding.js';
 import { initTask } from '../commands/task.js';
 import { readBootstrapMemory } from '../lib/bootstrap-memory.js';
 import { memoryCoreHardByteLimit } from '../lib/memory-core-budget.js';
@@ -90,6 +91,36 @@ test('bootstrap distinguishes partial, invalid, and over-budget Memory', () => {
   assert.equal(report.memory.state, 'inconclusive');
   assert.equal(report.memory.core?.budget.status, 'hard-limit');
   assert.ok(report.reasons.some((reason) => /budget/i.test(reason)));
+});
+
+test('bootstrap exposes fact semantics and reverification requirements', () => {
+  const { project, runtime } = fixture();
+  initProject(runtime, project, capturedIo());
+  captureFinding(
+    runtime,
+    project,
+    {
+      kind: 'analysis',
+      retention: 'workstream',
+      factClass: 'current-state',
+      title: 'Recheck current branch state',
+      conclusion: 'The active branch state must be checked again before use.',
+      rationale: 'Branch state changes during implementation.',
+      application: 'Run the source verifier before making a branch-dependent decision.',
+      evidence: ['The stored statement is intentionally temporary.'],
+      sourceRefs: ['verifier:git status --short --branch'],
+      workstream: 'bootstrap-fact-semantics',
+      expires: '2026-09-30',
+    },
+    capturedIo(),
+  );
+
+  const finding = bootstrapProject(runtime, project, {}, capturedIo()).memory.metadata.find(
+    ({ type }) => type === 'analytical-finding',
+  );
+  assert.equal(finding?.factClass, 'current-state');
+  assert.equal(finding?.classification, 'explicit');
+  assert.equal(finding?.requiresReverification, true);
 });
 
 test('bootstrap caps metadata and reports truncation without reading archive bodies', () => {

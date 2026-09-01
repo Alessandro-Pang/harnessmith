@@ -35,6 +35,8 @@ test('typed durable finding deduplicates a conclusion and accumulates evidence',
           'analysis',
           '--retention',
           'durable',
+          '--fact-class',
+          'settled-fact',
           '--title',
           'Keep routing intent explicit',
           '--conclusion',
@@ -109,6 +111,7 @@ test('finding payload schema fails closed and preserves an invalid payload', () 
     JSON.stringify({
       kind: 'analysis',
       retention: 'durable',
+      factClass: 'settled-fact',
       title: 'Reject unknown payload fields',
       conclusion: 'Typed payloads must reject schema drift.',
       rationale: 'Unknown fields can silently bypass intended contracts.',
@@ -135,6 +138,7 @@ test('workstream finding requires a stable binding and explicit expiry', () => {
   const base = {
     kind: 'research' as const,
     retention: 'workstream' as const,
+    factClass: 'recovery-state' as const,
     title: 'Compare bounded search paths',
     conclusion: 'The candidate needs a reproducible bounded benchmark.',
     rationale: 'Architecture fit does not prove measured performance.',
@@ -175,6 +179,7 @@ test('finding rejects incomplete semantics and secret-bearing evidence before in
   const base = {
     kind: 'review' as const,
     retention: 'durable' as const,
+    factClass: 'settled-fact' as const,
     title: 'Reject incomplete findings',
     conclusion: 'A finding needs reusable reasoning and application.',
     rationale: 'Without why, the conclusion cannot be evaluated.',
@@ -199,6 +204,32 @@ test('finding rejects incomplete semantics and secret-bearing evidence before in
   assert.equal(existsSync(join(project, '.agent-docs')), false);
 });
 
+test('durable findings reject drifting state and preserve verifier pointers', () => {
+  const { project, runtime } = fixture();
+  const base = {
+    kind: 'analysis' as const,
+    retention: 'durable' as const,
+    title: 'Recompute repository state',
+    conclusion: 'Repository state must be recomputed before use.',
+    rationale: 'A cached HEAD or test count drifts after every relevant change.',
+    application: 'Run the verifier instead of trusting an earlier output.',
+    evidence: ['The verifier is stable while its output is intentionally not retained.'],
+    sourceRefs: ['verifier:git rev-parse HEAD'],
+  };
+
+  assert.throws(
+    () => captureFinding(runtime, project, { ...base, factClass: 'current-state' }, capturedIo()),
+    /current-state.*durable/i,
+  );
+  const result = captureFinding(
+    runtime,
+    project,
+    { ...base, factClass: 'verification-pointer' },
+    capturedIo(),
+  );
+  assert.match(readFileSync(result.path, 'utf8'), /^fact-class: verification-pointer$/m);
+});
+
 test('finding document validation explains malformed identity, content, and retention', () => {
   const body = '# 结论\n\nA reusable conclusion.\n\n# 证据\n\nEvidence without a list item.\n';
   const metadata = new Map<string, unknown>([
@@ -214,9 +245,10 @@ test('finding document validation explains malformed identity, content, and rete
   ]);
   const io = capturedIo();
 
-  assert.equal(validateFindingDocument('finding.md', body, metadata, io), 9);
+  assert.equal(validateFindingDocument('finding.md', body, metadata, io), 10);
   assert.match(io.errors.join('\n'), /identity or schema/);
   assert.match(io.errors.join('\n'), /finding kind/);
+  assert.match(io.errors.join('\n'), /valid fact class/);
   assert.match(io.errors.join('\n'), /source references/);
   assert.match(io.errors.join('\n'), /non-empty 理由/);
   assert.match(io.errors.join('\n'), /non-empty 应用/);
@@ -224,6 +256,11 @@ test('finding document validation explains malformed identity, content, and rete
   assert.match(io.errors.join('\n'), /working memory/);
   assert.match(io.errors.join('\n'), /stable workstream/);
   assert.match(io.errors.join('\n'), /valid expiry/);
+
+  const authorityIo = capturedIo();
+  metadata.set('fact-class', 'formal-fact');
+  validateFindingDocument('finding.md', body, metadata, authorityIo);
+  assert.match(authorityIo.errors.join('\n'), /cannot declare formal fact authority/i);
 });
 
 test('finding document validation rejects drifted durable metadata and digest', () => {

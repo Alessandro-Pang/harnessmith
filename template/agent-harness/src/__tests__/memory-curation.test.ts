@@ -99,6 +99,7 @@ test('task completion does not close workstream state, while workstream completi
     {
       kind: 'analysis',
       retention: 'durable',
+      factClass: 'settled-fact',
       title: 'Typed curation candidate',
       conclusion: 'Curation should propose semantic promotion separately from task closure.',
       rationale: 'Acceptance evidence and durable knowledge have different owners.',

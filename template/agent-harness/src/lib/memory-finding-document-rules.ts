@@ -1,4 +1,5 @@
 import type { Io } from '../types.js';
+import { isMemoryFactClass } from './memory-fact-semantics.js';
 import { type FindingKind, findingDigest, findingSection } from './memory-finding.js';
 import { normalizedInputContent } from './memory-input.js';
 
@@ -37,11 +38,18 @@ export function validateFindingDocument(
   const kind = metadata.get('finding-kind');
   const retention = metadata.get('retention');
   const sourceRefs = metadata.get('source-refs');
-  if (
-    metadata.get('type') !== 'analytical-finding' ||
-    metadata.get('finding-schema-version') !== 1
-  ) {
+  const schemaVersion = metadata.get('finding-schema-version');
+  if (metadata.get('type') !== 'analytical-finding' || ![1, 2].includes(Number(schemaVersion))) {
     io.error(`Invalid typed finding identity or schema: ${path}`);
+    failures += 1;
+  }
+  const factClass = metadata.get('fact-class');
+  if (schemaVersion === 2 && !isMemoryFactClass(factClass)) {
+    io.error(`Typed finding v2 requires a valid fact class: ${path}`);
+    failures += 1;
+  }
+  if (factClass === 'formal-fact') {
+    io.error(`Analytical finding cannot declare formal fact authority: ${path}`);
     failures += 1;
   }
   if (!findingKinds.has(String(kind))) {
@@ -82,6 +90,10 @@ export function validateFindingDocument(
     }
     if (metadata.has('workstream') || metadata.has('expires')) {
       io.error(`Durable finding must not declare workstream or expiry: ${path}`);
+      failures += 1;
+    }
+    if (factClass === 'current-state' || factClass === 'recovery-state') {
+      io.error(`Durable finding cannot retain ${factClass}: ${path}`);
       failures += 1;
     }
   } else {
