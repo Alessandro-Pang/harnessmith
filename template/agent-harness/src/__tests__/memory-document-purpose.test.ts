@@ -166,7 +166,7 @@ test('maintenance reports duplicate purpose and explainable split proposals', ()
 
   const checkIo = capturedIo();
   memoryCheck(runtime, project, checkIo);
-  assert.match(checkIo.errors.join('\n'), /WARNING.*generic-description.*working\/cjk\.md/i);
+  assert.match(checkIo.errors.join('\n'), /WARNING.*generic-description.*working[\\/]cjk\.md/i);
 
   const report = memoryMaintenanceReport(memoryRoot, '2026-08-31');
   assert.deepEqual(report.genericDescriptions, ['working/cjk.md']);
