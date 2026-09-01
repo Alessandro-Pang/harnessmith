@@ -131,8 +131,19 @@ Memory maintenance 遵循非权威边界：`migrate` 默认只输出 proposal，
 仍被 active index 引用的记忆，`promote` 只输出 proposal。`check --indexed` 要求 active/blocked
 文档可从 index 到达，`maintain` 只读报告候选。Runtime 不得自动写项目正式文档或删除记忆。
 
-Memory Autopilot 只有四类窄写入口：`capture-input`、`capture-experience`、`handoff` 生命周期以及用户画像
-生命周期。各入口的业务状态机由对应专题文档拥有；本文件只定义 CLI 的参数、payload 和执行安全契约。
+`memory curate <project> --task <id>` 是只读的 task/workstream 策展报告。它只输出 proposal 候选并显式区分
+phase、task、workstream 完成与用户取消；不得嵌入 `task close`，也不得代替 `promote`、`close-input`、
+`supersede` 或 `archive` 的 mutation 与门禁。
+
+Memory Autopilot 只有五类窄写入口：`capture-input`、`capture-experience`、`capture-finding`、`handoff`
+生命周期以及用户画像生命周期。各入口的业务状态机由对应专题文档拥有；本文件只定义 CLI 的参数、payload
+和执行安全契约。
+
+`memory evaluate-capture --payload-file <path> --json` 是只读的统一资格判断入口。它要求完整 typed payload，
+先返回 negative eligibility，再处理价值、来源、typed writer、授权、root 状态和语义重复；不会初始化 Memory
+或代替具体写命令。资格输出使用 `unchanged / proposed / blocked / not-evaluated` 与稳定 `reasonCode`；实际写入口
+继续返回 `created / updated / unchanged`，并同时返回同值 `status` 与稳定 `reasonCode`。因此未运行 evaluator
+不能被编码成 `unchanged`，而 evaluator 的 `proposed` 也不能被描述成已经写入。
 
 自动产生的自由文本必须先由宿主的非 shell 文件能力写入 task-scoped 绝对 JSON 文件，再通过
 `--payload-file` 传入单独的 CLI 进程；禁止把不可信文本放入 shell 参数、重定向或命令替换。payload 必须
@@ -150,8 +161,10 @@ temp:scan` dry-run；未知目录、活动 lock/proof 和 recovery 引用不进�
 Input schema v2 要求显式 `mode: verbatim|summary`、五类 `purpose` 与 `retention: workstream|durable`；
 workstream retention 必须绑定稳定 workstream。Input 对 verbatim 绑定原始文本，对可靠摘要绑定规范化文本，
 并同时绑定来源和模式。`close-input` 原子写入完成原因和可选消费证据，并从 `core.md` 移除 active 引用；
-typed experience
-要求 lesson/failure、结论、证据与来源。Handoff 字段与 reconcile/close 语义以
+typed experience 要求 lesson/failure、结论、理由、应用、证据与来源；旧的 v1 experience 文档继续可读。
+`capture-finding` 只接受 analysis/review/research，并要求结论、理由、应用、证据与来源；`durable` 映射到
+distilled，`workstream` 映射到 working，后者必须绑定稳定 workstream 和明确 expiry。二者都按结论 digest
+去重并合并来源与证据，不开放任意 Markdown 写入。Handoff 字段与 reconcile/close 语义以
 [long-running task protocol](long-running-tasks.md) 为准，画像命令以
 [user profile standard](../standards/user-profile-memory.md) 为准。
 所有 coordinated write 在读取或写入任何 entry 前对整组路径执行 SafePath preflight，再使用

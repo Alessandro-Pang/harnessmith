@@ -222,3 +222,28 @@ test('project uses one pinned pnpm toolchain across manifests, CI, scripts, and 
     false,
   );
 });
+
+test('pre-push isolates repository-local Git environment before fixture tests', () => {
+  const hook = readFileSync(join(root, '.husky', 'pre-push'), 'utf8');
+
+  const localGitEnvironment = [
+    'GIT_ALTERNATE_OBJECT_DIRECTORIES',
+    'GIT_CONFIG',
+    'GIT_CONFIG_PARAMETERS',
+    'GIT_CONFIG_COUNT',
+    'GIT_OBJECT_DIRECTORY',
+    'GIT_DIR',
+    'GIT_WORK_TREE',
+    'GIT_IMPLICIT_WORK_TREE',
+    'GIT_GRAFT_FILE',
+    'GIT_INDEX_FILE',
+    'GIT_NO_REPLACE_OBJECTS',
+    'GIT_REPLACE_REF_BASE',
+    'GIT_PREFIX',
+    'GIT_SHALLOW_FILE',
+    'GIT_COMMON_DIR',
+  ];
+  const unset = hook.split('\n').find((line) => line.startsWith('unset ')) || '';
+  for (const variable of localGitEnvironment) assert.match(unset, new RegExp(`\\b${variable}\\b`));
+  assert.match(hook, /pnpm run preflight/);
+});

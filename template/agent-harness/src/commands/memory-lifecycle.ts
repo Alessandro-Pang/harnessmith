@@ -118,6 +118,12 @@ export function memoryMaintenance(
     for (const path of report.genericActionInputs) io.log(`  ${path}`);
     io.log(`Active workstream inputs: ${report.workstreamInputs.length}`);
     for (const path of report.workstreamInputs) io.log(`  ${path}`);
+    io.log(
+      `Core budget: ${report.coreBudget.status} (${report.coreBudget.lines} lines, ${report.coreBudget.bytes} bytes)`,
+    );
+    for (const reference of report.coreBudget.compressionCandidates) {
+      io.log(`  compression candidate: ${reference}`);
+    }
   }
   return report;
 }

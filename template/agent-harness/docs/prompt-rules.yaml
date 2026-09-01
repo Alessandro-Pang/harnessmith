@@ -1,0 +1,112 @@
+version: 1
+rules:
+  - id: user-task-read-only
+    owner: operating-model
+    principle: Read-only requests do not mutate the user task object.
+    rationale: Analysis or diagnosis must not silently become source, configuration, documentation, or remote writes.
+    action: Inspect and report evidence without modifying the scoped user object.
+    fallback: Return an evidence-bounded answer or inconclusive result.
+    guarantee: guided
+    boundary:
+      - template/AGENTS.md
+      - template/agent-harness/docs/core/operating-model.md
+    confusingWith: [sidecar-write-eligibility]
+
+  - id: sidecar-write-eligibility
+    owner: project-agent-docs
+    principle: User-object read-only status does not decide managed sidecar eligibility.
+    rationale: Combining the two dimensions either loses qualified findings or authorizes unrelated writes.
+    action: Run the unified negative-first eligibility evaluator, then evaluate value, source evidence, typed writer, authorization, and root state independently.
+    fallback: Return a proposal or blocked result without editing managed Markdown.
+    guarantee: guided
+    boundary:
+      - template/agent-harness/docs/standards/project-agent-docs.md
+      - template/agent-harness/src/lib/memory-capture-eligibility.ts
+    confusingWith: [user-task-read-only]
+
+  - id: managed-work-state-write-path
+    owner: harness-cli-architecture
+    principle: Managed Memory, Task, and Handoff writes use typed runtime paths.
+    rationale: Direct command-level filesystem mutation bypasses validation, locking, atomicity, and rollback.
+    action: Route mutations through the owning store or transaction.
+    fallback: Fail closed and preserve a recoverable path.
+    guarantee: enforced
+    evidence:
+      implementation:
+        - scripts/preflight-architecture.ts
+        - template/agent-harness/src/lib/memory-write.ts
+        - template/agent-harness/src/lib/task-store.ts
+      verification:
+        - src/__tests__/preflight-architecture.test.ts
+        - template/agent-harness/src/__tests__/memory-write-safety.test.ts
+        - template/agent-harness/src/__tests__/memory-handoff-safety.test.ts
+
+  - id: task-completion-gate
+    owner: long-running-tasks
+    principle: Task complete requires current passing acceptance evidence.
+    rationale: A completion summary or curation result does not prove the acceptance criteria.
+    action: Call the acceptance gate before persisting complete.
+    fallback: Keep the task in progress or close it as blocked with an actionable next step.
+    guarantee: enforced
+    evidence:
+      implementation:
+        - template/agent-harness/src/commands/task.ts
+        - template/agent-harness/src/lib/task-evidence.ts
+      verification:
+        - src/__tests__/preflight-architecture.test.ts
+        - template/agent-harness/src/__tests__/task-evidence.test.ts
+        - template/agent-harness/src/__tests__/task-core-safety.test.ts
+    confusingWith: [completion-curation]
+
+  - id: completion-curation
+    owner: project-agent-docs
+    principle: Completion curation proposes Memory lifecycle actions without completing a Task.
+    rationale: Semantic retention and mechanical acceptance answer different questions.
+    action: Produce bounded promote, close, supersede, archive, or skip candidates for the current task scope.
+    fallback: Return none and leave Task and Memory unchanged.
+    guarantee: enforced
+    evidence:
+      implementation:
+        - template/agent-harness/src/commands/memory-curation.ts
+        - template/agent-harness/src/lib/memory-curation-documents.ts
+      verification:
+        - template/agent-harness/src/__tests__/memory-curation.test.ts
+        - template/agent-harness/src/__tests__/task-core-safety.test.ts
+    confusingWith: [task-completion-gate]
+
+  - id: action-intent-routing
+    owner: operating-model
+    principle: Primary playbooks match requested actions while topics match involved concepts.
+    rationale: Examples, quotations, and historical descriptions can contain action words without requesting those actions.
+    action: Preserve the raw request and return no primary playbook when no action intent matches.
+    fallback: Return explicit ambiguity instead of selecting by keyword priority.
+    guarantee: enforced
+    evidence:
+      implementation:
+        - template/agent-harness/src/lib/docs-routing.ts
+      verification:
+        - template/agent-harness/src/__tests__/docs-routing.test.ts
+
+  - id: payload-consumption-boundary
+    owner: harness-cli-architecture
+    principle: Typed payloads are consumed only after the owning domain command succeeds.
+    rationale: Early deletion loses recovery evidence while replaying mutable payloads can duplicate or change mutations.
+    action: Validate identity and content, execute once, then remove a successful one-shot payload.
+    fallback: Preserve or replace the failed payload using the documented retry contract.
+    guarantee: enforced
+    evidence:
+      implementation:
+        - template/agent-harness/src/cli.ts
+      verification:
+        - template/agent-harness/src/__tests__/memory-payload-file.test.ts
+
+  - id: host-event-delivery
+    owner: observability
+    principle: Host lifecycle events exist only when a supported Host integration emits them.
+    rationale: A receiver, Prompt reminder, mock, or scenario definition does not prove real event delivery.
+    action: Verify the official Host contract and candidate-bound event evidence.
+    fallback: Report unsupported, not configured, or inconclusive without inventing an event.
+    guarantee: host-dependent
+    boundary:
+      - docs/architecture.md
+      - template/agent-harness/docs/core/observability.md

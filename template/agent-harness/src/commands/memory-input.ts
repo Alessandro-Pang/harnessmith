@@ -18,6 +18,7 @@ import {
 } from '../lib/memory-input-policy.js';
 import { markdownFiles, memoryReference, readMemoryDocument } from '../lib/memory-path.js';
 import {
+  type MemoryWriteCandidate,
   type MemoryWriteResult,
   output,
   validateUnchanged,
@@ -89,7 +90,7 @@ function repairExistingInputIndex(
   existing: ExistingInput,
   date: string,
   io: Io,
-): MemoryWriteResult {
+): MemoryWriteCandidate {
   const { path, status } = existing;
   const reference = `memory:${memoryReference(memoryRoot, path)}`;
   if (!['active', 'blocked'].includes(status)) {
@@ -179,7 +180,7 @@ export function captureInput(
   const { policy, title, storedPayload, summary } = prepareInput(project, options);
   const date = calendarDate(runtime);
   const digest = inputContentDigest(storedPayload, options.source, !summary);
-  const result = withProjectMemoryTransaction<MemoryWriteResult>(
+  const result = withProjectMemoryTransaction<MemoryWriteCandidate>(
     runtime,
     project,
     ({ memoryRoot }) => {

@@ -95,7 +95,14 @@ export function memoryCheck(
   input = '.',
   io: Io = console,
   { indexed = false, json = false }: { indexed?: boolean; json?: boolean } = {},
-): { version: 1; root: string; indexed: boolean; valid: true; totalFiles: number } {
+): {
+  version: 1;
+  root: string;
+  indexed: boolean;
+  valid: true;
+  totalFiles: number;
+  coreBudget: ReturnType<typeof memoryMaintenanceReport>['coreBudget'];
+} {
   assertNoHighConfidenceSecret([input], 'Memory check request');
   const root = resolveMemoryRoot(runtime, input);
   validateMemoryRoot(root, io, {
@@ -143,6 +150,7 @@ export function memoryCheck(
     indexed,
     valid: true as const,
     totalFiles: report.totalFiles,
+    coreBudget: report.coreBudget,
   };
   if (json) io.log(JSON.stringify(result, null, 2));
   else if (indexed) io.log(`Memory check passed: ${root}`);

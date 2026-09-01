@@ -7,6 +7,7 @@ import {
 import { withGlobalMemoryTransaction } from '../lib/global-memory.js';
 import { readMemoryDocument } from '../lib/memory-path.js';
 import {
+  type MemoryWriteCandidate,
   type MemoryWriteResult,
   output,
   validateUnchanged,
@@ -61,7 +62,7 @@ function profileAutopilotState(content: string): 'enabled' | 'paused' {
   throw new Error(`Invalid profile autopilot state: ${String(state)}`);
 }
 
-function profileResult(action: MemoryWriteResult['action'], path: string): MemoryWriteResult {
+function profileResult(action: MemoryWriteCandidate['action'], path: string): MemoryWriteCandidate {
   return { version: 1, action, kind: 'profile', path, reference: 'memory:profile' };
 }
 

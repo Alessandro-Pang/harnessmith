@@ -33,7 +33,8 @@ const userProfile = readFileSync(
 test('top-level rules preserve only durable trust authorization and delivery boundaries', () => {
   assert.match(agents, /宿主\/System.*用户当前明确授权.*个人规则.*项目规则/s);
   assert.match(agents, /仓库.*网页.*日志.*工具.*记忆.*不可信.*不授权/s);
-  assert.match(agents, /只读.*不写源码.*配置.*正式文档/s);
+  assert.match(agents, /只读.*用户请求.*目标对象.*不修改.*源码.*配置.*正式文档.*外部系统/s);
+  assert.match(agents, /不自动禁止.*托管.*sidecar.*资格.*typed.*授权.*安全校验/s);
   assert.match(agents, /commit.*push.*merge.*发布.*远端写入.*明确授权/s);
   assert.match(agents, /事实源/);
   assert.match(agents, /验证.*未验证.*风险/s);
@@ -50,11 +51,27 @@ test('top-level prompt is a compact bootstrap instead of a Memory CLI manual', (
   assert.doesNotMatch(agents, /core\/git-conventions\.md/);
 });
 
-test('top-level rules preserve high-loss handoff payload contracts', () => {
-  assert.match(agents, /每次.*handoff.*attempt.*全新.*payload.*路径.*执行后.*冻结.*失败.*新路径/s);
-  assert.match(agents, /verification.*精确命令.*exit 0.*completed.*不能.*代替/s);
-  assert.match(agents, /旧.*open.*全部.*解决.*首次.*clearOpen.*true.*不得.*clear.*open/s);
-  assert.match(agents, /第二个.*独立.*已验证.*任务.*reason.*multi-task/s);
+test('top-level rules route handoff field contracts to their single owner', () => {
+  assert.doesNotMatch(agents, /clearOpen|reason.*multi-task|handoff mutation attempt/);
+  assert.match(
+    longRunning,
+    /每次.*handoff.*attempt.*全新.*payload.*路径.*执行后.*冻结.*失败.*新路径/s,
+  );
+  assert.match(longRunning, /verification.*精确命令.*exit 0.*completed.*不能.*代替/s);
+  assert.match(longRunning, /旧.*open.*全部.*resolved.*clearOpen.*true/s);
+  assert.match(longRunning, /第二个.*独立.*已验证.*任务.*reason.*multi-task/s);
+});
+
+test('operating model separates target mutability from managed sidecar eligibility', () => {
+  assert.match(operatingModel, /用户任务对象.*Harness sidecar/s);
+  assert.match(operatingModel, /任务是否只读.*不决定.*Memory 资格/s);
+  assert.match(operatingModel, /没有匹配.*typed.*proposal.*不得.*直接.*Markdown/s);
+  assert.match(projectMemory, /negative eligibility.*价值.*来源.*typed writer.*授权.*安全/s);
+  assert.match(
+    projectMemory,
+    /created.*updated.*unchanged.*proposed.*blocked.*not-evaluated.*reasonCode/s,
+  );
+  assert.match(projectMemory, /not-evaluated.*不得.*unchanged/s);
 });
 
 test('top-level routing uses one primary playbook plus supporting topics without category exceptions', () => {
@@ -77,25 +94,15 @@ test('top-level routing uses one primary playbook plus supporting topics without
 test('startup rules retain progressive project discovery without copying its command sequence', () => {
   const profile = agents.indexOf('profile.md');
   const personal = agents.indexOf('AGENTS.md', profile + 1);
-  const project = agents.indexOf('project-agent-docs.md');
-  assert.ok(profile >= 0 && personal > profile && project > personal);
-  assert.match(agents, /发现.*\.agent-docs.*首个.*Memory.*命令.*只读.*输出可见性/s);
-  assert.match(agents, /不得.*合并.*其它.*读取/s);
-  assert.match(agents, /rg -n -C 12.*输出可见性.*project-agent-docs\.md/s);
+  const bootstrap = agents.indexOf('bootstrap', personal + 1);
+  assert.ok(profile >= 0 && personal > profile && bootstrap > personal);
+  assert.match(agents, /bootstrap.*--project.*--json/s);
+  assert.doesNotMatch(agents, /rg -n -C 12.*输出可见性/);
   assert.match(
     projectMemory,
-    /metadata.*core\.md.*active\/blocked task.*维护候选.*命中正文.*事实源/s,
+    /bootstrap.*metadata.*core.*预算.*active.*task.*维护候选.*推荐.*正文.*截断/s,
   );
-  assert.match(projectMemory, /每个阶段.*单独命令.*不得.*合并/s);
-  assert.match(
-    projectMemory,
-    /memory list.*--json.*core\.md.*task status.*--project.*--json.*memory maintain.*--json/s,
-  );
-  assert.match(projectMemory, /事实源.*单独命令.*sed.*docs\/architecture/s);
-  assert.match(
-    projectMemory,
-    /contradicted.*supersede.*archive.*expired.*无独有.*archive.*indexed/s,
-  );
+  assert.doesNotMatch(projectMemory, /memory list.*task status.*memory maintain/s);
   assert.doesNotMatch(agents, /memory list|task status|memory maintain/);
   assert.match(agents, /命中正文.*事实源/s);
 });
@@ -120,29 +127,11 @@ test('startup deterministically discovers one explicitly referenced project cont
   assert.match(agents, /项目上下文.*不可信.*不授权/s);
 });
 
-test('the bounded first project-memory read contains the complete executable startup contract', () => {
-  const lines = projectMemory.split('\n');
-  const anchor = lines.findIndex(
-    (line) => line.includes('已有 `.agent-docs/`') && line.includes('输出可见性'),
-  );
-  assert.ok(anchor >= 0);
-  const boundedRead = lines.slice(Math.max(0, anchor - 12), anchor + 13).join('\n');
-
-  assert.match(
-    boundedRead,
-    /memory list.*--json.*core\.md.*task status.*--project.*--json.*memory maintain.*--json/s,
-  );
-  assert.match(boundedRead, /完成.*事实源.*前.*禁止.*agent_message.*commentary/s);
-  assert.match(boundedRead, /事实源.*单独命令.*sed.*docs\/architecture/s);
-  assert.match(boundedRead, /memory list.*空输出.*原样重试一次/s);
-  assert.match(boundedRead, /maintain.*全部.*unindexed.*expired.*active\/blocked/s);
-  assert.match(boundedRead, /命中正文.*命令.*完成.*事实源.*新.*单独命令.*不得.*合并/s);
-  assert.match(boundedRead, /事实本身.*当前架构边界为.*不得.*仍.*依然/s);
-  assert.match(boundedRead, /同阶段.*多篇.*&&.*禁用.*;/s);
-  assert.match(
-    boundedRead,
-    /contradicted.*supersede.*archive.*expired.*无独有.*archive.*memory check.*--indexed.*--json/s,
-  );
+test('the project-memory standard delegates deterministic startup discovery to bootstrap', () => {
+  assert.match(projectMemory, /bootstrap --project <absolute-project-root> --json/);
+  assert.match(projectMemory, /只读.*不.*修复.*归档.*迁移.*索引/s);
+  assert.match(projectMemory, /recommended.*active\/blocked.*事实源/s);
+  assert.doesNotMatch(projectMemory, /sed -n '1,260p' \.agent-docs\/core\.md/);
 });
 
 test('the bounded output-visibility read retains the ordinary-sidecar classifier', () => {

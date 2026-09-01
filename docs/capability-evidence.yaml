@@ -47,6 +47,19 @@ claims:
       - src/__tests__/temporary-resource.test.ts
       - src/__tests__/user-data-lock.test.ts
 
+  - id: architecture-invariant-preflight
+    status: implemented
+    owner: repository architecture and documentation preflight
+    claim: Fail closed when source ownership, work-state write boundaries, task completion gates, or capability evidence contracts drift.
+    implementation:
+      - scripts/preflight-architecture.ts
+      - scripts/capability-evidence.ts
+      - scripts/preflight-docs.ts
+    verification:
+      - src/__tests__/preflight-architecture.test.ts
+      - src/__tests__/preflight-docs.test.ts
+      - src/__tests__/public-positioning.test.ts
+
   - id: progressive-context-routing
     status: implemented
     owner: embedded Harness runtime
@@ -56,6 +69,19 @@ claims:
     verification:
       - template/agent-harness/src/__tests__/docs-routing.test.ts
       - template/agent-harness/src/__tests__/search-budget.test.ts
+
+  - id: memory-capture-eligibility
+    status: implemented
+    owner: embedded Harness Memory runtime
+    claim: Evaluate Memory capture candidates with negative eligibility first and return stable machine-readable status and reason codes before any typed mutation.
+    implementation:
+      - template/agent-harness/src/lib/memory-capture-eligibility.ts
+      - template/agent-harness/src/program/memory-capture-eligibility.ts
+      - template/agent-harness/src/lib/memory-write.ts
+    verification:
+      - template/agent-harness/src/__tests__/memory-capture-eligibility.test.ts
+      - template/agent-harness/src/__tests__/memory-finding.test.ts
+      - src/__tests__/memory-autopilot-prompt.test.ts
 
   - id: cross-repository-map
     status: implemented

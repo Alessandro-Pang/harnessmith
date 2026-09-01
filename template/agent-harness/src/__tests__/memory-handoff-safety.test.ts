@@ -27,7 +27,7 @@ function fixture(prefix: string) {
   return { project, runtime: harnessRuntime(root) };
 }
 
-test('Closing a handoff removes its reference only from Recent Handoffs', () => {
+test('Closing a handoff rejects duplicate routes before removing its exact pointer', () => {
   const { project, runtime } = fixture('harness-handoff-close-section-');
   const options = {
     title: 'Section-scoped handoff',
@@ -49,11 +49,25 @@ test('Closing a handoff removes its reference only from Recent Handoffs', () => 
     capturedIo(),
   );
   const corePath = join(project, '.agent-docs', 'core.md');
-  const withOtherRoutes = readFileSync(corePath, 'utf8')
+  const validCore = readFileSync(corePath, 'utf8');
+  const withOtherRoutes = validCore
     .replace('## Active Work\n', `## Active Work\n\n- historical route ${first.reference}\n`)
     .replace(`；${first.reference}`, `；${first.reference} related ${second.reference}`);
   writeFileSync(corePath, withOtherRoutes);
 
+  assert.throws(
+    () =>
+      memoryAutopilot.closeHandoff(
+        runtime,
+        project,
+        { session: 'section-thread-1', outcome: 'cancelled' },
+        capturedIo(),
+      ),
+    /canonical pointer|duplicate pointer/i,
+  );
+  assert.equal(readFileSync(corePath, 'utf8'), withOtherRoutes);
+
+  writeFileSync(corePath, validCore);
   memoryAutopilot.closeHandoff(
     runtime,
     project,
@@ -62,12 +76,7 @@ test('Closing a handoff removes its reference only from Recent Handoffs', () => 
   );
 
   const core = readFileSync(corePath, 'utf8');
-  const activeWork = core.slice(
-    core.indexOf('## Active Work'),
-    core.indexOf('## Important Inputs'),
-  );
   const recent = core.slice(core.indexOf('## Recent Handoffs'));
-  assert.match(activeWork, new RegExp(first.reference));
   assert.doesNotMatch(recent, new RegExp(first.reference));
   assert.match(recent, new RegExp(second.reference));
 });

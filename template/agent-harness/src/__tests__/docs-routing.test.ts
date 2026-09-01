@@ -28,6 +28,34 @@ test('documentation routing separates one task playbook from supporting topics',
   );
 });
 
+test('documentation routing treats review and research examples as concepts rather than requested actions', () => {
+  const report = routeDocumentation(docsRoot, [
+    '为什么只读任务不写入记忆？比如分析 xxx、评审 xxx、调研 xxx 都会产生高价值内容。',
+  ]);
+
+  assert.equal(report.primaryPlaybook, null);
+  assert.deepEqual(
+    report.topics.map(({ name }) => name),
+    ['operating-model', 'project-agent-docs'],
+  );
+});
+
+test('documentation routing chooses research when the user explicitly asks to analyze prompt design', () => {
+  const report = routeDocumentation(docsRoot, ['结合这个 QA 来分析 Prompt 的优化']);
+
+  assert.equal(report.primaryPlaybook?.name, 'research-and-design');
+});
+
+test.each([
+  '这里引用了“review、design、research”三个词，但没有要求执行这些任务。',
+  '文档举例包含评审、设计和调研，不代表当前要执行其中任何一项。',
+])(
+  'documentation routing does not select a playbook from quoted or explanatory mentions for %s',
+  (query) => {
+    assert.equal(routeDocumentation(docsRoot, [query]).primaryPlaybook, null);
+  },
+);
+
 test('documentation routing keeps Git and safety as topics without giving either extra task weight', () => {
   const report = routeDocumentation(docsRoot, ['检查 Git 分支命名和安全风险']);
 
@@ -142,3 +170,14 @@ test('runtime audit, policy decision, and token cost queries route to observabil
     ['observability'],
   );
 });
+
+test.each(['审查 Prompt 的保证等级和规则 owner', 'compare confusing-pair fallback contracts'])(
+  'prompt rule contract routes as a supporting standard for %s',
+  (query) => {
+    const report = routeDocumentation(docsRoot, [query]);
+    assert.ok(
+      report.topics.some(({ name }) => name === 'prompt-rule-contract'),
+      `${query} did not route to prompt-rule-contract`,
+    );
+  },
+);

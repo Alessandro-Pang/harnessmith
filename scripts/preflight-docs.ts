@@ -6,6 +6,7 @@ import { supportedAgentNames } from '../src/agents.js';
 import { parseFrontmatterDocument } from '../template/agent-harness/src/lib/frontmatter.js';
 import { markdownLinkTargets } from '../template/agent-harness/src/lib/markdown-links.js';
 import { capabilityEvidenceIssues } from './capability-evidence.js';
+import { promptRuleContractIssues } from './prompt-rule-contract.js';
 
 interface ManifestEntry {
   kind?: unknown;
@@ -56,6 +57,7 @@ const CANONICAL_ROUTE_IDS = [
   'repository-map',
   'project-agents',
   'project-agent-docs',
+  'prompt-rule-contract',
   'user-profile-memory',
 ] as const;
 
@@ -190,6 +192,12 @@ export function checkDocs({ root, harnessRoot, check }: DocsContext): void {
     check(false, `agent-harness docs manifest is missing canonical route: ${id}`);
   }
   const routed = manifestRoutes(docsRoot, manifest, check);
+  const promptRulesPath = join(docsRoot, 'prompt-rules.yaml');
+  check(existsSync(promptRulesPath), 'prompt rule contract is missing');
+  if (existsSync(promptRulesPath)) {
+    const contract = parse(readFileSync(promptRulesPath, 'utf8')) as unknown;
+    for (const issue of promptRuleContractIssues(root, manifest, contract)) check(false, issue);
+  }
   checkMarkdownDocs(docsRoot, routed, check);
   checkPortableTemplate(root, check);
 }

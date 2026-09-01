@@ -82,11 +82,33 @@ function routingMatchIsNegated(term: string, position: number): boolean {
   );
 }
 
+function routingMatchIsRequestedAction(term: string, position: number): boolean {
+  const clause =
+    term
+      .slice(0, position)
+      .split(/[,.!?;，。！？；]/u)
+      .at(-1) ?? '';
+  const prefix = clause.trim();
+  if (prefix === '') return true;
+  return /(?:\b(?:please|can you|could you|would you|i want you to|i need you to|let(?:'s| us)|now|then|also)\s+(?:\p{L}+\s+){0,4}|(?:请|请你|帮我|给我|现在|继续|重新|开始|进行|执行|来|需要|要求|希望|想要|逐个|并)\s*)$/u.test(
+    prefix,
+  );
+}
+
 function matchesRoutingTerm(trigger: string, term: string): boolean {
   const candidate = normalizeRoutingText(trigger);
   if (!candidate) return false;
   return routingMatchPositions(candidate, term).some(
     (position) => !routingMatchIsNegated(term, position),
+  );
+}
+
+function matchesPlaybookIntent(trigger: string, term: string): boolean {
+  const candidate = normalizeRoutingText(trigger);
+  if (!candidate) return false;
+  return routingMatchPositions(candidate, term).some(
+    (position) =>
+      !routingMatchIsNegated(term, position) && routingMatchIsRequestedAction(term, position),
   );
 }
 
@@ -135,12 +157,17 @@ export function routeDocumentation(docsRoot: string, query: string[]): Documenta
       throw new Error(`Documentation manifest entry ${name} has invalid triggers`);
     }
     const triggers = rawEntry.triggers as string[];
+    const kind = rawEntry.kind as DocumentationRoute['kind'];
     const matchedTriggers = triggers.filter((trigger) =>
-      terms.some((term) => matchesRoutingTerm(trigger, term)),
+      terms.some((term) =>
+        kind === 'playbook'
+          ? matchesPlaybookIntent(trigger, term)
+          : matchesRoutingTerm(trigger, term),
+      ),
     );
     if (matchedTriggers.length === 0) continue;
     routes.push({
-      kind: rawEntry.kind as DocumentationRoute['kind'],
+      kind,
       name,
       path: routedPath(docsRoot, rawEntry.path),
       priority: rawEntry.priority ?? 0,
