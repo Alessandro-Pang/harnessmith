@@ -1,15 +1,15 @@
-import { routeDocumentation } from '../lib/docs-routing.js';
+import { type DocumentationIntent, routeDocumentation } from '../lib/docs-routing.js';
 import { assertNoHighConfidenceSecret } from '../lib/secret-hygiene.js';
 import type { Io, Runtime } from '../types.js';
 
 export function route(
   runtime: Runtime,
   query: string[],
-  { json = false }: { json?: boolean } = {},
+  { json = false, intent }: { json?: boolean; intent?: DocumentationIntent } = {},
   io: Io = console,
 ): number {
   assertNoHighConfidenceSecret(query, 'Documentation route query');
-  const report = routeDocumentation(runtime.docsRoot, query);
+  const report = routeDocumentation(runtime.docsRoot, query, { intent });
   if (json) io.log(JSON.stringify(report, null, 2));
   else if (report.status === 'unmatched') io.log('No matching documentation routes');
   else if (report.status === 'ambiguous') {

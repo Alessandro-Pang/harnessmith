@@ -64,6 +64,24 @@
       "categories": ["en", "quotation", "meta", "false-positive-guard"],
       "query": "The phrase \"implement the fix\" is quoted as an example, not a current instruction.",
       "expected": { "status": "unmatched", "top1": null, "topics": [], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "zh-analysis-implementation-noun",
+      "categories": ["zh", "action", "false-positive-guard", "real-request"],
+      "query": "分析当前项目，实现方面是否合理。",
+      "expected": { "status": "matched", "top1": "research-and-design", "topics": [], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "zh-review-result-unmatched",
+      "categories": ["zh", "meta", "false-positive-guard", "real-request"],
+      "query": "根据评审结果，形成对应的解决方案。",
+      "expected": { "status": "unmatched", "top1": null, "topics": [], "forbiddenPlaybooks": ["review"] }
+    },
+    {
+      "id": "zh-progressive-implementation",
+      "categories": ["zh", "action", "false-negative-guard", "real-request"],
+      "query": "进行逐个实施。",
+      "expected": { "status": "matched", "top1": "change", "topics": [], "forbiddenPlaybooks": [] }
     }
   ]
 }

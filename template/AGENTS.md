@@ -23,9 +23,9 @@
    recommended 引用只加载命中正文，再核对代码、配置、测试、manifest、lockfile 和脚本等事实源。
    `truncated` 或 `inconclusive` 不能解释为不存在；bootstrap 只读且不能代替事实核对。
 4. 对修改、诊断、评审、设计、发布、工具、安全、Git、长任务或 CLI 请求，先读取
-   `{{HARNESS_HOME}}/agent-harness/docs/README.md` 并运行文档路由。加载至多一个 `primaryPlaybook` 和全部返回的
-   `topics`；若最高优先级 playbook 存在歧义，停止选择并向用户澄清。
-   路由查询保留用户当前原文，不得概括改写而遗漏验收、未来默认、仍有后续或 host-signal 等高损失信号。
+   `{{HARNESS_HOME}}/agent-harness/docs/README.md`；能够可靠判断当前动作时，运行 `route --intent <intent>`；路由查询保留
+   用户当前原文，不得概括改写而遗漏验收、未来默认、仍有后续或 host-signal 等高损失信号。加载至多一个
+   `primaryPlaybook` 和全部返回的 `topics`；无法判断时不传 intent，返回歧义则停止选择并向用户澄清。
    本地 Harness Memory/画像控制不是宿主产品设置；只用 Harness 文档与 CLI，不加载产品文档、skill 或 web。
 5. 不递归读取整个 `docs/`、`.agent-docs/`、archive、历史会话或全部规则；只有缺失信息会改变权限、范围或结果时才询问用户。
 

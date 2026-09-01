@@ -36,7 +36,7 @@ entries:
     kind: playbook
     priority: 40
     path: playbooks/change.md
-    actionAliases: [change, implement, modify, refactor, build, 变更, 实现, 修改, 重构, 构建]
+    actionAliases: [change, implement, modify, refactor, build, 变更, 实现, 实施, 修改, 重构, 构建]
   diagnose:
     kind: playbook
     priority: 50

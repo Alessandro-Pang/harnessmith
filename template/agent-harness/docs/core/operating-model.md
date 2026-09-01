@@ -46,9 +46,10 @@ updated: 2026-08-28
 
 ## 4. 路由与回复语言
 
-文档路由把用户请求中的动作与涉及概念分开：playbook 只匹配 manifest 的中英文 `actionAliases`，topic 与
-standard 只匹配 `conceptAliases`。CJK 标点和混合语言不改变动作语义；否定、引用、示例和元讨论中的动作词
-不选择 primary playbook。未命中或同优先级真实歧义必须显式返回并停止选择，不靠英文词面或 priority 猜测。
+文档路由把用户请求中的动作与涉及概念分开：调用方能够可靠判断动作时传入受限 intent，Runtime 只验证并映射
+唯一 playbook；topic 与 standard 仍匹配 `conceptAliases`。未传 intent 时，CJK 标点和混合语言不改变动作语义，
+否定、引用、示例、元讨论和名词性动作词不选择 primary playbook。未命中或多个真实动作必须显式返回并停止选择，
+不靠英文词面或 priority 猜测。路由只决定文档发现，不能扩大用户授权。
 
 回复语言优先级是：用户在当前请求中的明确要求 > 带持久证据的当前画像偏好 > 当前请求的自动检测。
 必要的 identifier、命令、路径和错误原文保持原样。翻译、改写、示例目标语言和一次性语言要求只影响当前

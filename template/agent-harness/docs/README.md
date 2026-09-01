@@ -45,8 +45,9 @@ updated: 2026-08-28
 
 ## 读取原则
 
-1. 路由返回至多一个 `primaryPlaybook` 和零个或多个 `topics`。先加载 primary playbook，再按任务所需加载 supporting topics。
-2. 最高优先级的 playbook 有多个候选时视为歧义：停止自动选择并向用户澄清，不能靠文档顺序决定。
+1. 能够可靠判断当前动作时显式传入受限 intent 并选择唯一 playbook；Runtime 验证 `--intent` 后返回至多一个
+   `primaryPlaybook` 和零个或多个 `topics`。先加载 primary playbook，再按任务所需加载 supporting topics。
+2. 未传 intent 时只做保守自动推断；多个动作返回歧义，低置信度返回 `unmatched`，不靠 priority 或文档顺序决定。
 3. 项目内存在更具体的 `AGENTS.md`、skill 或文档索引时，优先读取项目事实源。
 4. 检索先返回文件名、标题、元信息或命中段落；只有确认相关后才读取全文。
 5. 本目录保存跨仓、长期、个人级规则和事实导航；单次任务记忆与证据放项目 `.agent-docs/`。
@@ -56,8 +57,7 @@ updated: 2026-08-28
 
 ```bash
 # 使用 manifest 中英 aliases 返回命中文档，不加载正文
-node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs route 评审 permissions --json
-
+node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs route --intent review 评审 permissions --json
 # 在 Harness、项目 docs 与记忆中做有界检索
 node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs search --project /absolute/project/path \
   --limit 20 --max-line-length 300 --json "authentication"
