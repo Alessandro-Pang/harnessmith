@@ -9,7 +9,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 test('llms.txt exposes a complete non-interactive install protocol', () => {
   const content = readFileSync(join(root, 'llms.txt'), 'utf8');
   for (const required of [
-    'npx --yes harnessmith --agent <agents>',
+    'npx --yes harnessmith setup --agent <agents>',
     '--dry-run',
     'init global',
     'init project',
@@ -27,6 +27,8 @@ test('llms.txt exposes a complete non-interactive install protocol', () => {
     'harnessmith status',
     'harnessmith restore',
     'harnessmith uninstall',
+    'installed-and-healthy',
+    'host-dependent',
   ]) {
     assert.ok(content.includes(required), `llms.txt is missing: ${required}`);
   }

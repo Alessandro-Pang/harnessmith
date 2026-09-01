@@ -51,6 +51,23 @@ test('Commander supports lifecycle commands and safety flags', async () => {
   assert.equal(result.force, true);
 });
 
+test('Commander exposes guided setup through the shared install options', async () => {
+  let result: (CliOptions & { command: HarnessmithCommand }) | undefined;
+  const program = createProgram(async (command, options) => {
+    result = { command, ...options };
+  });
+  await program.parseAsync(
+    ['setup', '--agent', 'cursor', '--project', '/tmp/project', '--dry-run', '--json'],
+    { from: 'user' },
+  );
+  assert.ok(result);
+  assert.equal(result.command, 'setup');
+  assert.deepEqual(result.agent, ['cursor']);
+  assert.equal(result.project, '/tmp/project');
+  assert.equal(result.dryRun, true);
+  assert.equal(result.json, true);
+});
+
 test('Commander exposes adapter capabilities as a read-only command', async () => {
   let result: (CliOptions & { command: HarnessmithCommand }) | undefined;
   const program = createProgram(async (command, options) => {

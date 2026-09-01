@@ -3,6 +3,7 @@ import type { AgentName } from './adapter-registry.js';
 
 export type { AgentName };
 export type OutputAction = 'create' | 'replace-managed' | 'conflict';
+export type InstallTargetState = 'missing' | 'managed' | 'modified' | 'unmanaged';
 export type ManagedStatus = 'managed' | 'modified' | 'missing';
 
 export interface Io {
@@ -69,7 +70,7 @@ export interface InstallPlan {
   capabilities: AdapterCapabilities;
   instructions: string[];
   initializeGlobalMemory: boolean;
-  outputs: Array<{ path: string; action: OutputAction }>;
+  outputs: Array<{ path: string; action: OutputAction; state: InstallTargetState }>;
 }
 
 export interface Backup {
