@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { execaSync } from 'execa';
+import { firstValuePreview } from './first-value.js';
 import { statusAll } from './lifecycle.js';
 import { describeInstall } from './records.js';
 import type { Adapter, CliOptions } from './types.js';
@@ -55,6 +56,7 @@ export function createSetupGuide(adapters: Adapter[], options: CliOptions) {
       prompt:
         'Perform a read-only analysis of this repository, cite current fact sources, and report unverified scope without changing files.',
     },
+    firstValue: firstValuePreview(adapters),
   };
 }
 

@@ -9,6 +9,15 @@ import type { AdapterStatus, InstallPlan, InstallResult, Io } from './types.js';
 
 type PromptInput = Readable & { isTTY?: boolean };
 type PromptOutput = Writable & { isTTY?: boolean };
+type FirstValueView = SetupGuide['firstValue'] | StatusExplanation['firstValue'];
+
+function printFirstValue(firstValue: FirstValueView, io: Io): void {
+  const { installed, healthy, hostConfigured, hostVerified } = firstValue.states;
+  io.log(
+    `  First Value: installed=${installed.status}, healthy=${healthy.status}, host-configured=${hostConfigured.status}, host-verified=${hostVerified.status}`,
+  );
+  io.log(`  First Value next ${firstValue.nextAction.code}  ${firstValue.nextAction.command}`);
+}
 
 function stopOnCancel<T>(value: T | symbol): T {
   if (isCancel(value)) throw new Error('Operation cancelled');
@@ -127,6 +136,7 @@ export function printSetupGuide(guide: SetupGuide, io: Io = console): void {
   for (const boundary of guide.willNotChange) io.log(`    - ${boundary}`);
   io.log(`  recovery preview  ${guide.recovery.restore}`);
   io.log(`  real Host behavior  ${guide.hostBehavior.status}`);
+  printFirstValue(guide.firstValue, io);
 }
 
 export function printAdoptPlan(report: AdoptReport, io: Io = console): void {
@@ -175,6 +185,7 @@ export function printStatusExplanations(explanations: StatusExplanation[], io: I
     io.log(
       `  Host behavior: ${explanation.boundaries.hostBehavior.conclusion} (${explanation.boundaries.hostBehavior.reasonCode})`,
     );
+    printFirstValue(explanation.firstValue, io);
   }
 }
 

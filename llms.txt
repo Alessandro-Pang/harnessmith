@@ -87,6 +87,10 @@ use the published `npx --yes harnessmith` commands below.
    the minimum required permission.
 6. Report every installed instruction path, Harness path, backup path, ownership result, and deterministic health result.
    Never report `installed-and-healthy` as proof of behavior in a real Host session.
+   Use the shared First Value states exactly: `installed`, `healthy`, `host-configured`, and `host-verified`. After managed
+   installation, run `diagnostics --agent <agent> --json`; after deterministic health passes, present the controlled
+   read-only first task and recovery preview. Keep Host-owned states inconclusive until a real Host run supplies tool,
+   filesystem, and verifier evidence.
 
 If the preview reports unmanaged rules that must be preserved, do not jump to `--force`. Use the proposal-bound adoption flow:
 

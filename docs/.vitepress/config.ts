@@ -91,6 +91,7 @@ export default withMermaid(defineConfig({
           text: '开始使用',
           items: [
             { text: '快速开始', link: '/guide/getting-started' },
+            { text: 'First Value Loop', link: '/guide/first-value-loop' },
             { text: '宿主支持', link: '/guide/hosts' },
             { text: '生命周期', link: '/guide/lifecycle' },
           ],

@@ -112,6 +112,18 @@ test('setup installs and verifies global and project adapters without claiming H
   assert.ok(existsSync(join(project, '.cursor', '.harnessmith', 'install.json')));
 });
 
+test('setup text reports the shared First Value states and controlled Host task next step', () => {
+  const { root, project } = fixture('harnessmith-setup-first-value-text-');
+  const result = execute(root, project, ['setup', '--agent', 'codex', '--yes']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(
+    result.stdout,
+    /First Value: installed=passed, healthy=passed, host-configured=inconclusive, host-verified=inconclusive/,
+  );
+  assert.match(result.stdout, /First Value next RUN_CONTROLLED_HOST_TASK/);
+});
+
 test('setup requires explicit non-interactive confirmation', () => {
   const { root, project } = fixture('harnessmith-setup-confirm-');
   const result = execute(root, project, ['setup', '--agent', 'codex', '--json']);

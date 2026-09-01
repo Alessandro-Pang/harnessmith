@@ -98,6 +98,11 @@ test('status explain JSON and text share state, reason, and safe next action sem
   assert.match(text.stdout, new RegExp(report.actions[0].code));
   assert.match(text.stdout, /not executed automatically/i);
   assert.doesNotMatch(text.stdout, /automatic=true/i);
+  assert.match(
+    text.stdout,
+    /First Value: installed=passed, healthy=not-checked, host-configured=inconclusive, host-verified=inconclusive/,
+  );
+  assert.match(text.stdout, /First Value next RUN_DIAGNOSTICS/);
 });
 
 test('status explain reports unsupported adapters without resolving or writing paths', () => {

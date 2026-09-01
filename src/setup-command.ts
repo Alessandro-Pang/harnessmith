@@ -1,4 +1,5 @@
 import type { Readable, Writable } from 'node:stream';
+import { firstValueFromSetupVerification } from './first-value.js';
 import { installAll } from './install.js';
 import { createSetupGuide, setupVerificationPassed, verifySetup } from './setup.js';
 import type { Adapter, CliOptions, InstallResult, Io } from './types.js';
@@ -78,11 +79,19 @@ export async function executeSetup(
     result: passed ? ('installed-and-healthy' as const) : ('verification-failed' as const),
     installation: results,
     verification,
+    firstValue: firstValueFromSetupVerification(verification),
   };
   if (options.json) context.io.log(JSON.stringify(report));
   else {
     printInstallResults(results, context.io, { interactive, output: context.output });
     printSetupVerification(verification, context.io);
+    const { installed, healthy, hostConfigured, hostVerified } = report.firstValue.states;
+    context.io.log(
+      `  First Value: installed=${installed.status}, healthy=${healthy.status}, host-configured=${hostConfigured.status}, host-verified=${hostVerified.status}`,
+    );
+    context.io.log(
+      `  First Value next ${report.firstValue.nextAction.code}  ${report.firstValue.nextAction.command}`,
+    );
     context.io.log(`First task: ${guide.minimalExample.prompt}`);
   }
   if (interactive) {

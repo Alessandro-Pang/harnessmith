@@ -60,6 +60,10 @@ npx harnessmith status --agent codex --explain
 `restore`。安装成功或确定性健康检查通过，不等于真实 Host 行为已经通过：模型行为、工具权限、认证与运行时事件均为
 `host-dependent`，必须在实际宿主会话中另行验证。
 
+统一状态词汇为 `installed`、`healthy`、`host-configured`、`host-verified`。setup 能在本地证明前两项；status 只证明
+`installed`，不会顺带证明 `healthy`。完成安装后的下一步是运行 `diagnostics --agent <agent> --json`，再进入真实 Host
+执行下方首次受控任务。完整起点、终点、owner、失败出口和零遥测回归见 [First Value Loop](/guide/first-value-loop)。
+
 ## 选择其他宿主
 
 `codex`、`claude-code`、`opencode` 与 `kimi-code` 使用全局安装范围；`cursor` 使用项目范围：
@@ -84,6 +88,9 @@ npx harnessmith setup --agent codex,opencode,kimi-code
 
 这类请求会先命中入口中的信任与发现规则，再按需路由到具体 playbook。Harnessmith 提供上下文和工作契约；宿主是否
 执行命令、是否要求权限批准，仍由宿主自身决定。
+
+只有真实 Host 完成该任务并保留工具、文件系统与 verifier 证据，才到达 `host-verified`。在此之前先查看
+`status --explain` 和 `restore --dry-run`，完成 `recovery-aware` 检查点。
 
 ## 让 Agent 帮你安装
 
