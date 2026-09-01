@@ -78,6 +78,8 @@ export function createProgram(
     ['uninstall', 'restore all layers and remove the installation'],
   ] as const) {
     const command = program.command(name).description(description);
+    if (name === 'status')
+      command.option('--explain', 'explain evidence, risk, and safe next actions');
     command.action(() => execute(name, command.optsWithGlobals<CliOptions>()));
   }
   return program;

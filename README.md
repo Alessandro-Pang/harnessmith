@@ -68,6 +68,9 @@ Cursor 需用 `--project /path/to/project` 指定项目根。目标路径、别�
 # 查看所有权与文件完整性
 npx harnessmith status --agent codex
 
+# 解释观察状态、证据、风险和不会自动执行的安全下一步
+npx harnessmith status --agent codex --explain
+
 # 恢复上一安装层
 npx harnessmith restore --agent codex
 

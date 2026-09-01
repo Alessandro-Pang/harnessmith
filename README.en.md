@@ -69,6 +69,9 @@ Cursor requires `--project /path/to/project`. See the
 # Inspect ownership and file integrity
 npx harnessmith status --agent codex
 
+# Explain observed state, evidence, risk, and safe actions that are not auto-run
+npx harnessmith status --agent codex --explain
+
 # Restore the previous installation layer
 npx harnessmith restore --agent codex
 
