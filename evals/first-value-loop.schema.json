@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:harnessmith:first-value-loop-scenario:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "id",
+    "version",
+    "start",
+    "end",
+    "firstValueDefinition",
+    "telemetry",
+    "activityClaimsExcluded",
+    "steps"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "id": { "const": "first-value-loop" },
+    "version": { "const": 1 },
+    "start": { "const": "positioning" },
+    "end": { "const": "host-verified" },
+    "firstValueDefinition": { "$ref": "#/$defs/text" },
+    "telemetry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["default", "futureRequirement"],
+      "properties": {
+        "default": { "const": "local-only" },
+        "futureRequirement": { "$ref": "#/$defs/text" }
+      }
+    },
+    "activityClaimsExcluded": {
+      "type": "array",
+      "prefixItems": [
+        { "const": "npm-downloads" },
+        { "const": "github-traffic" },
+        { "const": "local-tests" }
+      ],
+      "items": false,
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": { "$ref": "#/$defs/step" }
+    }
+  },
+  "$defs": {
+    "text": { "type": "string", "minLength": 1, "maxLength": 2048 },
+    "textList": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/text" }
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "owner",
+        "localObservable",
+        "successSignals",
+        "failureSignals",
+        "exitReasons"
+      ],
+      "properties": {
+        "id": {
+          "enum": [
+            "positioning",
+            "host-selected",
+            "previewed",
+            "installed",
+            "healthy",
+            "controlled-task-ready",
+            "host-configured",
+            "recovery-aware",
+            "host-verified"
+          ]
+        },
+        "owner": {
+          "enum": ["docs", "user", "harnessmith-installer", "embedded-runtime", "host", "host-and-user"]
+        },
+        "localObservable": { "type": "boolean" },
+        "successSignals": { "$ref": "#/$defs/textList" },
+        "failureSignals": { "$ref": "#/$defs/textList" },
+        "exitReasons": { "$ref": "#/$defs/textList" }
+      }
+    }
+  }
+}

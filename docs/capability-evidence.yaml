@@ -188,6 +188,23 @@ claims:
       - src/__tests__/portable-config.test.ts
       - src/__tests__/args.test.ts
 
+  - id: first-value-loop
+    status: implemented
+    owner: product journey contract and local usability regression
+    claim: Define the activation journey from positioning to real-Host verification with shared installed, healthy, host-configured, and host-verified states, while generating a versioned local-only acceptance record that does not infer users from downloads, traffic, or tests.
+    implementation:
+      - src/first-value.ts
+      - src/setup.ts
+      - src/status-explanation.ts
+      - scripts/first-value-loop.ts
+      - evals/first-value-loop.v1.json
+      - evals/first-value-record.schema.json
+    verification:
+      - src/__tests__/first-value.test.ts
+      - evals/__tests__/first-value-loop.test.ts
+      - src/__tests__/setup.test.ts
+      - src/__tests__/status-explain.test.ts
+
   - id: candidate-bound-host-eval-gate
     status: implemented
     owner: release verification scripts

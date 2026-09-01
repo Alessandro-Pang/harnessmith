@@ -60,6 +60,10 @@ npx harnessmith setup --agent cursor --project /path/to/project --yes --json
 成功报告中的 `installed-and-healthy` 只表示安装所有权与内嵌 Runtime 的确定性检查通过；不代表真实 Host 中的模型行为、
 工具权限、认证或运行时事件已经通过。
 
+报告内的 First Value 状态使用统一的 `installed`、`healthy`、`host-configured`、`host-verified`：setup 可本地证明前两项，
+后两项在没有真实 Host 证据时保持 `inconclusive`。下一步先运行 `diagnostics --agent <agent> --json`，再执行文档中的首次
+只读受控任务；完整 journey 见 [First Value Loop](/guide/first-value-loop)。
+
 ## 安全接管 `adopt`
 
 `adopt` 默认只读扫描已有 Host 规则，将内容逐项分类为 managed-compatible、user-owned overlay、冲突规则、
@@ -90,6 +94,9 @@ npx harnessmith status --agent codex --explain --json
 本地状态可判定为 `managed`、`modified`、`unmanaged`、`partial` 或 `missing`；`unsupported` 表示没有 Adapter
 契约并在路径解析前停止。Harness capability、Host configuration 和真实 Host behavior 分开报告，无法从本地证明的 Host
 结论固定为 `inconclusive` / `host-dependent`，不会误报为 healthy。
+
+`status` 的 First Value 投影只把 `managed` 映射为 `installed: passed`；因为该命令不运行 Runtime health，`healthy`
+仍为 `not-checked`。managed 状态的统一下一步是 `diagnostics --agent <agent> --json`。
 
 建议动作只作为下一步展示，带有 `automatic: false`、`destructive: false` 和授权要求，不会由 `status` 自动执行。
 

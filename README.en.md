@@ -105,6 +105,10 @@ See the [CLI reference](https://alexpang.cn/harnessmith/reference/cli) and
 [Runtime CLI reference](https://alexpang.cn/harnessmith/reference/runtime-cli#repository-map-维护跨项目关系) explains the
 Repository Map model, evidence threshold, and maintenance commands.
 
+Installation and local health reach only `installed` / `healthy`; First Value reaches `host-verified` only after the real
+Host completes the controlled read-only task with verifier evidence. See the
+[First Value Loop](https://alexpang.cn/harnessmith/guide/first-value-loop).
+
 ## Embedded document search
 
 `search` / `memory search` use `--mode auto` by default: a valid local full-text index enables weighted BM25 retrieval,

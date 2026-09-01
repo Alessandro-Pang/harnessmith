@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:harnessmith:first-value-loop-record:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "scenarioId",
+    "scenarioVersion",
+    "result",
+    "states",
+    "firstValueAchieved",
+    "telemetry",
+    "evidence",
+    "excludedActivityClaims"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "scenarioId": { "const": "first-value-loop" },
+    "scenarioVersion": { "const": 1 },
+    "result": { "enum": ["local-baseline-passed", "local-baseline-failed"] },
+    "states": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "positioning",
+        "hostSelected",
+        "previewed",
+        "installed",
+        "healthy",
+        "controlledTaskReady",
+        "hostConfigured",
+        "hostVerified",
+        "recoveryAware"
+      ],
+      "properties": {
+        "positioning": { "$ref": "#/$defs/localStatus" },
+        "hostSelected": { "$ref": "#/$defs/localStatus" },
+        "previewed": { "$ref": "#/$defs/localStatus" },
+        "installed": { "$ref": "#/$defs/localStatus" },
+        "healthy": { "$ref": "#/$defs/localStatus" },
+        "controlledTaskReady": { "$ref": "#/$defs/localStatus" },
+        "hostConfigured": { "const": "inconclusive" },
+        "hostVerified": { "const": "inconclusive" },
+        "recoveryAware": { "$ref": "#/$defs/localStatus" }
+      }
+    },
+    "firstValueAchieved": { "const": false },
+    "telemetry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["uploaded", "remoteEvidenceUsed"],
+      "properties": {
+        "uploaded": { "const": false },
+        "remoteEvidenceUsed": { "const": false }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 16,
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[A-Z0-9_]+$" }
+    },
+    "excludedActivityClaims": {
+      "type": "array",
+      "prefixItems": [
+        { "const": "NPM_DOWNLOADS_ARE_NOT_ACTIVE_USERS" },
+        { "const": "GITHUB_TRAFFIC_IS_NOT_ACTIVE_USERS" },
+        { "const": "LOCAL_TESTS_ARE_NOT_ACTIVE_USERS" }
+      ],
+      "items": false,
+      "minItems": 3,
+      "maxItems": 3
+    }
+  },
+  "$defs": {
+    "localStatus": { "enum": ["passed", "failed"] }
+  }
+}

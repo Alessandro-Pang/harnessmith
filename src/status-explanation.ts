@@ -1,4 +1,5 @@
 import { existsSync } from 'node:fs';
+import { firstValueFromStatus } from './first-value.js';
 import type { Adapter, AdapterStatus, AdapterStatusInspection } from './types.js';
 
 const stateDefinitions = {
@@ -121,6 +122,7 @@ export function explainStatus({ adapter, status, record, plan }: AdapterStatusIn
       },
     },
     stateDefinitions,
+    firstValue: firstValueFromStatus(state, adapter.name),
   };
 }
 
@@ -155,6 +157,7 @@ export function explainUnsupportedStatus(requestedAgents: string[]) {
       },
     },
     stateDefinitions,
+    firstValue: firstValueFromStatus('unsupported', requestedAgents.join(',') || 'unknown'),
   };
 }
 

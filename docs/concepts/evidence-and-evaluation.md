@@ -33,6 +33,16 @@ benchmark `passed` 只证明当前源码对该 corpus 的确定性契约达标�
 
 这条链不能证明第三方 Coding Agent 真的读取了规则、触发了权限提示，或按场景使用了工具。
 
+### First Value 本地体验回归
+
+`pnpm run eval:first-value` 在 disposable 本地目录中复现 setup preview、managed install、deterministic health、status
+explain 和 restore preview，并输出 version 1 acceptance record。这能发现 journey 术语、下一步、安装与恢复入口的回归，
+且默认不上传 telemetry。
+
+该记录明确把 `installed`、`healthy` 与 `host-configured`、`host-verified` 分开。本地 baseline 通过时，Host-owned
+状态仍为 `inconclusive`，`firstValueAchieved` 固定为 `false`；npm downloads、GitHub traffic 和本地 tests 均被列为
+不能用于推断 active users 的指标。完整 journey 见 [First Value Loop](/guide/first-value-loop)。
+
 ### 真实宿主评测
 
 一份完整的 Host Eval 应使用某个精确候选 tarball，在真实宿主中执行场景，并采集脱敏的 JSONL、工具行为、文件差异和

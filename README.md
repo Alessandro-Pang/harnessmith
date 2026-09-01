@@ -103,6 +103,9 @@ node <harness-path>/bin/harness.mjs health --json
 [安全生命周期](https://alexpang.cn/harnessmith/guide/lifecycle)。Repository Map 的关系模型、证据门槛和维护命令见
 [运行时 CLI](https://alexpang.cn/harnessmith/reference/runtime-cli#repository-map-维护跨项目关系)。
 
+安装与本地 health 通过只到达 `installed` / `healthy`；真实 Host 完成首次只读受控任务并保留 verifier 证据后才是
+`host-verified`。完整路径见 [First Value Loop](https://alexpang.cn/harnessmith/guide/first-value-loop)。
+
 ## 内嵌文档检索
 
 `search` / `memory search` 默认使用 `--mode auto`：存在有效的本地全文索引时执行加权 BM25 检索，否则安全回退到

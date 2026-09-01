@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "id": "first-value-loop",
+  "version": 1,
+  "start": "positioning",
+  "end": "host-verified",
+  "firstValueDefinition": "A selected Host has the managed Harness installed, deterministic health passes, the user completes the documented read-only controlled task in that real Host with verifier evidence, and the recovery path has been presented.",
+  "telemetry": {
+    "default": "local-only",
+    "futureRequirement": "Any remote telemetry requires a separate opt-in design with purpose limitation, privacy review, retention, and a disable mechanism."
+  },
+  "activityClaimsExcluded": ["npm-downloads", "github-traffic", "local-tests"],
+  "steps": [
+    {
+      "id": "positioning",
+      "owner": "docs",
+      "localObservable": true,
+      "successSignals": ["The user can identify Harnessmith as a cross-Host personal Harness distributor rather than a universal runtime."],
+      "failureSignals": ["The product is interpreted as owning model loops, permissions, or Host execution."],
+      "exitReasons": ["Unsupported product expectation", "No need for cross-Host rule distribution"]
+    },
+    {
+      "id": "host-selected",
+      "owner": "user",
+      "localObservable": true,
+      "successSignals": ["A built-in Adapter and its scope are selected explicitly."],
+      "failureSignals": ["The Host is unsupported or project scope is missing."],
+      "exitReasons": ["Unsupported Host", "Project root unavailable"]
+    },
+    {
+      "id": "previewed",
+      "owner": "harnessmith-installer",
+      "localObservable": true,
+      "successSignals": ["setup --dry-run returns destinations, ownership states, unchanged boundaries, and recovery commands."],
+      "failureSignals": ["The preview is ambiguous, unsafe, or reports a conflict without a review path."],
+      "exitReasons": ["Unmanaged target", "Modified managed target", "Unsafe path"]
+    },
+    {
+      "id": "installed",
+      "owner": "harnessmith-installer",
+      "localObservable": true,
+      "successSignals": ["Every recorded output exists and matches its managed checksum."],
+      "failureSignals": ["Installation rolls back, remains partial, or produces modified outputs."],
+      "exitReasons": ["Safety refusal", "Operation lock", "Rollback required"]
+    },
+    {
+      "id": "healthy",
+      "owner": "embedded-runtime",
+      "localObservable": true,
+      "successSignals": ["Deterministic embedded Runtime health returns healthy with exit zero."],
+      "failureSignals": ["Health is skipped, fails, times out, or returns invalid output."],
+      "exitReasons": ["Runtime unavailable", "Memory initialization skipped", "Health failure"]
+    },
+    {
+      "id": "controlled-task-ready",
+      "owner": "docs",
+      "localObservable": true,
+      "successSignals": ["The setup result presents the canonical read-only first task and verifier expectation."],
+      "failureSignals": ["No bounded task or evidence requirement is presented."],
+      "exitReasons": ["Task is not applicable", "Required repository is unavailable"]
+    },
+    {
+      "id": "host-configured",
+      "owner": "host",
+      "localObservable": false,
+      "successSignals": ["The selected real Host loads the managed instruction entrypoint under its own configuration contract."],
+      "failureSignals": ["The Host cannot load the rules, authenticate, or grant required read-only access."],
+      "exitReasons": ["Host configuration incomplete", "Authentication unavailable", "Permission declined"]
+    },
+    {
+      "id": "recovery-aware",
+      "owner": "user",
+      "localObservable": true,
+      "successSignals": ["Status inspection and restore dry-run commands are presented before the controlled Host task."],
+      "failureSignals": ["The user cannot identify how to inspect or recover the installed layer."],
+      "exitReasons": ["Recovery plan unavailable", "Backup evidence missing"]
+    },
+    {
+      "id": "host-verified",
+      "owner": "host-and-user",
+      "localObservable": false,
+      "successSignals": ["The real Host completes the canonical read-only task and retains tool, filesystem, and verifier evidence."],
+      "failureSignals": ["Only local tests, installation, downloads, traffic, or an unevidenced model answer are available."],
+      "exitReasons": ["Host task failed", "Evidence incomplete", "User stopped before verification"]
+    }
+  ]
+}
