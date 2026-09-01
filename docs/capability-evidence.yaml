@@ -150,6 +150,19 @@ claims:
       - template/agent-harness/src/__tests__/memory.test.ts
       - template/agent-harness/src/__tests__/task.test.ts
 
+  - id: explicit-memory-curation-apply
+    status: implemented
+    owner: embedded Harness Memory runtime
+    claim: Keep curation proposal-only by default while explicitly applying bounded, content-bound selections through existing typed lifecycle commands with per-item verification and partial-failure reporting.
+    implementation:
+      - template/agent-harness/src/commands/memory-curation.ts
+      - template/agent-harness/src/program/memory-curation-apply.ts
+      - template/agent-harness/src/lib/memory-curation-contract.ts
+    verification:
+      - template/agent-harness/src/__tests__/memory-curation.test.ts
+      - template/agent-harness/src/__tests__/memory-curation-apply.test.ts
+      - src/__tests__/memory-curation-apply-docs.test.ts
+
   - id: privacy-safe-runtime-audit
     status: implemented
     owner: embedded Harness runtime

@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { parseFrontmatterDocument } from './frontmatter.js';
 import { markdownFiles, memoryReference, readMemoryDocument } from './memory-path.js';
 import {
@@ -19,6 +20,7 @@ export interface CurationDocument {
   taskId?: string;
   sourceRefs: string[];
   references: string[];
+  sourceDigest: string;
 }
 
 export function canonicalMemoryReference(reference: string): string {
@@ -61,6 +63,7 @@ export function loadCurationDocuments(memoryRoot: string): CurationDocument[] {
       references: [...bodyReferences, ...metadataReferences(parsed.metadata)].map(
         canonicalMemoryReference,
       ),
+      sourceDigest: `sha256:${createHash('sha256').update(content).digest('hex')}`,
     };
   });
 }

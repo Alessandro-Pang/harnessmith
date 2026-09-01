@@ -3,6 +3,13 @@ import {
   canonicalMemoryReference,
   loadCurationDocuments,
 } from '../lib/memory-curation-documents.js';
+import { buildCurationProposals } from '../lib/memory-curation-proposals.js';
+import type {
+  CurationCandidate,
+  CurationOptions,
+  CurationOutcome,
+  MemoryCurationReport,
+} from '../lib/memory-curation-types.js';
 import { validateMemoryRoot } from '../lib/memory-validation.js';
 import { assertNoHighConfidenceSecret } from '../lib/secret-hygiene.js';
 import { projectRoot, readTask } from '../lib/task-store.js';
@@ -10,34 +17,12 @@ import { otherTaskOwners, taskReferences } from '../lib/workflow-relations.js';
 import { calendarDate } from '../runtime.js';
 import type { Io, Runtime, TaskStatus } from '../types.js';
 
-type CurationOutcome = 'phase-complete' | 'task-complete' | 'workstream-complete' | 'user-cancel';
+export type { CurationApplySelection } from '../lib/memory-curation-contract.js';
 
-export interface CurationOptions {
-  task: string;
-  workstream?: string;
-  outcome?: CurationOutcome;
-  json?: boolean;
-}
-
-interface CurationCandidate {
-  reference: string;
-  reason: string;
-}
-
-export interface MemoryCurationReport {
-  version: 1;
-  project: string;
-  task: string;
-  taskStatus: TaskStatus;
-  workstream: string;
-  outcome: CurationOutcome;
-  result: 'none' | 'candidates';
-  promoteCandidates: CurationCandidate[];
-  closeCandidates: CurationCandidate[];
-  supersedeCandidates: CurationCandidate[];
-  archiveCandidates: CurationCandidate[];
-  skipped: CurationCandidate[];
-}
+export type {
+  CurationOptions,
+  MemoryCurationReport,
+} from '../lib/memory-curation-types.js';
 
 const outcomes = new Set<CurationOutcome>([
   'phase-complete',
@@ -231,18 +216,29 @@ export function curateMemory(
     0
       ? 'candidates'
       : 'none';
+  const proposals = buildCurationProposals({
+    project: root,
+    documents: all,
+    candidates: buckets,
+    expiresOn: today,
+    task: task.id,
+    taskStatus: task.status,
+    workstream,
+    outcome,
+  });
   const report: MemoryCurationReport = {
     version: 1,
+    mode: 'proposal-only',
     project: root,
     task: task.id,
     taskStatus: task.status,
     workstream,
     outcome,
     result,
-    promoteCandidates: buckets.promote,
-    closeCandidates: buckets.close,
-    supersedeCandidates: buckets.supersede,
-    archiveCandidates: buckets.archive,
+    promoteCandidates: proposals.promote,
+    closeCandidates: proposals.close,
+    supersedeCandidates: proposals.supersede,
+    archiveCandidates: proposals.archive,
     skipped: buckets.skipped,
   };
   outputCuration(report, Boolean(options.json), io);

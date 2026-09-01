@@ -1,6 +1,5 @@
 import type { Command } from 'commander';
 import { memoryCheck, memoryList, memorySearch } from '../commands/memory.js';
-import { type CurationOptions, curateMemory } from '../commands/memory-curation.js';
 import { archiveMemory, supersedeMemory } from '../commands/memory-lifecycle.js';
 import { memoryMaintenance } from '../commands/memory-maintenance.js';
 import { memoryMigrate } from '../commands/memory-migration.js';
@@ -10,9 +9,11 @@ import {
 } from '../commands/memory-promotion.js';
 import { memoryRepair } from '../commands/memory-repair.js';
 import { workflowRelations } from '../commands/workflow-relations.js';
+import type { CurationCommandOptions } from '../lib/memory-curation-types.js';
 import type { Io, Runtime } from '../types.js';
 import { registerMemoryAutopilotCommands } from './memory-autopilot.js';
 import { registerMemoryCaptureEligibilityCommand } from './memory-capture-eligibility.js';
+import { memoryCuration } from './memory-curation-apply.js';
 import { addSearchOptions, type SearchCommandOptions } from './search-options.js';
 import type { CommandRunner } from './types.js';
 
@@ -60,9 +61,14 @@ export function registerMemoryCommands(
       '--outcome <outcome>',
       'phase-complete, task-complete, workstream-complete, or user-cancel',
     )
+    .option('--apply <proposal...>', 'apply one or more exact proposal ids')
+    .option('--apply-file <path>', 'read bounded typed proposal selections from JSON')
+    .option('--yes', 'confirm the selected typed curation actions')
     .option('--json', 'write a machine-readable curation report')
     .action(
-      run((scope: string, options: CurationOptions) => curateMemory(runtime, scope, options, io)),
+      run((scope: string, options: CurationCommandOptions) =>
+        memoryCuration(runtime, scope, options, io),
+      ),
     );
   memory
     .command('relationships <scope>')

@@ -148,6 +148,12 @@ backups, failed sidecars without a typed transaction, and unclassified validatio
 `inconclusive`. A repair must report exact paths, authority, backup/recovery, risk, prerequisites, and an independent
 verifier. Active locks fail closed; stale locks are handled only by the typed lock acquisition contract.
 
+`memory curate <project> --task <id>` is proposal-only by default. Explicit apply selects one to sixteen exact,
+unexpired proposal identities and requires `--yes`; source digest, authoritative workspace, Task, reference, cycle,
+or date drift fails closed. Close, supersede, and archive delegate to typed lifecycle commands. Promotion only emits
+the formal promotion proposal and does not write a source of truth. Batch output is per-item, preserves recovery paths,
+reports remaining proposals, and cannot substitute for the independent Task acceptance gate.
+
 If project-memory need is uncertain, ask the user. Do not initialize `.agent-docs` merely because the command
 exists. Initialization creates `.agent-docs/.gitignore` and `.agent-docs/.ignore` with `*`; it does not modify
 the project-root `.gitignore` or `.ignore`.

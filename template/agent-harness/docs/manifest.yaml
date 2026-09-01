@@ -23,7 +23,7 @@ entries:
   harness-cli-architecture:
     kind: topic
     path: core/harness-cli-architecture.md
-    conceptAliases: [harness-cli, install, init, memory-command, memory-autopilot, capture-input, close-input, payload-file, handoff, close-handoff, reconcile-profile, forget-profile, profile-autopilot, acceptance, local-harness, harness-profile, profile-autopilot-control, doctor, health, route, memory-migrate, 安装, 初始化, 记忆命令, 自动记忆, 验收, 本地-harness, harness-画像, 画像控制, 健康检查, 路由, 记忆迁移]
+    conceptAliases: [harness-cli, install, init, memory-command, memory-autopilot, capture-input, close-input, payload-file, handoff, close-handoff, reconcile-profile, forget-profile, profile-autopilot, acceptance, local-harness, harness-profile, profile-autopilot-control, doctor, health, route, memory-migrate, memory-curate, curation-apply, 安装, 初始化, 记忆命令, 自动记忆, 验收, 本地-harness, harness-画像, 画像控制, 健康检查, 路由, 记忆迁移, 记忆策展, 策展执行]
   observability:
     kind: topic
     path: core/observability.md
@@ -68,7 +68,7 @@ entries:
   project-agent-docs:
     kind: standard
     path: standards/project-agent-docs.md
-    conceptAliases: [.agent-docs, project-memory, memory-policy, memory-writeback, high-value-analysis, session, evidence, handoff, acceptance, future-tasks, multi-stage, phase, verified-phase, phase-handoff, multi-task, compaction, context-budget, close-handoff, memory-autopilot, capture-input, payload-file, memory-list, memory-check, memory-migrate, memory-repair, repair-plan, secret-hygiene, host-evals, 项目记忆, 记忆沉淀, 记忆策略, 高价值内容, 只读任务, 会话, 验收, 未来所有任务, 以后所有任务, 阶段, 多阶段, 多阶段任务, 阶段交接, 阶段已验证仍有后续, 多任务, 压缩, 上下文预算, 上下文预算信号, 自动记忆, 记忆列表, 记忆检查, 记忆迁移, 诊断修复, 修复提案, 凭据卫生]
+    conceptAliases: [.agent-docs, project-memory, memory-policy, memory-writeback, high-value-analysis, session, evidence, handoff, acceptance, future-tasks, multi-stage, phase, verified-phase, phase-handoff, multi-task, compaction, context-budget, close-handoff, memory-autopilot, capture-input, payload-file, memory-list, memory-check, memory-migrate, memory-repair, repair-plan, memory-curate, curation-apply, secret-hygiene, host-evals, 项目记忆, 记忆沉淀, 记忆策略, 高价值内容, 只读任务, 会话, 验收, 未来所有任务, 以后所有任务, 阶段, 多阶段, 多阶段任务, 阶段交接, 阶段已验证仍有后续, 多任务, 压缩, 上下文预算, 上下文预算信号, 自动记忆, 记忆列表, 记忆检查, 记忆迁移, 诊断修复, 修复提案, 记忆策展, 策展执行, 凭据卫生]
   prompt-rule-contract:
     kind: standard
     path: standards/prompt-rule-contract.md

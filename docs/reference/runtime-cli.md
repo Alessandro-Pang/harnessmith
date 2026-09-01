@@ -92,6 +92,8 @@ node <harness-path>/bin/harness.mjs memory check project --indexed --json
 node <harness-path>/bin/harness.mjs memory relationships /absolute/project/path --json
 node <harness-path>/bin/harness.mjs memory maintain project --json
 node <harness-path>/bin/harness.mjs memory repair project --json
+node <harness-path>/bin/harness.mjs memory curate project --task task-id --json
+node <harness-path>/bin/harness.mjs memory curate project --task task-id --apply-file /tmp/curation-selection.json --yes --json
 ```
 
 `memory relationships` 是项目级只读报告：统一列出 Task、默认 phase/workstream、Memory owner、session 与
@@ -101,6 +103,14 @@ lifecycle role，并报告 orphan task reference 和 cross-workstream binding。
 `memory maintain` 只报告未索引、过期、重复、可归档和替代关系异常，不会自行删除或改写。旧 metadata 通过
 `memory migrate` 先生成 proposal；只有提案状态为 ready 且显式传入 `--apply` 才写入。`supersede` 建立替代关系，
 `archive` 只处理已关闭内容，`promote` 只输出提升到权威事实层的提案。
+
+`memory curate` 默认仍是零写入的 `proposal-only` 报告，Task close 不会自动执行候选。每个 promote、close、supersede
+或 archive 候选包含稳定 `proposalId`、`sourceDigest`、排除 `.agent-docs` 的 workspace digest、`expiresOn`、前置条件和
+精确 verifier。显式执行必须选择 1–16 个 proposal，并传入 `--yes`；需要 replacement 或 promotion 参数时使用项目外的
+有界 `--apply-file`。执行前会重新生成并比对 proposal identity，因此 source、工作区、Task 状态、引用关系或日期变化都会
+fail closed 并要求重新生成。close、supersede 与 archive 只调用既有 typed lifecycle，继续执行 inbound reference、cycle、
+锁和 rollback 门禁；promotion 只调用正式 promotion proposal 流程，不写事实源。批量报告逐项 action、reason、validation、
+recovery path 和 remaining proposals，单项失败只形成 `partial`，不能把整批标为成功。该执行层与 Task acceptance gate 独立。
 
 `memory repair` 默认是零写入诊断，只为 partial initialization、可机械压缩的 core index、损坏或缺失的派生检索索引，
 以及具备完整 owner、proposal、目标与内容 digest 的中断事务分别生成独立 proposal。实际修复必须同时传入上次诊断得到的

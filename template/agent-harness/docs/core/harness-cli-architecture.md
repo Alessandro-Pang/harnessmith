@@ -148,10 +148,14 @@ validation failure 保留并报告 `inconclusive`。active locks 直接拒绝；
 和未满足条件。proposal 自身永远不构成正式写入授权；只有目标已存在且提供 adoption evidence 时才产生可追踪的
 supersede candidate，仍须 owner 确认并走 typed lifecycle，不能报告为已采纳或已 supersede。
 
-`memory curate <project> --task <id>` 是只读的 task/workstream 策展报告。它只输出 proposal 候选并显式区分
-phase、task、workstream 完成与用户取消；不得嵌入 `task close`，也不得代替 `promote`、`close-input`、
-`supersede` 或 `archive` 的 mutation 与门禁。具有多个 `task:` owner 的共享文档不得因单个 task/workstream
-结束而进入 close 或 archive candidate。
+`memory curate <project> --task <id>` 默认是只读的 task/workstream 策展报告，只输出 proposal 候选并显式区分
+phase、task、workstream 完成与用户取消；`task close` 不会自动 apply。候选用 action、source digest、排除 Memory 的
+workspace digest、Task/workstream/outcome 和 `expiresOn` 计算稳定 `proposalId`。显式执行必须选择有界 proposal 集并同时
+提供 `--yes`；执行前逐项重新生成 identity，任何 source、workspace、Task、引用或日期漂移都 fail closed。close、supersede
+和 archive 只委托既有 typed lifecycle，因此 inbound reference、cycle、lock、exact-state verifier 和 rollback 契约继续生效；
+promotion 只生成正式 promotion proposal，不直接写权威事实源。批量输出逐项 action、reason、validation、recovery path 与
+remaining proposals，partial failure 不得报告整批成功。curation apply 与 Task acceptance gate 独立，不能完成或验证 Task。
+具有多个 `task:` owner 的共享文档不得因单个 task/workstream 结束而进入 close 或 archive candidate。
 
 `memory relationships <project>` 输出 version 1、`report-only` 的关系视图。Task ledger 继续拥有验收状态；
 关系视图只确定性派生默认 workstream 与 current phase，并把 Memory 的 task/workstream/session owner 及
