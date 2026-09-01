@@ -17,6 +17,7 @@ owner: maintainers
 | `restore` | 恢复上一安装层 | 是 |
 | `uninstall` | 恢复全部安装层并移除记录 | 是 |
 | `capabilities` | 输出 Adapter 范围、激活和权限边界 | 否 |
+| `diagnostics` | 预览本地脱敏诊断报告 | 否 |
 
 ## 通用选项
 
@@ -88,6 +89,19 @@ npx harnessmith status --agent codex --explain --json
 
 建议动作只作为下一步展示，带有 `automatic: false`、`destructive: false` 和授权要求，不会由 `status` 自动执行。
 
+## 脱敏诊断 `diagnostics`
+
+```bash
+npx harnessmith diagnostics --agent codex --json
+```
+
+报告只包含 allowlist 中的版本、Adapter capability、状态码、计数、SHA-256 摘要、采集预算、失败分类和复核命令。
+原始 prompt、模型输出、tool arguments、文件正文、环境变量、secret、用户标识符和本地路径不能进入报告；未知字段由
+schema 拒绝。命令只将报告预览到 stdout，不写文件也不上传，分享前由用户审阅。
+
+每个子命令最多读取 256 KiB，最长运行 10 秒。超限、超时、无输出和无效 JSON 都保留为稳定失败分类；一个采集步骤
+成功不会覆盖此前失败。未初始化的项目 Memory 和未执行的真实 Host 行为明确标为 `inconclusive`。
+
 ## 示例
 
 ```bash
@@ -109,6 +123,7 @@ npx harnessmith status --agent codex --json
 npx harnessmith status --agent codex --explain --json
 npx harnessmith adopt --agent codex --json
 npx harnessmith capabilities --json
+npx harnessmith diagnostics --agent codex --json
 
 # 回退生命周期
 npx harnessmith restore --agent codex

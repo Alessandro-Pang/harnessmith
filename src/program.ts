@@ -8,6 +8,7 @@ import type { CliOptions } from './types.js';
 export type HarnessmithCommand =
   | 'setup'
   | 'adopt'
+  | 'diagnostics'
   | 'install'
   | 'status'
   | 'restore'
@@ -78,6 +79,11 @@ export function createProgram(
     .command('capabilities')
     .description('report adapter scope, activation, ownership, and permission boundaries');
   capabilities.action(() => execute('capabilities', capabilities.optsWithGlobals<CliOptions>()));
+
+  const diagnostics = program
+    .command('diagnostics')
+    .description('preview a redacted, local-only diagnostic report');
+  diagnostics.action(() => execute('diagnostics', diagnostics.optsWithGlobals<CliOptions>()));
 
   for (const [name, description] of [
     ['status', 'inspect installation ownership and integrity'],

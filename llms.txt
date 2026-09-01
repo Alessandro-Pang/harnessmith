@@ -151,6 +151,9 @@ the project-root `.gitignore` or `.ignore`.
 - Use `status --explain --json` when ownership alone is insufficient. Preserve `observedState`, `reasonCode`, evidence,
   and action codes. Suggested actions have `automatic: false`; do not execute restore, takeover, or Host changes without
   the user's authorization. Host configuration and real behavior remain `inconclusive` until Host evidence exists.
+- Use `diagnostics --agent <agents> --json` to preview bounded, allowlisted troubleshooting metadata. The command writes
+  only to stdout, never uploads or persists a report, and intentionally excludes raw content, local paths, environment
+  variables, secrets, and user identifiers. Preserve partial and inconclusive classifications when sharing a preview.
 - Lifecycle commands attempt rollback along recorded paths. If rollback is incomplete, preserve stderr and every
   recovery path, report the installation as blocked, and do not claim the previous state was restored.
 - Upgrade by rerunning `npx --yes harnessmith`; use the outer CLI for status, restore, and uninstall:
