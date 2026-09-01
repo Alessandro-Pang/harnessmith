@@ -26,6 +26,10 @@ reproduction without secrets or personal memory content.
 - `diagnostics` emits only schema-allowlisted metadata to stdout. It does not persist or upload reports, and it
   excludes raw prompts, model output, tool arguments, file bodies, environment variables, secrets, local paths,
   and user identifiers. Review the preview before sharing it.
+- Portable config export is restricted to three personal-overlay files. Managed payloads, mutable state, global
+  and project memory, host credentials, caches, temporary files, and workspace content are excluded. Import
+  validates a versioned closed schema and digests, rejects symlinks and path escapes, and cannot overwrite a
+  different target; a content-bound proposal and explicit confirmation are required before transactional writes.
 - Uninstall does not delete shared or project `.agent-docs` memory.
 - A future custom-template feature must treat templates as executable trusted input because installed
   Harness JavaScript can run with the user's permissions.

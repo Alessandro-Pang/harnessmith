@@ -11,6 +11,13 @@ export interface Io {
   error?(message?: unknown, ...optional: unknown[]): void;
 }
 
+export interface ExecuteContext {
+  env: NodeJS.ProcessEnv;
+  io: Io;
+  input: Readable;
+  output: Writable;
+}
+
 export interface Instruction {
   path: string;
   render(content: string): string;
@@ -160,6 +167,8 @@ export interface CliOptions {
   initGlobal?: boolean;
   explain?: boolean;
   proposal?: string;
+  output?: string;
+  input?: string;
 }
 
 export interface RunContext {

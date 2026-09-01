@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "kind": "harnessmith-portable-config",
+  "rootKind": "personal-overlay",
+  "collectionResult": "complete",
+  "resources": [
+    {
+      "path": "AGENTS.md",
+      "encoding": "utf8",
+      "digest": "sha256:faa5b4816800b8cbe1595e5533fe36c53f396c0c26a3a876dd3e4085232348a1",
+      "content": "# fixture\n"
+    }
+  ],
+  "exclusions": [],
+  "excludedCategories": [
+    "managed-distribution",
+    "mutable-state",
+    "global-memory",
+    "project-memory",
+    "host-credentials",
+    "cache-and-temporary-files",
+    "workspace-content"
+  ],
+  "bundleDigest": "sha256:c7490623d4b10a8ea2338570a3df361e6ac493c6f7c467d257330141e535965d"
+}

@@ -107,6 +107,25 @@ test('Commander exposes read-only diagnostics reports', async () => {
   assert.equal(result.json, true);
 });
 
+test('Commander exposes proposal-bound config export and import', async () => {
+  const calls: Array<CliOptions & { command: HarnessmithCommand }> = [];
+  const program = createProgram(async (command, options) => {
+    calls.push({ command, ...options });
+  });
+  await program.parseAsync(['export', '--output', '/tmp/bundle.json', '--json'], {
+    from: 'user',
+  });
+  await program.parseAsync(
+    ['import', '--input', '/tmp/bundle.json', '--proposal', 'sha256:abc', '--yes', '--json'],
+    { from: 'user' },
+  );
+  assert.equal(calls[0].command, 'export');
+  assert.equal(calls[0].output, '/tmp/bundle.json');
+  assert.equal(calls[1].command, 'import');
+  assert.equal(calls[1].input, '/tmp/bundle.json');
+  assert.equal(calls[1].proposal, 'sha256:abc');
+});
+
 test('Commander exposes adapter capabilities as a read-only command', async () => {
   let result: (CliOptions & { command: HarnessmithCommand }) | undefined;
   const program = createProgram(async (command, options) => {

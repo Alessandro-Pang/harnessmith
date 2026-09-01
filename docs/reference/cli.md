@@ -18,6 +18,8 @@ owner: maintainers
 | `uninstall` | 恢复全部安装层并移除记录 | 是 |
 | `capabilities` | 输出 Adapter 范围、激活和权限边界 | 否 |
 | `diagnostics` | 预览本地脱敏诊断报告 | 否 |
+| `export` | 预览或写入版本化 personal overlay bundle | 仅提供 `--output` 时是 |
+| `import` | 校验并规划或导入 personal overlay bundle | 默认否；确认精确提案后是 |
 
 ## 通用选项
 
@@ -32,6 +34,8 @@ owner: maintainers
 | `--no-init-global` | 跳过共享全局 Memory 初始化 |
 | `--explain` | 仅用于 `status`；解释状态、证据、风险和安全下一步 |
 | `--proposal <id>` | 仅用于 `adopt`；绑定先前只读扫描返回的精确提案 |
+| `--output <file>` | 仅用于 `export`；写入一个不存在的新 bundle 文件 |
+| `--input <file>` | 仅用于 `import`；读取待校验的本地 bundle |
 | `-v, --version` | 输出版本 |
 | `-h, --help` | 输出帮助 |
 
@@ -102,6 +106,28 @@ schema 拒绝。命令只将报告预览到 stdout，不写文件也不上传，
 每个子命令最多读取 256 KiB，最长运行 10 秒。超限、超时、无输出和无效 JSON 都保留为稳定失败分类；一个采集步骤
 成功不会覆盖此前失败。未初始化的项目 Memory 和未执行的真实 Host 行为明确标为 `inconclusive`。
 
+## 版本化导出与导入
+
+```bash
+# 预览并可选写入一个新文件；不会覆盖已有输出
+npx harnessmith export --json
+npx harnessmith export --output ./harness-config.json --json
+
+# 第一步只校验 bundle、digest、目标状态并返回 proposalId
+npx harnessmith import --input ./harness-config.json --json
+
+# 审阅后确认完全相同的 bundle 与目标状态
+npx harnessmith import --input ./harness-config.json --proposal <proposalId> --yes --json
+```
+
+v1 bundle 只允许 personal overlay 的 `AGENTS.md` 和 Repository Map 两种表示；managed distribution、可变 state、
+全局/项目 Memory、Host credential、cache、临时文件和任意 workspace 内容始终排除。allowlist 文件含高置信 secret 或
+超过 256 KiB 时不会进入 bundle，并将导出标记为 `partial`。
+
+import 对未知 schema、未知字段、digest 不一致、路径越界、symlink 和无效 UTF-8 fail closed。目标缺失时可创建，内容
+相同则幂等跳过；任何不同内容均视为 conflict，不能用 import 覆盖，需回到显式 `adopt` 流程。实际写入持有 personal
+root coordination lock，并在失败时按快照回滚；提案后的 bundle 或目标变化会使 `proposalId` 失效。
+
 ## 示例
 
 ```bash
@@ -124,6 +150,8 @@ npx harnessmith status --agent codex --explain --json
 npx harnessmith adopt --agent codex --json
 npx harnessmith capabilities --json
 npx harnessmith diagnostics --agent codex --json
+npx harnessmith export --output ./harness-config.json --json
+npx harnessmith import --input ./harness-config.json --json
 
 # 回退生命周期
 npx harnessmith restore --agent codex

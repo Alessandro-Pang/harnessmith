@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:harnessmith:schema:portable-config:v1",
+  "title": "Harnessmith portable personal-overlay configuration bundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "kind",
+    "rootKind",
+    "collectionResult",
+    "resources",
+    "exclusions",
+    "excludedCategories",
+    "bundleDigest"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "kind": { "const": "harnessmith-portable-config" },
+    "rootKind": { "const": "personal-overlay" },
+    "collectionResult": { "enum": ["complete", "partial"] },
+    "resources": {
+      "type": "array",
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/resource" }
+    },
+    "exclusions": {
+      "type": "array",
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/exclusion" }
+    },
+    "excludedCategories": {
+      "type": "array",
+      "prefixItems": [
+        { "const": "managed-distribution" },
+        { "const": "mutable-state" },
+        { "const": "global-memory" },
+        { "const": "project-memory" },
+        { "const": "host-credentials" },
+        { "const": "cache-and-temporary-files" },
+        { "const": "workspace-content" }
+      ],
+      "items": false,
+      "minItems": 7,
+      "maxItems": 7
+    },
+    "bundleDigest": { "$ref": "#/$defs/digest" }
+  },
+  "$defs": {
+    "path": {
+      "enum": [
+        "AGENTS.md",
+        "projects/repository-map.md",
+        "projects/repository-map.yaml"
+      ]
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "resource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "encoding", "digest", "content"],
+      "properties": {
+        "path": { "$ref": "#/$defs/path" },
+        "encoding": { "const": "utf8" },
+        "digest": { "$ref": "#/$defs/digest" },
+        "content": { "type": "string", "maxLength": 262144 }
+      }
+    },
+    "exclusion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "reasonCode"],
+      "properties": {
+        "path": { "$ref": "#/$defs/path" },
+        "reasonCode": { "enum": ["SECRET_DETECTED", "FILE_BUDGET_EXCEEDED"] }
+      }
+    }
+  }
+}

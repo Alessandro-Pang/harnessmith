@@ -87,6 +87,11 @@ npx harnessmith capabilities --json
 # 预览本地脱敏诊断报告；命令不上传或持久化报告
 npx harnessmith diagnostics --agent codex --json
 
+# 导出可迁移的 personal overlay，再以内容绑定提案导入
+npx harnessmith export --output ./harness-config.json --json
+npx harnessmith import --input ./harness-config.json --json
+npx harnessmith import --input ./harness-config.json --proposal <proposalId> --yes --json
+
 # 检查个人 Repository Map 中的跨仓库关系
 node <harness-path>/bin/harness.mjs repository-map check --json
 

@@ -175,6 +175,19 @@ claims:
       - src/__tests__/diagnostics.test.ts
       - src/__tests__/args.test.ts
 
+  - id: versioned-portable-config
+    status: implemented
+    owner: outer portable-config transaction
+    claim: Export a minimal versioned personal-overlay bundle and validate, plan, proposal-bind, lock, import, and roll back allowed resources without including managed payloads, state, memory, credentials, caches, temporary files, or workspace content.
+    implementation:
+      - src/portable-config-contract.ts
+      - src/portable-config.ts
+      - src/portable-config-command.ts
+      - portable-config/bundle.schema.json
+    verification:
+      - src/__tests__/portable-config.test.ts
+      - src/__tests__/args.test.ts
+
   - id: candidate-bound-host-eval-gate
     status: implemented
     owner: release verification scripts

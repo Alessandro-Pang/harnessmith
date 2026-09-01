@@ -1,4 +1,3 @@
-import type { Readable, Writable } from 'node:stream';
 import { adapterCapabilities, createAdapter } from './adapters.js';
 import { executeAdopt } from './adopt-command.js';
 import { normalizeAgents } from './agents.js';
@@ -6,11 +5,15 @@ import { executeDiagnostics } from './diagnostics-command.js';
 import { installAll } from './install.js';
 import { inspectStatusAll, restoreAll, statusAll, uninstallAll } from './lifecycle.js';
 import { describeLifecycle } from './lifecycle-plan.js';
+import {
+  executePortableConfigExport,
+  executePortableConfigImport,
+} from './portable-config-command.js';
 import type { HarnessmithCommand } from './program.js';
 import { assertNonOverlappingAdapters, describeInstall } from './records.js';
 import { executeSetup } from './setup-command.js';
 import { explainStatus, explainUnsupportedStatus } from './status-explanation.js';
-import type { Adapter, CliOptions, Io, LifecycleCommand, LifecyclePlan } from './types.js';
+import type { Adapter, CliOptions, ExecuteContext, LifecycleCommand } from './types.js';
 import { HarnessmithError } from './types.js';
 import {
   confirmConflicts,
@@ -23,14 +26,7 @@ import {
   startInteractive,
 } from './ui.js';
 
-interface ExecuteContext {
-  env: NodeJS.ProcessEnv;
-  io: Io;
-  input: Readable;
-  output: Writable;
-}
-
-function isTty(stream: Readable | Writable): boolean {
+function isTty(stream: ExecuteContext['input'] | ExecuteContext['output']): boolean {
   return 'isTTY' in stream && stream.isTTY === true;
 }
 
@@ -57,7 +53,7 @@ async function resolveAdapters(options: CliOptions, context: ExecuteContext): Pr
 }
 
 function printLifecyclePlans(
-  plans: LifecyclePlan[],
+  plans: Array<ReturnType<typeof describeLifecycle>>,
   context: ExecuteContext,
   machineReadable: boolean,
 ): void {
@@ -96,7 +92,7 @@ function previewLifecycle(
 function executeLifecycle(
   command: Exclude<
     HarnessmithCommand,
-    'setup' | 'adopt' | 'diagnostics' | 'install' | 'capabilities'
+    'setup' | 'adopt' | 'diagnostics' | 'export' | 'import' | 'install' | 'capabilities'
   >,
   adapters: Adapter[],
   options: CliOptions,
@@ -223,6 +219,8 @@ export async function executeCommand(
     !options.yes && isTty(context.input) && isTty(context.output) && !options.json;
   if (interactive) startInteractive(context.output);
   if (command === 'capabilities') return executeCapabilities(options, context);
+  if (command === 'export') return executePortableConfigExport(options, context);
+  if (command === 'import') return executePortableConfigImport(options, context);
   let adapters: Adapter[];
   try {
     adapters = await resolveAdapters(options, context);

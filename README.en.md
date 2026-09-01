@@ -88,6 +88,11 @@ npx harnessmith capabilities --json
 # Preview a local redacted diagnostics report; the command neither uploads nor persists it
 npx harnessmith diagnostics --agent codex --json
 
+# Export the portable personal overlay, then import it through a content-bound proposal
+npx harnessmith export --output ./harness-config.json --json
+npx harnessmith import --input ./harness-config.json --json
+npx harnessmith import --input ./harness-config.json --proposal <proposalId> --yes --json
+
 # Check cross-repository relationships in your personal Repository Map
 node <harness-path>/bin/harness.mjs repository-map check --json
 
