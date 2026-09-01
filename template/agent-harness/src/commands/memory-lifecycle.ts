@@ -9,10 +9,6 @@ import {
 } from '../lib/memory-lifecycle-transaction.js';
 import { withMemoryLock } from '../lib/memory-lock.js';
 import {
-  type MemoryMaintenanceReport,
-  memoryMaintenanceReport,
-} from '../lib/memory-maintenance.js';
-import {
   isInside,
   markdownFiles,
   memoryDocumentPath,
@@ -81,61 +77,6 @@ function assertSupersessionRemainsAcyclic(root: string, source: string, replacem
     if (typeof next !== 'string' || !next.startsWith('memory:')) return;
     current = memoryDocumentPath(root, next.slice('memory:'.length));
   }
-}
-
-export function memoryMaintenance(
-  runtime: Runtime,
-  input = '.',
-  { json = false }: { json?: boolean } = {},
-  io: Io = console,
-): MemoryMaintenanceReport {
-  assertNoHighConfidenceSecret([input], 'Memory maintenance request');
-  const root = resolveMemoryRoot(runtime, input);
-  validateMemoryRoot(root, io, {
-    quietSuccess: true,
-    rootKind: root === runtime.memoryHome ? 'global' : 'project',
-  });
-  const report = memoryMaintenanceReport(root, calendarDate(runtime));
-  if (json) io.log(JSON.stringify(report, null, 2));
-  else {
-    io.log(`Memory maintenance: ${report.root}`);
-    io.log(`Unindexed active memory: ${report.unindexed.length}`);
-    for (const path of report.unindexed) io.log(`  ${path}`);
-    io.log(`Expired working memory: ${report.expiredWorking.length}`);
-    for (const path of report.expiredWorking) io.log(`  ${path}`);
-    io.log(`Closed archive candidates: ${report.closed.length}`);
-    for (const path of report.closed) io.log(`  ${path}`);
-    io.log(`Duplicate active titles: ${report.duplicateTitles.length}`);
-    for (const candidate of report.duplicateTitles) {
-      io.log(`  ${candidate.title}: ${candidate.paths.join(', ')}`);
-    }
-    io.log(`Supersession cycles: ${report.supersessionCycles.length}`);
-    for (const cycle of report.supersessionCycles) io.log(`  ${cycle.join(' -> ')}`);
-    io.log(`Active inputs: ${report.activeInputCount}`);
-    io.log(`Legacy inputs: ${report.legacyInputs.length}`);
-    for (const path of report.legacyInputs) io.log(`  ${path}`);
-    io.log(`Generic action inputs: ${report.genericActionInputs.length}`);
-    for (const path of report.genericActionInputs) io.log(`  ${path}`);
-    io.log(`Active workstream inputs: ${report.workstreamInputs.length}`);
-    for (const path of report.workstreamInputs) io.log(`  ${path}`);
-    io.log(`Generic descriptions: ${report.genericDescriptions.length}`);
-    for (const path of report.genericDescriptions) io.log(`  ${path}`);
-    io.log(`Duplicate purposes: ${report.duplicatePurposes.length}`);
-    for (const candidate of report.duplicatePurposes) {
-      io.log(`  ${candidate.purpose}: ${candidate.paths.join(', ')}`);
-    }
-    io.log(`Split proposals: ${report.splitProposals.length}`);
-    for (const proposal of report.splitProposals) {
-      io.log(`  ${proposal.path}: ${proposal.reasons.join(', ')}`);
-    }
-    io.log(
-      `Core budget: ${report.coreBudget.status} (${report.coreBudget.lines} lines, ${report.coreBudget.bytes} bytes)`,
-    );
-    for (const reference of report.coreBudget.compressionCandidates) {
-      io.log(`  compression candidate: ${reference}`);
-    }
-  }
-  return report;
 }
 
 export function supersedeMemory(

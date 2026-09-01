@@ -141,6 +141,12 @@ supersede candidate，仍须 owner 确认并走 typed lifecycle，不能报告�
 phase、task、workstream 完成与用户取消；不得嵌入 `task close`，也不得代替 `promote`、`close-input`、
 `supersede` 或 `archive` 的 mutation 与门禁。
 
+`memory maintain` 输出 version 2 read-only audit：统一列出 duplicate、stale、contradicted、expired、
+unindexed、broken-reference、cycle、budget、来源缺口及现有 input/purpose review 候选。每项包含稳定
+reason code、证据、typed suggested action、风险与 capture eligibility 状态；缺少 eligibility 完整输入时必须明确
+`not-evaluated` 并统计 coverage，缺少事实来源或受限扫描只能是 `inconclusive`。JSON execution failure 会保留
+失败状态并维持 non-zero command failure，后续输出不得把它覆盖成成功；报告不会自动修复、关闭或归档。
+
 Memory Autopilot 只有五类窄写入口：`capture-input`、`capture-experience`、`capture-finding`、`handoff`
 生命周期以及用户画像生命周期。各入口的业务状态机由对应专题文档拥有；本文件只定义 CLI 的参数、payload
 和执行安全契约。
