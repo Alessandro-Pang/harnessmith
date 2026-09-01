@@ -87,6 +87,8 @@ test('typed durable finding deduplicates a conclusion and accumulates evidence',
   assert.match(document, /^type: analytical-finding$/m);
   assert.match(document, /^memory-kind: distilled$/m);
   assert.match(document, /^finding-kind: analysis$/m);
+  assert.match(document, /^document-purpose: Keep routing intent explicit$/m);
+  assert.match(document, /^document-purpose-schema-version: 1$/m);
   assert.match(document, /^retention: durable$/m);
   assert.match(document, /# 理由\n\nVocabulary-only matching/);
   assert.match(document, /# 应用\n\nUse action-aware matching/);
@@ -101,6 +103,33 @@ test('typed durable finding deduplicates a conclusion and accumulates evidence',
     0,
     checkIo.errors.join('\n'),
   );
+});
+
+test('the same purpose does not merge semantically different conclusions', () => {
+  const { project, runtime } = fixture();
+  const base = {
+    kind: 'analysis' as const,
+    retention: 'durable' as const,
+    factClass: 'settled-fact' as const,
+    title: 'Keep one canonical purpose',
+    rationale: 'Purpose identifies intent while the conclusion digest identifies semantics.',
+    application: 'Keep distinct conclusions as distinct documents.',
+    evidence: ['Two conclusions can serve one stable purpose.'],
+    sourceRefs: ['docs/purpose-contract.md'],
+  };
+  const first = captureFinding(
+    runtime,
+    project,
+    { ...base, conclusion: 'The first conclusion remains independently reviewable.' },
+    capturedIo(),
+  );
+  const second = captureFinding(
+    runtime,
+    project,
+    { ...base, conclusion: 'The second conclusion remains independently reviewable.' },
+    capturedIo(),
+  );
+  assert.notEqual(first.path, second.path);
 });
 
 test('finding payload schema fails closed and preserves an invalid payload', () => {

@@ -4,6 +4,7 @@ import { basename, dirname, join } from 'node:path';
 import { stringify } from 'yaml';
 import { parseFrontmatterDocument } from '../lib/frontmatter.js';
 import { escapeCoreLabel, upsertCoreReference } from '../lib/memory-core.js';
+import { documentPurposeMetadata } from '../lib/memory-document-purpose.js';
 import { normalizedInputContent } from '../lib/memory-input.js';
 import { markdownFiles, memoryReference, readMemoryDocument } from '../lib/memory-path.js';
 import {
@@ -112,6 +113,7 @@ function render(
     {
       title: options.title.trim(),
       description: `${options.kind === 'failure' ? '失败经验' : '可复用经验'}：${options.title.trim()}`,
+      ...documentPurposeMetadata(options.title),
       type: 'operational-experience',
       'memory-kind': 'distilled',
       status: 'active',

@@ -183,6 +183,8 @@ test('the shipped session template uses the canonical typed handoff contract', (
     'handoff-generation: 1',
     'fact-class: recovery-state',
     'expiry-policy: handoff-lifecycle',
+    'document-purpose: "<任务交接标题>"',
+    'document-purpose-schema-version: 1',
     'checkpoint-reason:',
     'snapshot-mode: replace',
   ]) {

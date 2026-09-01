@@ -150,6 +150,10 @@ analysis/review/research，并显式标注 `settled-fact`、`current-state`、`v
 保持可读并标为 legacy unclassified，迁移不得猜测。两类写入都按结论 digest 去重并合并来源和证据，不追加重复流水，也不授权修改正式事实源。命令完成后
 必须校验目标文档、索引和全根 schema；失败时回滚托管写入或保留可恢复路径。
 
+新 typed 文档必须声明一个与 title 对齐的 `document-purpose`，description 必须包含同一主题。低信息描述只
+能在 legacy 文档中以 warning 形式继续读取；新写入必须拒绝。维护报告可以针对重复 purpose 或多个顶层
+purpose/结论标题提出 split proposal，但 proposal 不授权自动拆分、重写正文或合并不同 conclusion digest。
+
 ## 输出可见性
 
 即使触发自动 sidecar，也不等于索要操作、状态或审计。用户要求使用 `prior memory` 或

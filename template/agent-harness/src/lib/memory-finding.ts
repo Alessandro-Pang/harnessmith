@@ -27,3 +27,10 @@ export function findingSection(body: string, heading: string): string | undefine
     .match(new RegExp(`(?:^|\\n)# ${escaped}\\n\\n([\\s\\S]*?)(?=\\n# |$)`, 'u'))?.[1]
     .trim();
 }
+
+export function findingListSection(body: string, heading: string): string[] {
+  return (findingSection(body, heading) ?? '')
+    .split('\n')
+    .filter((line) => line.startsWith('- '))
+    .map((line) => line.slice(2));
+}

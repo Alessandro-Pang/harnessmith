@@ -4,6 +4,7 @@ import {
   type MemoryRootKind,
   validateAutopilotDocumentRules,
 } from './memory-autopilot-document-rules.js';
+import { validateDocumentPurpose } from './memory-document-purpose.js';
 import { validateInputDocumentRules } from './memory-input-document-rules.js';
 import { containsUnsafeDisplayCharacters } from './memory-root-path-rules.js';
 import { validateTaskLedgerMemory } from './task-ledger-memory.js';
@@ -223,5 +224,11 @@ export function validateMemoryDocumentRules(
   failures += validateUserProfile(root, path, body, metadata, rootKind, io);
   failures += validateTaskLedgerMemory(root, path, metadata, io);
   failures += validateAutopilotDocumentRules(root, path, content, body, metadata, rootKind, io);
+  for (const diagnostic of validateDocumentPurpose(metadata)) {
+    io.error(
+      `${diagnostic.severity === 'warning' ? 'WARNING ' : ''}Memory document purpose ${diagnostic.code}: ${path}`,
+    );
+    if (diagnostic.severity === 'error') failures += 1;
+  }
   return failures;
 }

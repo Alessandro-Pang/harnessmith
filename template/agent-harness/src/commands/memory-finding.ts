@@ -2,6 +2,7 @@ import { basename, dirname, join } from 'node:path';
 import { stringify } from 'yaml';
 import { parseFrontmatterDocument } from '../lib/frontmatter.js';
 import { escapeCoreLabel, upsertCoreReference } from '../lib/memory-core.js';
+import { documentPurposeMetadata } from '../lib/memory-document-purpose.js';
 import {
   assertFindingFactSemantics,
   type MemoryFactClass,
@@ -11,7 +12,7 @@ import {
   type FindingKind,
   type FindingRetention,
   findingDigest,
-  findingSection,
+  findingListSection,
   findingSlug,
 } from '../lib/memory-finding.js';
 import { normalizedInputContent } from '../lib/memory-input.js';
@@ -104,13 +105,6 @@ function assertOptions(options: FindingOptions): void {
   }
 }
 
-function listSection(body: string, heading: string): string[] {
-  return (findingSection(body, heading) ?? '')
-    .split('\n')
-    .filter((line) => line.startsWith('- '))
-    .map((line) => line.slice(2));
-}
-
 function render(
   runtime: Runtime,
   projectName: string,
@@ -127,6 +121,7 @@ function render(
     {
       title: options.title.trim(),
       description: `分析发现：${options.title.trim()}`,
+      ...documentPurposeMetadata(options.title),
       type: 'analytical-finding',
       'memory-kind': memoryKind,
       status: 'active',
@@ -193,7 +188,7 @@ export function captureFinding(
     const created = String(parsed.metadata.get('created') || date);
     const evidence = [
       ...new Set([
-        ...listSection(parsed.body, '证据'),
+        ...findingListSection(parsed.body, '证据'),
         ...options.evidence.map((item) => item.trim()),
       ]),
     ];

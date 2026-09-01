@@ -143,6 +143,8 @@ test('memory maintenance reports duplicate active titles and supersession cycles
     'duplicate title: Another (another-a.md, another-b.md)',
     'duplicate title: Duplicate (duplicate-a.md, duplicate-b.md)',
     'supersession cycle: cycle-a.md -> cycle-b.md -> cycle-a.md',
+    'duplicate purpose: Another (another-a.md, another-b.md)',
+    'duplicate purpose: Duplicate (duplicate-a.md, duplicate-b.md)',
   ]);
   assert.match(io.logs.join('\n'), /Duplicate active titles: 2/);
   assert.match(io.logs.join('\n'), /Supersession cycles: 1/);
@@ -192,6 +194,7 @@ test('memory migration is proposal-only by default and preserves replaced legacy
   assert.equal(report.proposedUpdates['legacy-status'], 'Draft for Maintainer Review');
   assert.equal(report.proposedUpdates['legacy-schema-version'], 0);
   assert.equal(Object.hasOwn(report.proposedUpdates, 'fact-class'), false);
+  assert.equal(Object.hasOwn(report.proposedUpdates, 'document-purpose'), false);
   assert.equal(readFileSync(source, 'utf8'), before);
 
   const applied = memoryMigrate(
@@ -205,6 +208,7 @@ test('memory migration is proposal-only by default and preserves replaced legacy
   assert.equal(applied.mode, 'applied');
   assert.match(readFileSync(source, 'utf8'), /legacy-status: Draft for Maintainer Review/);
   assert.doesNotMatch(readFileSync(source, 'utf8'), /^fact-class:/m);
+  assert.doesNotMatch(readFileSync(source, 'utf8'), /^document-purpose:/m);
   memoryCheck(runtime, 'global', capturedIo());
 });
 

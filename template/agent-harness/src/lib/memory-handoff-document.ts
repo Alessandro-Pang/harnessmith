@@ -3,6 +3,7 @@ import { stringify } from 'yaml';
 import type { Runtime } from '../types.js';
 import { parseFrontmatter, parseFrontmatterDocument } from './frontmatter.js';
 import { isAtxHeading } from './markdown-heading.js';
+import { documentPurposeMetadata } from './memory-document-purpose.js';
 import type { HandoffOptions } from './memory-handoff.js';
 import type { HandoffIdentity } from './memory-handoff-identity.js';
 import { canonicalHandoffSectionTitles } from './memory-handoff-options.js';
@@ -155,6 +156,7 @@ export function renderHandoff(
     ...previous,
     title: options.title.trim(),
     description: `会话交接：${options.title.trim()}`,
+    ...documentPurposeMetadata(options.title),
     type: 'session-handoff',
     'memory-kind': 'episode',
     status: options.status || 'active',

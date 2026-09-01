@@ -1,6 +1,8 @@
 ---
 title: "<任务交接标题>"
-description: "<本记录帮助下一位 Agent 回答什么>"
+description: "会话交接：<任务交接标题>"
+document-purpose: "<任务交接标题>"
+document-purpose-schema-version: 1
 type: session-handoff
 memory-kind: episode
 status: active

@@ -140,6 +140,7 @@ test('capture-input stores typed policy metadata and close-input consumes it fro
   const created = JSON.parse(createdIo.logs[0]);
   const input = readFileSync(created.path, 'utf8');
   assert.match(input, /^input-schema-version: 2$/m);
+  assert.match(input, /^document-purpose-schema-version: 1$/m);
   assert.match(input, /^input-purpose: risk-decision$/m);
   assert.match(input, /^retention: workstream$/m);
   assert.match(input, /^workstream: release-0-7-1$/m);
