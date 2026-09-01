@@ -2,6 +2,7 @@ import type { Readable, Writable } from 'node:stream';
 import { confirm, intro, isCancel, log, multiselect, note, outro } from '@clack/prompts';
 import pc from 'picocolors';
 import { supportedAgents } from './agents.js';
+import type { SetupGuide, SetupVerification } from './setup.js';
 import type { AdapterStatus, InstallPlan, InstallResult, Io } from './types.js';
 
 type PromptInput = Readable & { isTTY?: boolean };
@@ -62,6 +63,22 @@ export async function confirmConflicts(
   );
 }
 
+export async function confirmSetup({
+  input = process.stdin,
+  output = process.stdout,
+}: {
+  input?: PromptInput;
+  output?: PromptOutput;
+} = {}): Promise<boolean> {
+  const value = await confirm({
+    message: 'Install exactly this plan and run deterministic post-install health checks?',
+    initialValue: false,
+    input,
+    output,
+  });
+  return isCancel(value) ? false : value;
+}
+
 export function startInteractive(output: PromptOutput): void {
   intro(pc.bgCyan(pc.black(' Harnessmith ')), { output });
 }
@@ -83,6 +100,22 @@ export function printPlans(plans: InstallPlan[], io: Io = console): void {
             : pc.cyan(label);
       io.log(`  ${state} ${path}`);
     }
+  }
+}
+
+export function printSetupGuide(guide: SetupGuide, io: Io = console): void {
+  printPlans(guide.adapters, io);
+  io.log('  will not change');
+  for (const boundary of guide.willNotChange) io.log(`    - ${boundary}`);
+  io.log(`  recovery preview  ${guide.recovery.restore}`);
+  io.log(`  real Host behavior  ${guide.hostBehavior.status}`);
+}
+
+export function printSetupVerification(verification: SetupVerification, io: Io = console): void {
+  for (const item of verification) {
+    io.log(
+      `${item.adapter}: ownership=${item.ownership}, runtime-health=${item.runtimeHealth}, real-host=not-verified`,
+    );
   }
 }
 

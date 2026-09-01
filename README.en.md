@@ -36,13 +36,15 @@ Harnessmith is not a universal Agent Runtime and does not own model loops, tool 
 Node.js 24.12.0 or newer is required. No global installation is needed.
 
 ```bash
-# Choose a host interactively
-npx harnessmith
+# Preview the host, destinations, file states, recovery, and capability boundaries
+npx harnessmith setup --agent codex --dry-run
 
-# Select a host; add --dry-run to inspect writes first
-npx harnessmith install --agent codex
-npx harnessmith --dry-run --agent codex
+# Reuse the same plan, confirm, install, and run deterministic health checks
+npx harnessmith setup --agent codex
 ```
+
+Add `--yes` explicitly in non-interactive environments. A successful `setup` proves managed-file integrity and embedded
+Runtime health; model behavior, tool permissions, and authentication in a real Host session still require separate evidence.
 
 You can also ask a coding agent to read the installation protocol first:
 

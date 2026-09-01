@@ -34,6 +34,20 @@ claims:
       - src/__tests__/lifecycle-transaction.test.ts
       - src/__tests__/lifecycle-transaction-failures.test.ts
 
+  - id: guided-first-use-setup
+    status: implemented
+    owner: outer installer setup workflow
+    claim: Preview, confirm, install, and deterministically verify global and project-scoped Harness destinations through one machine-readable plan without weakening ownership safeguards or claiming real Host behavior.
+    implementation:
+      - src/setup.ts
+      - src/setup-command.ts
+      - src/command-executor.ts
+      - src/program.ts
+    verification:
+      - src/__tests__/setup.test.ts
+      - src/__tests__/args.test.ts
+      - src/__tests__/adapter-conformance.test.ts
+
   - id: temporary-resource-lifecycle
     status: implemented
     owner: outer lifecycle and verification tooling

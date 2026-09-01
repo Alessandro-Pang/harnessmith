@@ -35,13 +35,15 @@ Harnessmith 不实现通用 Agent Runtime，也不接管模型循环、工具权
 需要 Node.js 24.12.0 或更高版本，无需全局安装。
 
 ```bash
-# 交互式选择宿主
-npx harnessmith
+# 先查看宿主、目标、文件状态、恢复方式与能力边界
+npx harnessmith setup --agent codex --dry-run
 
-# 指定宿主；写入前可加 --dry-run
-npx harnessmith install --agent codex
-npx harnessmith --dry-run --agent codex
+# 复用同一计划，确认后安装并执行确定性健康检查
+npx harnessmith setup --agent codex
 ```
+
+非交互环境需显式追加 `--yes`。`setup` 的安装与健康检查通过，只证明受管理文件和内嵌 Runtime 可用；真实 Host
+会话中的模型行为、工具权限和认证仍需另行验证。
 
 也可以让 Coding Agent 先读取安装协议：
 

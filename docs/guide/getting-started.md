@@ -19,51 +19,55 @@ API key，也不会替你登录第三方宿主。
 以 Codex 为例：
 
 ```bash
-npx harnessmith --dry-run --agent codex
+npx harnessmith setup --agent codex --dry-run
 ```
 
-dry-run 不写文件。请检查输出中的宿主、授权根、规则入口和 Harness 目录是否符合预期；机器处理时可加 `--json`。
+dry-run 不写文件。它会输出之后安装所复用的同一份计划，包括宿主范围、目标根、每个文件的
+`missing` / `managed` / `unmanaged` / `modified` 状态、不会改动的 Host 能力以及恢复命令。机器处理时可加
+`--json`。
 
 ## 第二步：执行安装
 
 直接指定宿主：
 
 ```bash
-npx harnessmith install --agent codex
+npx harnessmith setup --agent codex
 ```
 
-也可以运行交互式选择：
+交互模式会在写入前再次展示变更、不变项和恢复方式，并允许取消。非交互环境必须显式确认：
 
 ```bash
-npx harnessmith
+npx harnessmith setup --agent codex --yes --json
 ```
 
-如果目标存在但不是 Harnessmith 管理，安装会默认拒绝。不要用 `--force` 掩盖未知冲突；先确认文件来源和差异，确实要
-接管时再显式选择，并保留生成的备份。
+如果目标是 `unmanaged` 或受管理后被修改为 `modified`，引导仍会默认拒绝，不会通过确认步骤绕过。不要用 `--force`
+掩盖未知冲突；先确认文件来源和差异，确实要接管时再显式选择，并保留生成的备份。没有对应 Adapter 的宿主是
+`unsupported`，在解析或写入目标前停止。
 
 ## 第三步：验证安装
 
-安装后确认 Harnessmith 仍拥有目标文件且内容完整：
+`setup` 会在安装事务完成后自动检查所有权和内嵌 Runtime 健康。也可以随时重新核对：
 
 ```bash
 npx harnessmith status --agent codex
 ```
 
-需要让 Agent 自检内嵌 Runtime 时，可让它运行安装目录中的 `harness.mjs doctor`；准确路径以 Adapter 的 dry-run/status
-结果为准，不要从文档硬猜。
+安装失败时，事务会尝试回滚；按错误中的指引先重新 dry-run 并检查 `status`，只有存在上一安装层时才使用
+`restore`。安装成功或确定性健康检查通过，不等于真实 Host 行为已经通过：模型行为、工具权限、认证与运行时事件均为
+`host-dependent`，必须在实际宿主会话中另行验证。
 
 ## 选择其他宿主
 
 `codex`、`claude-code`、`opencode` 与 `kimi-code` 使用全局安装范围；`cursor` 使用项目范围：
 
 ```bash
-npx harnessmith install --agent cursor --project /path/to/project
+npx harnessmith setup --agent cursor --project /path/to/project
 ```
 
 同一命令可以逗号分隔多个宿主：
 
 ```bash
-npx harnessmith install --agent codex,opencode,kimi-code
+npx harnessmith setup --agent codex,opencode,kimi-code
 ```
 
 准确目标路径、别名和支持状态见[宿主支持](/guide/hosts)。
