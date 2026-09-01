@@ -102,6 +102,7 @@ rules:
       verification:
         - template/agent-harness/src/__tests__/docs-routing.test.ts
         - src/__tests__/multilingual-prompt.test.ts
+        - evals/__tests__/prompt-route-benchmark.test.ts
 
   - id: payload-consumption-boundary
     owner: harness-cli-architecture

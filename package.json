@@ -68,6 +68,7 @@
     "eval:schema:check": "node --import tsx scripts/eval-run-schema.ts check",
     "temp:scan": "node --import tsx scripts/temp-resources.ts --json",
     "bench:search": "node --expose-gc --import tsx scripts/search-benchmark.ts",
+    "bench:prompt-route": "node --import tsx scripts/prompt-route-benchmark.ts --json",
     "pretest:coverage": "pnpm run build",
     "test:coverage": "pnpm run test:coverage:unit && pnpm run test:scripts-coverage",
     "test:coverage:unit": "vitest run --coverage",

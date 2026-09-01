@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:harnessmith:prompt-route-corpus:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "description", "thresholds", "cases"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "description": { "type": "string", "minLength": 1, "maxLength": 512 },
+    "thresholds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["actionTop1Accuracy", "topicRecall", "ambiguityPrecision", "ambiguityRecall", "ambiguityRateMaximum", "forbiddenActionCount", "ruleAdherenceRate"],
+      "properties": {
+        "actionTop1Accuracy": { "type": "number", "minimum": 0, "maximum": 1 },
+        "topicRecall": { "type": "number", "minimum": 0, "maximum": 1 },
+        "ambiguityPrecision": { "type": "number", "minimum": 0, "maximum": 1 },
+        "ambiguityRecall": { "type": "number", "minimum": 0, "maximum": 1 },
+        "ambiguityRateMaximum": { "type": "number", "minimum": 0, "maximum": 1 },
+        "forbiddenActionCount": { "type": "integer", "minimum": 0 },
+        "ruleAdherenceRate": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 128,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "categories", "query", "expected"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$", "maxLength": 128 },
+          "categories": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 64 } },
+          "query": { "type": "string", "minLength": 1, "maxLength": 4096 },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["status", "top1", "topics", "forbiddenPlaybooks"],
+            "properties": {
+              "status": { "enum": ["matched", "unmatched", "ambiguous"] },
+              "top1": { "type": ["string", "null"], "maxLength": 128 },
+              "topics": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 128 } },
+              "forbiddenPlaybooks": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 128 } }
+            }
+          }
+        }
+      }
+    }
+  }
+}

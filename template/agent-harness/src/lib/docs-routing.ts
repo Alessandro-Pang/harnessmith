@@ -101,7 +101,14 @@ function routingMatchIsRequestedAction(term: string, position: number): boolean 
       .at(-1) ?? '';
   const prefix = clause.trim();
   if (prefix === '') return true;
-  return /^(?:(?:please|can you|could you|would you|i want you to|i need you to|let(?:'s| us)|now|then|also)(?:\s+\p{L}+){0,4}|(?:请|请你|帮我|给我|现在|继续|重新|开始|进行|执行|来|需要|要求|希望|想要|逐个|并)|(?:结合|基于|根据)[\p{L}\p{N} ._-]{0,40}(?:来)?)$/u.test(
+  return /^(?:(?:please|can you|could you|would you|i want you to|i need you to|let(?:'s| us)|now|then|also)(?:\s+\p{L}+){0,4}|(?:请|请你|帮我|给我|现在|继续|重新|开始|进行|执行|来|需要|要求|希望|想要|逐个|并|只)|(?:结合|基于|根据)[\p{L}\p{N} ._-]{0,40}(?:来)?)$/u.test(
+    prefix,
+  );
+}
+
+function routingMatchIsIllustrative(term: string, position: number): boolean {
+  const prefix = term.slice(Math.max(0, position - 48), position);
+  return /(?:\b(?:for example|e\.g\.|such as)\s*,?\s*|(?:例如|比如|譬如)\s*[：:,，]?\s*)$/u.test(
     prefix,
   );
 }
@@ -141,6 +148,7 @@ function matchesPlaybookIntent(trigger: string, term: string): boolean {
     (position) =>
       !routingMatchIsNegated(term, position) &&
       !routingMatchIsQuoted(term, position) &&
+      !routingMatchIsIllustrative(term, position) &&
       routingMatchIsRequestedAction(term, position),
   );
 }
