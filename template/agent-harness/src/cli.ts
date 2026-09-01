@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Command, Option } from 'commander';
+import { bootstrapProject } from './commands/bootstrap.js';
 import { doctor } from './commands/doctor.js';
 import { health } from './commands/health.js';
 import { initGlobal, initPersonal, initProject } from './commands/init.js';
@@ -73,6 +74,24 @@ interface HarnessManifest {
   node: string;
 }
 
+function registerBootstrapCommand(
+  program: Command,
+  runtime: Runtime,
+  io: Io,
+  run: CommandRunner,
+): void {
+  program
+    .command('bootstrap')
+    .description('read one bounded project and Memory startup summary')
+    .requiredOption('--project <path>', 'project path')
+    .option('--json', 'write a machine-readable startup summary')
+    .action(
+      run((options: JsonProjectOptions) =>
+        bootstrapProject(runtime, options.project as string, options, io),
+      ),
+    );
+}
+
 function registerCoreCommands(
   program: Command,
   runtime: Runtime,
@@ -80,6 +99,7 @@ function registerCoreCommands(
   run: CommandRunner,
   manifest: HarnessManifest,
 ): void {
+  registerBootstrapCommand(program, runtime, io, run);
   program
     .command('version')
     .description('print the Harness version')

@@ -32,6 +32,10 @@ test('typed experience deduplicates one conclusion and accumulates sourced evide
           'Keep prompt rules atomic',
           '--conclusion',
           'Readable atomic rules are safer than byte-optimized prompt compression.',
+          '--rationale',
+          'Atomic rules preserve intent boundaries during prompt maintenance.',
+          '--application',
+          'Keep one enforceable constraint per routed owner document.',
           '--evidence',
           evidence,
           '--source-ref',
@@ -60,6 +64,9 @@ test('typed experience deduplicates one conclusion and accumulates sourced evide
   const document = readFileSync(first.path, 'utf8');
   assert.match(document, /^memory-kind: distilled$/m);
   assert.match(document, /^experience-kind: lesson$/m);
+  assert.match(document, /^experience-schema-version: 2$/m);
+  assert.match(document, /# 理由\n\nAtomic rules preserve intent boundaries/);
+  assert.match(document, /# 应用\n\nKeep one enforceable constraint/);
   assert.match(document, /docs\/prompt-review\.md/);
   assert.match(document, /template\/agent-harness\/src\/__tests__\/docs-routing\.test\.ts/);
   assert.match(document, /compressed rule exceeded normal sentence complexity/);
@@ -79,6 +86,8 @@ test('typed failure experience requires evidence and source references', () => {
           kind: 'failure',
           title: 'Incomplete release exception',
           conclusion: 'A partial risk list must not authorize the complete evaluation matrix.',
+          rationale: 'The omitted paths remain unverified.',
+          application: 'Require the complete matrix before authorization.',
           evidence: [],
           sourceRefs: [],
         },

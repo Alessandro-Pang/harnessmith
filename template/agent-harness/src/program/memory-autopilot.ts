@@ -14,6 +14,7 @@ import {
 } from '../lib/command-payload.js';
 import type { Io, Runtime } from '../types.js';
 import { registerMemoryExperienceCommand } from './memory-experience.js';
+import { registerMemoryFindingCommand } from './memory-finding.js';
 import { registerMemoryInputCommands } from './memory-input.js';
 import { collect } from './task-options.js';
 import type { CommandRunner } from './types.js';
@@ -68,6 +69,7 @@ function registerProjectAutopilotCommands(
   run: CommandRunner,
 ): void {
   registerMemoryExperienceCommand(memory, runtime, io, run);
+  registerMemoryFindingCommand(memory, runtime, io, run);
   registerMemoryInputCommands(memory, runtime, io, run);
 
   memory

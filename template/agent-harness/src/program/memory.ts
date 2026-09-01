@@ -1,10 +1,12 @@
 import type { Command } from 'commander';
 import { memoryCheck, memoryList, memorySearch } from '../commands/memory.js';
+import { type CurationOptions, curateMemory } from '../commands/memory-curation.js';
 import { archiveMemory, memoryMaintenance, supersedeMemory } from '../commands/memory-lifecycle.js';
 import { memoryMigrate } from '../commands/memory-migration.js';
 import { memoryPromotionProposal } from '../commands/memory-promotion.js';
 import type { Io, Runtime } from '../types.js';
 import { registerMemoryAutopilotCommands } from './memory-autopilot.js';
+import { registerMemoryCaptureEligibilityCommand } from './memory-capture-eligibility.js';
 import { addSearchOptions, type SearchCommandOptions } from './search-options.js';
 import type { CommandRunner } from './types.js';
 
@@ -44,6 +46,19 @@ export function registerMemoryCommands(
       ),
     );
   memory
+    .command('curate <scope>')
+    .description('report proposal-first curation candidates for one task or workstream')
+    .requiredOption('--task <id>', 'task id that scopes the report')
+    .option('--workstream <id>', 'stable workstream id; defaults to the task id')
+    .option(
+      '--outcome <outcome>',
+      'phase-complete, task-complete, workstream-complete, or user-cancel',
+    )
+    .option('--json', 'write a machine-readable curation report')
+    .action(
+      run((scope: string, options: CurationOptions) => curateMemory(runtime, scope, options, io)),
+    );
+  memory
     .command('maintain [scope]')
     .description('report unindexed, expired, and closed memory candidates')
     .option('--json', 'write the report as JSON')
@@ -52,6 +67,7 @@ export function registerMemoryCommands(
         memoryMaintenance(runtime, scope, options, io),
       ),
     );
+  registerMemoryCaptureEligibilityCommand(memory, io, run);
   registerMemoryMutationCommands(memory, runtime, io, run);
   registerMemoryAutopilotCommands(memory, runtime, io, run);
 }

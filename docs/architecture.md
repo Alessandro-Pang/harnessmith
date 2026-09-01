@@ -60,6 +60,9 @@ manifest、route 和 search 按任务发现。项目内更具体的规则、skil
 状态、检查点、下一步、验收条件和证据。并发写入持有任务锁，`complete` 只能通过 acceptance gate。
 
 这层刻意不自动把 Memory 提升成规则或源码。可持续学习需要提案、核对和明确写入目标，避免历史推断污染事实源。
+Memory capture eligibility 由一个只读、negative-first 的 evaluator 统一判定；用户任务是否只读不直接决定
+sidecar 资格。evaluator 用稳定 status/reason code 区分跳过、提案、阻塞和未判断，实际 mutation 仍只能进入
+对应 typed writer，并由写入结果确认 created、updated 或 unchanged。
 
 ### 4. Verification：区分可重复门禁与真实宿主证据
 
@@ -69,6 +72,22 @@ verifier 证据绑定到精确候选 tarball；仓库中的 `eval:validate` 与 
 `eval:gate` 是 executable release gate，但它只校验 maintainer-attested record structure 的候选绑定、结构、一致性与
 覆盖。它不会启动第三方宿主，也不负责登录或认证，更不能证明记录确由真实 Host 产生；可信来源需要
 外部 CI、签名 attestation 和人工复核。详见[证据与评测](/concepts/evidence-and-evaluation)。
+
+## 机械化架构契约
+
+分层和写入边界不仅依赖本文说明，`preflight` 还会检查以下不变量：
+
+- 内嵌 Runtime 的 `lib` 不得依赖 `commands`，一个 command 也不得依赖另一个 sibling command；公共行为应下沉到
+  `lib`，由多个入口复用。
+- typed work-state command 不得直接调用文件系统写入 API。Memory、Task 与 Handoff 的 mutation 必须进入所属的
+  store/transaction，再复用 SafePath、secret scan、锁、原子写和失败回滚。
+- Task 的 `complete` 路径必须在持久化之前调用 `assertTaskCanComplete`；该检查是 acceptance gate 的机械入口，不能由
+  Prompt、completion curation 或普通 checkpoint 代替。
+- Host identity、专属路径、环境变量与 hook 只能由外层 Adapter 拥有；portable template 的静态检查拒绝这些身份泄漏。
+- `docs/capability-evidence.yaml` 中每个 capability claim 必须使用唯一 ID。`implemented` 不仅要指向实现，还必须指向
+  executable verification；`delegated` 和 `unsupported` 则必须指向公开边界，不能靠措辞强度提升保证等级。
+
+这些检查证明仓库内的确定性结构没有漂移，不证明真实 Host 已执行规则，也不把自然语言 guidance 升级为权限强制。
 
 ## 一次安装的事务边界
 

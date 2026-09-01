@@ -76,6 +76,7 @@ function validateParsedMemoryDocument(
   let failures = validateMemoryDocumentRules(
     root,
     path,
+    content,
     frontmatter.body,
     frontmatter.metadata,
     io,

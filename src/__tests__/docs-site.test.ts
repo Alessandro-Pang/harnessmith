@@ -252,6 +252,26 @@ test('cross-repository relationships remain a first-class public capability', ()
   assert.match(evidence, /template\/agent-harness\/src\/__tests__\/repository-map\.test\.ts/);
 });
 
+test('architecture invariants have implementation and executable verification evidence', () => {
+  const evidence = read('docs/capability-evidence.yaml');
+
+  assert.match(evidence, /id: architecture-invariant-preflight/);
+  assert.match(evidence, /scripts\/preflight-architecture\.ts/);
+  assert.match(evidence, /scripts\/capability-evidence\.ts/);
+  assert.match(evidence, /src\/__tests__\/preflight-architecture\.test\.ts/);
+  assert.match(evidence, /src\/__tests__\/preflight-docs\.test\.ts/);
+});
+
+test('capture eligibility has public architecture and executable evidence', () => {
+  const architecture = read('docs/architecture.md');
+  const evidence = read('docs/capability-evidence.yaml');
+
+  assert.match(architecture, /capture eligibility/i);
+  assert.match(evidence, /id: memory-capture-eligibility/);
+  assert.match(evidence, /memory-capture-eligibility\.ts/);
+  assert.match(evidence, /memory-capture-eligibility\.test\.ts/);
+});
+
 test('advanced README material remains available in the documentation site', () => {
   const runtime = read('docs/reference/runtime-cli.md');
   const config = read('docs/.vitepress/config.ts');

@@ -9,12 +9,17 @@ import { validateMemoryRoot } from './memory-validation.js';
 import { modeMatches } from './portable-mode.js';
 import { assertSafePath } from './safe-path.js';
 
-export interface MemoryWriteResult {
+export interface MemoryWriteCandidate {
   version: 1;
   action: 'created' | 'updated' | 'unchanged';
-  kind: 'input' | 'episode' | 'profile' | 'distilled';
+  kind: 'input' | 'episode' | 'profile' | 'working' | 'distilled';
   path: string;
   reference: string;
+}
+
+export interface MemoryWriteResult extends MemoryWriteCandidate {
+  status: MemoryWriteCandidate['action'];
+  reasonCode: 'created-new-memory' | 'updated-existing-memory' | 'unchanged-existing-memory';
 }
 
 export interface ExactFileState {
@@ -222,7 +227,14 @@ export function validateUnchanged(
   validateMemoryRoot(root, io, { quietSuccess: true, rootKind });
 }
 
-export function output(result: MemoryWriteResult, json: boolean, io: Io): MemoryWriteResult {
-  io.log(json ? JSON.stringify(result) : `${result.action} ${result.kind}: ${result.path}`);
-  return result;
+export function output(result: MemoryWriteCandidate, json: boolean, io: Io): MemoryWriteResult {
+  const reasonCode =
+    result.action === 'created'
+      ? 'created-new-memory'
+      : result.action === 'updated'
+        ? 'updated-existing-memory'
+        : 'unchanged-existing-memory';
+  const reported = { ...result, status: result.action, reasonCode } as const;
+  io.log(json ? JSON.stringify(reported) : `${reported.action} ${reported.kind}: ${reported.path}`);
+  return reported;
 }

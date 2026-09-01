@@ -94,7 +94,7 @@ test('updating a handoff replaces a case-folded reference alias', () => {
   assert.deepEqual(references, [handoff.reference]);
 });
 
-test('updating a handoff preserves another reference on the same core line', () => {
+test('updating a handoff rejects a core line that contains another reference', () => {
   const { project, runtime } = projectFixture();
   const first = captureHandoff(
     runtime,
@@ -117,17 +117,18 @@ test('updating a handoff preserves another reference on the same core line', () 
     ),
   );
 
-  captureHandoff(
-    runtime,
-    project,
-    handoffOptions('same-line-1', 'Verify the first task.'),
-    capturedIo(),
+  const malformed = readFileSync(corePath, 'utf8');
+  assert.throws(
+    () =>
+      captureHandoff(
+        runtime,
+        project,
+        handoffOptions('same-line-1', 'Verify the first task.'),
+        capturedIo(),
+      ),
+    /exactly one canonical pointer/i,
   );
-
-  const core = readFileSync(corePath, 'utf8');
-  assert.match(core, /related memory:sessions\//);
-  assert.equal(core.split(second.reference).length - 1, 2);
-  assert.equal(core.split(first.reference).length - 1, 1);
+  assert.equal(readFileSync(corePath, 'utf8'), malformed);
 });
 
 test('capturing an input removes the generated section placeholder', () => {

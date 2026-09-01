@@ -53,3 +53,13 @@ test('public positioning uses one control-plane scope and explicit capability st
     assert.match(content, /raw prompt|原始 prompt/i, `${path} must state the raw-content boundary`);
   }
 });
+
+test('architecture documents the mechanically checked ownership and write boundaries', () => {
+  const architecture = readFileSync(join(root, 'docs', 'architecture.md'), 'utf8');
+
+  assert.match(architecture, /lib.*不得依赖.*commands/s);
+  assert.match(architecture, /typed work-state command.*不得直接.*文件系统写入/s);
+  assert.match(architecture, /Task.*complete.*assertTaskCanComplete.*acceptance gate/s);
+  assert.match(architecture, /Host identity.*外层 Adapter/s);
+  assert.match(architecture, /capability claim.*唯一.*executable verification/s);
+});

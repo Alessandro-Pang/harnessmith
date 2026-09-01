@@ -1,7 +1,12 @@
 import { relative, resolve, sep } from 'node:path';
 import type { Io } from '../types.js';
 import { isAtxHeading } from './markdown-heading.js';
+import { validateMemoryCoreContract } from './memory-core-budget.js';
 import { reportMemoryDiagnostic } from './memory-diagnostic.js';
+import {
+  validateExperienceSemantics,
+  validateFindingDocument,
+} from './memory-finding-document-rules.js';
 import { validateTypedHandoff } from './memory-handoff-document-rules.js';
 import { type InputSource, inputContentDigest, parseInputBody } from './memory-input.js';
 
@@ -105,6 +110,7 @@ function validateArchiveLocation(
 function validateCoreStructure(
   root: string,
   path: string,
+  content: string,
   body: string,
   rootKind: MemoryRootKind,
   io: Io,
@@ -156,12 +162,14 @@ function validateCoreStructure(
     io.error(`Memory core does not match the ${rootKind} managed section layout: ${path}`);
     failures += 1;
   }
+  failures += validateMemoryCoreContract(path, content, body, io);
   return failures;
 }
 
 export function validateAutopilotDocumentRules(
   root: string,
   path: string,
+  content: string,
   body: string,
   metadata: Map<string, unknown>,
   rootKind: MemoryRootKind,
@@ -172,8 +180,10 @@ export function validateAutopilotDocumentRules(
     failures += validateInputDigest(path, body, metadata, io);
   }
   failures += validateTypedHandoff(root, path, body, metadata, io);
+  failures += validateFindingDocument(path, body, metadata, io);
+  failures += validateExperienceSemantics(path, body, metadata, io);
   failures += validateReservedDocumentIdentity(root, path, metadata, rootKind, io);
   failures += validateArchiveLocation(root, path, metadata, io);
-  failures += validateCoreStructure(root, path, body, rootKind, io);
+  failures += validateCoreStructure(root, path, content, body, rootKind, io);
   return failures;
 }
