@@ -12,6 +12,7 @@ import { workflowRelations } from '../commands/workflow-relations.js';
 import type { CurationCommandOptions } from '../lib/memory-curation-types.js';
 import type { Io, Runtime } from '../types.js';
 import { registerMemoryAutopilotCommands } from './memory-autopilot.js';
+import { registerMemoryCandidateDiscoveryCommand } from './memory-candidate-discovery.js';
 import { registerMemoryCaptureEligibilityCommand } from './memory-capture-eligibility.js';
 import { memoryCuration } from './memory-curation-apply.js';
 import { addSearchOptions, type SearchCommandOptions } from './search-options.js';
@@ -100,6 +101,7 @@ export function registerMemoryCommands(
       ),
     );
   registerMemoryCaptureEligibilityCommand(memory, io, run);
+  registerMemoryCandidateDiscoveryCommand(memory, io, run);
   registerMemoryMutationCommands(memory, runtime, io, run);
   registerMemoryAutopilotCommands(memory, runtime, io, run);
 }
