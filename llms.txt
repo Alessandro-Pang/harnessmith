@@ -52,6 +52,12 @@ use the published `npx --yes harnessmith` commands below.
   - Instructions: `$DSH_HOME/AGENTS.md` when set to a non-empty value; otherwise `~/.dsh/AGENTS.md`
   - Harness: `agent-harness` under the same effective DeepSeek Harness home
   - Contract source: `@deepseek-ai/dsh-agent-instructions` user-global baseline only
+  - Validated revision (maintainer manual + install lifecycle tests):
+    `@deepseek-ai/dsh@0.1.1-rc.2`, `@deepseek-ai/dsh-agent-instructions@0.1.1-rc.2`, upstream tag
+    `dsh-v0.1.1-rc.2`, commit `b150a551b8d465e31e418e1b2eaf5e79bbb7d28e`
+  - Support range: compatibility is claimed only for that pinned npm release and upstream revision;
+    DeepSeek Harness is developer-preview and other versions are unsupported until re-validated (not a
+    minimum-version guarantee)
   - Out of scope: project-root / nested `AGENTS.md`/`CLAUDE.md` candidates and local overlays; Cordis
     patches; `settings.yaml`; credentials; permissions, sandbox, tool allowlists, and approval
   - Do not tell the user that installing the file enforces DSH security controls or verifies a real

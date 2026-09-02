@@ -61,7 +61,9 @@ You can also ask a coding agent to read the installation protocol first:
 
 DeepSeek Adapter installs **only** the user-global `$DSH_HOME/AGENTS.md` (default `~/.dsh/AGENTS.md`).
 Project-root / nested instructions and permissions, sandbox, and approval remain host-owned; a
-successful install does not mean the full DSH scope chain or formal Host Eval is verified.
+successful install does not mean the full DSH scope chain or formal Host Eval is verified. Compatibility
+is currently claimed only for `@deepseek-ai/dsh@0.1.1-rc.2` / tag `dsh-v0.1.1-rc.2`; other revisions
+require re-validation.
 
 Cursor requires `--project /path/to/project`. See the
 [host guide](https://alexpang.cn/harnessmith/guide/hosts) for destinations, aliases, and support evidence.

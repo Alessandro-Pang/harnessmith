@@ -111,8 +111,24 @@ capabilities 输出与 Eval `host.adapter` 枚举都从该清单派生或与之�
 
 产品身份（官方坐标）：仓库
 [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)，npm 包 `@deepseek-ai/dsh`，可执行文件
-`dsh`。配置根为 `$DSH_HOME`（默认 `~/.dsh`）；空或仅空白的 `DSH_HOME` 按上游 `resolveDshHome` 视为未设置。契约以
-官方包文档与 `@deepseek-ai/dsh-agent-instructions` 为准。
+`dsh`。配置根为 `$DSH_HOME`（默认 `~/.dsh`）；空或仅空白的 `DSH_HOME` 按上游 `resolveDshHome` 视为未设置。用户全局
+指令契约来自 `@deepseek-ai/dsh-agent-instructions`（`packages/context/agent-instructions`）。
+
+#### 验证 revision（maintainer 手工 + 自动化安装生命周期）
+
+| 坐标 | 已验证值 |
+| --- | --- |
+| npm CLI | `@deepseek-ai/dsh@0.1.1-rc.2` |
+| npm 指令契约 | `@deepseek-ai/dsh-agent-instructions@0.1.1-rc.2`（与上述 CLI 同版本捆绑） |
+| 上游 Git tag | [`dsh-v0.1.1-rc.2`](https://github.com/deepseek-ai/deepseek-harness/releases/tag/dsh-v0.1.1-rc.2) |
+| 上游 commit | `b150a551b8d465e31e418e1b2eaf5e79bbb7d28e` |
+
+#### 支持范围
+
+DeepSeek Harness 仍处于 developer preview，版本间可能 breaking change。Harnessmith 的 Adapter
+安装生命周期（路径解析、备份、restore/uninstall）面向文档化的 `$DSH_HOME/AGENTS.md` 契约，但**兼容性声明仅覆盖上表
+这一组 npm 版本 + 上游 revision 的验证结果**；更高/更低或其他 revision 的 `dsh` 在重新验证前不视为已支持。Host Eval
+仍为非阻断可选证据。
 
 **不要把 Adapter 契约等同于「写一个全局 Markdown 文件」。** 产品身份与指令加载是两件事：DSH 会话 baseline 是一条
 作用域链，而 Harnessmith 只托管其中固定的用户全局一层。
