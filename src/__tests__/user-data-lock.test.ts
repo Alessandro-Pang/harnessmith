@@ -18,11 +18,11 @@ import {
   harnessRuntime,
 } from '../../template/agent-harness/src/__tests__/helpers/harness.js';
 import { initGlobal } from '../../template/agent-harness/src/commands/init.js';
-import { checkpointTask, initTask } from '../../template/agent-harness/src/commands/task.js';
+import { checkpointTask, initTask } from '../../template/agent-harness/src/commands/task/task.js';
 import {
   userDataCoordinationTargets as embeddedTargets,
   withUserDataCoordinationLocks as withEmbeddedUserDataCoordinationLocks,
-} from '../../template/agent-harness/src/lib/user-data-lock.js';
+} from '../../template/agent-harness/src/lib/filesystem/user-data-lock.js';
 import {
   userDataCoordinationTargets,
   withUserDataCoordinationLocks,

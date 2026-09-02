@@ -21,7 +21,7 @@ rules:
     guarantee: guided
     boundary:
       - template/agent-harness/docs/standards/project-agent-docs.md
-      - template/agent-harness/src/lib/memory-capture-eligibility.ts
+      - template/agent-harness/src/lib/memory/memory-capture-eligibility.ts
     confusingWith: [user-task-read-only]
 
   - id: managed-work-state-write-path
@@ -34,8 +34,8 @@ rules:
     evidence:
       implementation:
         - scripts/preflight/preflight-architecture.ts
-        - template/agent-harness/src/lib/memory-write.ts
-        - template/agent-harness/src/lib/task-store.ts
+        - template/agent-harness/src/lib/memory/memory-write.ts
+        - template/agent-harness/src/lib/task/task-store.ts
       verification:
         - src/__tests__/preflight-architecture.test.ts
         - template/agent-harness/src/__tests__/memory-write-safety.test.ts
@@ -50,8 +50,8 @@ rules:
     guarantee: enforced
     evidence:
       implementation:
-        - template/agent-harness/src/commands/task.ts
-        - template/agent-harness/src/lib/task-evidence.ts
+        - template/agent-harness/src/commands/task/task.ts
+        - template/agent-harness/src/lib/task/task-evidence.ts
       verification:
         - src/__tests__/preflight-architecture.test.ts
         - template/agent-harness/src/__tests__/task-evidence.test.ts
@@ -67,8 +67,8 @@ rules:
     guarantee: enforced
     evidence:
       implementation:
-        - template/agent-harness/src/commands/memory-curation.ts
-        - template/agent-harness/src/lib/memory-curation-documents.ts
+        - template/agent-harness/src/commands/memory/memory-curation.ts
+        - template/agent-harness/src/lib/memory/memory-curation-documents.ts
       verification:
         - template/agent-harness/src/__tests__/memory-curation.test.ts
         - template/agent-harness/src/__tests__/task-core-safety.test.ts
@@ -83,7 +83,7 @@ rules:
     guarantee: enforced
     evidence:
       implementation:
-        - template/agent-harness/src/lib/docs-routing.ts
+        - template/agent-harness/src/lib/documentation/docs-routing.ts
       verification:
         - template/agent-harness/src/__tests__/docs-routing.test.ts
 
@@ -96,8 +96,8 @@ rules:
     guarantee: enforced
     evidence:
       implementation:
-        - template/agent-harness/src/lib/docs-routing.ts
-        - template/agent-harness/src/lib/response-language.ts
+        - template/agent-harness/src/lib/documentation/docs-routing.ts
+        - template/agent-harness/src/lib/routing/response-language.ts
         - template/agent-harness/docs/manifest.yaml
       verification:
         - template/agent-harness/src/__tests__/docs-routing.test.ts
@@ -137,8 +137,8 @@ rules:
     guarantee: enforced
     evidence:
       implementation:
-        - template/agent-harness/src/lib/replay-contract.ts
-        - template/agent-harness/src/commands/replay.ts
+        - template/agent-harness/src/lib/replay/replay-contract.ts
+        - template/agent-harness/src/commands/replay/replay.ts
       verification:
         - template/agent-harness/src/__tests__/replay-contract.test.ts
         - template/agent-harness/src/__tests__/host-signal-replay.test.ts

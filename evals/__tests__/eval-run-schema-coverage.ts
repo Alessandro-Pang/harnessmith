@@ -12,11 +12,11 @@ import {
   generateEvalRunSchemaAdapterEnum,
   readEvalAdapterEnum,
   rewriteEvalAdapterEnumSource,
-} from '../../scripts/evaluation/eval-run-schema.js';
+} from '../../scripts/evaluation/contracts/eval-run-schema.js';
 import { evalAdapterEnum } from '../../src/adapters/adapter-registry.js';
 
 const repositoryRoot = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
-const entry = join(repositoryRoot, 'scripts', 'evaluation', 'eval-run-schema.ts');
+const entry = join(repositoryRoot, 'scripts', 'evaluation', 'contracts', 'eval-run-schema.ts');
 const expected = evalAdapterEnum();
 
 function runCli(args: string[]) {

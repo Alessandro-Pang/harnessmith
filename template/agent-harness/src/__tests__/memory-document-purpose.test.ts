@@ -4,14 +4,17 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { initProject } from '../commands/init.js';
-import { memoryCheck } from '../commands/memory.js';
-import { captureFinding } from '../commands/memory-finding.js';
+import { memoryCheck } from '../commands/memory/memory.js';
+import { captureFinding } from '../commands/memory/memory-finding.js';
 import {
   analyzeDocumentPurpose,
   documentPurposeMetadata,
   validateDocumentPurpose,
-} from '../lib/memory-document-purpose.js';
-import { memoryMaintenanceReport, memoryMaintenanceWarnings } from '../lib/memory-maintenance.js';
+} from '../lib/memory/memory-document-purpose.js';
+import {
+  memoryMaintenanceReport,
+  memoryMaintenanceWarnings,
+} from '../lib/memory/memory-maintenance.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function fixture() {

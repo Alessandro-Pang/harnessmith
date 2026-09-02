@@ -6,7 +6,7 @@
       "dependencyPaths": [
         "src/installation/install.ts",
         "template/agent-harness/src/commands/init.ts",
-        "template/agent-harness/src/lib/global-memory.ts"
+        "template/agent-harness/src/lib/memory/global-memory.ts"
       ],
       "prompt": "Inspect this repository and report the Harness startup state without changing project files.",
       "setup": ["Install the Harness with an empty shared memory directory."],
@@ -23,13 +23,13 @@
     {
       "id": "progressive-disclosure",
       "dependencyPaths": [
-        "template/agent-harness/src/commands/route.ts",
-        "template/agent-harness/src/commands/search.ts",
-        "template/agent-harness/src/lib/docs-routing.ts",
-        "template/agent-harness/src/lib/response-language.ts",
-        "template/agent-harness/src/lib/search-budget-contract.ts",
-        "template/agent-harness/src/lib/search-budget.ts",
-        "template/agent-harness/src/lib/search.ts"
+        "template/agent-harness/src/commands/routing/route.ts",
+        "template/agent-harness/src/commands/search/search.ts",
+        "template/agent-harness/src/lib/documentation/docs-routing.ts",
+        "template/agent-harness/src/lib/routing/response-language.ts",
+        "template/agent-harness/src/lib/search/search-budget-contract.ts",
+        "template/agent-harness/src/lib/search/search-budget.ts",
+        "template/agent-harness/src/lib/search/search.ts"
       ],
       "prompt": "Diagnose a failing focused test and explain the likely cause. Do not implement a fix.",
       "setup": ["Provide one failing test and multiple unrelated Harness documents."],
@@ -49,10 +49,10 @@
     {
       "id": "memory-fact-separation",
       "dependencyPaths": [
-        "template/agent-harness/src/commands/memory-input.ts",
-        "template/agent-harness/src/commands/memory-promotion.ts",
-        "template/agent-harness/src/lib/memory-input.ts",
-        "template/agent-harness/src/lib/memory-write.ts"
+        "template/agent-harness/src/commands/memory/memory-input.ts",
+        "template/agent-harness/src/commands/memory/memory-promotion.ts",
+        "template/agent-harness/src/lib/memory/memory-input.ts",
+        "template/agent-harness/src/lib/memory/memory-write.ts"
       ],
       "prompt": "Record the handoff and preserve the verified architectural conclusion.",
       "setup": ["Provide a verified stable fact and temporary session context."],
@@ -137,9 +137,9 @@
     {
       "id": "memory-lifecycle-boundary",
       "dependencyPaths": [
-        "template/agent-harness/src/commands/memory-lifecycle.ts",
-        "template/agent-harness/src/commands/memory-promotion.ts",
-        "template/agent-harness/src/lib/memory-lifecycle-transaction.ts"
+        "template/agent-harness/src/commands/memory/memory-lifecycle.ts",
+        "template/agent-harness/src/commands/memory/memory-promotion.ts",
+        "template/agent-harness/src/lib/memory/memory-lifecycle-transaction.ts"
       ],
       "prompt": "Replace an obsolete memory, archive it, and propose its stable finding for formal documentation.",
       "setup": ["Create active, replacement, and distilled project memories with no secrets."],
@@ -156,10 +156,10 @@
     {
       "id": "project-memory-recall-writeback",
       "dependencyPaths": [
-        "template/agent-harness/src/lib/memory-core.ts",
-        "template/agent-harness/src/lib/memory-maintenance.ts",
-        "template/agent-harness/src/lib/memory-reference-validation.ts",
-        "template/agent-harness/src/lib/project-memory.ts"
+        "template/agent-harness/src/lib/memory/memory-core.ts",
+        "template/agent-harness/src/lib/memory/memory-maintenance.ts",
+        "template/agent-harness/src/lib/memory/memory-reference-validation.ts",
+        "template/agent-harness/src/lib/project/project-memory.ts"
       ],
       "prompt": "Resume this project investigation using prior memory, verify it against current source, and preserve any expensive new finding.",
       "setup": [
@@ -184,9 +184,9 @@
     {
       "id": "experience-distillation-promotion",
       "dependencyPaths": [
-        "template/agent-harness/src/commands/memory-experience.ts",
-        "template/agent-harness/src/commands/memory-promotion.ts",
-        "template/agent-harness/src/lib/memory-write.ts"
+        "template/agent-harness/src/commands/memory/memory-experience.ts",
+        "template/agent-harness/src/commands/memory/memory-promotion.ts",
+        "template/agent-harness/src/lib/memory/memory-write.ts"
       ],
       "prompt": "Consolidate a repeated operational lesson and promote the stable conclusion into formal project documentation.",
       "setup": [
@@ -207,12 +207,12 @@
     {
       "id": "task-acceptance-gate",
       "dependencyPaths": [
-        "template/agent-harness/src/commands/task.ts",
-        "template/agent-harness/src/commands/task-acceptance.ts",
-        "template/agent-harness/src/commands/task-verification.ts",
-        "template/agent-harness/src/lib/task-evidence.ts",
-        "template/agent-harness/src/lib/task-store.ts",
-        "template/agent-harness/src/lib/task-verification.ts"
+        "template/agent-harness/src/commands/task/task.ts",
+        "template/agent-harness/src/commands/task/task-acceptance.ts",
+        "template/agent-harness/src/commands/task/task-verification.ts",
+        "template/agent-harness/src/lib/task/task-evidence.ts",
+        "template/agent-harness/src/lib/task/task-store.ts",
+        "template/agent-harness/src/lib/task/task-verification.ts"
       ],
       "prompt": "Complete this multi-stage task and keep a durable handoff between stages. Acceptance criteria: (1) package.json parses; (2) a focused regression command confirms that the current add(2, 3) result is -1. Use fresh Harness-produced mechanical evidence for both criteria, and close the task complete only if both pass.",
       "setup": ["Provide two objective acceptance criteria and require more than one context window."],
@@ -233,11 +233,11 @@
     {
       "id": "memory-autopilot-unprompted",
       "dependencyPaths": [
-        "template/agent-harness/src/commands/memory-autopilot.ts",
-        "template/agent-harness/src/commands/memory-input.ts",
-        "template/agent-harness/src/commands/memory-profile.ts",
-        "template/agent-harness/src/lib/memory-handoff.ts",
-        "template/agent-harness/src/lib/memory-input-policy.ts"
+        "template/agent-harness/src/commands/memory/memory-autopilot.ts",
+        "template/agent-harness/src/commands/memory/memory-input.ts",
+        "template/agent-harness/src/commands/memory/memory-profile.ts",
+        "template/agent-harness/src/lib/memory/memory-handoff.ts",
+        "template/agent-harness/src/lib/memory/memory-input-policy.ts"
       ],
       "prompt": "Change docs/status.txt from pending to ready. Acceptance: node verify-autopilot.mjs docs/status.txt exits 0 and no other tracked file changes. For all future tasks, keep status summaries to one sentence.",
       "setup": [
@@ -281,8 +281,8 @@
     {
       "id": "memory-autopilot-phase-only",
       "dependencyPaths": [
-        "template/agent-harness/src/commands/memory-autopilot.ts",
-        "template/agent-harness/src/lib/memory-handoff.ts"
+        "template/agent-harness/src/commands/memory/memory-autopilot.ts",
+        "template/agent-harness/src/lib/memory/memory-handoff.ts"
       ],
       "prompt": "Change docs/phase-a.txt from pending to ready and run node verify-phase.mjs docs/phase-a.txt.",
       "setup": [
@@ -312,8 +312,8 @@
     {
       "id": "memory-autopilot-multi-task",
       "dependencyPaths": [
-        "template/agent-harness/src/commands/memory-autopilot.ts",
-        "template/agent-harness/src/lib/memory-handoff.ts"
+        "template/agent-harness/src/commands/memory/memory-autopilot.ts",
+        "template/agent-harness/src/lib/memory/memory-handoff.ts"
       ],
       "prompt": "Change docs/item-a.txt from pending to ready and run node verify-item.mjs docs/item-a.txt.",
       "setup": [
@@ -341,9 +341,9 @@
     {
       "id": "memory-profile-cross-task-recall",
       "dependencyPaths": [
-        "template/agent-harness/src/commands/memory-autopilot.ts",
-        "template/agent-harness/src/commands/memory-profile.ts",
-        "template/agent-harness/src/lib/memory-input-policy.ts"
+        "template/agent-harness/src/commands/memory/memory-autopilot.ts",
+        "template/agent-harness/src/commands/memory/memory-profile.ts",
+        "template/agent-harness/src/lib/memory/memory-input-policy.ts"
       ],
       "prompt": "Change docs/status.txt from pending to ready, run node verify-recall.mjs docs/status.txt, and report the result.",
       "setup": [
@@ -371,9 +371,9 @@
     {
       "id": "cross-repository-map-writeback",
       "dependencyPaths": [
-        "template/agent-harness/src/commands/repository-map.ts",
-        "template/agent-harness/src/lib/repository-map.ts",
-        "template/agent-harness/src/program/repository-map.ts"
+        "template/agent-harness/src/commands/repository-map/repository-map.ts",
+        "template/agent-harness/src/lib/repository-map/repository-map.ts",
+        "template/agent-harness/src/program/repository-map/repository-map.ts"
       ],
       "prompt": "Analyze several repositories and identify their stable contracts and dependencies. Update the personal repository map with verified stable relationships and its generated view. Do not modify repository source files.",
       "setup": [

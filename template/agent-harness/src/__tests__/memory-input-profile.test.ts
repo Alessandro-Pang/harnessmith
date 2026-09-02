@@ -12,14 +12,14 @@ import {
 import { tmpdir } from 'node:os';
 import { basename, dirname, join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { memoryCheck } from '../commands/memory.js';
-import { captureHandoff } from '../commands/memory-autopilot.js';
-import { captureInput } from '../commands/memory-input.js';
+import { memoryCheck } from '../commands/memory/memory.js';
+import { captureHandoff } from '../commands/memory/memory-autopilot.js';
+import { captureInput } from '../commands/memory/memory-input.js';
 import {
   reconcileProfile,
   removeProfileEntry,
   setProfileAutopilot,
-} from '../commands/memory-profile.js';
+} from '../commands/memory/memory-profile.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function fixture(prefix: string) {

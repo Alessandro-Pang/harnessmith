@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { readBoundedRegularFile } from '../lib/bounded-file.js';
+import { readBoundedRegularFile } from '../lib/filesystem/bounded-file.js';
 
 test('bounded reads reject an invalid byte budget before touching the path', () => {
   assert.throws(

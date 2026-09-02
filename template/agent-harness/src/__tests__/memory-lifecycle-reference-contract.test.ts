@@ -4,9 +4,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { initGlobal } from '../commands/init.js';
-import { memoryCheck } from '../commands/memory.js';
-import { supersedeMemory } from '../commands/memory-lifecycle.js';
-import { memoryMaintenance } from '../commands/memory-maintenance.js';
+import { memoryCheck } from '../commands/memory/memory.js';
+import { supersedeMemory } from '../commands/memory/memory-lifecycle.js';
+import { memoryMaintenance } from '../commands/memory/memory-maintenance.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function fixture(): string {

@@ -8,7 +8,7 @@ import { onTestFinished, test } from 'vitest';
 import { evalAdapterEnum } from '../../src/adapters/adapter-registry.js';
 
 const root = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
-const entry = join(root, 'scripts', 'evaluation', 'eval-run-schema.ts');
+const entry = join(root, 'scripts', 'evaluation', 'contracts', 'eval-run-schema.ts');
 
 function run(args: string[]) {
   return spawnSync(process.execPath, ['--import', 'tsx', entry, ...args], {

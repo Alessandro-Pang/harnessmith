@@ -2,12 +2,15 @@ import { chmodSync, constants, copyFileSync, existsSync, rmSync } from 'node:fs'
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execaSync } from 'execa';
-import { type EvaluationGateResult, gateEvaluationRecords } from '../evaluation/eval-contract.js';
+import {
+  type EvaluationGateResult,
+  gateEvaluationRecords,
+} from '../evaluation/contracts/eval-contract.js';
 import {
   evaluationFingerprint,
   releaseArtifactPath,
   requiredEvaluationAdapters,
-} from '../evaluation/eval-fingerprint.js';
+} from '../evaluation/records/eval-fingerprint.js';
 import { readNpmPackageTarball } from './npm-tarball.js';
 import { type ReleaseCliOptions, releaseOptions } from './release-publish-options.js';
 import { loadReleaseRiskAcceptance } from './release-risk-acceptance.js';

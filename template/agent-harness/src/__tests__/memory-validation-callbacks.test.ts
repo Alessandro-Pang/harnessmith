@@ -3,8 +3,8 @@ import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { beforeEach, onTestFinished, test, vi } from 'vitest';
-import { applyMigration } from '../lib/memory-migration-apply.js';
-import { validateMemoryPreflight } from '../lib/memory-preflight.js';
+import { applyMigration } from '../lib/memory/memory-migration-apply.js';
+import { validateMemoryPreflight } from '../lib/memory/memory-preflight.js';
 
 const validationControl = vi.hoisted(() => ({
   documentFailure: undefined as unknown,
@@ -13,8 +13,8 @@ const validationControl = vi.hoisted(() => ({
   rootDiagnostic: undefined as string | undefined,
 }));
 
-vi.mock('../lib/memory-validation.js', async (importOriginal) => {
-  const original = await importOriginal<typeof import('../lib/memory-validation.js')>();
+vi.mock('../lib/memory/memory-validation.js', async (importOriginal) => {
+  const original = await importOriginal<typeof import('../lib/memory/memory-validation.js')>();
   return {
     ...original,
     validateMemoryRoot: (...args: Parameters<typeof original.validateMemoryRoot>) => {

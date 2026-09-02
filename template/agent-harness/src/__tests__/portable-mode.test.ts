@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { modeMatches } from '../lib/portable-mode.js';
+import { modeMatches } from '../lib/filesystem/portable-mode.js';
 
 test('Windows ignores POSIX permission bits that its filesystem API cannot preserve', () => {
   assert.equal(modeMatches(0o666, 0o600, 'win32'), true);

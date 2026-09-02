@@ -15,12 +15,12 @@ import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { initGlobal, initProject } from '../commands/init.js';
-import { memoryCheck } from '../commands/memory.js';
-import { captureHandoff, closeHandoff } from '../commands/memory-autopilot.js';
-import { archiveMemory, supersedeMemory } from '../commands/memory-lifecycle.js';
-import { memoryMaintenance } from '../commands/memory-maintenance.js';
-import { closeTask, initTask, taskStatus } from '../commands/task.js';
-import { verifyAcceptance } from '../commands/task-verification.js';
+import { memoryCheck } from '../commands/memory/memory.js';
+import { captureHandoff, closeHandoff } from '../commands/memory/memory-autopilot.js';
+import { archiveMemory, supersedeMemory } from '../commands/memory/memory-lifecycle.js';
+import { memoryMaintenance } from '../commands/memory/memory-maintenance.js';
+import { closeTask, initTask, taskStatus } from '../commands/task/task.js';
+import { verifyAcceptance } from '../commands/task/task-verification.js';
 import { calendarDate } from '../runtime.js';
 import { assertMode, capturedIo, harnessRuntime } from './helpers/harness.js';
 

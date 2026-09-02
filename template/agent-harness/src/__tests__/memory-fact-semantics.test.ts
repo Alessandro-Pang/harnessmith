@@ -3,16 +3,16 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { parseFrontmatterDocument } from '../lib/frontmatter.js';
+import { parseFrontmatterDocument } from '../lib/documentation/frontmatter.js';
 import {
   assertFindingFactSemantics,
   classifyMemoryDocument,
   classifyMemoryFact,
   type MemoryFactClass,
   validFactExpiry,
-} from '../lib/memory-fact-semantics.js';
-import { searchText } from '../lib/search.js';
-import { searchWithIndex } from '../lib/search-index.js';
+} from '../lib/memory/memory-fact-semantics.js';
+import { searchText } from '../lib/search/search.js';
+import { searchWithIndex } from '../lib/search/search-index.js';
 import { harnessRuntime } from './helpers/harness.js';
 
 function fixture() {

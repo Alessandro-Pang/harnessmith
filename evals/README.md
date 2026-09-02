@@ -159,7 +159,7 @@ unknown behavior file never silently inherits Host evidence.
 
 ## Bounded runner and Codex transport contract
 
-`scripts/evaluation/eval-runner.ts` supplies the transport-neutral scheduling boundary used by real-Host adapters.
+`scripts/evaluation/planning/eval-runner.ts` supplies the transport-neutral scheduling boundary used by real-Host adapters.
 Independent scenarios run with 2 workers by default and at most 3-way bounded parallelism. Each
 transport failure may retry once. Two consecutive transport failures open the circuit breaker, stop new work,
 and classify scenarios that never started as `infra-blocked`; they are never converted into behavior failures.
@@ -168,7 +168,7 @@ The runner gives every attempt an `AbortSignal` and a hard deadline, enforces bo
 60-minute matrix budgets, and preserves `behavior-failed`, `infra-inconclusive`, and `evaluator-failed` as
 separate outcomes. An injected executor and clock keep the scheduler deterministic in tests.
 
-`scripts/evaluation/eval-codex-transport.ts` supplies the concrete transport for the current required Host. It invokes
+`scripts/evaluation/codex/eval-codex-transport.ts` supplies the concrete transport for the current required Host. It invokes
 `codex exec` without a shell, sends the scenario prompt over stdin, selects JSONL output, an ephemeral session,
 the `workspace-write` sandbox, and automatic approval review, and never uses a dangerous sandbox-bypass flag.
 The workspace must be absolute and disposable. The runner `AbortSignal` terminates the process and its

@@ -13,8 +13,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { initGlobal, initProject } from '../commands/init.js';
-import { memoryMigrate } from '../commands/memory-migration.js';
-import { maximumMemoryDocumentBytes } from '../lib/memory-path.js';
+import { memoryMigrate } from '../commands/memory/memory-migration.js';
+import { maximumMemoryDocumentBytes } from '../lib/memory/memory-path.js';
 import { assertMode, capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function fixture() {

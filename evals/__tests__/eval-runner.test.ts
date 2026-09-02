@@ -4,7 +4,7 @@ import {
   type HostEvalAttempt,
   type HostEvalAttemptResult,
   runHostEvalScenarios,
-} from '../../scripts/evaluation/eval-runner.js';
+} from '../../scripts/evaluation/planning/eval-runner.js';
 
 const passed = {
   outcome: 'passed',

@@ -1,16 +1,20 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { RunRecord } from './eval-artifacts.js';
-import { evaluationFingerprint, releaseArtifactPath, repositoryRoot } from './eval-fingerprint.js';
-import { readHostCapabilityMatrix } from './eval-host-capability-matrix-contract.js';
+import type { RunRecord } from './records/eval-artifacts.js';
+import {
+  evaluationFingerprint,
+  releaseArtifactPath,
+  repositoryRoot,
+} from './records/eval-fingerprint.js';
+import { readHostCapabilityMatrix } from './contracts/eval-host-capability-matrix-contract.js';
 import {
   latestEvaluationRecords,
   type VerifiedRun,
   validateEvaluationRecords,
-} from './eval-records.js';
+} from './records/eval-records.js';
 
-export { readHostCapabilityMatrix } from './eval-host-capability-matrix-contract.js';
+export { readHostCapabilityMatrix } from './contracts/eval-host-capability-matrix-contract.js';
 
 type CellStatus =
   | 'passed'

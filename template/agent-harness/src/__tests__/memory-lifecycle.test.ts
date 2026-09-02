@@ -5,12 +5,12 @@ import { dirname, join } from 'node:path';
 import lockfile from 'proper-lockfile';
 import { onTestFinished, test } from 'vitest';
 import { initGlobal } from '../commands/init.js';
-import { memoryCheck } from '../commands/memory.js';
-import { archiveMemory, supersedeMemory } from '../commands/memory-lifecycle.js';
-import { memoryMaintenance } from '../commands/memory-maintenance.js';
-import { memoryMigrate } from '../commands/memory-migration.js';
-import { inputContentDigest } from '../lib/memory-input.js';
-import { memoryMaintenanceWarnings } from '../lib/memory-maintenance.js';
+import { memoryCheck } from '../commands/memory/memory.js';
+import { archiveMemory, supersedeMemory } from '../commands/memory/memory-lifecycle.js';
+import { memoryMaintenance } from '../commands/memory/memory-maintenance.js';
+import { memoryMigrate } from '../commands/memory/memory-migration.js';
+import { inputContentDigest } from '../lib/memory/memory-input.js';
+import { memoryMaintenanceWarnings } from '../lib/memory/memory-maintenance.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function temporaryRoot(): string {

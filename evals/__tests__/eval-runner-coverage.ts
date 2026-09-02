@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {
   type HostEvalAttemptResult,
   runHostEvalScenarios,
-} from '../../scripts/evaluation/eval-runner.js';
+} from '../../scripts/evaluation/planning/eval-runner.js';
 
 const passed = { outcome: 'passed', termination: 'completed' } as const;
 

@@ -7,7 +7,7 @@ import { runCli } from '../cli.js';
 import {
   type CaptureEligibilityInput,
   evaluateCaptureEligibility,
-} from '../lib/memory-capture-eligibility.js';
+} from '../lib/memory/memory-capture-eligibility.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function eligibleInput(overrides: Partial<CaptureEligibilityInput> = {}): CaptureEligibilityInput {

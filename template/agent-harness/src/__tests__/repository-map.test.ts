@@ -13,7 +13,7 @@ import {
   serializeRepositoryMap,
   validateRepositoryMap,
   verifyRepositoryMap,
-} from '../lib/repository-map.js';
+} from '../lib/repository-map/repository-map.js';
 
 function fixtureRoot(): string {
   const root = mkdtempSync(join(tmpdir(), 'harness-repository-map-'));

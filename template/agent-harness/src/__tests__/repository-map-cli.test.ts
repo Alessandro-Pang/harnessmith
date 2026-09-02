@@ -5,7 +5,10 @@ import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { runCli } from '../cli.js';
 import { initPersonal } from '../commands/init.js';
-import { parseRepositoryMap, serializeRepositoryMap } from '../lib/repository-map.js';
+import {
+  parseRepositoryMap,
+  serializeRepositoryMap,
+} from '../lib/repository-map/repository-map.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function validMap() {

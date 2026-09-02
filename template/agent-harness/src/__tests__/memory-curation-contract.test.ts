@@ -3,9 +3,12 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { curationRecoveryPaths, curationWorkspaceDigest } from '../lib/memory-curation-contract.js';
-import { buildCurationProposals } from '../lib/memory-curation-proposals.js';
-import { readCurationSelectionFile } from '../lib/memory-curation-selection.js';
+import {
+  curationRecoveryPaths,
+  curationWorkspaceDigest,
+} from '../lib/memory/memory-curation-contract.js';
+import { buildCurationProposals } from '../lib/memory/memory-curation-proposals.js';
+import { readCurationSelectionFile } from '../lib/memory/memory-curation-selection.js';
 
 function fixture() {
   const root = mkdtempSync(join(tmpdir(), 'harness-curation-contract-'));

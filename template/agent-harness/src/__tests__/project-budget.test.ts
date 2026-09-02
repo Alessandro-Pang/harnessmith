@@ -14,12 +14,12 @@ import {
 import { tmpdir } from 'node:os';
 import { delimiter, dirname, join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { closeTask, initTask } from '../commands/task.js';
-import { classifyGitFailure, gitRoot, gitVersion } from '../lib/git.js';
-import { projectSnapshot } from '../lib/project.js';
-import { createProjectGitBudget, projectGitRaw } from '../lib/project-git.js';
-import { resolveGitExecutable } from '../lib/run-git.js';
-import { projectRoot } from '../lib/task-store.js';
+import { closeTask, initTask } from '../commands/task/task.js';
+import { classifyGitFailure, gitRoot, gitVersion } from '../lib/filesystem/git.js';
+import { projectSnapshot } from '../lib/project/project.js';
+import { createProjectGitBudget, projectGitRaw } from '../lib/project/project-git.js';
+import { resolveGitExecutable } from '../lib/filesystem/run-git.js';
+import { projectRoot } from '../lib/task/task-store.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function gitExecutable(bin: string, source: string, mode = 0o755): void {

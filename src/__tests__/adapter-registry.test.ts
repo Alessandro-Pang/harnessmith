@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { onTestFinished, test } from 'vitest';
-import { checkEvalRunSchemaAdapterEnum } from '../../scripts/evaluation/eval-run-schema.js';
+import { checkEvalRunSchemaAdapterEnum } from '../../scripts/evaluation/contracts/eval-run-schema.js';
 import {
   type AgentName,
   adapterAliasMap,

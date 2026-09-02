@@ -18,16 +18,16 @@ import {
   applyMemoryRepair,
   diagnoseMemoryRepair,
   memoryRepair,
-} from '../commands/memory-repair.js';
-import { memoryCoreBudget } from '../lib/memory-core-budget.js';
-import { compactCoreContent, digest } from '../lib/memory-repair-contract.js';
+} from '../commands/memory/memory-repair.js';
+import { memoryCoreBudget } from '../lib/memory/memory-core-budget.js';
+import { compactCoreContent, digest } from '../lib/memory/memory-repair-contract.js';
 import {
   cleanupRepairJournal,
   type RepairMarker,
   repairJournalPaths,
-} from '../lib/memory-repair-journal.js';
-import { canonicalPath } from '../lib/safe-path.js';
-import { searchIndexPath, searchWithIndex } from '../lib/search-index.js';
+} from '../lib/memory/memory-repair-journal.js';
+import { canonicalPath } from '../lib/filesystem/safe-path.js';
+import { searchIndexPath, searchWithIndex } from '../lib/search/search-index.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function fixture(prefix: string) {

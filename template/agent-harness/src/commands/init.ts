@@ -1,10 +1,10 @@
 import { join } from 'node:path';
-import { withExclusiveDirectoryLock } from '../lib/exclusive-lock.js';
-import { writeIfMissing } from '../lib/files.js';
-import { initializeGlobalMemory } from '../lib/global-memory.js';
-import { initializeProjectMemory } from '../lib/project-memory.js';
-import { readTemplate, render } from '../lib/templates.js';
-import { withUserDataCoordinationLocks } from '../lib/user-data-lock.js';
+import { withExclusiveDirectoryLock } from '../lib/filesystem/exclusive-lock.js';
+import { writeIfMissing } from '../lib/filesystem/files.js';
+import { initializeGlobalMemory } from '../lib/memory/global-memory.js';
+import { initializeProjectMemory } from '../lib/project/project-memory.js';
+import { readTemplate, render } from '../lib/filesystem/templates.js';
+import { withUserDataCoordinationLocks } from '../lib/filesystem/user-data-lock.js';
 import { assertRuntimeCanMutate } from '../runtime.js';
 import type { Io, Runtime } from '../types.js';
 

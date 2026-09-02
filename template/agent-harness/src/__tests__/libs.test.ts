@@ -13,7 +13,7 @@ import {
 import { tmpdir } from 'node:os';
 import { basename, join } from 'node:path';
 import { onTestFinished, test, vi } from 'vitest';
-import { inspectProject } from '../commands/project.js';
+import { inspectProject } from '../commands/project/project.js';
 import {
   atomicWrite,
   atomicWriteMany,
@@ -22,17 +22,17 @@ import {
   sameText,
   shortDigest,
   writeIfMissing,
-} from '../lib/files.js';
+} from '../lib/filesystem/files.js';
 import {
   parseFrontmatter,
   parseFrontmatterDocument,
   updateFrontmatter,
-} from '../lib/frontmatter.js';
-import { gitRoot, gitVersion } from '../lib/git.js';
-import { projectSnapshot } from '../lib/project.js';
-import { canonicalPath } from '../lib/safe-path.js';
-import { outputSearch, searchableFiles, searchText, textSearch } from '../lib/search.js';
-import { render } from '../lib/templates.js';
+} from '../lib/documentation/frontmatter.js';
+import { gitRoot, gitVersion } from '../lib/filesystem/git.js';
+import { projectSnapshot } from '../lib/project/project.js';
+import { canonicalPath } from '../lib/filesystem/safe-path.js';
+import { outputSearch, searchableFiles, searchText, textSearch } from '../lib/search/search.js';
+import { render } from '../lib/filesystem/templates.js';
 import { calendarDate, createRuntime, timestamp } from '../runtime.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 

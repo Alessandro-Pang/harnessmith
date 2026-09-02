@@ -4,8 +4,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { initGlobal, initProject } from '../commands/init.js';
-import { memoryMaintenance } from '../commands/memory-maintenance.js';
-import { memoryMaintenanceReport } from '../lib/memory-maintenance.js';
+import { memoryMaintenance } from '../commands/memory/memory-maintenance.js';
+import { memoryMaintenanceReport } from '../lib/memory/memory-maintenance.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function fixture() {

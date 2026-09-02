@@ -6,7 +6,7 @@ import {
   comparePromptRouteBenchmarks,
   repositoryRoot,
   runPromptRouteBenchmark,
-} from '../../scripts/benchmarks/prompt-route-benchmark-lib.js';
+} from '../../scripts/benchmarks/prompt-route/prompt-route-benchmark-lib.js';
 
 test('prompt route benchmark is versioned, reproducible, and passes deterministic thresholds', () => {
   const first = runPromptRouteBenchmark();

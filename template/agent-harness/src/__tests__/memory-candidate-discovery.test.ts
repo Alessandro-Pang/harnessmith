@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, onTestFinished, test } from 'vitest';
 import { runCli } from '../cli.js';
-import { discoverMemoryCandidates } from '../lib/memory-candidate-discovery.js';
+import { discoverMemoryCandidates } from '../lib/memory/memory-candidate-discovery.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 describe('memory candidate discovery', () => {

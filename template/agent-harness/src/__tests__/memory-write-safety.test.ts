@@ -14,10 +14,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { initGlobal } from '../commands/init.js';
-import { captureHandoff } from '../commands/memory-autopilot.js';
-import { reconcileProfile } from '../commands/memory-profile.js';
-import { writeValidated } from '../lib/memory-write.js';
-import { withUserDataCoordinationLocks } from '../lib/user-data-lock.js';
+import { captureHandoff } from '../commands/memory/memory-autopilot.js';
+import { reconcileProfile } from '../commands/memory/memory-profile.js';
+import { writeValidated } from '../lib/memory/memory-write.js';
+import { withUserDataCoordinationLocks } from '../lib/filesystem/user-data-lock.js';
 import { assertMode, capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function temporaryRoot(prefix: string): string {

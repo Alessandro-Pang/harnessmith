@@ -2,10 +2,10 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'vitest';
-import { parseFrontmatter } from '../lib/frontmatter.js';
-import type { HandoffOptions } from '../lib/memory-handoff.js';
-import { assertHandoffOptions, reconcileHandoffOptions } from '../lib/memory-handoff.js';
-import { handoffIdentityFromMetadata } from '../lib/memory-handoff-identity.js';
+import { parseFrontmatter } from '../lib/documentation/frontmatter.js';
+import type { HandoffOptions } from '../lib/memory/memory-handoff.js';
+import { assertHandoffOptions, reconcileHandoffOptions } from '../lib/memory/memory-handoff.js';
+import { handoffIdentityFromMetadata } from '../lib/memory/memory-handoff-identity.js';
 
 const base: HandoffOptions = {
   session: 'document-boundary',

@@ -13,9 +13,9 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { initProject } from '../commands/init.js';
-import { memoryCheck } from '../commands/memory.js';
-import * as memoryAutopilot from '../commands/memory-autopilot.js';
-import { archiveMemory } from '../commands/memory-lifecycle.js';
+import { memoryCheck } from '../commands/memory/memory.js';
+import * as memoryAutopilot from '../commands/memory/memory-autopilot.js';
+import { archiveMemory } from '../commands/memory/memory-lifecycle.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function fixture(prefix: string) {

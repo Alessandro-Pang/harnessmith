@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { createScenarioExecutor } from '../../scripts/evaluation/eval-codex-scenario-process.js';
+import { createScenarioExecutor } from '../../scripts/evaluation/codex/eval-codex-scenario-process.js';
 
 const directory = mkdtempSync(join(tmpdir(), 'harnessmith-matrix-coverage-'));
 try {

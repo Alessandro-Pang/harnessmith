@@ -84,7 +84,7 @@ claims:
     implementation:
       - src/temporary-resources/temporary-resource.ts
       - src/installation/user-data-lock.ts
-      - template/agent-harness/src/lib/user-data-lock.ts
+      - template/agent-harness/src/lib/filesystem/user-data-lock.ts
       - scripts/temporary-resources/temp-resources.ts
     verification:
       - src/__tests__/temporary-resource.test.ts
@@ -108,7 +108,7 @@ claims:
     owner: embedded Harness runtime
     claim: Route tasks to bounded, progressively disclosed guidance without loading the complete handbook.
     implementation:
-      - template/agent-harness/src/commands/route.ts
+      - template/agent-harness/src/commands/routing/route.ts
     verification:
       - template/agent-harness/src/__tests__/docs-routing.test.ts
       - template/agent-harness/src/__tests__/search-budget.test.ts
@@ -118,9 +118,9 @@ claims:
     owner: embedded Harness Memory runtime
     claim: Evaluate Memory capture candidates with negative eligibility first and return stable machine-readable status and reason codes before any typed mutation.
     implementation:
-      - template/agent-harness/src/lib/memory-capture-eligibility.ts
-      - template/agent-harness/src/program/memory-capture-eligibility.ts
-      - template/agent-harness/src/lib/memory-write.ts
+      - template/agent-harness/src/lib/memory/memory-capture-eligibility.ts
+      - template/agent-harness/src/program/memory/memory-capture-eligibility.ts
+      - template/agent-harness/src/lib/memory/memory-write.ts
     verification:
       - template/agent-harness/src/__tests__/memory-capture-eligibility.test.ts
       - template/agent-harness/src/__tests__/memory-finding.test.ts
@@ -131,10 +131,10 @@ claims:
     owner: embedded Harness runtime and user-owned personal overlay
     claim: Maintain evidence-backed repository responsibilities and typed direct relationships without treating discovery as authority.
     implementation:
-      - template/agent-harness/src/commands/repository-map.ts
-      - template/agent-harness/src/lib/repository-map-types.ts
-      - template/agent-harness/src/lib/repository-map-validation.ts
-      - template/agent-harness/src/lib/repository-map-verification.ts
+      - template/agent-harness/src/commands/repository-map/repository-map.ts
+      - template/agent-harness/src/lib/repository-map/repository-map-types.ts
+      - template/agent-harness/src/lib/repository-map/repository-map-validation.ts
+      - template/agent-harness/src/lib/repository-map/repository-map-verification.ts
     verification:
       - template/agent-harness/src/__tests__/repository-map.test.ts
       - template/agent-harness/src/__tests__/repository-map-cli.test.ts
@@ -144,8 +144,8 @@ claims:
     owner: embedded Harness runtime
     claim: Maintain non-authoritative memory and resumable task state with acceptance and write-safety gates.
     implementation:
-      - template/agent-harness/src/commands/memory.ts
-      - template/agent-harness/src/commands/task.ts
+      - template/agent-harness/src/commands/memory/memory.ts
+      - template/agent-harness/src/commands/task/task.ts
     verification:
       - template/agent-harness/src/__tests__/memory.test.ts
       - template/agent-harness/src/__tests__/task.test.ts
@@ -155,9 +155,9 @@ claims:
     owner: embedded Harness Memory runtime
     claim: Keep curation proposal-only by default while explicitly applying bounded, content-bound selections through existing typed lifecycle commands with per-item verification and partial-failure reporting.
     implementation:
-      - template/agent-harness/src/commands/memory-curation.ts
-      - template/agent-harness/src/program/memory-curation-apply.ts
-      - template/agent-harness/src/lib/memory-curation-contract.ts
+      - template/agent-harness/src/commands/memory/memory-curation.ts
+      - template/agent-harness/src/program/memory/memory-curation-apply.ts
+      - template/agent-harness/src/lib/memory/memory-curation-contract.ts
     verification:
       - template/agent-harness/src/__tests__/memory-curation.test.ts
       - template/agent-harness/src/__tests__/memory-curation-apply.test.ts
@@ -168,9 +168,9 @@ claims:
     owner: embedded Harness runtime
     claim: Accept, bound, store, query, summarize, health-check, and archive host-supplied runtime metadata without raw content.
     implementation:
-      - template/agent-harness/src/commands/audit.ts
-      - template/agent-harness/src/lib/audit-model.ts
-      - template/agent-harness/src/lib/audit-store.ts
+      - template/agent-harness/src/commands/audit/audit.ts
+      - template/agent-harness/src/lib/audit/audit-model.ts
+      - template/agent-harness/src/lib/audit/audit-store.ts
     verification:
       - template/agent-harness/src/__tests__/audit.test.ts
 
@@ -209,7 +209,7 @@ claims:
       - src/setup/first-value.ts
       - src/setup/setup.ts
       - src/status/status-explanation.ts
-      - scripts/evaluation/first-value-loop.ts
+      - scripts/evaluation/planning/first-value-loop.ts
       - evals/first-value-loop.v1.json
       - evals/first-value-record.schema.json
     verification:
@@ -223,9 +223,9 @@ claims:
     owner: release verification scripts
     claim: Validate maintainer-attested Host Eval records against the exact candidate artifact and release policy.
     implementation:
-      - scripts/evaluation/eval-gate.ts
-      - scripts/evaluation/eval-gate-failure.ts
-      - scripts/evaluation/eval-fingerprint.ts
+      - scripts/evaluation/records/eval-gate.ts
+      - scripts/evaluation/records/eval-gate-failure.ts
+      - scripts/evaluation/records/eval-fingerprint.ts
     verification:
       - evals/__tests__/gate-observability.test.ts
       - evals/__tests__/run-gate.test.ts
@@ -237,8 +237,8 @@ claims:
     claim: Classify Host Eval outcomes without treating infrastructure failures as behavior failures, while enforcing bounded attempts and time budgets in every record.
     implementation:
       - evals/run.schema.json
-      - scripts/evaluation/eval-execution-contract.ts
-      - scripts/evaluation/eval-records.ts
+      - scripts/evaluation/contracts/eval-execution-contract.ts
+      - scripts/evaluation/records/eval-records.ts
     verification:
       - evals/__tests__/run-gate.test.ts
       - evals/__tests__/run-selection-security.test.ts
@@ -250,9 +250,9 @@ claims:
     claim: Select dependency-scoped Host Eval scenarios for mapped behavior changes and fail closed to the full matrix for unknown or over-broad changes.
     implementation:
       - evals/scenarios.json
-      - scripts/evaluation/eval-planning.ts
-      - scripts/evaluation/eval-scenarios.ts
-      - scripts/evaluation/eval-contract.ts
+      - scripts/evaluation/planning/eval-planning.ts
+      - scripts/evaluation/planning/eval-scenarios.ts
+      - scripts/evaluation/contracts/eval-contract.ts
     verification:
       - evals/__tests__/eval-planning.test.ts
       - evals/__tests__/eval-inheritance.test.ts
@@ -263,7 +263,7 @@ claims:
     owner: Host Eval scheduling
     claim: Run independent Host Eval scenarios with bounded parallelism, hard budgets, one transport retry, and a fail-closed circuit breaker.
     implementation:
-      - scripts/evaluation/eval-runner.ts
+      - scripts/evaluation/planning/eval-runner.ts
     verification:
       - evals/__tests__/eval-runner.test.ts
 
@@ -272,10 +272,10 @@ claims:
     owner: Codex Host Eval execution and evidence
     claim: Run the complete Codex L3 scenario catalog against one authorized candidate and explicit model through shell-free bounded processes, disposable fixtures, independent verifiers, and schema-v6 evidence.
     implementation:
-      - scripts/evaluation/eval-codex-matrix.ts
-      - scripts/evaluation/eval-codex-scenario-process.ts
-      - scripts/evaluation/eval-codex-scenario.mjs
-      - scripts/evaluation/eval-codex-matrix-support.mjs
+      - scripts/evaluation/codex/eval-codex-matrix.ts
+      - scripts/evaluation/codex/eval-codex-scenario-process.ts
+      - scripts/evaluation/codex/eval-codex-scenario.mjs
+      - scripts/evaluation/codex/eval-codex-matrix-support.mjs
     verification:
       - evals/__tests__/eval-codex-matrix.test.ts
       - evals/__tests__/eval-codex-matrix-coverage.ts
@@ -285,7 +285,7 @@ claims:
     owner: Host Eval evidence and release verification
     claim: Preserve exact, inherited, and infrastructure-blocked matrix-cell evidence in release state and attestation without counting blocked cells as passing coverage.
     implementation:
-      - scripts/evaluation/eval-contract.ts
+      - scripts/evaluation/contracts/eval-contract.ts
       - scripts/release/release-evaluation-evidence.ts
       - scripts/release/release-state.ts
       - scripts/release/release-attestation.ts
@@ -323,11 +323,11 @@ claims:
     owner: embedded Harness Memory lifecycle
     claim: Diagnose repair candidates without writing, apply one content-bound proposal with exact authority and paths, and retain or roll back unverifiable recovery state.
     implementation:
-      - template/agent-harness/src/commands/memory-repair.ts
-      - template/agent-harness/src/lib/memory-repair-plan.ts
-      - template/agent-harness/src/lib/memory-repair-apply.ts
-      - template/agent-harness/src/lib/memory-repair-journal.ts
-      - template/agent-harness/src/lib/memory-repair-transaction.ts
+      - template/agent-harness/src/commands/memory/memory-repair.ts
+      - template/agent-harness/src/lib/memory/memory-repair-plan.ts
+      - template/agent-harness/src/lib/memory/memory-repair-apply.ts
+      - template/agent-harness/src/lib/memory/memory-repair-journal.ts
+      - template/agent-harness/src/lib/memory/memory-repair-transaction.ts
     verification:
       - template/agent-harness/src/__tests__/memory-repair.test.ts
 

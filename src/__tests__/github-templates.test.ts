@@ -171,7 +171,9 @@ test('pull request metadata is checked from the trusted default branch', () => {
   const checkout = job?.steps?.find(({ uses }) => text(uses).startsWith('actions/checkout@'));
   assert.equal(checkout?.with?.ref, '$' + '{{ github.event.repository.default_branch }}');
   assert.ok(
-    job?.steps?.some(({ run }) => text(run).includes('scripts/evaluation/pr-contract.ts')),
+    job?.steps?.some(({ run }) =>
+      text(run).includes('scripts/evaluation/contracts/pr-contract.ts'),
+    ),
     'PR contract workflow must execute the repository validator',
   );
 });

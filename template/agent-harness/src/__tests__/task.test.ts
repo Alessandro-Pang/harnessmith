@@ -5,10 +5,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import lockfile from 'proper-lockfile';
 import { onTestFinished, test } from 'vitest';
-import { memoryCheck } from '../commands/memory.js';
-import { checkpointTask, closeTask, initTask, taskStatus } from '../commands/task.js';
-import { updateAcceptance } from '../commands/task-acceptance.js';
-import { verifyAcceptance } from '../commands/task-verification.js';
+import { memoryCheck } from '../commands/memory/memory.js';
+import { checkpointTask, closeTask, initTask, taskStatus } from '../commands/task/task.js';
+import { updateAcceptance } from '../commands/task/task-acceptance.js';
+import { verifyAcceptance } from '../commands/task/task-verification.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function projectFixture(): { project: string; runtime: ReturnType<typeof harnessRuntime> } {

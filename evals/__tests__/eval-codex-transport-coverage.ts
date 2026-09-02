@@ -3,7 +3,7 @@ import {
   buildCodexInvocation,
   createCodexHostEvalExecutor,
   runBoundedHostProcess,
-} from '../../scripts/evaluation/eval-codex-transport.js';
+} from '../../scripts/evaluation/codex/eval-codex-transport.js';
 
 const cwd = process.cwd();
 const signal = new AbortController().signal;

@@ -15,7 +15,7 @@ import { basename, dirname, join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { runCli } from '../cli.js';
 import { initGlobal } from '../commands/init.js';
-import * as memoryAutopilot from '../commands/memory-autopilot.js';
+import * as memoryAutopilot from '../commands/memory/memory-autopilot.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 test('Harness memory autopilot captures input and handoff with indexed documents', () => {

@@ -3,8 +3,8 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { routeDocumentation } from '../lib/docs-routing.js';
-import { resolveResponseLanguage } from '../lib/response-language.js';
+import { routeDocumentation } from '../lib/documentation/docs-routing.js';
+import { resolveResponseLanguage } from '../lib/routing/response-language.js';
 import { sourceHarnessRoot } from './helpers/harness.js';
 
 const docsRoot = join(sourceHarnessRoot, 'docs');

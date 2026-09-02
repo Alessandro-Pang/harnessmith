@@ -8,7 +8,7 @@ import {
   cleanupTrackedDirectories,
   snapshotDirectoryIdentity,
   writeValidated,
-} from '../lib/memory-write.js';
+} from '../lib/memory/memory-write.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function temporaryRoot(prefix: string): string {

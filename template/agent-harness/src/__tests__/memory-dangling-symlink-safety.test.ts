@@ -16,8 +16,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { initGlobal, initProject } from '../commands/init.js';
-import { captureInput } from '../commands/memory-input.js';
-import { maximumMemoryDocumentBytes } from '../lib/memory-path.js';
+import { captureInput } from '../commands/memory/memory-input.js';
+import { maximumMemoryDocumentBytes } from '../lib/memory/memory-path.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function fixture() {

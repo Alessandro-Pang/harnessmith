@@ -12,12 +12,12 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { memoryCheck } from '../commands/memory.js';
-import { checkpointTask, closeTask, initTask } from '../commands/task.js';
-import { verifyAcceptance } from '../commands/task-verification.js';
-import { contentMemoryReferences } from '../lib/memory-validation.js';
-import { modeMatches } from '../lib/portable-mode.js';
-import { writeTaskWithProgress } from '../lib/task-store.js';
+import { memoryCheck } from '../commands/memory/memory.js';
+import { checkpointTask, closeTask, initTask } from '../commands/task/task.js';
+import { verifyAcceptance } from '../commands/task/task-verification.js';
+import { contentMemoryReferences } from '../lib/memory/memory-validation.js';
+import { modeMatches } from '../lib/filesystem/portable-mode.js';
+import { writeTaskWithProgress } from '../lib/task/task-store.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function fixture(): { project: string; runtime: ReturnType<typeof harnessRuntime> } {

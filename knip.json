@@ -3,8 +3,8 @@
   "entry": [
     "bin/harnessmith.mjs",
     "docs/.vitepress/config.ts",
-    "scripts/evaluation/eval-gate.ts",
-    "scripts/evaluation/eval-run-schema.ts",
+    "scripts/evaluation/records/eval-gate.ts",
+    "scripts/evaluation/contracts/eval-run-schema.ts",
     "scripts/preflight/preflight.ts",
     "scripts/release/release-publish.ts",
     "template/agent-harness/bin/harness.mjs"

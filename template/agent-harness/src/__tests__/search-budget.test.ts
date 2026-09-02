@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { onTestFinished, test, vi } from 'vitest';
 import { runCli } from '../cli.js';
 import { initGlobal } from '../commands/init.js';
-import { outputSearch, searchText } from '../lib/search.js';
+import { outputSearch, searchText } from '../lib/search/search.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function temporaryRoot(): string {

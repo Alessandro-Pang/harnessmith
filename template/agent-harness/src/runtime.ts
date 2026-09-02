@@ -2,7 +2,7 @@ import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { homedir, userInfo } from 'node:os';
 import { basename, dirname, isAbsolute, join, relative, resolve, sep, win32 } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { canonicalPath, isPathInside } from './lib/safe-path.js';
+import { canonicalPath, isPathInside } from './lib/filesystem/safe-path.js';
 import type { InstallationContext, Runtime } from './types.js';
 
 const sourceDirectory = dirname(fileURLToPath(import.meta.url));

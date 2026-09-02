@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import { test } from 'vitest';
-import { runFirstValueLoop } from '../../scripts/evaluation/first-value-loop.js';
+import { runFirstValueLoop } from '../../scripts/evaluation/planning/first-value-loop.js';
 
 const root = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const readJson = (path: string) => JSON.parse(readFileSync(join(root, path), 'utf8'));

@@ -14,11 +14,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { initGlobal, initProject } from '../commands/init.js';
-import { memoryCheck, memoryList, memorySearch } from '../commands/memory.js';
-import { captureInput } from '../commands/memory-input.js';
-import { archiveMemory } from '../commands/memory-lifecycle.js';
-import { memoryMaintenance } from '../commands/memory-maintenance.js';
-import { maximumMemoryDocumentBytes } from '../lib/memory-path.js';
+import { memoryCheck, memoryList, memorySearch } from '../commands/memory/memory.js';
+import { captureInput } from '../commands/memory/memory-input.js';
+import { archiveMemory } from '../commands/memory/memory-lifecycle.js';
+import { memoryMaintenance } from '../commands/memory/memory-maintenance.js';
+import { maximumMemoryDocumentBytes } from '../lib/memory/memory-path.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function fixture(): string {

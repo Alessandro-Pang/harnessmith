@@ -4,8 +4,8 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import * as memoryAutopilot from '../commands/memory-autopilot.js';
-import { parseFrontmatterDocument } from '../lib/frontmatter.js';
+import * as memoryAutopilot from '../commands/memory/memory-autopilot.js';
+import { parseFrontmatterDocument } from '../lib/documentation/frontmatter.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 test('Handoff snapshots replace unrelated pivot fields without leaking prior task state', () => {

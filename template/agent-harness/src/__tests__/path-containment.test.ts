@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { join, resolve } from 'node:path';
 import { test } from 'vitest';
-import { isPathInside } from '../lib/safe-path.js';
+import { isPathInside } from '../lib/filesystem/safe-path.js';
 
 test('path containment distinguishes siblings from in-root dot-prefixed names', () => {
   const root = resolve('containment-root');

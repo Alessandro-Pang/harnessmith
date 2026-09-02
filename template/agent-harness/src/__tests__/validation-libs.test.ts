@@ -3,11 +3,11 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { routeDocumentation } from '../lib/docs-routing.js';
-import { validateDocs } from '../lib/docs-validation.js';
-import { memoryDocumentPath } from '../lib/memory-path.js';
-import { metadataReferences, validateMemoryRoot } from '../lib/memory-validation.js';
-import { outputTask } from '../lib/task-output.js';
+import { routeDocumentation } from '../lib/documentation/docs-routing.js';
+import { validateDocs } from '../lib/documentation/docs-validation.js';
+import { memoryDocumentPath } from '../lib/memory/memory-path.js';
+import { metadataReferences, validateMemoryRoot } from '../lib/memory/memory-validation.js';
+import { outputTask } from '../lib/task/task-output.js';
 import type { TaskSummary, ValidationReport } from '../types.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 

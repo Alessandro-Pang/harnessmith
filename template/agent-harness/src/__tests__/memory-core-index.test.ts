@@ -4,9 +4,9 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { memoryCheck } from '../commands/memory.js';
-import { captureHandoff, closeHandoff } from '../commands/memory-autopilot.js';
-import { captureInput } from '../commands/memory-input.js';
+import { memoryCheck } from '../commands/memory/memory.js';
+import { captureHandoff, closeHandoff } from '../commands/memory/memory-autopilot.js';
+import { captureInput } from '../commands/memory/memory-input.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function projectFixture(): { project: string; runtime: ReturnType<typeof harnessRuntime> } {

@@ -123,7 +123,7 @@ test('dependencies used only by the bundled Harness stay build-time dependencies
 
 test('Markdown AST traversal uses the maintained unist visitor', () => {
   const source = readFileSync(
-    join(root, 'template', 'agent-harness', 'src', 'lib', 'markdown-links.ts'),
+    join(root, 'template', 'agent-harness', 'src', 'lib', 'documentation', 'markdown-links.ts'),
     'utf8',
   );
 
@@ -151,7 +151,10 @@ test('built CLI preflight derives and exercises the complete Adapter set', () =>
 });
 
 test('release manifest comparison uses Node deep equality', () => {
-  const source = readFileSync(join(root, 'scripts', 'evaluation', 'eval-fingerprint.ts'), 'utf8');
+  const source = readFileSync(
+    join(root, 'scripts', 'evaluation', 'records', 'eval-fingerprint.ts'),
+    'utf8',
+  );
 
   assert.match(source, /import \{ isDeepStrictEqual \} from ['"]node:util['"]/);
   assert.match(source, /isDeepStrictEqual\(candidatePackage, currentPackage\)/);

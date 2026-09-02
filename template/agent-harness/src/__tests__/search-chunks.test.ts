@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { chunkSearchDocument } from '../lib/search-chunks.js';
-import { tokenizeSearchText } from '../lib/search-tokenizer.js';
+import { chunkSearchDocument } from '../lib/search/search-chunks.js';
+import { tokenizeSearchText } from '../lib/search/search-tokenizer.js';
 
 test('Markdown chunks preserve frontmatter title, heading lineage, and source lines', () => {
   const content = [

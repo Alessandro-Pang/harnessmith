@@ -13,10 +13,13 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { runCli } from '../cli.js';
-import type { SearchSource } from '../lib/search.js';
-import { searchCorpusDigest, serializeSearchIndexSnapshot } from '../lib/search-index-snapshot.js';
-import { queryLoadedIndex, searchIndexPath, searchWithIndex } from '../lib/search-index.js';
-import { loadCurrentIndex } from '../lib/search-index-store.js';
+import type { SearchSource } from '../lib/search/search.js';
+import {
+  searchCorpusDigest,
+  serializeSearchIndexSnapshot,
+} from '../lib/search/search-index-snapshot.js';
+import { queryLoadedIndex, searchIndexPath, searchWithIndex } from '../lib/search/search-index.js';
+import { loadCurrentIndex } from '../lib/search/search-index-store.js';
 import { assertMode, capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function fixture(): {

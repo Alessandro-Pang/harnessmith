@@ -2,10 +2,10 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join, sep } from 'node:path';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import addFormatsModule from 'ajv-formats';
-import { validateDocs } from '../lib/docs-validation.js';
-import { listFiles } from '../lib/files.js';
-import { projectSnapshot } from '../lib/project.js';
-import { addCheck as check } from '../lib/validation-report.js';
+import { validateDocs } from '../lib/documentation/docs-validation.js';
+import { listFiles } from '../lib/filesystem/files.js';
+import { projectSnapshot } from '../lib/project/project.js';
+import { addCheck as check } from '../lib/filesystem/validation-report.js';
 import type { Io, Runtime, ValidationReport, ValidationSummary } from '../types.js';
 import { errorMessage } from '../types.js';
 

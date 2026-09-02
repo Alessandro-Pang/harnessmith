@@ -12,7 +12,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { runCli } from '../cli.js';
-import { createHealthReport } from '../lib/health.js';
+import { createHealthReport } from '../lib/health/health.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function fixture() {

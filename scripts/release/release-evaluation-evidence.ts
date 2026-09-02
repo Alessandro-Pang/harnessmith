@@ -1,4 +1,7 @@
-import type { EvaluationEvidence, InheritedEvaluationSource } from '../evaluation/eval-contract.js';
+import type {
+  EvaluationEvidence,
+  InheritedEvaluationSource,
+} from '../evaluation/contracts/eval-contract.js';
 
 const sha256Pattern = /^[a-f0-9]{64}$/u;
 

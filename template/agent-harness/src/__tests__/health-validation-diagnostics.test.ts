@@ -4,8 +4,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test, vi } from 'vitest';
 
-vi.mock('../lib/memory-validation.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../lib/memory-validation.js')>();
+vi.mock('../lib/memory/memory-validation.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../lib/memory/memory-validation.js')>();
   return {
     ...actual,
     validateMemoryRoot(_root: string, io: { log(message: unknown): void }) {
@@ -15,7 +15,7 @@ vi.mock('../lib/memory-validation.js', async (importOriginal) => {
   };
 });
 
-import { createHealthReport } from '../lib/health.js';
+import { createHealthReport } from '../lib/health/health.js';
 import { harnessRuntime } from './helpers/harness.js';
 
 test('health preserves validator log diagnostics when a memory check fails', () => {

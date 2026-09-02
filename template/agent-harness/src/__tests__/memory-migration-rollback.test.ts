@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { beforeEach, onTestFinished, test, vi } from 'vitest';
 import { initGlobal } from '../commands/init.js';
-import { memoryMigrate } from '../commands/memory-migration.js';
+import { memoryMigrate } from '../commands/memory/memory-migration.js';
 import { assertMode, capturedIo, escapeRegExp, harnessRuntime } from './helpers/harness.js';
 
 const validationControl = vi.hoisted(() => ({
@@ -16,8 +16,8 @@ const validationControl = vi.hoisted(() => ({
   replacementPath: '',
 }));
 
-vi.mock('../lib/memory-validation.js', async (importOriginal) => {
-  const original = await importOriginal<typeof import('../lib/memory-validation.js')>();
+vi.mock('../lib/memory/memory-validation.js', async (importOriginal) => {
+  const original = await importOriginal<typeof import('../lib/memory/memory-validation.js')>();
   return {
     ...original,
     validateMemoryRoot: (...args: Parameters<typeof original.validateMemoryRoot>) => {

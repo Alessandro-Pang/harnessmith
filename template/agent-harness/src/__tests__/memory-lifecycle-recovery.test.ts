@@ -6,8 +6,8 @@ import { beforeEach, onTestFinished, test, vi } from 'vitest';
 
 const fault = vi.hoisted(() => ({ restorePath: '' }));
 
-vi.mock('../lib/files.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../lib/files.js')>();
+vi.mock('../lib/filesystem/files.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../lib/filesystem/files.js')>();
   return {
     ...actual,
     atomicWrite(path: string, content: string, mode?: number) {
@@ -20,7 +20,7 @@ vi.mock('../lib/files.js', async (importOriginal) => {
 });
 
 import { initGlobal } from '../commands/init.js';
-import { archiveMemory } from '../commands/memory-lifecycle.js';
+import { archiveMemory } from '../commands/memory/memory-lifecycle.js';
 import { calendarDate } from '../runtime.js';
 import { assertMode, capturedIo, escapeRegExp, harnessRuntime } from './helpers/harness.js';
 

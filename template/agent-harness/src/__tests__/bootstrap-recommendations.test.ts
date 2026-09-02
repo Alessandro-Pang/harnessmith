@@ -4,9 +4,9 @@ import {
   type BootstrapMemoryRead,
   type BootstrapMetadata,
   recommendedBootstrapReads,
-} from '../lib/bootstrap-memory.js';
-import type { MemoryCoreBudgetReport } from '../lib/memory-core-budget.js';
-import type { MemoryMaintenanceReport } from '../lib/memory-maintenance.js';
+} from '../lib/bootstrap/bootstrap-memory.js';
+import type { MemoryCoreBudgetReport } from '../lib/memory/memory-core-budget.js';
+import type { MemoryMaintenanceReport } from '../lib/memory/memory-maintenance.js';
 
 function metadata(path: string, status: string, requiresReverification = false): BootstrapMetadata {
   return {

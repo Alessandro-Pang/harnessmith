@@ -12,8 +12,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { parse } from 'yaml';
-import { parseFrontmatterDocument } from '../../template/agent-harness/src/lib/frontmatter.js';
-import { render as renderHarnessTemplate } from '../../template/agent-harness/src/lib/templates.js';
+import { parseFrontmatterDocument } from '../../template/agent-harness/src/lib/documentation/frontmatter.js';
+import { render as renderHarnessTemplate } from '../../template/agent-harness/src/lib/filesystem/templates.js';
 import type { Runtime } from '../../template/agent-harness/src/types.js';
 import {
   installationRenderer,

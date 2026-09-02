@@ -6,7 +6,7 @@ test('planner selects only scenarios mapped to a changed behavior source', () =>
   const result = run([
     'plan',
     '--changed-file',
-    'template/agent-harness/src/commands/search.ts',
+    'template/agent-harness/src/commands/search/search.ts',
     '--json',
   ]);
 
@@ -15,7 +15,7 @@ test('planner selects only scenarios mapped to a changed behavior source', () =>
     version: 1,
     tier: 'L2',
     reason: 'mapped-behavior-change',
-    changedFiles: ['template/agent-harness/src/commands/search.ts'],
+    changedFiles: ['template/agent-harness/src/commands/search/search.ts'],
     scenarios: ['progressive-disclosure'],
   });
 });

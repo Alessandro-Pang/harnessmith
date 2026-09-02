@@ -3,12 +3,12 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { resolveHandoffTarget } from '../lib/memory-handoff.js';
+import { resolveHandoffTarget } from '../lib/memory/memory-handoff.js';
 import {
   type HandoffGenerationState,
   validateHandoffGenerations,
-} from '../lib/memory-handoff-generation-rules.js';
-import { generatedHandoffSessionId } from '../lib/memory-handoff-identity.js';
+} from '../lib/memory/memory-handoff-generation-rules.js';
+import { generatedHandoffSessionId } from '../lib/memory/memory-handoff-identity.js';
 import { capturedIo } from './helpers/harness.js';
 
 function fixture(prefix: string): string {

@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { runCli } from '../cli.js';
 import { initGlobal } from '../commands/init.js';
-import { createHealthReport } from '../lib/health.js';
+import { createHealthReport } from '../lib/health/health.js';
 import {
   managedOutputWithinHome,
   resolveRuntimeIdentity,

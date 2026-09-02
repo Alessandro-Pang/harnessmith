@@ -10,8 +10,8 @@ const concurrencyFault = vi.hoisted(() => ({
   templatePath: '',
 }));
 
-vi.mock('../lib/templates.js', async (importOriginal) => {
-  const original = await importOriginal<typeof import('../lib/templates.js')>();
+vi.mock('../lib/filesystem/templates.js', async (importOriginal) => {
+  const original = await importOriginal<typeof import('../lib/filesystem/templates.js')>();
   return {
     ...original,
     render: (...args: Parameters<typeof original.render>) => {
@@ -27,8 +27,8 @@ vi.mock('../lib/templates.js', async (importOriginal) => {
   };
 });
 
-vi.mock('../lib/memory-core.js', async (importOriginal) => {
-  const original = await importOriginal<typeof import('../lib/memory-core.js')>();
+vi.mock('../lib/memory/memory-core.js', async (importOriginal) => {
+  const original = await importOriginal<typeof import('../lib/memory/memory-core.js')>();
   return {
     ...original,
     upsertCoreReference: (...args: Parameters<typeof original.upsertCoreReference>) => {
@@ -44,7 +44,7 @@ vi.mock('../lib/memory-core.js', async (importOriginal) => {
   };
 });
 
-import { initializeGlobalMemory } from '../lib/global-memory.js';
+import { initializeGlobalMemory } from '../lib/memory/global-memory.js';
 import { assertMode, escapeRegExp, harnessRuntime } from './helpers/harness.js';
 
 beforeEach(() => {

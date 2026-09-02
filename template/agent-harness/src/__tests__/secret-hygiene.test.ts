@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { containsHighConfidenceSecret, secretTextFiles } from '../lib/secret-hygiene.js';
+import { containsHighConfidenceSecret, secretTextFiles } from '../lib/security/secret-hygiene.js';
 
 test.each([
   '-----BEGIN ENCRYPTED PRIVATE KEY-----',

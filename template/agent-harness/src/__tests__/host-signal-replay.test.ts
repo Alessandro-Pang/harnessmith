@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { runCli } from '../cli.js';
 import { initProject } from '../commands/init.js';
-import { digestPath } from '../lib/files.js';
+import { digestPath } from '../lib/filesystem/files.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 test('a duplicate host signal replay leaves the persisted Handoff unchanged', () => {

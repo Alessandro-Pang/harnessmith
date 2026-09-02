@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { runCli } from '../cli.js';
-import { captureExperience } from '../commands/memory-experience.js';
+import { captureExperience } from '../commands/memory/memory-experience.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function fixture() {

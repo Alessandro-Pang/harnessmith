@@ -14,19 +14,19 @@ import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { runCli } from '../cli.js';
 import { initProject } from '../commands/init.js';
-import { memoryCheck, memoryList, memorySearch } from '../commands/memory.js';
-import { captureHandoff, closeHandoff } from '../commands/memory-autopilot.js';
-import { captureInput } from '../commands/memory-input.js';
-import { archiveMemory } from '../commands/memory-lifecycle.js';
-import { memoryMaintenance } from '../commands/memory-maintenance.js';
+import { memoryCheck, memoryList, memorySearch } from '../commands/memory/memory.js';
+import { captureHandoff, closeHandoff } from '../commands/memory/memory-autopilot.js';
+import { captureInput } from '../commands/memory/memory-input.js';
+import { archiveMemory } from '../commands/memory/memory-lifecycle.js';
+import { memoryMaintenance } from '../commands/memory/memory-maintenance.js';
 import {
   reconcileProfile,
   removeProfileEntry,
   setProfileAutopilot,
-} from '../commands/memory-profile.js';
-import { checkpointTask, closeTask, initTask, taskStatus } from '../commands/task.js';
-import { updateAcceptance } from '../commands/task-acceptance.js';
-import { verifyAcceptance } from '../commands/task-verification.js';
+} from '../commands/memory/memory-profile.js';
+import { checkpointTask, closeTask, initTask, taskStatus } from '../commands/task/task.js';
+import { updateAcceptance } from '../commands/task/task-acceptance.js';
+import { verifyAcceptance } from '../commands/task/task-verification.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function fixture() {

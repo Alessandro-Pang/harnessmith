@@ -5,15 +5,18 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { initProject } from '../commands/init.js';
-import { memoryCheck } from '../commands/memory.js';
+import { memoryCheck } from '../commands/memory/memory.js';
 import {
   memoryCoreBudget,
   memoryCoreHardByteLimit,
   memoryCoreMaxEntryBytes,
   memoryCoreSoftByteLimit,
-} from '../lib/memory-core-budget.js';
-import { memoryMaintenanceReport, memoryMaintenanceWarnings } from '../lib/memory-maintenance.js';
-import { writeValidated } from '../lib/memory-write.js';
+} from '../lib/memory/memory-core-budget.js';
+import {
+  memoryMaintenanceReport,
+  memoryMaintenanceWarnings,
+} from '../lib/memory/memory-maintenance.js';
+import { writeValidated } from '../lib/memory/memory-write.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function fixture() {

@@ -4,14 +4,14 @@ import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { closeTask, initTask } from '../commands/task.js';
-import { verifyAcceptance } from '../commands/task-verification.js';
+import { closeTask, initTask } from '../commands/task/task.js';
+import { verifyAcceptance } from '../commands/task/task-verification.js';
 import {
   captureScopeDigests,
   fileDigest,
   fileDigestIsFresh,
   scopeDigestsAreFresh,
-} from '../lib/task-verification-scope.js';
+} from '../lib/task/task-verification-scope.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function git(project: string, args: string[]): void {

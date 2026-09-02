@@ -7,12 +7,15 @@ import { basename, join } from 'node:path';
 import lockfile from 'proper-lockfile';
 import { onTestFinished, test } from 'vitest';
 import { initProject } from '../commands/init.js';
-import { curateMemory } from '../commands/memory-curation.js';
-import { captureFinding } from '../commands/memory-finding.js';
-import { captureInput } from '../commands/memory-input.js';
-import { supersedeMemory } from '../commands/memory-lifecycle.js';
-import { initTask } from '../commands/task.js';
-import { applyMemoryCuration, curationApplyLockRoot } from '../program/memory-curation-apply.js';
+import { curateMemory } from '../commands/memory/memory-curation.js';
+import { captureFinding } from '../commands/memory/memory-finding.js';
+import { captureInput } from '../commands/memory/memory-input.js';
+import { supersedeMemory } from '../commands/memory/memory-lifecycle.js';
+import { initTask } from '../commands/task/task.js';
+import {
+  applyMemoryCuration,
+  curationApplyLockRoot,
+} from '../program/memory/memory-curation-apply.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function fixture(taskId = 'curation-apply-lock-task') {

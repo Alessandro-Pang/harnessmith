@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { validatePullRequest } from '../../scripts/evaluation/pr-contract.js';
+import { validatePullRequest } from '../../scripts/evaluation/contracts/pr-contract.js';
 
 const validPullRequest = {
   title: 'feat(search): add indexed documentation search',

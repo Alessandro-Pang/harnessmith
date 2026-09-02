@@ -31,8 +31,8 @@ const templateReplacement = vi.hoisted(() => ({
   skip: 0,
 }));
 
-vi.mock('../lib/memory-validation.js', async (importOriginal) => {
-  const original = await importOriginal<typeof import('../lib/memory-validation.js')>();
+vi.mock('../lib/memory/memory-validation.js', async (importOriginal) => {
+  const original = await importOriginal<typeof import('../lib/memory/memory-validation.js')>();
   return {
     ...original,
     validateMemoryRoot: (...args: Parameters<typeof original.validateMemoryRoot>) => {
@@ -51,8 +51,8 @@ vi.mock('../lib/memory-validation.js', async (importOriginal) => {
   };
 });
 
-vi.mock('../lib/files.js', async (importOriginal) => {
-  const original = await importOriginal<typeof import('../lib/files.js')>();
+vi.mock('../lib/filesystem/files.js', async (importOriginal) => {
+  const original = await importOriginal<typeof import('../lib/filesystem/files.js')>();
   return {
     ...original,
     atomicWrite(path: string, content: string, mode?: number) {
@@ -66,8 +66,8 @@ vi.mock('../lib/files.js', async (importOriginal) => {
   };
 });
 
-vi.mock('../lib/bounded-file.js', async (importOriginal) => {
-  const original = await importOriginal<typeof import('../lib/bounded-file.js')>();
+vi.mock('../lib/filesystem/bounded-file.js', async (importOriginal) => {
+  const original = await importOriginal<typeof import('../lib/filesystem/bounded-file.js')>();
   return {
     ...original,
     readBoundedRegularFile: (...args: Parameters<typeof original.readBoundedRegularFile>) => {
@@ -86,8 +86,8 @@ vi.mock('../lib/bounded-file.js', async (importOriginal) => {
   };
 });
 
-vi.mock('../lib/templates.js', async (importOriginal) => {
-  const original = await importOriginal<typeof import('../lib/templates.js')>();
+vi.mock('../lib/filesystem/templates.js', async (importOriginal) => {
+  const original = await importOriginal<typeof import('../lib/filesystem/templates.js')>();
   return {
     ...original,
     render: (...args: Parameters<typeof original.render>) => {
@@ -107,14 +107,14 @@ vi.mock('../lib/templates.js', async (importOriginal) => {
 });
 
 import { initGlobal } from '../commands/init.js';
-import { archiveMemory } from '../commands/memory-lifecycle.js';
+import { archiveMemory } from '../commands/memory/memory-lifecycle.js';
 import {
   archiveMemoryAndValidate,
   replaceMemoryAndValidate,
   snapshotMemoryFile,
-} from '../lib/memory-lifecycle-transaction.js';
-import { writeValidated } from '../lib/memory-write.js';
-import { withProjectMemoryTransaction } from '../lib/project-memory.js';
+} from '../lib/memory/memory-lifecycle-transaction.js';
+import { writeValidated } from '../lib/memory/memory-write.js';
+import { withProjectMemoryTransaction } from '../lib/project/project-memory.js';
 import { calendarDate } from '../runtime.js';
 import { assertMode, capturedIo, escapeRegExp, harnessRuntime } from './helpers/harness.js';
 

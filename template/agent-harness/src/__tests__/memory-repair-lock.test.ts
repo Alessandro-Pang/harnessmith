@@ -6,8 +6,8 @@ import { join } from 'node:path';
 import lockfile from 'proper-lockfile';
 import { onTestFinished, test } from 'vitest';
 import { initProject } from '../commands/init.js';
-import { applyMemoryRepair, diagnoseMemoryRepair } from '../commands/memory-repair.js';
-import { canonicalPath } from '../lib/safe-path.js';
+import { applyMemoryRepair, diagnoseMemoryRepair } from '../commands/memory/memory-repair.js';
+import { canonicalPath } from '../lib/filesystem/safe-path.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 test('repair rejects an active memory lock and reclaims only the exact stale lock through typed acquisition', () => {

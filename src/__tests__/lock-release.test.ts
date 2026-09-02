@@ -9,7 +9,7 @@ const locks = vi.hoisted(() => ({ lockSync: vi.fn() }));
 
 vi.mock('proper-lockfile', () => ({ default: { lockSync: locks.lockSync } }));
 
-import { withExclusiveDirectoryLock } from '../../template/agent-harness/src/lib/exclusive-lock.js';
+import { withExclusiveDirectoryLock } from '../../template/agent-harness/src/lib/filesystem/exclusive-lock.js';
 import { adapterCapabilities } from '../adapters/adapters.js';
 import { withAdapterLocks } from '../installation/operation-lock.js';
 

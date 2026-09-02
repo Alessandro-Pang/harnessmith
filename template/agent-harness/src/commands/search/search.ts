@@ -1,0 +1,41 @@
+import { join, resolve } from 'node:path';
+import { gitRoot } from '../../lib/filesystem/git.js';
+import { outputSearch, type SearchOptions } from '../../lib/search/search.js';
+import { searchWithIndex } from '../../lib/search/search-index.js';
+import { assertNoHighConfidenceSecret } from '../../lib/security/secret-hygiene.js';
+import type { Io, Runtime } from '../../types.js';
+
+export function contextSearch(
+  runtime: Runtime,
+  query: string,
+  project = process.cwd(),
+  io: Io = console,
+  { json = false, ...options }: SearchOptions & { json?: boolean } = {},
+): number {
+  assertNoHighConfidenceSecret([query, project], 'Context search request');
+  const target = resolve(project);
+  const root = gitRoot(target) || target;
+  const report = searchWithIndex(
+    runtime,
+    query,
+    [
+      { root: runtime.docsRoot, label: 'harness-docs', trust: 'guidance' },
+      { root: join(root, 'docs'), label: 'project-docs', trust: 'untrusted' },
+      {
+        root: runtime.memoryHome,
+        label: 'global-memory',
+        trust: 'untrusted',
+        excludeDirectories: ['_archive'],
+      },
+      {
+        root: join(root, '.agent-docs'),
+        label: 'project-memory',
+        trust: 'untrusted',
+        excludeDirectories: ['_archive', 'host-evals'],
+      },
+    ],
+    options,
+  );
+  outputSearch(report, io, { json });
+  return report.matches.length > 0 ? 0 : 1;
+}

@@ -4,8 +4,8 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { captureHandoff, closeHandoff } from '../commands/memory-autopilot.js';
-import { initTask } from '../commands/task.js';
+import { captureHandoff, closeHandoff } from '../commands/memory/memory-autopilot.js';
+import { initTask } from '../commands/task/task.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function fixture() {

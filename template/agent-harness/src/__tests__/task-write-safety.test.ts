@@ -4,9 +4,9 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'no
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { checkpointTask, initTask } from '../commands/task.js';
-import { updateAcceptance } from '../commands/task-acceptance.js';
-import { writeTask, writeTaskWithProgress } from '../lib/task-store.js';
+import { checkpointTask, initTask } from '../commands/task/task.js';
+import { updateAcceptance } from '../commands/task/task-acceptance.js';
+import { writeTask, writeTaskWithProgress } from '../lib/task/task-store.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function projectFixture(): { project: string; runtime: ReturnType<typeof harnessRuntime> } {

@@ -5,10 +5,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { runCli } from '../cli.js';
-import { closeTask, initTask, taskStatus } from '../commands/task.js';
-import { updateAcceptance } from '../commands/task-acceptance.js';
-import { verifyAcceptance } from '../commands/task-verification.js';
-import { projectSnapshot } from '../lib/project.js';
+import { closeTask, initTask, taskStatus } from '../commands/task/task.js';
+import { updateAcceptance } from '../commands/task/task-acceptance.js';
+import { verifyAcceptance } from '../commands/task/task-verification.js';
+import { projectSnapshot } from '../lib/project/project.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function git(project: string, args: string[]): string {

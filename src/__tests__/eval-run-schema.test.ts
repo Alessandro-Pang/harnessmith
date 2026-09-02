@@ -10,7 +10,7 @@ import {
   generateEvalRunSchemaAdapterEnum,
   readEvalAdapterEnum,
   rewriteEvalAdapterEnumSource,
-} from '../../scripts/evaluation/eval-run-schema.js';
+} from '../../scripts/evaluation/contracts/eval-run-schema.js';
 import { evalAdapterEnum } from '../adapters/adapter-registry.js';
 
 test('applyEvalAdapterEnum rewrites only host.adapter.enum', () => {

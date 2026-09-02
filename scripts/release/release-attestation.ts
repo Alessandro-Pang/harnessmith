@@ -1,4 +1,7 @@
-import type { EvaluationEvidence, InheritedEvaluationSource } from '../evaluation/eval-contract.js';
+import type {
+  EvaluationEvidence,
+  InheritedEvaluationSource,
+} from '../evaluation/contracts/eval-contract.js';
 import {
   evaluationMatrix,
   type ReleaseRiskAcceptance,

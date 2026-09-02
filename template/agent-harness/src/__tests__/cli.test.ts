@@ -6,10 +6,10 @@ import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { digestPath } from '../../../../src/shared/files.js';
 import { runCli } from '../cli.js';
-import { doctor } from '../commands/doctor.js';
+import { doctor } from '../commands/health/doctor.js';
 import { initGlobal, initPersonal, initProject } from '../commands/init.js';
 import { validate } from '../commands/validate.js';
-import { render } from '../lib/templates.js';
+import { render } from '../lib/filesystem/templates.js';
 import { capturedIo, harnessRuntime, packageRoot, sourceHarnessRoot } from './helpers/harness.js';
 
 function installedFixture() {

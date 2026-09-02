@@ -1,8 +1,14 @@
 import { chmodSync, existsSync, lstatSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import writeFileAtomic from 'write-file-atomic';
-import type { EvaluationEvidence, InheritedEvaluationSource } from '../evaluation/eval-contract.js';
-import { repositoryRoot, requiredEvaluationAdapters } from '../evaluation/eval-fingerprint.js';
+import type {
+  EvaluationEvidence,
+  InheritedEvaluationSource,
+} from '../evaluation/contracts/eval-contract.js';
+import {
+  repositoryRoot,
+  requiredEvaluationAdapters,
+} from '../evaluation/records/eval-fingerprint.js';
 import { readNpmPackageTarball } from './npm-tarball.js';
 import {
   evaluationMatrix,

@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { checkEvalRunSchemaAdapterEnum } from '../evaluation/eval-run-schema.js';
+import { checkEvalRunSchemaAdapterEnum } from '../evaluation/contracts/eval-run-schema.js';
 
 type Check = (condition: unknown, message: string) => void;
 

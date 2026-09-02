@@ -5,10 +5,10 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { initProject } from '../commands/init.js';
-import { resolveMemoryRoot } from '../commands/memory.js';
-import { memoryPromotionProposal } from '../commands/memory-promotion.js';
-import { findingDigest } from '../lib/memory-finding.js';
-import { assertPromotionTargetType } from '../lib/memory-promotion-contract.js';
+import { resolveMemoryRoot } from '../commands/memory/memory.js';
+import { memoryPromotionProposal } from '../commands/memory/memory-promotion.js';
+import { findingDigest } from '../lib/memory/memory-finding.js';
+import { assertPromotionTargetType } from '../lib/memory/memory-promotion-contract.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function memoryDocument(title: string): string {

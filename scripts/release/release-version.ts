@@ -3,7 +3,7 @@ import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Command } from 'commander';
 import { execaSync } from 'execa';
-import { repositoryRoot } from '../evaluation/eval-fingerprint.js';
+import { repositoryRoot } from '../evaluation/records/eval-fingerprint.js';
 import {
   finalizeReleaseVersion,
   verifyCiRelease,

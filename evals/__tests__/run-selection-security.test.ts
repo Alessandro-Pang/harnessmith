@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync, renameSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'vitest';
-import { supportedAdapters } from '../../scripts/evaluation/eval-fingerprint.js';
+import { supportedAdapters } from '../../scripts/evaluation/records/eval-fingerprint.js';
 import { currentFingerprint, root, run, temporaryDirectory, writeRun } from './run-fixture.js';
 
 function writePassingMatrix(runsDirectory: string, evaluatedAt: string): void {

@@ -3,10 +3,10 @@ import { dirname, extname, join, relative, resolve, sep } from 'node:path';
 import { fdir } from 'fdir';
 import { parse } from 'yaml';
 import { supportedAgentNames } from '../../src/shared/agents.js';
-import { parseFrontmatterDocument } from '../../template/agent-harness/src/lib/frontmatter.js';
-import { markdownLinkTargets } from '../../template/agent-harness/src/lib/markdown-links.js';
+import { parseFrontmatterDocument } from '../../template/agent-harness/src/lib/documentation/frontmatter.js';
+import { markdownLinkTargets } from '../../template/agent-harness/src/lib/documentation/markdown-links.js';
 import { capabilityEvidenceIssues } from '../evaluation/capability-evidence.js';
-import { promptRuleContractIssues } from '../benchmarks/prompt-rule-contract.js';
+import { promptRuleContractIssues } from '../benchmarks/prompt-route/prompt-rule-contract.js';
 
 interface ManifestEntry {
   actionAliases?: unknown;

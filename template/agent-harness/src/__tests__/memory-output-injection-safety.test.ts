@@ -5,8 +5,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { initProject } from '../commands/init.js';
-import { memoryList } from '../commands/memory.js';
-import { memoryMaintenance } from '../commands/memory-maintenance.js';
+import { memoryList } from '../commands/memory/memory.js';
+import { memoryMaintenance } from '../commands/memory/memory-maintenance.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function memoryDocument(title: string): string {

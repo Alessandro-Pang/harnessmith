@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { runCli } from '../cli.js';
-import { evaluateReplayContract } from '../lib/replay-contract.js';
+import { evaluateReplayContract } from '../lib/replay/replay-contract.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 const exactReplay = {

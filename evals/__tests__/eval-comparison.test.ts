@@ -100,7 +100,7 @@ test('Host evidence comparison CLI emits the versioned deterministic JSON contra
     [
       '--import',
       'tsx',
-      join(root, 'scripts', 'evaluation', 'eval-gate.ts'),
+      join(root, 'scripts', 'evaluation', 'records', 'eval-gate.ts'),
       'compare',
       '--baseline-runs-dir',
       options.baselineRunsDirectory,

@@ -5,8 +5,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { initProject } from '../commands/init.js';
-import { applyMemoryRepair, diagnoseMemoryRepair } from '../commands/memory-repair.js';
-import { repairJournalPaths } from '../lib/memory-repair-journal.js';
+import { applyMemoryRepair, diagnoseMemoryRepair } from '../commands/memory/memory-repair.js';
+import { repairJournalPaths } from '../lib/memory/memory-repair-journal.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 test('repair never masks rollback failure and retains changed target plus exact recovery paths', () => {

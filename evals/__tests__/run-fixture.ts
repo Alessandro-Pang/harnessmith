@@ -10,7 +10,7 @@ import type { AgentName } from '../../src/shared/types.js';
 import { writeCandidateTarball } from './tarball-fixture.js';
 
 export const root = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
-const entry = join(root, 'scripts', 'evaluation', 'eval-gate.ts');
+const entry = join(root, 'scripts', 'evaluation', 'records', 'eval-gate.ts');
 const candidateDirectory = mkdtempSync(join(tmpdir(), 'harnessmith-eval-candidate-'));
 export const candidateArtifact = join(candidateDirectory, 'harnessmith-test-candidate.tgz');
 writeCandidateTarball(candidateArtifact, root);

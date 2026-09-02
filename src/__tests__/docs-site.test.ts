@@ -248,7 +248,10 @@ test('cross-repository relationships remain a first-class public capability', ()
   assert.match(english, /reference\/runtime-cli#repository-map/);
   assert.match(architecture, /Repository Map/);
   assert.match(evidence, /id: cross-repository-map/);
-  assert.match(evidence, /template\/agent-harness\/src\/commands\/repository-map\.ts/);
+  assert.match(
+    evidence,
+    /template\/agent-harness\/src\/commands\/repository-map\/repository-map\.ts/,
+  );
   assert.match(evidence, /template\/agent-harness\/src\/__tests__\/repository-map\.test\.ts/);
 });
 

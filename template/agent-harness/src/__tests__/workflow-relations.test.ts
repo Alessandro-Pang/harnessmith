@@ -6,9 +6,9 @@ import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { runCli } from '../cli.js';
 import { initProject } from '../commands/init.js';
-import { initTask } from '../commands/task.js';
-import { workflowRelations } from '../commands/workflow-relations.js';
-import { buildWorkflowRelationReport } from '../lib/workflow-relations.js';
+import { initTask } from '../commands/task/task.js';
+import { workflowRelations } from '../commands/workflow/workflow-relations.js';
+import { buildWorkflowRelationReport } from '../lib/workflow/workflow-relations.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 test('relation model reports owners, lifecycle roles, orphans, and cross-workstream conflicts', () => {

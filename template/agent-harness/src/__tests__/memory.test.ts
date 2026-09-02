@@ -14,9 +14,14 @@ import { join } from 'node:path';
 import lockfile from 'proper-lockfile';
 import { onTestFinished, test } from 'vitest';
 import { initGlobal, initPersonal, initProject } from '../commands/init.js';
-import { memoryCheck, memoryList, memorySearch, resolveMemoryRoot } from '../commands/memory.js';
-import { contextSearch } from '../commands/search.js';
-import { parseFrontmatter } from '../lib/frontmatter.js';
+import {
+  memoryCheck,
+  memoryList,
+  memorySearch,
+  resolveMemoryRoot,
+} from '../commands/memory/memory.js';
+import { contextSearch } from '../commands/search/search.js';
+import { parseFrontmatter } from '../lib/documentation/frontmatter.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function temporaryRoot(): string {

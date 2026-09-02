@@ -5,13 +5,13 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test, vi } from 'vitest';
 import { initProject } from '../commands/init.js';
-import { type CurationApplySelection, curateMemory } from '../commands/memory-curation.js';
-import { captureFinding } from '../commands/memory-finding.js';
-import { captureInput } from '../commands/memory-input.js';
-import { initTask } from '../commands/task.js';
-import { digestPath } from '../lib/files.js';
-import { readTask } from '../lib/task-store.js';
-import { applyMemoryCuration, memoryCuration } from '../program/memory-curation-apply.js';
+import { type CurationApplySelection, curateMemory } from '../commands/memory/memory-curation.js';
+import { captureFinding } from '../commands/memory/memory-finding.js';
+import { captureInput } from '../commands/memory/memory-input.js';
+import { initTask } from '../commands/task/task.js';
+import { digestPath } from '../lib/filesystem/files.js';
+import { readTask } from '../lib/task/task-store.js';
+import { applyMemoryCuration, memoryCuration } from '../program/memory/memory-curation-apply.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function fixture(taskId = 'curation-apply-task') {

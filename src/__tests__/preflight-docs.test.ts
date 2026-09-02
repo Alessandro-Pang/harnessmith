@@ -9,7 +9,7 @@ import {
   invalidManifestRouteMetadata,
   missingCanonicalRouteIds,
 } from '../../scripts/preflight/preflight-docs.js';
-import { promptRuleContractIssues } from '../../scripts/benchmarks/prompt-rule-contract.js';
+import { promptRuleContractIssues } from '../../scripts/benchmarks/prompt-route/prompt-rule-contract.js';
 
 test('trusted docs traversal returns filtered full paths in deterministic order', () => {
   const root = mkdtempSync(join(tmpdir(), 'harness-preflight-docs-'));

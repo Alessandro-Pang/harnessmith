@@ -5,12 +5,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { runCli } from '../cli.js';
-import { captureFinding } from '../commands/memory-finding.js';
-import { findingDigest } from '../lib/memory-finding.js';
+import { captureFinding } from '../commands/memory/memory-finding.js';
+import { findingDigest } from '../lib/memory/memory-finding.js';
 import {
   validateExperienceSemantics,
   validateFindingDocument,
-} from '../lib/memory-finding-document-rules.js';
+} from '../lib/memory/memory-finding-document-rules.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function fixture() {

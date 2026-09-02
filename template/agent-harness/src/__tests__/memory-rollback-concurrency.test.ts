@@ -19,8 +19,8 @@ const atomicFault = vi.hoisted(() => ({
   path: '',
 }));
 
-vi.mock('../lib/memory-validation.js', async (importOriginal) => {
-  const original = await importOriginal<typeof import('../lib/memory-validation.js')>();
+vi.mock('../lib/memory/memory-validation.js', async (importOriginal) => {
+  const original = await importOriginal<typeof import('../lib/memory/memory-validation.js')>();
   return {
     ...original,
     validateMemoryRoot: (...args: Parameters<typeof original.validateMemoryRoot>) => {
@@ -38,8 +38,8 @@ vi.mock('../lib/memory-validation.js', async (importOriginal) => {
   };
 });
 
-vi.mock('../lib/files.js', async (importOriginal) => {
-  const original = await importOriginal<typeof import('../lib/files.js')>();
+vi.mock('../lib/filesystem/files.js', async (importOriginal) => {
+  const original = await importOriginal<typeof import('../lib/filesystem/files.js')>();
   return {
     ...original,
     atomicWrite(path: string, content: string, mode?: number) {
@@ -57,11 +57,11 @@ vi.mock('../lib/files.js', async (importOriginal) => {
 });
 
 import { initGlobal, initProject } from '../commands/init.js';
-import { archiveMemory, supersedeMemory } from '../commands/memory-lifecycle.js';
-import { reconcileProfile } from '../commands/memory-profile.js';
-import { initTask } from '../commands/task.js';
-import { updateAcceptance } from '../commands/task-acceptance.js';
-import { writeValidated } from '../lib/memory-write.js';
+import { archiveMemory, supersedeMemory } from '../commands/memory/memory-lifecycle.js';
+import { reconcileProfile } from '../commands/memory/memory-profile.js';
+import { initTask } from '../commands/task/task.js';
+import { updateAcceptance } from '../commands/task/task-acceptance.js';
+import { writeValidated } from '../lib/memory/memory-write.js';
 import { calendarDate } from '../runtime.js';
 import { assertMode, capturedIo, escapeRegExp, harnessRuntime } from './helpers/harness.js';
 

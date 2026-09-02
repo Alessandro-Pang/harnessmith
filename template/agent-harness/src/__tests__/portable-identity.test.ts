@@ -5,11 +5,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { initProject } from '../commands/init.js';
-import { memoryCheck } from '../commands/memory.js';
-import { initTask, taskStatus } from '../commands/task.js';
-import { assertHandoffSessionId } from '../lib/memory-handoff-identity.js';
-import { validatePortableMemoryPaths } from '../lib/memory-root-path-rules.js';
-import { canonicalTaskLedgerId } from '../lib/task-ledger-memory.js';
+import { memoryCheck } from '../commands/memory/memory.js';
+import { initTask, taskStatus } from '../commands/task/task.js';
+import { assertHandoffSessionId } from '../lib/memory/memory-handoff-identity.js';
+import { validatePortableMemoryPaths } from '../lib/memory/memory-root-path-rules.js';
+import { canonicalTaskLedgerId } from '../lib/task/task-ledger-memory.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function fixture(): {

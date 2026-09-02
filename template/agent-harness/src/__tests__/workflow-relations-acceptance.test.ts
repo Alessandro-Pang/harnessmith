@@ -5,10 +5,10 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { initProject } from '../commands/init.js';
-import { initTask } from '../commands/task.js';
-import { verifyAcceptance } from '../commands/task-verification.js';
-import { renderHandoff } from '../lib/memory-handoff.js';
-import { assertAcceptanceEvidenceRole } from '../lib/workflow-relations.js';
+import { initTask } from '../commands/task/task.js';
+import { verifyAcceptance } from '../commands/task/task-verification.js';
+import { renderHandoff } from '../lib/memory/memory-handoff.js';
+import { assertAcceptanceEvidenceRole } from '../lib/workflow/workflow-relations.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 test('a Handoff recovery snapshot cannot satisfy file acceptance evidence', () => {

@@ -4,9 +4,9 @@ import { tmpdir } from 'node:os';
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { onTestFinished, test } from 'vitest';
-import type { SearchReport, SearchSource } from '../lib/search.js';
-import { searchText } from '../lib/search.js';
-import { searchWithIndex } from '../lib/search-index.js';
+import type { SearchReport, SearchSource } from '../lib/search/search.js';
+import { searchText } from '../lib/search/search.js';
+import { searchWithIndex } from '../lib/search/search-index.js';
 import { harnessRuntime } from './helpers/harness.js';
 
 interface GoldenQuery {

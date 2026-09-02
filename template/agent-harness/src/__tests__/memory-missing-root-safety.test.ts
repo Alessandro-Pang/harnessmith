@@ -4,8 +4,8 @@ import { existsSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { archiveMemory, supersedeMemory } from '../commands/memory-lifecycle.js';
-import { memoryMigrate } from '../commands/memory-migration.js';
+import { archiveMemory, supersedeMemory } from '../commands/memory/memory-lifecycle.js';
+import { memoryMigrate } from '../commands/memory/memory-migration.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 test('maintenance mutations never initialize a missing project memory root', () => {

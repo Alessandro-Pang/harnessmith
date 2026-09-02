@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { aggregateProfileObservations } from '../lib/memory-profile-observations.js';
+import { aggregateProfileObservations } from '../lib/memory/memory-profile-observations.js';
 
 test('promotes repeated matching observations into a proposed profile candidate', () => {
   const result = aggregateProfileObservations([

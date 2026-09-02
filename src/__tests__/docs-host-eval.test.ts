@@ -35,7 +35,7 @@ test('Host Eval docs expose dependency-scoped incremental selection', () => {
   }
   const capabilities = read('docs/capability-evidence.yaml');
   assert.match(capabilities, /id: incremental-host-eval-selection/);
-  assert.match(capabilities, /scripts\/evaluation\/eval-planning\.ts/);
+  assert.match(capabilities, /scripts\/evaluation\/planning\/eval-planning\.ts/);
   assert.match(capabilities, /evals\/__tests__\/eval-planning\.test\.ts/);
 });
 
@@ -50,7 +50,7 @@ test('Host Eval docs expose bounded parallel runner and circuit breaker', () => 
     assert.match(content, /infra-blocked/);
   }
   assert.match(capabilities, /id: bounded-host-eval-runner/);
-  assert.match(capabilities, /scripts\/evaluation\/eval-runner\.ts/);
+  assert.match(capabilities, /scripts\/evaluation\/planning\/eval-runner\.ts/);
   assert.match(capabilities, /evals\/__tests__\/eval-runner\.test\.ts/);
 });
 

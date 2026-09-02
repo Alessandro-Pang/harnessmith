@@ -6,7 +6,7 @@ import {
   evaluationFingerprint,
   repositoryRoot,
   requiredEvaluationAdapters,
-} from '../evaluation/eval-fingerprint.js';
+} from '../evaluation/records/eval-fingerprint.js';
 import {
   createReleaseAttestation,
   type ReleaseAttestation,

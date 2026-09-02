@@ -4,13 +4,13 @@ import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSyn
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { bootstrapMetadataLimit, bootstrapProject } from '../commands/bootstrap.js';
+import { bootstrapMetadataLimit, bootstrapProject } from '../commands/bootstrap/bootstrap.js';
 import { initProject } from '../commands/init.js';
-import { captureFinding } from '../commands/memory-finding.js';
-import { initTask } from '../commands/task.js';
-import { readBootstrapMemory } from '../lib/bootstrap-memory.js';
-import { memoryCoreHardByteLimit } from '../lib/memory-core-budget.js';
-import { projectSnapshot } from '../lib/project.js';
+import { captureFinding } from '../commands/memory/memory-finding.js';
+import { initTask } from '../commands/task/task.js';
+import { readBootstrapMemory } from '../lib/bootstrap/bootstrap-memory.js';
+import { memoryCoreHardByteLimit } from '../lib/memory/memory-core-budget.js';
+import { projectSnapshot } from '../lib/project/project.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function fixture({ git = true }: { git?: boolean } = {}) {

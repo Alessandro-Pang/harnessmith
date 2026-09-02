@@ -4,17 +4,17 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'no
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { shellArgument } from '../../scripts/evaluation/eval-codex-canary-common.js';
+import { shellArgument } from '../../scripts/evaluation/codex/eval-codex-canary-common.js';
 import {
   evaluateMachineErrorEvidence,
   validateCanaryOptions,
-} from '../../scripts/evaluation/eval-codex-canary-contract.js';
-import { writeCanaryEvidence } from '../../scripts/evaluation/eval-codex-canary-evidence.js';
-import { prepareMachineErrorCanary } from '../../scripts/evaluation/eval-codex-canary-fixture.js';
+} from '../../scripts/evaluation/codex/eval-codex-canary-contract.js';
+import { writeCanaryEvidence } from '../../scripts/evaluation/codex/eval-codex-canary-evidence.js';
+import { prepareMachineErrorCanary } from '../../scripts/evaluation/codex/eval-codex-canary-fixture.js';
 import {
   executePreparedMachineErrorCanary,
   type MachineErrorCanaryResult,
-} from '../../scripts/evaluation/eval-codex-canary-run.js';
+} from '../../scripts/evaluation/codex/eval-codex-canary-run.js';
 import { writeCandidateTarball } from './tarball-fixture.js';
 
 const root = dirname(dirname(dirname(fileURLToPath(import.meta.url))));

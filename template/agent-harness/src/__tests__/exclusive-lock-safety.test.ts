@@ -34,7 +34,7 @@ vi.mock('proper-lockfile', () => ({
   },
 }));
 
-import { withExclusiveDirectoryLock } from '../lib/exclusive-lock.js';
+import { withExclusiveDirectoryLock } from '../lib/filesystem/exclusive-lock.js';
 
 beforeEach(() => {
   lockControl.outside = '';

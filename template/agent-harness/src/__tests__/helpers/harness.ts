@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { modeMatches } from '../../lib/portable-mode.js';
+import { modeMatches } from '../../lib/filesystem/portable-mode.js';
 import type { Io, Runtime } from '../../types.js';
 
 export const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../../../..');

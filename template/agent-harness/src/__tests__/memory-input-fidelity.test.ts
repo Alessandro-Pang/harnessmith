@@ -13,14 +13,14 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { memoryCheck } from '../commands/memory.js';
-import { captureInput, maximumInputContentBytes } from '../commands/memory-input.js';
-import { closeInput } from '../commands/memory-input-close.js';
-import { archiveMemory } from '../commands/memory-lifecycle.js';
-import { reconcileProfile, removeProfileEntry } from '../commands/memory-profile.js';
-import { parseFrontmatterDocument } from '../lib/frontmatter.js';
-import { parseInputBody } from '../lib/memory-input.js';
-import { withProjectMemoryTransaction } from '../lib/project-memory.js';
+import { memoryCheck } from '../commands/memory/memory.js';
+import { captureInput, maximumInputContentBytes } from '../commands/memory/memory-input.js';
+import { closeInput } from '../commands/memory/memory-input-close.js';
+import { archiveMemory } from '../commands/memory/memory-lifecycle.js';
+import { reconcileProfile, removeProfileEntry } from '../commands/memory/memory-profile.js';
+import { parseFrontmatterDocument } from '../lib/documentation/frontmatter.js';
+import { parseInputBody } from '../lib/memory/memory-input.js';
+import { withProjectMemoryTransaction } from '../lib/project/project-memory.js';
 import { assertMode, capturedIo, harnessRuntime } from './helpers/harness.js';
 
 function fixture(prefix: string) {

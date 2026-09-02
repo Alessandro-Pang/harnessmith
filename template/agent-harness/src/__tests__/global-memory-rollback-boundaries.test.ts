@@ -12,7 +12,10 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { initializeGlobalMemory, withGlobalMemoryTransaction } from '../lib/global-memory.js';
+import {
+  initializeGlobalMemory,
+  withGlobalMemoryTransaction,
+} from '../lib/memory/global-memory.js';
 import { assertMode, harnessRuntime } from './helpers/harness.js';
 
 function fixture(prefix: string) {
