@@ -1,7 +1,7 @@
 # Harnessmith
 
 > Harnessmith is a cross-host Personal Harness distribution and work-state control plane for Codex, Cursor,
-> Claude Code, OpenCode, and Kimi Code CLI.
+> Claude Code, OpenCode, Kimi Code CLI, and DeepSeek Harness.
 > This file is an operational guide for an LLM helping a user install or initialize it.
 
 Project: https://www.npmjs.com/package/harnessmith
@@ -47,12 +47,28 @@ use the published `npx --yes harnessmith` commands below.
   - Instructions: `$KIMI_CODE_HOME/AGENTS.md`, default `~/.kimi-code/AGENTS.md`
   - Harness: `agent-harness` under the same effective Kimi Code CLI data directory
   - Supports Kimi Code CLI `0.12.0` or newer; does not target legacy Python `kimi-cli` data at `~/.kimi/`
+- `deepseek` (aliases: `dsh`, `deepseek-harness`)
+  - Official coordinates: `deepseek-ai/deepseek-harness`, package `@deepseek-ai/dsh`, executable `dsh`
+  - Instructions: `$DSH_HOME/AGENTS.md` when set to a non-empty value; otherwise `~/.dsh/AGENTS.md`
+  - Harness: `agent-harness` under the same effective DeepSeek Harness home
+  - Contract source: `@deepseek-ai/dsh-agent-instructions` user-global baseline only
+  - Validated revision (maintainer manual + install lifecycle tests):
+    `@deepseek-ai/dsh@0.1.1-rc.2`, `@deepseek-ai/dsh-agent-instructions@0.1.1-rc.2`, upstream tag
+    `dsh-v0.1.1-rc.2`, commit `b150a551b8d465e31e418e1b2eaf5e79bbb7d28e`
+  - Support range: compatibility is claimed only for that pinned npm release and upstream revision;
+    DeepSeek Harness is developer-preview and other versions are unsupported until re-validated (not a
+    minimum-version guarantee)
+  - Out of scope: project-root / nested `AGENTS.md`/`CLAUDE.md` candidates and local overlays; Cordis
+    patches; `settings.yaml`; credentials; permissions, sandbox, tool allowlists, and approval
+  - Do not tell the user that installing the file enforces DSH security controls or verifies a real
+    Session baseline; file presence is not Host Eval evidence
 
 ## LLM installation protocol
 
 1. Verify the runtime with `node --version`. Stop and explain the requirement if Node.js is older than 24.12.
 2. Determine the exact agent selection from the user's request. Accepted values are `codex`, `cursor`,
-   `claude`, `claude-code`, `opencode`, `kimi`, `kimi-code`, and `all`. Never infer `all` from an ambiguous request.
+   `claude`, `claude-code`, `opencode`, `kimi`, `kimi-code`, `deepseek`, `dsh`, `deepseek-harness`, and
+   `all`. Never infer `all` from an ambiguous request.
 3. If Cursor is selected, determine the intended project path. Ask the user if more than one repository is
    plausible. Prefer an absolute path.
 4. Preview resolved destinations before writing:

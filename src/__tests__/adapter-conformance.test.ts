@@ -3,15 +3,15 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
-  readFileSync,
   readdirSync,
+  readFileSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { adapterRegistry, type AgentName } from '../adapter-registry.js';
+import { type AgentName, adapterRegistry } from '../adapter-registry.js';
 import { createAdapter } from '../adapters.js';
 import { installAll } from '../install.js';
 import { restoreAll, statusAll, uninstallAll } from '../lifecycle.js';
@@ -30,6 +30,7 @@ function fixture(prefix: string) {
     CLAUDE_CONFIG_DIR: join(root, 'claude'),
     OPENCODE_CONFIG_DIR: join(root, 'opencode'),
     KIMI_CODE_HOME: join(root, 'kimi'),
+    DSH_HOME: join(root, 'dsh'),
     HARNESS_MEMORY_HOME: join(root, 'memory'),
     HARNESS_PERSONAL_HOME: join(root, 'personal'),
     HARNESS_REPOSITORY_ROOT: join(root, 'repositories'),

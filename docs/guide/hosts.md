@@ -6,7 +6,7 @@ owner: maintainers
 
 # 宿主支持
 
-Harnessmith 当前为五类 Coding Agent 提供 Adapter。Adapter 负责路径与文件格式适配，不会替代宿主自身的
+Harnessmith 当前为六类 Coding Agent 提供 Adapter。Adapter 负责路径与文件格式适配，不会替代宿主自身的
 模型循环、工具调度、sandbox 或权限批准。
 
 | 宿主 | `--agent` | 默认规则入口 | 范围与激活 |
@@ -16,6 +16,7 @@ Harnessmith 当前为五类 Coding Agent 提供 Adapter。Adapter 负责路径�
 | Claude Code | `claude`（别名 `claude-code`） | `${CLAUDE_CONFIG_DIR:-~/.claude}/AGENTS.md` 与 `CLAUDE.md` | 全局；宿主默认 |
 | OpenCode | `opencode` | `${OPENCODE_CONFIG_DIR:-${XDG_CONFIG_HOME:-~/.config}/opencode}/AGENTS.md` | 全局；宿主默认 |
 | Kimi Code CLI | `kimi`（别名 `kimi-code`） | `${KIMI_CODE_HOME:-~/.kimi-code}/AGENTS.md` | 全局；宿主默认 |
+| DeepSeek Harness | `deepseek`（别名 `dsh`、`deepseek-harness`） | `${DSH_HOME:-~/.dsh}/AGENTS.md` | 全局；宿主默认 |
 
 可以用机器可读输出核对当前版本的 Adapter 声明：
 
@@ -34,7 +35,13 @@ npx harnessmith capabilities --json
 
 Cursor 只把 Harnessmith 自己管理的文件写入 repository-local Git exclude 与 `.cursor/.ignore`，不会隐藏或覆盖团队已有的
 整个 `.cursor/` 目录。Kimi Adapter 面向当前 TypeScript/Node.js 实现的 Kimi Code CLI，并使用 `KIMI_CODE_HOME`；它不接管
-旧 Python `kimi-cli` 使用的 `~/.kimi/` 目录。精确兼容要求以对应 npm 发布包中的 `llms.txt` 为准。
+旧 Python `kimi-cli` 使用的 `~/.kimi/` 目录。DeepSeek Adapter 面向官方 `dsh` / `@deepseek-ai/dsh`，只托管用户全局
+`$DSH_HOME/AGENTS.md`；项目根/嵌套候选、权限与 sandbox 仍由宿主负责。
+
+DeepSeek 兼容性**仅针对已验证 revision** 声明：`@deepseek-ai/dsh@0.1.1-rc.2`、
+`@deepseek-ai/dsh-agent-instructions@0.1.1-rc.2`、上游 tag `dsh-v0.1.1-rc.2`（commit
+`b150a551b8d465e31e418e1b2eaf5e79bbb7d28e`）。developer preview 下其他版本在重新验证前不视为已支持。完整边界见
+[架构设计 — DeepSeek Harness 契约来源与验证边界](/architecture#deepseek-harness-契约来源与验证边界)。
 
 ## 支持状态如何解释
 

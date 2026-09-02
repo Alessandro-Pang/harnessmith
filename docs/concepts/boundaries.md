@@ -25,7 +25,7 @@ owner: maintainers
 ## Coding Agent 宿主保证什么
 
 模型循环、上下文压缩、工具/MCP 调度、sandbox、网络访问、权限提示、凭据管理、token/成本与事件真实性属于 Codex、
-Cursor、Claude Code、OpenCode 或 Kimi Code CLI。Harnesssmith 可以提供建议和接入点，但不能替宿主执行这些职责。
+Cursor、Claude Code、OpenCode、Kimi Code CLI 或 DeepSeek Harness。Harnesssmith 可以提供建议和接入点，但不能替宿主执行这些职责。
 
 例如，Harnesssmith 可以写明“远端写入需要明确授权”，但真正阻止一次未经批准的网络调用，需要宿主权限系统和用户
 审批；Markdown 本身不是 sandbox。

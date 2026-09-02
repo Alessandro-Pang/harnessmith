@@ -38,7 +38,7 @@ Publishing is a maintainer-authorized external write. Never publish only because
 
 3. For a changed behavior fingerprint, run every affected scenario in `evals/scenarios.json` against every
    real host required by the checked-in release policy. The current required host is Codex; Cursor, Claude
-   Code, OpenCode, and Kimi Code CLI remain supported optional evidence. A rules/runtime/safety-boundary change invalidates the complete
+   Code, OpenCode, Kimi Code CLI, and DeepSeek Harness remain supported optional evidence. A rules/runtime/safety-boundary change invalidates the complete
    matrix; a scenario-only change invalidates that scenario. A metadata-only release may reuse fresh compatible
    records. Preserve only redacted
    transcripts and local evidence artifacts, set `recordType: host-evaluation`, and bind the records to the
