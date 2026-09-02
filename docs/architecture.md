@@ -7,7 +7,8 @@ owner: maintainers
 # Harnessmith 架构设计
 
 Harnessmith 是**跨 Host 的 Personal Harness 分发与工作状态控制层**。它把一套宿主中立的规则、文档和本地 Runtime
-安全地接入 Codex、Cursor、Claude Code、OpenCode 与 Kimi Code CLI，但不替代这些宿主的 Agent Runtime。
+安全地接入 Codex、Cursor、Claude Code、OpenCode、Kimi Code CLI 与 DeepSeek Harness，但不替代这些宿主的 Agent
+Runtime。
 
 公开能力始终分成三种状态：**已实现（Implemented）** 表示代码与可执行证据都存在；**由宿主负责（Delegated to the
 Host）** 表示 Harnessmith 只提供 guidance 或接入点；**不支持（Unsupported）** 表示当前明确不声称拥有。逐项 owner
@@ -100,10 +101,34 @@ capabilities 输出与 Eval `host.adapter` 枚举都从该清单派生或与之�
 | Claude Code | global | Markdown | host-default | host |
 | OpenCode | global | Markdown | host-default | host |
 | Kimi Code CLI | global | Markdown | host-default | host |
+| DeepSeek Harness | global | Markdown | host-default | host |
 | Cursor | project | AGENTS.md + MDC | MDC always | host |
 
 “支持”表示 Adapter 生命周期、能力描述和回归测试存在，不表示每个宿主版本都完成真实运行评测。逐项状态以
 [能力声明—证据矩阵](./capability-evidence.yaml)为准。
+
+### DeepSeek Harness 契约来源与验证边界
+
+产品身份（官方坐标）：仓库
+[deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)，npm 包 `@deepseek-ai/dsh`，可执行文件
+`dsh`。配置根为 `$DSH_HOME`（默认 `~/.dsh`）；空或仅空白的 `DSH_HOME` 按上游 `resolveDshHome` 视为未设置。契约以
+官方包文档与 `@deepseek-ai/dsh-agent-instructions` 为准。
+
+**不要把 Adapter 契约等同于「写一个全局 Markdown 文件」。** 产品身份与指令加载是两件事：DSH 会话 baseline 是一条
+作用域链，而 Harnessmith 只托管其中固定的用户全局一层。
+
+| 范围 | 谁负责 | 说明 |
+| --- | --- | --- |
+| 用户全局 `$DSH_HOME/AGENTS.md` | Harnessmith Adapter | 唯一安装的指令入口；同根下还有 `agent-harness/`、`.harnessmith/` |
+| 项目根 / 嵌套 `AGENTS.md`、`CLAUDE.md` 与 `.local` overlay | 宿主 / 工作区 | 按 Session `cwd`、根标记与候选列表加载；**不在**安装范围 |
+| 权限、sandbox、工具白名单、审批 | 宿主 Runtime | 指令文件仅为 advisory，安装成功不等于强制执行 |
+| Cordis patch、`settings.yaml`、凭证 | 宿主 / 用户 | Harnessmith **不**写入、不挂载插件 |
+
+| 状态 | DeepSeek 边界 |
+| --- | --- |
+| 已实现（Implemented） | 用户全局路径解析、`install --dry-run` / `install` / `status` / `restore` / `uninstall`、SafePath、锁、备份、所有权标记与回滚；**不**声称托管完整作用域链 |
+| 已在真实宿主验证（Verified on Host） | 尚未提交 maintainer-attested DeepSeek Host Eval；文件存在 ≠ 已验证 Session baseline 注入；发布门禁仍只要求 Codex |
+| 由宿主负责（Delegated to the Host） | 项目/嵌套指令发现、模型循环、工具/权限/sandbox/审批、profile/bundle、会话存储与凭证 |
 
 ## 数据与信任边界
 

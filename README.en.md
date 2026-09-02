@@ -57,6 +57,11 @@ You can also ask a coding agent to read the installation protocol first:
 | Claude Code | global | `claude` (alias: `claude-code`) |
 | OpenCode | global | `opencode` |
 | Kimi Code CLI | global | `kimi` (alias: `kimi-code`) |
+| DeepSeek Harness | global | `deepseek` (aliases: `dsh`, `deepseek-harness`) |
+
+DeepSeek Adapter installs **only** the user-global `$DSH_HOME/AGENTS.md` (default `~/.dsh/AGENTS.md`).
+Project-root / nested instructions and permissions, sandbox, and approval remain host-owned; a
+successful install does not mean the full DSH scope chain or formal Host Eval is verified.
 
 Cursor requires `--project /path/to/project`. See the
 [host guide](https://alexpang.cn/harnessmith/guide/hosts) for destinations, aliases, and support evidence.
