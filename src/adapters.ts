@@ -1,7 +1,7 @@
 import { existsSync, statSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { getAdapterDefinition, type AgentName } from './adapter-registry.js';
+import { type AgentName, getAdapterDefinition } from './adapter-registry.js';
 import { type GitInspection, inspectGit } from './git-inspection.js';
 import {
   instructionRenderer,
@@ -119,6 +119,17 @@ function resolveKimiAdapter({ env, userHome }: AdapterResolveContext): Adapter {
   return globalMarkdownAdapter('kimi', agentHome);
 }
 
+function resolveDeepSeekAdapter({ env, userHome }: AdapterResolveContext): Adapter {
+  // Official DeepSeek Harness (dsh) home: $DSH_HOME, default ~/.dsh.
+  // Empty/whitespace DSH_HOME is treated as unset (upstream resolveDshHome).
+  // User-global instructions only: $DSH_HOME/AGENTS.md via @deepseek-ai/dsh-agent-instructions.
+  const configured = env.DSH_HOME;
+  const agentHome = canonicalPath(
+    configured !== undefined && configured.trim().length > 0 ? configured : join(userHome, '.dsh'),
+  );
+  return globalMarkdownAdapter('deepseek', agentHome);
+}
+
 function resolveCursorAdapter({ project }: AdapterResolveContext): Adapter {
   const definition = getAdapterDefinition('cursor');
   const root = projectRoot(project);
@@ -186,6 +197,7 @@ const adapterResolvers = {
   claude: resolveClaudeAdapter,
   opencode: resolveOpenCodeAdapter,
   kimi: resolveKimiAdapter,
+  deepseek: resolveDeepSeekAdapter,
 } as const satisfies Record<AgentName, AdapterResolver>;
 
 export function createAdapter(

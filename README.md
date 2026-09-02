@@ -56,6 +56,11 @@ npx harnessmith --dry-run --agent codex
 | Claude Code | 全局 | `claude`（别名 `claude-code`） |
 | OpenCode | 全局 | `opencode` |
 | Kimi Code CLI | 全局 | `kimi`（别名 `kimi-code`） |
+| DeepSeek Harness | 全局 | `deepseek`（别名 `dsh`、`deepseek-harness`） |
+
+DeepSeek Adapter **只**安装用户全局 `$DSH_HOME/AGENTS.md`（默认 `~/.dsh/AGENTS.md`）。项目根/嵌套指令与
+权限、sandbox、审批仍由宿主负责；安装成功不等于完整 DSH 作用域链或正式 Host Eval 已验证。兼容性目前仅针对
+`@deepseek-ai/dsh@0.1.1-rc.2` / tag `dsh-v0.1.1-rc.2` 的验证结果声明，其他 revision 需重新验证。
 
 Cursor 需用 `--project /path/to/project` 指定项目根。目标路径、别名和支持证据见
 [宿主指南](https://alexpang.cn/harnessmith/guide/hosts)。

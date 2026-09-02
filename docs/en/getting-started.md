@@ -23,7 +23,7 @@ npx harnessmith install --agent codex
 npx harnessmith status --agent codex
 ```
 
-Codex, Claude Code, OpenCode, and Kimi Code CLI use global scope. Cursor uses project scope:
+Codex, Claude Code, OpenCode, Kimi Code CLI, and DeepSeek Harness use global scope. Cursor uses project scope:
 
 ```bash
 npx harnessmith install --agent cursor --project /path/to/project
