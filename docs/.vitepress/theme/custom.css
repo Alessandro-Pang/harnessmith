@@ -152,9 +152,10 @@ html.dark .VPHomeHero .image-src {
 
 .VPHomeHero .text {
   max-width: 820px;
-  font-size: clamp(44px, 6.4vw, 82px);
+  margin-top: 28px;
+  font-size: 56px;
   font-weight: 680;
-  line-height: 1.04;
+  line-height: 76px;
   letter-spacing: -0.06em;
 }
 
