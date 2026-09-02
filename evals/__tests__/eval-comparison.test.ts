@@ -3,8 +3,8 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'vitest';
-import { compareHostEvaluationEvidence } from '../../scripts/eval-comparison.js';
-import { readNpmPackageTarball } from '../../scripts/npm-tarball.js';
+import { compareHostEvaluationEvidence } from '../../scripts/evaluation/eval-comparison.js';
+import { readNpmPackageTarball } from '../../scripts/release/npm-tarball.js';
 import { candidateArtifact, root, temporaryDirectory, writeRun } from './run-fixture.js';
 import { writeCandidateTarball } from './tarball-fixture.js';
 
@@ -100,7 +100,7 @@ test('Host evidence comparison CLI emits the versioned deterministic JSON contra
     [
       '--import',
       'tsx',
-      join(root, 'scripts', 'eval-gate.ts'),
+      join(root, 'scripts', 'evaluation', 'eval-gate.ts'),
       'compare',
       '--baseline-runs-dir',
       options.baselineRunsDirectory,

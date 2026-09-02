@@ -16,14 +16,14 @@ export default defineConfig({
       include: [
         'src/**/*.ts',
         'template/agent-harness/src/**/*.ts',
-        'scripts/npm-tarball.ts',
-        'scripts/preflight-docs.ts',
-        'scripts/preflight-git.ts',
-        'scripts/release-attestation.ts',
-        'scripts/release-finalize.ts',
-        'scripts/release-publish.ts',
-        'scripts/release-state.ts',
-        'scripts/release-version.ts',
+        'scripts/release/npm-tarball.ts',
+        'scripts/preflight/preflight-docs.ts',
+        'scripts/preflight/preflight-git.ts',
+        'scripts/release/release-attestation.ts',
+        'scripts/release/release-finalize.ts',
+        'scripts/release/release-publish.ts',
+        'scripts/release/release-state.ts',
+        'scripts/release/release-version.ts',
       ],
       exclude: ['**/__tests__/**'],
       reporter: ['text', 'json-summary'],
@@ -38,25 +38,25 @@ export default defineConfig({
           branches: 50,
           statements: 64,
         },
-        'src/safe-path.ts': {
+        'src/shared/safe-path.ts': {
           lines: 94,
           functions: 100,
           branches: 83,
           statements: 92,
         },
-        'src/install.ts': {
+        'src/installation/install.ts': {
           lines: 72,
           functions: 91,
           branches: 60,
           statements: 72,
         },
-        'src/lifecycle-transaction.ts': {
+        'src/installation/lifecycle-transaction.ts': {
           lines: 97,
           functions: 100,
           branches: 80,
           statements: 92,
         },
-        'src/operation-lock.ts': {
+        'src/installation/operation-lock.ts': {
           lines: 100,
           functions: 100,
           branches: 100,

@@ -23,11 +23,11 @@ host-neutrality test passing.
 ## Architecture boundaries
 
 - Host identity metadata (canonical name, label, aliases, capabilities) belongs in
-  `src/adapter-registry.ts`. Host paths, instruction file layout, environment variables, and ignore
-  rules belong in `src/adapters.ts`. Instruction render shapes for markdown/mdc (and future formats)
-  belong in `src/instruction-formats.ts`. Do not put host identity into `template/`.
-- To add a built-in Adapter: register it in `src/adapter-registry.ts`, add an exhaustive path
-  resolver in `src/adapters.ts`, then run `pnpm run eval:schema:generate` so
+  `src/adapters/adapter-registry.ts`. Host paths, instruction file layout, environment variables, and ignore
+  rules belong in `src/adapters/adapters.ts`. Instruction render shapes for markdown/mdc (and future formats)
+  belong in `src/adapters/instruction-formats.ts`. Do not put host identity into `template/`.
+- To add a built-in Adapter: register it in `src/adapters/adapter-registry.ts`, add an exhaustive path
+  resolver in `src/adapters/adapters.ts`, then run `pnpm run eval:schema:generate` so
   `evals/run.schema.json` `host.adapter.enum` is rewritten from the registry. Preflight runs
   `eval:schema:check` (and `pnpm run eval:schema:check`) to reject drift. Rely on
   `src/__tests__/adapter-conformance.test.ts` for shared lifecycle coverage. Do not add a dynamic
@@ -37,7 +37,7 @@ host-neutrality test passing.
 - Biome is the shared formatter and linter, Knip rejects unreachable files or exports, and Secretlint scans
   source plus prompt/document surfaces for known credential formats. Run `pnpm run format` after source
   changes; `pnpm run check` rejects quality drift before rebuilding the published runtimes.
-- Markdownlint checks repository documentation. `scripts/preflight.ts` checks package and CLI contracts plus
+- Markdownlint checks repository documentation. `scripts/preflight/preflight.ts` checks package and CLI contracts plus
   Harness document routing, frontmatter, relative links, template tokens, and host-neutrality.
 - Vitest owns unit and integration tests. Its V8 gate covers imported runtime and release helpers; c8 merges
   coverage from the preflight and eval CLI subprocesses. Both thresholds are regression floors.

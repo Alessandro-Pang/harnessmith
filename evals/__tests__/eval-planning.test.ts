@@ -49,7 +49,13 @@ test('planner keeps non-behavior changes in deterministic L1', () => {
 });
 
 test('planner fails closed to L3 when mapped changes exceed the L2 scenario bound', () => {
-  const result = run(['plan', '--changed-file', 'src/install.ts', 'src/cli.ts', '--json']);
+  const result = run([
+    'plan',
+    '--changed-file',
+    'src/installation/install.ts',
+    'src/cli.ts',
+    '--json',
+  ]);
 
   assert.equal(result.status, 0, result.stderr);
   const output = JSON.parse(result.stdout);
@@ -59,7 +65,7 @@ test('planner fails closed to L3 when mapped changes exceed the L2 scenario boun
 });
 
 test('planner rejects unsafe changed-file paths', () => {
-  for (const path of ['../src/install.ts', 'C:/src/install.ts']) {
+  for (const path of ['../src/installation/install.ts', 'C:/src/installation/install.ts']) {
     const result = run(['plan', '--changed-file', path, '--json']);
     assert.equal(result.status, 1);
     assert.match(result.stderr, /Unsafe changed file path/);

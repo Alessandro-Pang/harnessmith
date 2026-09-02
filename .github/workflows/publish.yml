@@ -43,14 +43,14 @@ jobs:
         run: |
           mkdir .release-ci
           npm pack --json --ignore-scripts --pack-destination .release-ci
-          node --import tsx scripts/release-version.ts ci-verify --artifact .release-ci/harnessmith-*.tgz --tag "${GITHUB_REF_NAME}"
+          node --import tsx scripts/release/release-version.ts ci-verify --artifact .release-ci/harnessmith-*.tgz --tag "${GITHUB_REF_NAME}"
       - name: Publish through npm Trusted Publishing
         env:
           HARNESS_RELEASE_WORKFLOW: '1'
         run: npm publish .release-ci/harnessmith-*.tgz --access public --registry=https://registry.npmjs.org/
       - name: Verify npm registry package
         run: >-
-          node --import tsx scripts/registry-verify.ts
+          node --import tsx scripts/release/registry-verify.ts
           --package harnessmith
           --version "${GITHUB_REF_NAME#v}"
           --expected-artifact .release-ci/harnessmith-*.tgz

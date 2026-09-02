@@ -9,8 +9,8 @@ const removal = vi.hoisted(() => ({
   failTransactionRoot: false,
 }));
 
-vi.mock('../files.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../files.js')>();
+vi.mock('../shared/files.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../shared/files.js')>();
   return {
     ...actual,
     removeExact(path: string) {
@@ -25,8 +25,9 @@ vi.mock('../files.js', async (importOriginal) => {
   };
 });
 
-vi.mock('../temporary-resource.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../temporary-resource.js')>();
+vi.mock('../temporary-resources/temporary-resource.js', async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import('../temporary-resources/temporary-resource.js')>();
   return {
     ...actual,
     disposeTemporaryWorkspace(workspace: { path: string }) {
@@ -41,7 +42,10 @@ vi.mock('../temporary-resource.js', async (importOriginal) => {
   };
 });
 
-import { LifecycleRecoveryError, lifecycleTransaction } from '../lifecycle-transaction.js';
+import {
+  LifecycleRecoveryError,
+  lifecycleTransaction,
+} from '../installation/lifecycle-transaction.js';
 
 beforeEach(() => {
   removal.failExact.clear();

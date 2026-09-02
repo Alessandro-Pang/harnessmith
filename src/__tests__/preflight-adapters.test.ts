@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { checkAdapterSet } from '../../scripts/preflight-adapters.js';
-import { supportedAgentNames } from '../adapter-registry.js';
+import { checkAdapterSet } from '../../scripts/preflight/preflight-adapters.js';
+import { supportedAgentNames } from '../adapters/adapter-registry.js';
 
 test('Adapter preflight accepts the registry order as its complete target set', () => {
   const observations: Array<{ condition: boolean; message: string }> = [];

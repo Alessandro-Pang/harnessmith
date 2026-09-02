@@ -262,6 +262,22 @@ test('health reports managed digest budget failures instead of losing its report
   );
 });
 
+test('health reports malformed managed output records instead of crashing', () => {
+  const { runtime, recordPath } = managedHealthFixture();
+  writeFileSync(
+    recordPath,
+    JSON.stringify({
+      schemaVersion: 1,
+      adapter: 'coverage-host',
+      outputs: [null],
+    }),
+  );
+
+  const installation = createHealthReport(runtime).checks.find(({ id }) => id === 'installation');
+  assert.equal(installation?.status, 'failed');
+  assert.match(installation?.message ?? '', /installation|output|invalid/i);
+});
+
 test('invalid runtime identity disables CLI write commands but keeps diagnostics available', () => {
   const root = temporaryRoot();
   const runtime = harnessRuntime(root, {

@@ -7,7 +7,7 @@ import {
   type ReleaseRunner,
   releaseCandidate,
   releasePublishGuard,
-} from '../../scripts/release-publish.js';
+} from '../../scripts/release/release-publish.js';
 import {
   candidateArtifact,
   currentFingerprint,
@@ -75,8 +75,8 @@ test('release helpers preserve exact CLI and risk-acceptance contracts in an iso
     })}\n`,
   );
   const script = `
-import { releaseOptions } from './scripts/release-publish-options.ts';
-import { loadReleaseRiskAcceptance } from './scripts/release-risk-acceptance.ts';
+import { releaseOptions } from './scripts/release/release-publish-options.ts';
+import { loadReleaseRiskAcceptance } from './scripts/release/release-risk-acceptance.ts';
 let duplicateError = '';
 try {
   releaseOptions(['--package-artifact', 'first.tgz', '--package-artifact', 'second.tgz']);

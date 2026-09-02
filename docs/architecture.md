@@ -109,11 +109,11 @@ effort，而不是绝对安全声明。检测到路径替换时会 fail closed�
 
 ## Adapter 契约
 
-`src/adapter-registry.ts` 是宿主身份与 capability 的单一清单；`createAdapter()` 解析路径后挂上同一
+`src/adapters/adapter-registry.ts` 是宿主身份与 capability 的单一清单；`createAdapter()` 解析路径后挂上同一
 份 `capabilities`，并出现在 dry-run、install result 与 status JSON 中。CLI `all` 展开、交互选择、
 capabilities 输出与 Eval `host.adapter` 枚举都从该清单派生或与之对齐。`evals/run.schema.json` 的
 `host.adapter.enum` 是由 registry 生成的已提交产物：新增内置 Adapter 时先登记 registry，再补
-`src/adapters.ts` 路径解析，并运行 `pnpm run eval:schema:generate`；preflight / `eval:schema:check`
+`src/adapters/adapters.ts` 路径解析，并运行 `pnpm run eval:schema:generate`；preflight / `eval:schema:check`
 拒绝生成物漂移。共享生命周期由 `adapter-conformance` 套件覆盖，不引入动态插件加载。
 
 | Adapter | 范围 | 规则入口 | 原生激活 | 权限 owner |

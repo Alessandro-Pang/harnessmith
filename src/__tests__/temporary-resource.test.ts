@@ -17,7 +17,7 @@ import {
   scanTemporaryResourceRoots,
   scanTemporaryResources,
   withTemporaryWorkspace,
-} from '../temporary-resource.js';
+} from '../temporary-resources/temporary-resource.js';
 
 function fixture(): string {
   const root = mkdtempSync(join(tmpdir(), 'harnessmith-temp-resource-test-'));

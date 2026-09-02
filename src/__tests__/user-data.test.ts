@@ -12,9 +12,9 @@ import {
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { adapterCapabilities } from '../adapters.js';
-import type { PreparedInstall } from '../types.js';
-import { initializeUserData } from '../user-data.js';
+import { adapterCapabilities } from '../adapters/adapters.js';
+import type { PreparedInstall } from '../shared/types.js';
+import { initializeUserData } from '../installation/user-data.js';
 
 function preparedInstall(root: string): PreparedInstall {
   const home = join(root, 'host');

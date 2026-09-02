@@ -1,8 +1,8 @@
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
-import { temporaryResourceReport } from '../../scripts/temp-resources.js';
-import { withTemporaryWorkspace } from '../../src/temporary-resource.js';
+import { temporaryResourceReport } from '../../scripts/temporary-resources/temp-resources.js';
+import { withTemporaryWorkspace } from '../../src/temporary-resources/temporary-resource.js';
 
 const base = mkdtempSync(join(tmpdir(), 'harnessmith-script-coverage-'));
 try {

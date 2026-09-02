@@ -12,9 +12,14 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import lockfile from 'proper-lockfile';
 import { onTestFinished, test } from 'vitest';
-import { adapterCapabilities } from '../adapters.js';
-import { commitInstall, installAll, prepareInstall, rollbackInstall } from '../install.js';
-import type { Adapter } from '../types.js';
+import { adapterCapabilities } from '../adapters/adapters.js';
+import {
+  commitInstall,
+  installAll,
+  prepareInstall,
+  rollbackInstall,
+} from '../installation/install.js';
+import type { Adapter } from '../shared/types.js';
 
 test('rolls back every committed output when a later destination fails', () => {
   const root = mkdtempSync(join(tmpdir(), 'harnessmith-rollback-'));

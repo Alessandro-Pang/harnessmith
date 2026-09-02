@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {
   evaluationMatrix,
   releaseEvaluationEvidenceIsValid,
-} from '../../scripts/release-evaluation-evidence.js';
+} from '../../scripts/release/release-evaluation-evidence.js';
 
 const digest = 'a'.repeat(64);
 const source = { packageVersion: '0.8.0', packageArtifactSha256: digest };

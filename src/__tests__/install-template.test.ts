@@ -15,8 +15,12 @@ import { parse } from 'yaml';
 import { parseFrontmatterDocument } from '../../template/agent-harness/src/lib/frontmatter.js';
 import { render as renderHarnessTemplate } from '../../template/agent-harness/src/lib/templates.js';
 import type { Runtime } from '../../template/agent-harness/src/types.js';
-import { installationRenderer, listModules, templateRoot } from '../install-template.js';
-import type { Adapter } from '../types.js';
+import {
+  installationRenderer,
+  listModules,
+  templateRoot,
+} from '../installation/install-template.js';
+import type { Adapter } from '../shared/types.js';
 
 function markdownFiles(root: string): string[] {
   return readdirSync(root, { withFileTypes: true }).flatMap((entry) => {

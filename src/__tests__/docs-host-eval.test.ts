@@ -35,7 +35,7 @@ test('Host Eval docs expose dependency-scoped incremental selection', () => {
   }
   const capabilities = read('docs/capability-evidence.yaml');
   assert.match(capabilities, /id: incremental-host-eval-selection/);
-  assert.match(capabilities, /scripts\/eval-planning\.ts/);
+  assert.match(capabilities, /scripts\/evaluation\/eval-planning\.ts/);
   assert.match(capabilities, /evals\/__tests__\/eval-planning\.test\.ts/);
 });
 
@@ -50,7 +50,7 @@ test('Host Eval docs expose bounded parallel runner and circuit breaker', () => 
     assert.match(content, /infra-blocked/);
   }
   assert.match(capabilities, /id: bounded-host-eval-runner/);
-  assert.match(capabilities, /scripts\/eval-runner\.ts/);
+  assert.match(capabilities, /scripts\/evaluation\/eval-runner\.ts/);
   assert.match(capabilities, /evals\/__tests__\/eval-runner\.test\.ts/);
 });
 
@@ -65,6 +65,6 @@ test('Host Eval docs expose release evidence state without counting infrastructu
     assert.match(content, /infra-blocked.*(?:不计入|never counts).*coverage/is);
   }
   assert.match(capabilities, /id: release-host-eval-evidence-state/);
-  assert.match(capabilities, /scripts\/release-evaluation-evidence\.ts/);
+  assert.match(capabilities, /scripts\/release\/release-evaluation-evidence\.ts/);
   assert.match(capabilities, /evals\/__tests__\/release-risk-integrity\.test\.ts/);
 });

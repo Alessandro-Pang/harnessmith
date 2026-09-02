@@ -18,11 +18,11 @@ import {
   createPortableConfigBundle,
   planPortableConfigImport,
   writePortableConfigBundle,
-} from '../portable-config.js';
+} from '../portable-config/portable-config.js';
 import {
   executePortableConfigExport,
   executePortableConfigImport,
-} from '../portable-config-command.js';
+} from '../portable-config/portable-config-command.js';
 
 const packageRoot = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const schema = JSON.parse(

@@ -15,8 +15,17 @@ const indexRefreshDefaults = {
   maxDirectories: 20_000,
   maxFiles: 50_000,
   maxTotalBytes: 256 * 1024 * 1024,
+  maxChunks: 100_000,
   maxDurationMs: 60_000,
 };
+
+export function resolveIndexMaxChunks(options: SearchOptions): number {
+  const maxChunks = options.maxChunks ?? indexRefreshDefaults.maxChunks;
+  if (!Number.isInteger(maxChunks) || maxChunks < 1) {
+    throw new Error('Search max chunks must be a positive integer');
+  }
+  return maxChunks;
+}
 
 export interface IndexedFile {
   sourceIndex: number;

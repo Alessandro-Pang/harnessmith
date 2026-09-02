@@ -12,8 +12,8 @@ import {
 import { tmpdir } from 'node:os';
 import { delimiter, dirname, join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { checkBranch } from '../../scripts/preflight-git.js';
-import { createAdapter, resolveGitExecutable } from '../adapters.js';
+import { checkBranch } from '../../scripts/preflight/preflight-git.js';
+import { createAdapter, resolveGitExecutable } from '../adapters/adapters.js';
 
 function withPath<T>(path: string, operation: () => T): T {
   const original = process.env.PATH;

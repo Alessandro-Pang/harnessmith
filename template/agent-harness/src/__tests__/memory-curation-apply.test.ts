@@ -3,7 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { onTestFinished, test } from 'vitest';
+import { onTestFinished, test, vi } from 'vitest';
 import { initProject } from '../commands/init.js';
 import { type CurationApplySelection, curateMemory } from '../commands/memory-curation.js';
 import { captureFinding } from '../commands/memory-finding.js';
@@ -171,6 +171,11 @@ test('source drift invalidates an exact proposal without overwriting the changed
 });
 
 test('authoritative workspace drift and proposal expiry both require regeneration', () => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date('2026-09-02T12:00:00.000Z'));
+  onTestFinished(() => {
+    vi.useRealTimers();
+  });
   const { root, project, runtime, taskId } = fixture();
   const input = captureInput(
     runtime,

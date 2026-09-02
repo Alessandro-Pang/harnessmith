@@ -5,7 +5,9 @@ import { dirname, join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 
 test('architecture preflight normalizes Windows paths before applying command rules', async () => {
-  const { normalizeArchitecturePath } = await import('../../scripts/preflight-architecture.js');
+  const { normalizeArchitecturePath } = await import(
+    '../../scripts/preflight/preflight-architecture.js'
+  );
 
   assert.equal(normalizeArchitecturePath('commands\\memory-input.ts'), 'commands/memory-input.ts');
   assert.equal(normalizeArchitecturePath('commands/task.ts'), 'commands/task.ts');
@@ -27,9 +29,18 @@ test('architecture preflight catches module syntax missed by the legacy from reg
       .map(([path]) => path),
     ['lib/dynamic.ts', 'lib/import-equals.ts', 'lib/side-effect.ts'],
   );
-  const checker = join(import.meta.dirname, '..', '..', 'scripts', 'preflight-architecture.ts');
+  const checker = join(
+    import.meta.dirname,
+    '..',
+    '..',
+    'scripts',
+    'preflight',
+    'preflight-architecture.ts',
+  );
   assert.equal(existsSync(checker), true, 'preflight architecture checker must exist');
-  const { checkArchitectureImports } = await import('../../scripts/preflight-architecture.js');
+  const { checkArchitectureImports } = await import(
+    '../../scripts/preflight/preflight-architecture.js'
+  );
   const sourceRoot = mkdtempSync(join(tmpdir(), 'harness-preflight-architecture-'));
   onTestFinished(() => rmSync(sourceRoot, { recursive: true, force: true }));
   for (const [path, content] of Object.entries(fixtures)) {
@@ -52,7 +63,9 @@ test('architecture preflight catches module syntax missed by the legacy from reg
 });
 
 test('architecture preflight rejects direct filesystem mutation in typed work-state commands', async () => {
-  const { checkArchitectureImports } = await import('../../scripts/preflight-architecture.js');
+  const { checkArchitectureImports } = await import(
+    '../../scripts/preflight/preflight-architecture.js'
+  );
   const sourceRoot = mkdtempSync(join(tmpdir(), 'harness-work-state-architecture-'));
   onTestFinished(() => rmSync(sourceRoot, { recursive: true, force: true }));
   const fixtures = {
@@ -81,7 +94,9 @@ test('architecture preflight rejects direct filesystem mutation in typed work-st
 });
 
 test('architecture preflight requires the acceptance gate on the task completion path', async () => {
-  const { checkArchitectureImports } = await import('../../scripts/preflight-architecture.js');
+  const { checkArchitectureImports } = await import(
+    '../../scripts/preflight/preflight-architecture.js'
+  );
   const sourceRoot = mkdtempSync(join(tmpdir(), 'harness-task-gate-architecture-'));
   onTestFinished(() => rmSync(sourceRoot, { recursive: true, force: true }));
   const taskCommand = join(sourceRoot, 'commands', 'task.ts');

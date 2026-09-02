@@ -37,9 +37,9 @@ test('fingerprint binds the candidate package and every complete scenario contra
     assert.match(dependencySha256 as string, /^[a-f0-9]{64}$/);
   }
   for (const source of [
-    'dist/adapters.js',
-    'dist/install-template.js',
-    'dist/lifecycle.js',
+    'dist/adapters/adapters.js',
+    'dist/installation/install-template.js',
+    'dist/installation/lifecycle.js',
     'template/AGENTS.md',
     'template/agent-harness/docs/README.md',
     'template/agent-harness/manifest.json',
@@ -376,8 +376,12 @@ test('release gate retains the global rule fingerprint as audit data', () => {
 });
 
 test('evaluation schema supports every adapter while release coverage uses the explicit host policy', async () => {
-  const { requiredEvaluationAdapters } = await import('../../scripts/eval-fingerprint.js');
-  const { checkEvalRunSchemaAdapterEnum } = await import('../../scripts/eval-run-schema.js');
+  const { requiredEvaluationAdapters } = await import(
+    '../../scripts/evaluation/eval-fingerprint.js'
+  );
+  const { checkEvalRunSchemaAdapterEnum } = await import(
+    '../../scripts/evaluation/eval-run-schema.js'
+  );
 
   assert.equal(checkEvalRunSchemaAdapterEnum(root).ok, true);
   assert.deepEqual(requiredEvaluationAdapters, ['codex']);
@@ -404,8 +408,8 @@ test('declared package release workflow gates the exact tarball before publicati
   assert.match(manifest.scripts['eval:gate'], /eval-gate\.ts gate/);
   assert.equal(manifest.scripts['release:check'], 'pnpm run release:quality && pnpm run eval:gate');
   assert.match(manifest.scripts['release:prepare'], /--prepare-only/);
-  assert.match(manifest.scripts['release:publish'], /scripts\/release-publish\.ts/);
-  assert.match(manifest.scripts.release, /scripts\/release-version\.ts/);
+  assert.match(manifest.scripts['release:publish'], /scripts\/release\/release-publish\.ts/);
+  assert.match(manifest.scripts.release, /scripts\/release\/release-version\.ts/);
   assert.match(manifest.scripts.prepublishOnly, /release-publish\.ts guard/);
 });
 

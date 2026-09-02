@@ -1,7 +1,7 @@
-import { executeCommand } from './command-executor.js';
-import { createProgram } from './program.js';
-import type { RunContext } from './types.js';
-import { errorMessage, machineErrorReport } from './types.js';
+import { executeCommand } from './application/command-executor.js';
+import { createProgram } from './app/program.js';
+import type { RunContext } from './shared/types.js';
+import { errorMessage, machineErrorReport } from './shared/types.js';
 
 export async function run(
   args: string[],

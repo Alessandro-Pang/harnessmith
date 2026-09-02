@@ -23,7 +23,10 @@ import {
   userDataCoordinationTargets as embeddedTargets,
   withUserDataCoordinationLocks as withEmbeddedUserDataCoordinationLocks,
 } from '../../template/agent-harness/src/lib/user-data-lock.js';
-import { userDataCoordinationTargets, withUserDataCoordinationLocks } from '../user-data-lock.js';
+import {
+  userDataCoordinationTargets,
+  withUserDataCoordinationLocks,
+} from '../installation/user-data-lock.js';
 
 const worker = fileURLToPath(new URL('./fixtures/user-data-worker.ts', import.meta.url));
 

@@ -15,9 +15,9 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { onTestFinished, test } from 'vitest';
-import { createAdapter } from '../adapters.js';
-import { applyAdoptPlan, createAdoptPlan } from '../adopt.js';
-import { canonicalPath } from '../safe-path.js';
+import { createAdapter } from '../adapters/adapters.js';
+import { applyAdoptPlan, createAdoptPlan } from '../adoption/adopt.js';
+import { canonicalPath } from '../shared/safe-path.js';
 
 const packageRoot = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const cli = join(packageRoot, 'bin', 'harnessmith.mjs');

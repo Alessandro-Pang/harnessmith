@@ -3,12 +3,12 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { createAdapter } from '../adapters.js';
+import { createAdapter } from '../adapters/adapters.js';
 import {
   firstValueFromSetupVerification,
   firstValueFromStatus,
   firstValuePreview,
-} from '../first-value.js';
+} from '../setup/first-value.js';
 
 function fixture() {
   const root = mkdtempSync(join(tmpdir(), 'harnessmith-first-value-'));

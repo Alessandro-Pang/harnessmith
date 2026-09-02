@@ -5,10 +5,10 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { onTestFinished, test } from 'vitest';
-import { createAdapter } from '../adapters.js';
-import { installAll } from '../install.js';
-import { inspectStatusAll } from '../lifecycle.js';
-import { explainStatus } from '../status-explanation.js';
+import { createAdapter } from '../adapters/adapters.js';
+import { installAll } from '../installation/install.js';
+import { inspectStatusAll } from '../installation/lifecycle.js';
+import { explainStatus } from '../status/status-explanation.js';
 
 const packageRoot = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const cli = join(packageRoot, 'bin', 'harnessmith.mjs');

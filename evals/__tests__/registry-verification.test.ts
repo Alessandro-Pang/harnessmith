@@ -5,7 +5,7 @@ import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync 
 import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { readNpmPackageTarball } from '../../scripts/npm-tarball.js';
+import { readNpmPackageTarball } from '../../scripts/release/npm-tarball.js';
 import { candidateArtifact } from './run-fixture.js';
 
 const root = join(import.meta.dirname, '..', '..');
@@ -135,7 +135,7 @@ test('registry verification validates metadata, downloaded bytes, and isolated s
     [
       '--import',
       'tsx',
-      'scripts/registry-verify.ts',
+      'scripts/release/registry-verify.ts',
       '--package',
       'harnessmith',
       '--version',
@@ -209,7 +209,7 @@ test('registry verification reports bounded propagation failure with a stable co
     [
       '--import',
       'tsx',
-      'scripts/registry-verify.ts',
+      'scripts/release/registry-verify.ts',
       '--package',
       'harnessmith',
       '--version',
@@ -272,7 +272,7 @@ for (const [mode, expectedCode] of [
       [
         '--import',
         'tsx',
-        'scripts/registry-verify.ts',
+        'scripts/release/registry-verify.ts',
         '--package',
         'harnessmith',
         '--version',

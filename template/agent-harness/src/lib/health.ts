@@ -6,6 +6,7 @@ import { digestPath } from './files.js';
 import { auditHealth } from './health-audit.js';
 import {
   installationIdentityHealth,
+  isManagedInstallRecord,
   type ManagedInstallRecord,
   runtimeHealth,
 } from './health-runtime.js';
@@ -15,7 +16,6 @@ import { memoryMaintenanceReport, memoryMaintenanceWarnings } from './memory-mai
 import { resolveMemoryRoot } from './memory-path.js';
 import { validateMemoryRoot } from './memory-validation.js';
 import { projectSnapshot } from './project.js';
-
 function managedInstallationHealth(runtime: Runtime): HealthCheck {
   const recordPath = join(runtime.harnessHome, '.harnessmith', 'install.json');
   if (!existsSync(recordPath)) {
@@ -28,7 +28,11 @@ function managedInstallationHealth(runtime: Runtime): HealthCheck {
   }
   let record: ManagedInstallRecord;
   try {
-    record = JSON.parse(readFileSync(recordPath, 'utf8')) as ManagedInstallRecord;
+    const parsed: unknown = JSON.parse(readFileSync(recordPath, 'utf8'));
+    if (!isManagedInstallRecord(parsed)) {
+      throw new Error('managed installation record schema is invalid');
+    }
+    record = parsed;
   } catch (error) {
     return {
       id: 'installation',
@@ -95,7 +99,6 @@ function managedInstallationHealth(runtime: Runtime): HealthCheck {
     ...(details.length > 0 ? { details } : {}),
   };
 }
-
 function installationHealth(runtime: Runtime): HealthCheck {
   const identityFailure = installationIdentityHealth(runtime);
   if (identityFailure) return identityFailure;
@@ -140,7 +143,6 @@ function installationHealth(runtime: Runtime): HealthCheck {
   }
   return { id: 'installation', status: 'passed', message: 'Installation contract available' };
 }
-
 function projectMemoryHealth(runtime: Runtime, projectRoot: string, today: string): HealthCheck {
   const check = memoryHealth(
     'project-memory',
@@ -164,7 +166,6 @@ function projectMemoryHealth(runtime: Runtime, projectRoot: string, today: strin
     details: missingIgnoreRules,
   };
 }
-
 function memoryHealth(
   id: string,
   root: string,

@@ -6,10 +6,10 @@ import { PassThrough } from 'node:stream';
 import { fileURLToPath } from 'node:url';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import { onTestFinished, test } from 'vitest';
-import { createAdapter } from '../adapters.js';
-import { executeCommand } from '../command-executor.js';
-import { createDiagnosticsReport } from '../diagnostics.js';
-import { installAll } from '../install.js';
+import { createAdapter } from '../adapters/adapters.js';
+import { executeCommand } from '../application/command-executor.js';
+import { createDiagnosticsReport } from '../diagnostics/diagnostics.js';
+import { installAll } from '../installation/install.js';
 
 const packageRoot = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const schema = JSON.parse(

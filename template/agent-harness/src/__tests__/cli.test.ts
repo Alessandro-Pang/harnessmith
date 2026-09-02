@@ -4,7 +4,7 @@ import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } f
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { digestPath } from '../../../../src/files.js';
+import { digestPath } from '../../../../src/shared/files.js';
 import { runCli } from '../cli.js';
 import { doctor } from '../commands/doctor.js';
 import { initGlobal, initPersonal, initProject } from '../commands/init.js';

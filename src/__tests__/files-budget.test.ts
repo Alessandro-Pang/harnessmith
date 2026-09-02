@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { digestPath } from '../files.js';
+import { digestPath } from '../shared/files.js';
 
 function fixture(): string {
   const root = mkdtempSync(join(tmpdir(), 'harnessmith-digest-budget-'));

@@ -171,7 +171,7 @@ test('pull request metadata is checked from the trusted default branch', () => {
   const checkout = job?.steps?.find(({ uses }) => text(uses).startsWith('actions/checkout@'));
   assert.equal(checkout?.with?.ref, '$' + '{{ github.event.repository.default_branch }}');
   assert.ok(
-    job?.steps?.some(({ run }) => text(run).includes('scripts/pr-contract.ts')),
+    job?.steps?.some(({ run }) => text(run).includes('scripts/evaluation/pr-contract.ts')),
     'PR contract workflow must execute the repository validator',
   );
 });
@@ -209,7 +209,7 @@ test('release notes are categorized and only created after npm publication is ve
     /Verify npm registry package/i.test(text(name)),
   );
   const verificationCommand = text(verification?.run);
-  assert.match(verificationCommand, /scripts\/registry-verify\.ts/);
+  assert.match(verificationCommand, /scripts\/release\/registry-verify\.ts/);
   assert.match(verificationCommand, /--version "\$\{GITHUB_REF_NAME#v\}"/);
   assert.match(verificationCommand, /--expected-artifact \.release-ci\/harnessmith-\*\.tgz/);
   assert.match(verificationCommand, /--require-provenance/);

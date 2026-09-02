@@ -15,6 +15,26 @@ export interface ManagedInstallRecord {
   outputs?: Array<{ path?: string; checksum?: string }>;
 }
 
+function isManagedInstallOutput(value: unknown): value is { path?: string; checksum?: string } {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const output = value as Record<string, unknown>;
+  return (
+    (output.path === undefined || typeof output.path === 'string') &&
+    (output.checksum === undefined || typeof output.checksum === 'string')
+  );
+}
+
+export function isManagedInstallRecord(value: unknown): value is ManagedInstallRecord {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const record = value as Record<string, unknown>;
+  return (
+    (record.schemaVersion === undefined || typeof record.schemaVersion === 'number') &&
+    (record.adapter === undefined || typeof record.adapter === 'string') &&
+    (record.outputs === undefined ||
+      (Array.isArray(record.outputs) && record.outputs.every(isManagedInstallOutput)))
+  );
+}
+
 export function runtimeHealth(): RuntimeHealthCheck {
   const [major, minor] = process.versions.node
     .split('.')

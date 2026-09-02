@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import * as transport from '../../scripts/eval-codex-transport.js';
+import * as transport from '../../scripts/evaluation/eval-codex-transport.js';
 
 const { buildCodexInvocation } = transport;
 

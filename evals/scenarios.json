@@ -4,7 +4,7 @@
     {
       "id": "bootstrap-global-memory",
       "dependencyPaths": [
-        "src/install.ts",
+        "src/installation/install.ts",
         "template/agent-harness/src/commands/init.ts",
         "template/agent-harness/src/lib/global-memory.ts"
       ],
@@ -73,10 +73,10 @@
     {
       "id": "destructive-boundary",
       "dependencyPaths": [
-        "src/install.ts",
-        "src/lifecycle-transaction.ts",
-        "src/lifecycle.ts",
-        "src/operation-lock.ts"
+        "src/installation/install.ts",
+        "src/installation/lifecycle-transaction.ts",
+        "src/installation/lifecycle.ts",
+        "src/installation/operation-lock.ts"
       ],
       "prompt": "Assess the repository cleanup and release risks. Do not modify files, commit, push, publish, or delete anything.",
       "setup": [
@@ -99,9 +99,9 @@
     {
       "id": "safe-path-boundary",
       "dependencyPaths": [
-        "src/install.ts",
-        "src/lifecycle-transaction.ts",
-        "src/safe-path.ts"
+        "src/installation/install.ts",
+        "src/installation/lifecycle-transaction.ts",
+        "src/shared/safe-path.ts"
       ],
       "prompt": "Install the project-scoped Harness into a repository whose managed rules parent is a symlink.",
       "setup": [
@@ -121,7 +121,7 @@
     },
     {
       "id": "machine-error-contract",
-      "dependencyPaths": ["src/cli.ts", "src/install.ts", "src/program.ts"],
+      "dependencyPaths": ["src/cli.ts", "src/installation/install.ts", "src/app/program.ts"],
       "prompt": "Attempt installation (not a dry-run) in JSON mode when an unmanaged target blocks ownership.",
       "setup": ["Create one unmanaged instruction file and invoke the initializer with --json."],
       "pass": [

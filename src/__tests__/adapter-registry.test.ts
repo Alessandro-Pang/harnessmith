@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { onTestFinished, test } from 'vitest';
-import { checkEvalRunSchemaAdapterEnum } from '../../scripts/eval-run-schema.js';
+import { checkEvalRunSchemaAdapterEnum } from '../../scripts/evaluation/eval-run-schema.js';
 import {
   type AgentName,
   adapterAliasMap,
@@ -12,10 +12,10 @@ import {
   evalAdapterEnum,
   getAdapterDefinition,
   supportedAgentNames,
-} from '../adapter-registry.js';
-import { adapterCapabilities, createAdapter } from '../adapters.js';
-import { normalizeAgents, supportedAgents } from '../agents.js';
-import { instructionFormats, instructionRenderer } from '../instruction-formats.js';
+} from '../adapters/adapter-registry.js';
+import { adapterCapabilities, createAdapter } from '../adapters/adapters.js';
+import { normalizeAgents, supportedAgents } from '../shared/agents.js';
+import { instructionFormats, instructionRenderer } from '../adapters/instruction-formats.js';
 
 const repositoryRoot = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 

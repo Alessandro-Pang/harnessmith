@@ -3,13 +3,13 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { capabilityEvidenceIssues } from '../../scripts/capability-evidence.js';
+import { capabilityEvidenceIssues } from '../../scripts/evaluation/capability-evidence.js';
 import {
   filesUnder,
   invalidManifestRouteMetadata,
   missingCanonicalRouteIds,
-} from '../../scripts/preflight-docs.js';
-import { promptRuleContractIssues } from '../../scripts/prompt-rule-contract.js';
+} from '../../scripts/preflight/preflight-docs.js';
+import { promptRuleContractIssues } from '../../scripts/benchmarks/prompt-rule-contract.js';
 
 test('trusted docs traversal returns filtered full paths in deterministic order', () => {
   const root = mkdtempSync(join(tmpdir(), 'harness-preflight-docs-'));

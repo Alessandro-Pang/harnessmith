@@ -11,12 +11,12 @@ import {
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { adapterRegistry, type AgentName } from '../adapter-registry.js';
-import { createAdapter } from '../adapters.js';
-import { installAll } from '../install.js';
-import { restoreAll, statusAll, uninstallAll } from '../lifecycle.js';
-import { describeInstall } from '../records.js';
-import type { Adapter } from '../types.js';
+import { adapterRegistry, type AgentName } from '../adapters/adapter-registry.js';
+import { createAdapter } from '../adapters/adapters.js';
+import { installAll } from '../installation/install.js';
+import { restoreAll, statusAll, uninstallAll } from '../installation/lifecycle.js';
+import { describeInstall } from '../installation/records.js';
+import type { Adapter } from '../shared/types.js';
 
 function fixture(prefix: string) {
   const root = mkdtempSync(join(tmpdir(), prefix));

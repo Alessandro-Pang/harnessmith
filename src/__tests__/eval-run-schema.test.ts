@@ -10,8 +10,8 @@ import {
   generateEvalRunSchemaAdapterEnum,
   readEvalAdapterEnum,
   rewriteEvalAdapterEnumSource,
-} from '../../scripts/eval-run-schema.js';
-import { evalAdapterEnum } from '../adapter-registry.js';
+} from '../../scripts/evaluation/eval-run-schema.js';
+import { evalAdapterEnum } from '../adapters/adapter-registry.js';
 
 test('applyEvalAdapterEnum rewrites only host.adapter.enum', () => {
   const schema = {

@@ -3,15 +3,15 @@ import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test, vi } from 'vitest';
-import type { Adapter } from '../types.js';
+import type { Adapter } from '../shared/types.js';
 
 const locks = vi.hoisted(() => ({ lockSync: vi.fn() }));
 
 vi.mock('proper-lockfile', () => ({ default: { lockSync: locks.lockSync } }));
 
 import { withExclusiveDirectoryLock } from '../../template/agent-harness/src/lib/exclusive-lock.js';
-import { adapterCapabilities } from '../adapters.js';
-import { withAdapterLocks } from '../operation-lock.js';
+import { adapterCapabilities } from '../adapters/adapters.js';
+import { withAdapterLocks } from '../installation/operation-lock.js';
 
 function adapter(home: string, name: Adapter['name']): Adapter {
   return {

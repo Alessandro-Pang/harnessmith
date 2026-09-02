@@ -13,13 +13,13 @@ import {
 import { delimiter, dirname, join, relative } from 'node:path';
 import { test } from 'vitest';
 
-import { repositoryRoot } from '../../scripts/eval-fingerprint.js';
-import { worktreeScenarioCatalog } from '../../scripts/eval-scenarios.js';
+import { repositoryRoot } from '../../scripts/evaluation/eval-fingerprint.js';
+import { worktreeScenarioCatalog } from '../../scripts/evaluation/eval-scenarios.js';
 import { temporaryDirectory } from './run-fixture.js';
 import { writeCandidateTarball } from './tarball-fixture.js';
 
-const entry = join(repositoryRoot, 'scripts', 'eval-codex-matrix.ts');
-const scenarioEntry = join(repositoryRoot, 'scripts', 'eval-codex-scenario.mjs');
+const entry = join(repositoryRoot, 'scripts', 'evaluation', 'eval-codex-matrix.ts');
+const scenarioEntry = join(repositoryRoot, 'scripts', 'evaluation', 'eval-codex-scenario.mjs');
 const coverageInstrumentation =
   process.argv.includes('--coverage') ||
   process.env.NODE_V8_COVERAGE !== undefined ||
@@ -110,7 +110,7 @@ test('matrix CLI rejects a candidate whose exact digest was not authorized', () 
 });
 
 test('matrix run schedules the complete catalog through the bounded runner', async () => {
-  const matrix = await import('../../scripts/eval-codex-matrix.js');
+  const matrix = await import('../../scripts/evaluation/eval-codex-matrix.js');
   assert.equal(typeof matrix.runCodexMatrix, 'function');
   const scenarioIds = worktreeScenarioCatalog(repositoryRoot).scenarios.map(({ id }) => id);
   const attempts: Array<{ scenarioId: string; attempt: number; maxAttempts: number }> = [];
@@ -231,7 +231,7 @@ test.skipIf(process.platform === 'win32')(
     symlinkSync(target, alias, 'dir');
     const support = await import(
       // @ts-expect-error The tracked evaluator support module is intentionally plain ESM.
-      '../../scripts/eval-codex-matrix-support.mjs'
+      '../../scripts/evaluation/eval-codex-matrix-support.mjs'
     );
 
     assert.equal(typeof support.sameCanonicalPath, 'function');
@@ -257,7 +257,7 @@ test.skipIf(process.platform === 'win32')(
     writeFileSync(payload, '{}\n');
     const support = await import(
       // @ts-expect-error The tracked evaluator support module is intentionally plain ESM.
-      '../../scripts/eval-codex-matrix-support.mjs'
+      '../../scripts/evaluation/eval-codex-matrix-support.mjs'
     );
     const canonicalPayload = join(realpathSync.native(directory), 'payload.json');
 
@@ -386,7 +386,7 @@ process.stdout.write('{"type":"turn.completed","usage":{"input_tokens":12}}\\n')
 });
 
 test('scenario executor passes the exact matrix contract to one isolated scenario process', async () => {
-  const matrix = await import('../../scripts/eval-codex-matrix.js');
+  const matrix = await import('../../scripts/evaluation/eval-codex-matrix.js');
   assert.equal(typeof matrix.createScenarioExecutor, 'function');
   const directory = temporaryDirectory();
   const scenarioProcess = join(directory, 'scenario.mjs');
@@ -420,7 +420,7 @@ process.stdout.write(JSON.stringify({ scenarioId: process.argv[2], outcome: comp
 test('profile-control skill routing remains bounded for deeply segmented commands', async () => {
   const { isExplicitProfileControlRoutingViolation } = await import(
     // @ts-expect-error The tracked evaluator support module is intentionally plain ESM.
-    '../../scripts/eval-codex-matrix-support.mjs'
+    '../../scripts/evaluation/eval-codex-matrix-support.mjs'
   );
   const item = {
     type: 'command_execution',

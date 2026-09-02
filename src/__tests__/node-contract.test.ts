@@ -53,7 +53,7 @@ test('release verification reuses one quality build and one covered unit-test ru
   assert.equal(scripts['build:emit'], 'tsup');
   assert.equal(
     scripts['preflight:quality'],
-    'pnpm run check && pnpm run build:emit && node --import tsx scripts/preflight.ts all',
+    'pnpm run check && pnpm run build:emit && node --import tsx scripts/preflight/preflight.ts all',
   );
   assert.equal(scripts.preflight, 'pnpm run preflight:quality && pnpm run test:unit');
   assert.equal(
@@ -132,7 +132,7 @@ test('Markdown AST traversal uses the maintained unist visitor', () => {
 });
 
 test('preflight mode parsing uses Commander choices', () => {
-  const source = readFileSync(join(root, 'scripts', 'preflight.ts'), 'utf8');
+  const source = readFileSync(join(root, 'scripts', 'preflight', 'preflight.ts'), 'utf8');
 
   assert.match(source, /from ['"]commander['"]/);
   assert.match(source, /\.choices\(\['all', 'cli', 'docs'\]\)/);
@@ -142,7 +142,7 @@ test('preflight mode parsing uses Commander choices', () => {
 });
 
 test('built CLI preflight derives and exercises the complete Adapter set', () => {
-  const source = readFileSync(join(root, 'scripts', 'preflight-adapters.ts'), 'utf8');
+  const source = readFileSync(join(root, 'scripts', 'preflight', 'preflight-adapters.ts'), 'utf8');
 
   assert.match(source, /supportedAgentNames/);
   assert.match(source, /\['install', '--agent', 'all'/);
@@ -151,7 +151,7 @@ test('built CLI preflight derives and exercises the complete Adapter set', () =>
 });
 
 test('release manifest comparison uses Node deep equality', () => {
-  const source = readFileSync(join(root, 'scripts', 'eval-fingerprint.ts'), 'utf8');
+  const source = readFileSync(join(root, 'scripts', 'evaluation', 'eval-fingerprint.ts'), 'utf8');
 
   assert.match(source, /import \{ isDeepStrictEqual \} from ['"]node:util['"]/);
   assert.match(source, /isDeepStrictEqual\(candidatePackage, currentPackage\)/);

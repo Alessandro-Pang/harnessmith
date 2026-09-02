@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { verifyReleaseAttestation } from '../../scripts/release-attestation.js';
-import { releaseRiskAcceptanceIsValid } from '../../scripts/release-state.js';
+import { verifyReleaseAttestation } from '../../scripts/release/release-attestation.js';
+import { releaseRiskAcceptanceIsValid } from '../../scripts/release/release-state.js';
 
 test('risk acceptance covers the exact canonical uncovered evaluation matrix', () => {
   const acceptance = {

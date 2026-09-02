@@ -7,12 +7,12 @@ import { onTestFinished, test } from 'vitest';
 import {
   repositoryRoot,
   runPromptRouteBenchmark,
-} from '../../scripts/prompt-route-benchmark-lib.js';
+} from '../../scripts/benchmarks/prompt-route-benchmark-lib.js';
 
 function run(args: string[]) {
   return spawnSync(
     process.execPath,
-    ['--import', 'tsx', 'scripts/prompt-route-benchmark.ts', ...args],
+    ['--import', 'tsx', 'scripts/benchmarks/prompt-route-benchmark.ts', ...args],
     {
       cwd: repositoryRoot,
       encoding: 'utf8',

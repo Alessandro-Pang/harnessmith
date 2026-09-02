@@ -231,7 +231,7 @@ test('release documentation distinguishes post-publish registry clean-room evide
   assert.match(evaluation, /registry metadata.*integrity.*隔离安装/s);
   assert.match(evaluation, /传播延迟.*metadata.*integrity.*运行失败/s);
   assert.match(capabilities, /id: post-publish-registry-verification/);
-  assert.match(capabilities, /scripts\/registry-verification\.ts/);
+  assert.match(capabilities, /scripts\/release\/registry-verification\.ts/);
   assert.match(capabilities, /evals\/__tests__\/registry-verification\.test\.ts/);
   assert.match(contributing, /registry clean-room/i);
 });
@@ -256,8 +256,8 @@ test('architecture invariants have implementation and executable verification ev
   const evidence = read('docs/capability-evidence.yaml');
 
   assert.match(evidence, /id: architecture-invariant-preflight/);
-  assert.match(evidence, /scripts\/preflight-architecture\.ts/);
-  assert.match(evidence, /scripts\/capability-evidence\.ts/);
+  assert.match(evidence, /scripts\/preflight\/preflight-architecture\.ts/);
+  assert.match(evidence, /scripts\/evaluation\/capability-evidence\.ts/);
   assert.match(evidence, /src\/__tests__\/preflight-architecture\.test\.ts/);
   assert.match(evidence, /src\/__tests__\/preflight-docs\.test\.ts/);
 });

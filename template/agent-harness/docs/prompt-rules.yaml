@@ -33,7 +33,7 @@ rules:
     guarantee: enforced
     evidence:
       implementation:
-        - scripts/preflight-architecture.ts
+        - scripts/preflight/preflight-architecture.ts
         - template/agent-harness/src/lib/memory-write.ts
         - template/agent-harness/src/lib/task-store.ts
       verification:

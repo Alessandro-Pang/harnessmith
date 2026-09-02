@@ -3,8 +3,8 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test, vi } from 'vitest';
-import { temporaryResourceReport } from '../../scripts/temp-resources.js';
-import { createTemporaryWorkspace } from '../temporary-resource.js';
+import { temporaryResourceReport } from '../../scripts/temporary-resources/temp-resources.js';
+import { createTemporaryWorkspace } from '../temporary-resources/temporary-resource.js';
 
 function fixture(): string {
   const root = mkdtempSync(join(tmpdir(), 'harnessmith-temp-report-test-'));

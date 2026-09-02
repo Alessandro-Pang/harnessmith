@@ -7,7 +7,7 @@ import { temporaryDirectory } from './run-fixture.js';
 async function support() {
   return import(
     // @ts-expect-error The tracked evaluator support module is intentionally plain ESM.
-    '../../scripts/eval-codex-matrix-support.mjs'
+    '../../scripts/evaluation/eval-codex-matrix-support.mjs'
   );
 }
 

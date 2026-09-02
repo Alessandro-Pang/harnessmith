@@ -26,6 +26,7 @@ import {
   indexFormatVersion,
   type LoadedIndex,
   runtimeIcuVersion,
+  resolveIndexMaxChunks,
   type SearchIndexSnapshot,
   SearchIndexUnavailable,
   sameIdentity,
@@ -115,6 +116,14 @@ function buildOrUpdateIndex(
   options: SearchOptions,
 ): void {
   const { discovery, files: current } = discoverIndexSources(sources, options, true);
+  const maxChunks = resolveIndexMaxChunks(options);
+  let chunkCount = 0;
+  const accountForChunks = (count: number): void => {
+    chunkCount += count;
+    if (chunkCount > maxChunks) {
+      throw new SearchIndexUnavailable('stale', 'Search index refresh exceeded its chunk budget');
+    }
+  };
   let previous = compatibleSnapshot(path, scopeHash);
   let backend: SearchBackend;
   try {
@@ -141,14 +150,17 @@ function buildOrUpdateIndex(
     const old = previousFiles.get(fileKey(file));
     previousFiles.delete(fileKey(file));
     if (old && sameIdentity(file, old)) {
+      accountForChunks(old.chunkIds.length);
       nextFiles.push(old);
       continue;
     }
     const indexed = readAndChunk(file, discovery);
     if (old && indexed.file.contentDigest === old.contentDigest) {
+      accountForChunks(old.chunkIds.length);
       nextFiles.push({ ...old, ...indexed.file, chunkIds: old.chunkIds });
       continue;
     }
+    accountForChunks(indexed.file.chunkIds.length);
     for (const id of old?.chunkIds || []) backend.discard(id);
     backend.addAll(indexed.documents);
     nextFiles.push(indexed.file);

@@ -7,7 +7,7 @@ import { test } from 'vitest';
 import {
   buildHostCapabilityMatrixReport,
   readHostCapabilityMatrix,
-} from '../../scripts/eval-host-capability-matrix.js';
+} from '../../scripts/evaluation/eval-host-capability-matrix.js';
 import {
   candidateArtifact,
   currentFingerprint,
@@ -212,7 +212,7 @@ test('matrix report keeps behavior, evaluator, and rejected-candidate records di
 });
 
 test('matrix CLI reports missing execution without manufacturing Host proof', () => {
-  const entry = join(root, 'scripts', 'eval-host-capability-matrix-cli.ts');
+  const entry = join(root, 'scripts', 'evaluation', 'eval-host-capability-matrix-cli.ts');
   const run = (extra: string[] = []) =>
     spawnSync(
       process.execPath,

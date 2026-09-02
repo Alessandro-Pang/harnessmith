@@ -3,11 +3,11 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { createAdapter } from '../adapters.js';
-import { effectiveContentFingerprint } from '../effective-content-fingerprint.js';
-import { installAll } from '../install.js';
-import { inspectStatusAll, statusAll } from '../lifecycle.js';
-import { explainStatus } from '../status-explanation.js';
+import { createAdapter } from '../adapters/adapters.js';
+import { effectiveContentFingerprint } from '../status/effective-content-fingerprint.js';
+import { installAll } from '../installation/install.js';
+import { inspectStatusAll, statusAll } from '../installation/lifecycle.js';
+import { explainStatus } from '../status/status-explanation.js';
 
 function fixture(prefix: string) {
   const root = mkdtempSync(join(tmpdir(), prefix));

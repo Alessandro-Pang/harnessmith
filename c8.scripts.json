@@ -1,12 +1,12 @@
 {
   "all": true,
   "exclude": [
-    "scripts/search-benchmark.ts",
-    "scripts/release-attestation.ts",
-    "scripts/release-finalize.ts",
-    "scripts/release-publish.ts",
-    "scripts/release-state.ts",
-    "scripts/release-version.ts"
+    "scripts/benchmarks/search-benchmark.ts",
+    "scripts/release/release-attestation.ts",
+    "scripts/release/release-finalize.ts",
+    "scripts/release/release-publish.ts",
+    "scripts/release/release-state.ts",
+    "scripts/release/release-version.ts"
   ],
   "include": ["scripts/**/*.ts"],
   "reports-dir": "coverage/scripts",

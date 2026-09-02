@@ -1,8 +1,8 @@
 import { join } from 'node:path';
-import { adapterCapabilities } from '../../adapters.js';
-import type { Adapter, AgentName, PreparedInstall } from '../../types.js';
-import { errorMessage, HarnessmithError } from '../../types.js';
-import { initializeUserData } from '../../user-data.js';
+import { adapterCapabilities } from '../../adapters/adapters.js';
+import type { Adapter, AgentName, PreparedInstall } from '../../shared/types.js';
+import { errorMessage, HarnessmithError } from '../../shared/types.js';
+import { initializeUserData } from '../../installation/user-data.js';
 
 const name = process.env.TEST_ADAPTER as AgentName;
 const home = process.env.TEST_ADAPTER_HOME || '';

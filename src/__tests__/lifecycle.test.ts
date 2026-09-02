@@ -3,9 +3,9 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { createAdapter } from '../adapters.js';
-import { installAll } from '../install.js';
-import { describeLifecycle } from '../lifecycle-plan.js';
+import { createAdapter } from '../adapters/adapters.js';
+import { installAll } from '../installation/install.js';
+import { describeLifecycle } from '../installation/lifecycle-plan.js';
 
 /**
  * Adapter-specific / edge-case lifecycle coverage.

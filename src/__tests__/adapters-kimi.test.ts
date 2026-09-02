@@ -3,7 +3,7 @@ import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { createAdapter } from '../adapters.js';
+import { createAdapter } from '../adapters/adapters.js';
 
 test('Kimi Code CLI adapter installs its global rule in the effective data directory', () => {
   const root = mkdtempSync(join(tmpdir(), 'harness-kimi-config-'));

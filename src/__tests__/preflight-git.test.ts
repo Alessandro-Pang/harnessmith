@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
-import { validBranchName } from '../../scripts/preflight-git.js';
+import { validBranchName } from '../../scripts/preflight/preflight-git.js';
 
 test('accepts issue-linked branches and long-lived branches', () => {
   for (const branch of [

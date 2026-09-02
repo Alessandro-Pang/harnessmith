@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import { PassThrough } from 'node:stream';
 import { test } from 'vitest';
-import { collectAgents, normalizeAgents } from '../agents.js';
-import { executeCommand } from '../command-executor.js';
-import { createProgram, type HarnessmithCommand } from '../program.js';
-import type { CliOptions } from '../types.js';
+import { collectAgents, normalizeAgents } from '../shared/agents.js';
+import { executeCommand } from '../application/command-executor.js';
+import { createProgram, type HarnessmithCommand } from '../app/program.js';
+import type { CliOptions } from '../shared/types.js';
 
 test('Commander supports repeatable and comma-separated agent values', async () => {
   let result: (CliOptions & { command: HarnessmithCommand }) | undefined;

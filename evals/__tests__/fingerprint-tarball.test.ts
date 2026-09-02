@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import fc from 'fast-check';
 import { test } from 'vitest';
-import { readNpmPackageTarball } from '../../scripts/npm-tarball.js';
+import { readNpmPackageTarball } from '../../scripts/release/npm-tarball.js';
 import { run, temporaryDirectory } from './run-fixture.js';
 import { candidateEntries, tarGzip, writeCandidateTarball } from './tarball-fixture.js';
 

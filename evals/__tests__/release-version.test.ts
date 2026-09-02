@@ -12,11 +12,11 @@ import { test } from 'vitest';
 import { candidateArtifact, currentFingerprint, temporaryDirectory } from './run-fixture.js';
 
 const root = join(import.meta.dirname, '..', '..');
-const modulePath = join(root, 'scripts', 'release-version.ts');
+const modulePath = join(root, 'scripts', 'release', 'release-version.ts');
 
 test('release version prepare leaves the GitHub Releases pointer unchanged and produces an exact candidate', async () => {
   assert.ok(existsSync(modulePath), 'release version workflow module is missing');
-  const { prepareReleaseVersion } = await import('../../scripts/release-version.js');
+  const { prepareReleaseVersion } = await import('../../scripts/release/release-version.js');
   const fixture = temporaryDirectory();
   mkdirSync(join(fixture, '.release'));
   writeFileSync(join(fixture, 'package.json'), '{"name":"fixture","version":"1.2.3"}\n');
@@ -62,7 +62,7 @@ test('release version prepare leaves the GitHub Releases pointer unchanged and p
 
 test('release attestation rejects a candidate digest that differs from local gates', async () => {
   assert.ok(existsSync(modulePath), 'release version workflow module is missing');
-  const { verifyReleaseAttestation } = await import('../../scripts/release-version.js');
+  const { verifyReleaseAttestation } = await import('../../scripts/release/release-version.js');
   assert.throws(
     () =>
       verifyReleaseAttestation(
@@ -101,7 +101,7 @@ test('release attestation rejects a candidate digest that differs from local gat
 });
 
 test('release attestation preserves an explicit risk exception without claiming full coverage', async () => {
-  const { verifyReleaseAttestation } = await import('../../scripts/release-version.js');
+  const { verifyReleaseAttestation } = await import('../../scripts/release/release-version.js');
   const subject = {
     packageName: 'harnessmith',
     packageVersion: '0.6.0',
@@ -169,8 +169,8 @@ test('tag publication workflow uses GitHub OIDC and the attested exact candidate
 });
 
 test('release finalization rejects changelog edits because release notes live on GitHub', async () => {
-  const { finalizeReleaseVersion } = await import('../../scripts/release-finalize.js');
-  const { writeReleaseState } = await import('../../scripts/release-state.js');
+  const { finalizeReleaseVersion } = await import('../../scripts/release/release-finalize.js');
+  const { writeReleaseState } = await import('../../scripts/release/release-state.js');
   const fixture = temporaryDirectory();
   const directory = join(fixture, '.release');
   mkdirSync(directory);

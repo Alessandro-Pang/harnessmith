@@ -12,7 +12,7 @@ import {
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { test } from 'vitest';
-import { lifecycleTransaction } from '../lifecycle-transaction.js';
+import { lifecycleTransaction } from '../installation/lifecycle-transaction.js';
 
 interface RecoveryError extends Error {
   recoveryPaths?: string[];

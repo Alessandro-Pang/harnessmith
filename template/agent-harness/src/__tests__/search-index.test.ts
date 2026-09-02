@@ -134,6 +134,17 @@ test('refresh updates changed chunks incrementally and removes deleted documents
   );
 });
 
+test('refresh rejects an index that exceeds its chunk budget', () => {
+  const { docs, runtime, sources } = fixture();
+  writeFileSync(join(docs, 'large.md'), `# Large\n\n${'x'.repeat(16_001)}\n`);
+
+  assert.throws(
+    () => searchWithIndex(runtime, 'large', sources, { refreshIndex: true, maxChunks: 1 }),
+    /chunk budget/i,
+  );
+  assert.equal(existsSync(searchIndexPath(runtime, sources)), false);
+});
+
 test('stale and corrupt indexes fail closed or fall back according to mode', () => {
   const { docs, runtime, sources } = fixture();
   const guide = join(docs, 'guide.md');

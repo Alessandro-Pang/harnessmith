@@ -11,7 +11,21 @@ const compatibilityBanner = [
 
 export default defineConfig([
   {
-    entry: ['src/*.ts'],
+    entry: [
+      'src/cli.ts',
+      'src/app/*.ts',
+      'src/application/*.ts',
+      'src/adapters/*.ts',
+      'src/adoption/*.ts',
+      'src/diagnostics/*.ts',
+      'src/installation/*.ts',
+      'src/portable-config/*.ts',
+      'src/presentation/*.ts',
+      'src/setup/*.ts',
+      'src/shared/*.ts',
+      'src/status/*.ts',
+      'src/temporary-resources/*.ts',
+    ],
     outDir: 'dist',
     format: ['esm'],
     target: 'node24',

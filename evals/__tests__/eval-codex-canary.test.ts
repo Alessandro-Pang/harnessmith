@@ -4,10 +4,10 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'vitest';
-import * as canary from '../../scripts/eval-codex-canary.js';
+import * as canary from '../../scripts/evaluation/eval-codex-canary.js';
 import { candidateArtifact, root, temporaryDirectory } from './run-fixture.js';
 
-const entry = join(root, 'scripts', 'eval-codex-canary.ts');
+const entry = join(root, 'scripts', 'evaluation', 'eval-codex-canary.ts');
 
 test('canary CLI exposes its exact bounded inputs without starting a Host', () => {
   const result = spawnSync(process.execPath, ['--import', 'tsx', entry, '--help'], {

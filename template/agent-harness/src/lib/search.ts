@@ -30,6 +30,7 @@ export interface SearchSource {
 export interface SearchOptions extends Partial<SearchScanLimits> {
   limit?: number;
   maxLineLength?: number;
+  maxChunks?: number;
   mode?: SearchMode;
   refreshIndex?: boolean;
 }
