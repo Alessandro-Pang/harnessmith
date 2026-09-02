@@ -1,6 +1,6 @@
-export type CandidateDiscoverySource = 'chat' | 'tool';
-export type MemoryCandidateKind = 'input' | 'profile';
-export type MemoryCandidatePurpose = 'acceptance' | 'constraint' | 'explicit-retain';
+type CandidateDiscoverySource = 'chat' | 'tool';
+type MemoryCandidateKind = 'input' | 'profile';
+type MemoryCandidatePurpose = 'acceptance' | 'constraint' | 'explicit-retain';
 
 export interface CandidateDiscoveryEvent {
   source: CandidateDiscoverySource;
