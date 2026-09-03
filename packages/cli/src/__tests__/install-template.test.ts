@@ -51,7 +51,7 @@ test('renders the apps/docs/site manifest with a valid Windows path', () => {
     instructions: [],
   } satisfies Adapter;
   const template = readFileSync(
-    join(templateRoot, 'packages', 'harness', 'docs', 'manifest.yaml'),
+    join(templateRoot, 'template', 'agent-harness', 'docs', 'manifest.yaml'),
     'utf8',
   );
 
@@ -84,7 +84,7 @@ test('renders all distributed frontmatter with valid Windows paths', () => {
   const render = installationRenderer(adapter, {
     HARNESS_REPOSITORY_ROOT: repositoryRoot,
   });
-  const docsRoot = join(templateRoot, 'packages', 'harness', 'docs');
+  const docsRoot = join(templateRoot, 'template', 'agent-harness', 'docs');
 
   for (const path of markdownFiles(docsRoot)) {
     assert.doesNotThrow(
@@ -96,7 +96,7 @@ test('renders all distributed frontmatter with valid Windows paths', () => {
 
 test('renders all memory template frontmatter with YAML-safe values', () => {
   const home = String.raw`C:\Users\runneradmin`;
-  const harnessRoot = join(templateRoot, 'packages', 'harness');
+  const harnessRoot = join(templateRoot, 'template', 'agent-harness');
   const runtime = {
     env: { HOME: home, TZ: 'UTC' },
     home,

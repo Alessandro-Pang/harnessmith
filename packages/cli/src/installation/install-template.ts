@@ -17,10 +17,11 @@ function resolvePackageRoot(start: string): string {
       if (manifest.name === 'harnessmith' && existsSync(join(current, 'template', 'agent-harness')))
         return current;
     } catch {
-      const parent = dirname(current);
-      if (parent === current) throw new Error('Unable to locate Harnesssmith package root');
-      current = parent;
+      // Missing or malformed manifests do not identify the distribution root.
     }
+    const parent = dirname(current);
+    if (parent === current) throw new Error('Unable to locate Harnesssmith package root');
+    current = parent;
   }
 }
 
