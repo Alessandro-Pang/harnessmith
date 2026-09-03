@@ -116,6 +116,7 @@ export default withMermaid(defineConfig({
             { text: '版本与迁移', link: '/versions/migrations' },
             { text: '贡献指南', link: '/contributing' },
             { text: '内容策略', link: '/content-strategy' },
+            { text: '优化路线图', link: '/project/optimization-roadmap' },
             { text: '历史与思想来源', link: '/project/history-and-influences' },
             { text: '参考资料', link: '/references' },
           ],
