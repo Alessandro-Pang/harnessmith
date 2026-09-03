@@ -141,7 +141,7 @@ test('validator describes accepted inputs as maintainer-attested record structur
 });
 
 test('architecture describes structural attestation instead of real-host evidence verification', () => {
-  const architecture = readFileSync(join(root, 'docs', 'architecture.md'), 'utf8');
+  const architecture = readFileSync(join(root, 'apps', 'docs', 'site', 'architecture.md'), 'utf8');
 
   assert.match(architecture, /maintainer-attested record structure/i);
   assert.doesNotMatch(architecture, /真实宿主证据校验/);

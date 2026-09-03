@@ -44,7 +44,7 @@ test('fingerprint binds the candidate package and every complete scenario contra
     'template/agent-harness/docs/README.md',
     'template/agent-harness/manifest.json',
     'template/agent-harness/schemas/task.schema.json',
-    'packages/harness/dist/harness.mjs',
+    'template/agent-harness/dist/harness.mjs',
     'template/agent-harness/templates/project-AGENTS.md',
   ]) {
     assert.ok(output.ruleSources.includes(source), `missing rule fingerprint source: ${source}`);
@@ -416,7 +416,7 @@ test('declared package release workflow gates the exact tarball before publicati
 test('evaluation and release docs distinguish contracts from real fresh host evidence', () => {
   const evalReadme = readFileSync(join(root, 'evals', 'README.md'), 'utf8');
   const releasing = readFileSync(join(root, 'RELEASING.md'), 'utf8');
-  const architecture = readFileSync(join(root, 'docs', 'architecture.md'), 'utf8');
+  const architecture = readFileSync(join(root, 'apps', 'docs', 'site', 'architecture.md'), 'utf8');
 
   for (const required of [
     'pnpm run eval:fingerprint',

@@ -214,7 +214,7 @@ test('fingerprint requires the npm tgz extension and core distribution files', (
     incomplete,
     tarGzip(
       candidateEntries(process.cwd()).filter(
-        ({ path }) => path !== 'package/packages/harness/dist/harness.mjs',
+        ({ path }) => path !== 'package/template/agent-harness/dist/harness.mjs',
       ),
     ),
   );
