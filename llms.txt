@@ -1,10 +1,10 @@
 # Harnessmith
 
 > Harnessmith is a cross-host Personal Harness distribution and work-state control plane for Codex, Cursor,
-> Claude Code, OpenCode, and Kimi Code CLI.
+> Claude Code, OpenCode, Kimi Code CLI, and Zed Agent.
 > This file is an operational guide for an LLM helping a user install or initialize it.
 
-Project: https://www.npmjs.com/package/harnessmith
+Project: <https://www.npmjs.com/package/harnessmith>
 Release channel: npm registry (`latest` dist-tag)
 Runtime: Node.js 24.12 or newer
 Repository package manager: pnpm 10.13.0 (locked by `packageManager` and `pnpm-lock.yaml`)
@@ -47,12 +47,15 @@ use the published `npx --yes harnessmith` commands below.
   - Instructions: `$KIMI_CODE_HOME/AGENTS.md`, default `~/.kimi-code/AGENTS.md`
   - Harness: `agent-harness` under the same effective Kimi Code CLI data directory
   - Supports Kimi Code CLI `0.12.0` or newer; does not target legacy Python `kimi-cli` data at `~/.kimi/`
+- `zed`
+  - Instructions: `~/.config/zed/AGENTS.md` (Windows: `%APPDATA%\Zed\AGENTS.md`)
+  - Harness: `agent-harness` under the same effective Zed configuration directory
 
 ## LLM installation protocol
 
 1. Verify the runtime with `node --version`. Stop and explain the requirement if Node.js is older than 24.12.
 2. Determine the exact agent selection from the user's request. Accepted values are `codex`, `cursor`,
-   `claude`, `claude-code`, `opencode`, `kimi`, `kimi-code`, and `all`. Never infer `all` from an ambiguous request.
+   `claude`, `claude-code`, `opencode`, `kimi`, `kimi-code`, `zed`, and `all`. Never infer `all` from an ambiguous request.
 3. If Cursor is selected, determine the intended project path. Ask the user if more than one repository is
    plausible. Prefer an absolute path.
 4. Preview the shared first-use plan before writing:

@@ -6,7 +6,7 @@ owner: maintainers
 
 # 宿主支持
 
-Harnessmith 当前为五类 Coding Agent 提供 Adapter。Adapter 负责路径与文件格式适配，不会替代宿主自身的
+Harnesssmith 当前为六类 Coding Agent 提供 Adapter。Adapter 负责路径与文件格式适配，不会替代宿主自身的
 模型循环、工具调度、sandbox 或权限批准。
 
 | 宿主 | `--agent` | 默认规则入口 | 范围与激活 |
@@ -16,6 +16,7 @@ Harnessmith 当前为五类 Coding Agent 提供 Adapter。Adapter 负责路径�
 | Claude Code | `claude`（别名 `claude-code`） | `${CLAUDE_CONFIG_DIR:-~/.claude}/AGENTS.md` 与 `CLAUDE.md` | 全局；宿主默认 |
 | OpenCode | `opencode` | `${OPENCODE_CONFIG_DIR:-${XDG_CONFIG_HOME:-~/.config}/opencode}/AGENTS.md` | 全局；宿主默认 |
 | Kimi Code CLI | `kimi`（别名 `kimi-code`） | `${KIMI_CODE_HOME:-~/.kimi-code}/AGENTS.md` | 全局；宿主默认 |
+| Zed Agent | `zed` | `~/.config/zed/AGENTS.md`（Windows：`%APPDATA%\Zed\AGENTS.md`） | 全局；宿主默认 |
 
 可以用机器可读输出核对当前版本的 Adapter 声明：
 

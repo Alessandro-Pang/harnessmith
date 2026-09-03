@@ -58,6 +58,7 @@ npx harnessmith setup --agent codex
 | Claude Code | 全局 | `claude`（别名 `claude-code`） |
 | OpenCode | 全局 | `opencode` |
 | Kimi Code CLI | 全局 | `kimi`（别名 `kimi-code`） |
+| Zed Agent | 全局 | `zed` |
 
 Cursor 需用 `--project /path/to/project` 指定项目根。目标路径、别名和支持证据见
 [宿主指南](https://alexpang.cn/harnessmith/guide/hosts)。

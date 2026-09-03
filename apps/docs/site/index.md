@@ -22,7 +22,7 @@ hero:
 <section class="home-signal" aria-label="Harnessmith 概览">
   <p class="home-eyebrow">Personal Agent Harness · Local first</p>
   <div class="home-signal-grid">
-    <div><strong>5</strong><span>个已接入宿主</span></div>
+    <div><strong>6</strong><span>个已接入宿主</span></div>
     <div><strong>2</strong><span>层清晰架构</span></div>
     <div><strong>1</strong><span>套可携带工作方式</span></div>
   </div>
@@ -43,9 +43,9 @@ hero:
   <article class="home-card home-card-hosts">
     <span class="home-card-index">01 / DISTRIBUTE</span>
     <h2>一套方法，适配多个宿主</h2>
-    <p>Codex、Cursor、Claude Code、OpenCode 与 Kimi Code CLI 共享宿主中立的 Harness；路径、入口和激活差异由 Adapter 处理。</p>
+    <p>Codex、Cursor、Claude Code、OpenCode、Kimi Code CLI 与 Zed Agent 共享宿主中立的 Harness；路径、入口和激活差异由 Adapter 处理。</p>
     <div class="host-list" aria-label="支持的宿主">
-      <span>Codex</span><span>Cursor</span><span>Claude Code</span><span>OpenCode</span><span>Kimi Code</span>
+      <span>Codex</span><span>Cursor</span><span>Claude Code</span><span>OpenCode</span><span>Kimi Code</span><span>Zed Agent</span>
     </div>
   </article>
 

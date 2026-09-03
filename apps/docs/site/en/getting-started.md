@@ -31,7 +31,7 @@ risk, and stable action codes without executing them. Host-limited checks remain
 Every interactive step can be cancelled before writing. Setup still refuses unmanaged and modified targets by default;
 confirmation does not bypass ownership safeguards. Unsupported hosts stop before destination resolution or writes.
 
-Codex, Claude Code, OpenCode, and Kimi Code CLI use global scope. Cursor uses project scope:
+Codex, Claude Code, OpenCode, Kimi Code CLI, and Zed Agent use global scope. Cursor uses project scope:
 
 ```bash
 npx harnessmith setup --agent cursor --project /path/to/project

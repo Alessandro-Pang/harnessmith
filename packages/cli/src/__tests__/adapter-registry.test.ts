@@ -31,13 +31,14 @@ test('adapter registry is the single host inventory for CLI selection and aliase
   assert.deepEqual(normalizeAgents(['all']), [...supportedAgentNames]);
   assert.deepEqual(normalizeAgents(['claude-code']), ['claude']);
   assert.deepEqual(normalizeAgents(['kimi-code']), ['kimi']);
-  assert.deepEqual(normalizeAgents(['1', '2', '3', '4', '5']), [...supportedAgentNames]);
+  assert.deepEqual(normalizeAgents(['1', '2', '3', '4', '5', '6']), [...supportedAgentNames]);
   assert.deepEqual([...adapterAliasMap().entries()].sort(), [
     ['1', 'codex'],
     ['2', 'cursor'],
     ['3', 'claude'],
     ['4', 'opencode'],
     ['5', 'kimi'],
+    ['6', 'zed'],
     ['claude-code', 'claude'],
     ['kimi-code', 'kimi'],
   ]);
@@ -91,6 +92,6 @@ test('createAdapter preserves registry metadata for every registered host', () =
 });
 
 test('AgentName union stays aligned with registry order used by install records', () => {
-  const names: AgentName[] = ['codex', 'cursor', 'claude', 'opencode', 'kimi'];
+  const names: AgentName[] = ['codex', 'cursor', 'claude', 'opencode', 'kimi', 'zed'];
   assert.deepEqual(names, [...supportedAgentNames]);
 });

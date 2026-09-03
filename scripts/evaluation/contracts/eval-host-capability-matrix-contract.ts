@@ -2,7 +2,10 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { AnySchema } from 'ajv';
 import { Ajv2020 } from 'ajv/dist/2020.js';
-import type { AgentName } from '../../../packages/cli/src/shared/types.js';
+import {
+  type AgentName,
+  supportedAgentNames,
+} from '../../../packages/cli/src/adapters/adapter-registry.js';
 import { worktreeScenarioCatalog } from '../planning/eval-scenarios.js';
 import { repositoryRoot } from '../records/eval-fingerprint.js';
 
@@ -30,7 +33,7 @@ function validateContract(matrix: HostCapabilityMatrix): HostCapabilityMatrix {
   if (!validate(matrix)) {
     throw new Error(`Host capability matrix violates schema: ${JSON.stringify(validate.errors)}`);
   }
-  const expectedHosts: AgentName[] = ['codex', 'cursor', 'claude', 'opencode', 'kimi'];
+  const expectedHosts: AgentName[] = [...supportedAgentNames];
   if (matrix.hosts.some(({ id }, index) => id !== expectedHosts[index])) {
     throw new Error('Host capability matrix must contain the canonical ordered Host list');
   }

@@ -30,6 +30,12 @@
       "state": "inconclusive",
       "reason": "The distribution adapter exists, but no Kimi Code CLI real-Host transport and independent evaluator are implemented.",
       "evidence": ["packages/cli/src/adapters/adapter-registry.ts", "evals/README.md"]
+    },
+    {
+      "id": "zed",
+      "state": "inconclusive",
+      "reason": "The distribution adapter exists, but no Zed Agent real-Host transport and independent evaluator are implemented.",
+      "evidence": ["packages/cli/src/adapters/adapter-registry.ts", "evals/README.md"]
     }
   ],
   "capabilities": [

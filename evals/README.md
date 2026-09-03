@@ -1,15 +1,15 @@
 # Harness behavior evaluations
 
 Unit tests prove deterministic file and CLI behavior. This directory defines a separate contract for
-recording a maintainer-observed Codex, Cursor, Claude Code, OpenCode, or Kimi Code CLI run against the installed Harness. The
-current release policy requires Codex; Cursor, Claude Code, OpenCode, and Kimi Code CLI records remain supported optional evidence. A schema
+recording a maintainer-observed Codex, Cursor, Claude Code, OpenCode, Kimi Code CLI, or Zed Agent run against the installed Harness. The
+current release policy requires Codex; Cursor, Claude Code, OpenCode, Kimi Code CLI, and Zed Agent records remain supported optional evidence. A schema
 fixture, scenario catalog, mocked transcript, or passing unit test is never real host evidence.
 
 ## Multi-Host capability matrix
 
 `host-capability-matrix.v1.json` maps the current first-startup, read-only analysis, typed-writer,
 uninitialized-project, compaction, second-task, sidecar-failure, dirty-worktree, local-write prohibition,
-and replay capabilities across all five distribution adapters. `pnpm run eval:host-matrix` binds that
+and replay capabilities across all six distribution adapters. `pnpm run eval:host-matrix` binds that
 contract and every accepted record to one exact candidate tarball:
 
 ```bash
