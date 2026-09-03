@@ -8,8 +8,8 @@
     "schemaVersion": { "const": 1 },
     "hosts": {
       "type": "array",
-      "minItems": 5,
-      "maxItems": 5,
+      "minItems": 6,
+      "maxItems": 6,
       "items": { "$ref": "#/$defs/host" }
     },
     "capabilities": {
@@ -51,7 +51,7 @@
       "additionalProperties": false,
       "required": ["id", "state", "reason", "evidence"],
       "properties": {
-        "id": { "enum": ["codex", "cursor", "claude", "opencode", "kimi"] },
+        "id": { "enum": ["codex", "cursor", "claude", "opencode", "kimi", "zed"] },
         "state": { "enum": ["executable", "inconclusive", "unsupported"] },
         "reason": { "$ref": "#/$defs/text" },
         "evidence": {

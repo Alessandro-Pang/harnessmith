@@ -119,6 +119,20 @@ function resolveKimiAdapter({ env, userHome }: AdapterResolveContext): Adapter {
   return globalMarkdownAdapter('kimi', agentHome);
 }
 
+export function resolveZedAgentHome(
+  env: NodeJS.ProcessEnv,
+  platform: NodeJS.Platform = process.platform,
+  userHome = canonicalPath(env.HOME || homedir()),
+): string {
+  if (platform === 'win32')
+    return canonicalPath(join(env.APPDATA || join(userHome, 'AppData', 'Roaming'), 'Zed'));
+  return canonicalPath(join(userHome, '.config', 'zed'));
+}
+
+function resolveZedAdapter({ env, userHome }: AdapterResolveContext): Adapter {
+  return globalMarkdownAdapter('zed', resolveZedAgentHome(env, process.platform, userHome));
+}
+
 function resolveCursorAdapter({ project }: AdapterResolveContext): Adapter {
   const definition = getAdapterDefinition('cursor');
   const root = projectRoot(project);
@@ -186,6 +200,7 @@ const adapterResolvers = {
   claude: resolveClaudeAdapter,
   opencode: resolveOpenCodeAdapter,
   kimi: resolveKimiAdapter,
+  zed: resolveZedAdapter,
 } as const satisfies Record<AgentName, AdapterResolver>;
 
 export function createAdapter(

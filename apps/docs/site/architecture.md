@@ -7,7 +7,7 @@ owner: maintainers
 # Harnessmith 架构设计
 
 Harnessmith 是**跨 Host 的 Personal Harness 分发与工作状态控制层**。它把一套宿主中立的规则、文档和本地 Runtime
-安全地接入 Codex、Cursor、Claude Code、OpenCode 与 Kimi Code CLI，但不替代这些宿主的 Agent Runtime。
+安全地接入 Codex、Cursor、Claude Code、OpenCode、Kimi Code CLI 与 Zed Agent，但不替代这些宿主的 Agent Runtime。
 
 公开能力始终分成三种状态：**已实现（Implemented）** 表示代码与可执行证据都存在；**由宿主负责（Delegated to the
 Host）** 表示 Harnessmith 只提供 guidance 或接入点；**不支持（Unsupported）** 表示当前明确不声称拥有。逐项 owner
@@ -128,6 +128,7 @@ capabilities 输出与 Eval `host.adapter` 枚举都从该清单派生或与之�
 | Claude Code | global | Markdown | host-default | host |
 | OpenCode | global | Markdown | host-default | host |
 | Kimi Code CLI | global | Markdown | host-default | host |
+| Zed Agent | global | Markdown | host-default | host |
 | Cursor | project | AGENTS.md + MDC | MDC always | host |
 
 “支持”表示 Adapter 生命周期、能力描述和回归测试存在，不表示每个宿主版本都完成真实运行评测。逐项状态以

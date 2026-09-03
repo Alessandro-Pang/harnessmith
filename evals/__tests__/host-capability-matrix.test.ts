@@ -30,7 +30,7 @@ test('host capability matrix is complete, unique, and backed by repository evide
   assert.equal(validate(matrix), true, JSON.stringify(validate.errors));
   assert.deepEqual(
     matrix.hosts.map(({ id }: { id: string }) => id),
-    ['codex', 'cursor', 'claude', 'opencode', 'kimi'],
+    ['codex', 'cursor', 'claude', 'opencode', 'kimi', 'zed'],
   );
   assert.deepEqual(
     matrix.capabilities.map(({ id }: { id: string }) => id),
@@ -90,10 +90,10 @@ test('matrix report binds every cell to one candidate and preserves real outcome
   const fingerprint = currentFingerprint();
   assert.equal(report.subject.packageArtifactSha256, fingerprint.packageArtifactSha256);
   assert.equal(report.subject.rulesSha256, fingerprint.rulesSha256);
-  assert.equal(report.cells.length, 50);
+  assert.equal(report.cells.length, 60);
   assert.equal(report.summary.passed, 1);
   assert.equal(report.summary['infra-inconclusive'], 2);
-  assert.equal(report.summary.inconclusive, 43);
+  assert.equal(report.summary.inconclusive, 53);
   assert.equal(report.summary['not-executed'], 4);
   assert.equal(report.summary.unsupported, 0);
   const passed = report.cells.find(
@@ -225,7 +225,7 @@ test('matrix CLI reports missing execution without manufacturing Host proof', ()
   const report = JSON.parse(reportResult.stdout);
   assert.equal(report.hostProof, false);
   assert.equal(report.summary['not-executed'], 7);
-  assert.equal(report.summary.inconclusive, 43);
+  assert.equal(report.summary.inconclusive, 53);
 
   const required = run(['--require-complete']);
   assert.equal(required.status, 1);

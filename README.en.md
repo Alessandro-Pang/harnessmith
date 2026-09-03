@@ -59,6 +59,7 @@ You can also ask a coding agent to read the installation protocol first:
 | Claude Code | global | `claude` (alias: `claude-code`) |
 | OpenCode | global | `opencode` |
 | Kimi Code CLI | global | `kimi` (alias: `kimi-code`) |
+| Zed Agent | global | `zed` |
 
 Cursor requires `--project /path/to/project`. See the
 [host guide](https://alexpang.cn/harnessmith/guide/hosts) for destinations, aliases, and support evidence.

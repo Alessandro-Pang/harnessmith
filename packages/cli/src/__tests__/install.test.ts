@@ -64,7 +64,7 @@ function backupWithContent(directory: string, prefix: string, expected: string):
   assert.equal(readFileSync(join(directory, backup), 'utf8'), expected);
 }
 
-test('installs all adapters, maps paths, and renames existing rules', () => {
+test('installs all adapters, maps paths, and renames existing rules', { timeout: 60_000 }, () => {
   const root = mkdtempSync(join(tmpdir(), 'harnessmith-'));
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
   const project = join(root, 'project');
@@ -280,7 +280,7 @@ test('json mode emits parseable automation output without terminal decoration', 
     .map((line) => JSON.parse(line));
   assert.deepEqual(
     plans.map(({ adapter }) => adapter),
-    ['codex', 'cursor', 'claude', 'opencode', 'kimi'],
+    ['codex', 'cursor', 'claude', 'opencode', 'kimi', 'zed'],
   );
   assert.equal(plans[0].capabilities.scope, 'global');
   assert.equal(plans[1].capabilities.scope, 'project');

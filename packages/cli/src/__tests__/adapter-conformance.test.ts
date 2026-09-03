@@ -26,6 +26,7 @@ function fixture(prefix: string) {
   const env = {
     ...process.env,
     HOME: root,
+    APPDATA: join(root, 'appdata'),
     CODEX_HOME: join(root, 'codex'),
     CLAUDE_CONFIG_DIR: join(root, 'claude'),
     OPENCODE_CONFIG_DIR: join(root, 'opencode'),
