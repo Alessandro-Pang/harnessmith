@@ -52,7 +52,7 @@ test('docs preflight validates canonical contract route ids instead of prose sni
 test('prompt rule contracts require complete semantics, evidence, owners, and confusing pairs', () => {
   const root = mkdtempSync(join(tmpdir(), 'harness-prompt-rule-contract-'));
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
-  mkdirSync(join(root, 'packages/cli/src'));
+  mkdirSync(join(root, 'packages/cli/src'), { recursive: true });
   mkdirSync(join(root, 'packages/cli/src', '__tests__'));
   mkdirSync(join(root, 'docs'));
   writeFileSync(join(root, 'packages/cli/src', 'gate.ts'), 'export const gate = true;\n');
@@ -179,7 +179,7 @@ test('docs preflight validates route kinds and requires explicit playbook priori
 test('capability evidence requires explicit states and code plus test evidence for implemented claims', () => {
   const root = mkdtempSync(join(tmpdir(), 'harness-capability-evidence-'));
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
-  mkdirSync(join(root, 'packages/cli/src'));
+  mkdirSync(join(root, 'packages/cli/src'), { recursive: true });
   writeFileSync(join(root, 'packages/cli/src', 'feature.ts'), 'export const feature = true;\n');
   writeFileSync(
     join(root, 'packages/cli/src', 'feature.test.ts'),
@@ -249,7 +249,7 @@ test('capability evidence requires explicit states and code plus test evidence f
 test('capability evidence rejects duplicate ids and non-executable verification evidence', () => {
   const root = mkdtempSync(join(tmpdir(), 'harness-capability-contract-'));
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
-  mkdirSync(join(root, 'packages/cli/src'));
+  mkdirSync(join(root, 'packages/cli/src'), { recursive: true });
   mkdirSync(join(root, 'docs'));
   writeFileSync(join(root, 'packages/cli/src', 'feature.ts'), 'export const feature = true;\n');
   writeFileSync(join(root, 'docs', 'claim.md'), '# Claim\n');
@@ -285,7 +285,7 @@ test('capability evidence rejects duplicate ids and non-executable verification 
     }),
     [
       'capability claim id is duplicated: feature',
-      'implemented claim feature verification evidence is not executable: apps/docs/site/claim.md',
+      'implemented claim feature verification evidence is not executable: docs/claim.md',
     ],
   );
 });

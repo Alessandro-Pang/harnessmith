@@ -130,7 +130,7 @@ test('handoff maps payload sourceRefs into recovery metadata', () => {
   );
 
   const stored = readFileSync(JSON.parse(io.logs[0]).path, 'utf8');
-  assert.match(stored, /^scope:\n {2}- src\/feature\.ts$/m);
+  assert.match(stored, /^scope:\n {2}- packages\/cli\/src\/feature\.ts$/m);
   assert.match(stored, /^source-refs:\n {2}- docs\/contract\.md$/m);
 });
 

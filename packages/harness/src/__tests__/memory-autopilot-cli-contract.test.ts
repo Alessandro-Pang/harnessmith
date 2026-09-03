@@ -233,7 +233,7 @@ test('handoff preserves omitted recovery fields, clears them explicitly, and clo
   assert.match(preserved, /# 关键决策\n\nKeep replacement snapshots/);
   assert.match(preserved, /# 验证证据\n\nFocused tests passed/);
   assert.match(preserved, /# 未解决事项\n\nFull verification remains/);
-  assert.match(preserved, /^scope:\n {2}- src\/feature\.ts$/m);
+  assert.match(preserved, /^scope:\n {2}- packages\/cli\/src\/feature\.ts$/m);
   assert.match(preserved, /^source-refs:\n {2}- docs\/contract\.md$/m);
   assert.match(preserved, /^status: blocked$/m);
 
