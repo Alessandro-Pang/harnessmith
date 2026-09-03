@@ -7,7 +7,7 @@ owner: maintainers
 # Harnessmith 架构设计
 
 Harnessmith 是**跨 Host 的 Personal Harness 分发与工作状态控制层**。它把一套宿主中立的规则、文档和本地 Runtime
-安全地接入 Codex、Cursor、Claude Code、OpenCode、Kimi Code CLI 与 DeepSeek Harness，但不替代这些宿主的 Agent
+安全地接入 Codex、Cursor、Claude Code、OpenCode、Kimi Code CLI、DeepSeek Harness 与 Pi Agent，但不替代这些宿主的 Agent
 Runtime。
 
 公开能力始终分成三种状态：**已实现（Implemented）** 表示代码与可执行证据都存在；**由宿主负责（Delegated to the
@@ -102,6 +102,7 @@ capabilities 输出与 Eval `host.adapter` 枚举都从该清单派生或与之�
 | OpenCode | global | Markdown | host-default | host |
 | Kimi Code CLI | global | Markdown | host-default | host |
 | DeepSeek Harness | global | Markdown | host-default | host |
+| Pi Agent | global | Markdown | host-default | host |
 | Cursor | project | AGENTS.md + MDC | MDC always | host |
 
 “支持”表示 Adapter 生命周期、能力描述和回归测试存在，不表示每个宿主版本都完成真实运行评测。逐项状态以
@@ -145,6 +146,35 @@ DeepSeek Harness 仍处于 developer preview，版本间可能 breaking change�
 | 已实现（Implemented） | 用户全局路径解析、`install --dry-run` / `install` / `status` / `restore` / `uninstall`、SafePath、锁、备份、所有权标记与回滚；**不**声称托管完整作用域链 |
 | 已在真实宿主验证（Verified on Host） | 尚未提交 maintainer-attested DeepSeek Host Eval；文件存在 ≠ 已验证 Session baseline 注入；发布门禁仍只要求 Codex |
 | 由宿主负责（Delegated to the Host） | 项目/嵌套指令发现、模型循环、工具/权限/sandbox/审批、profile/bundle、会话存储与凭证 |
+
+### Pi Agent 契约来源与验证边界
+
+产品身份（官方坐标）：仓库
+[earendil-works/pi](https://github.com/earendil-works/pi)，npm 包 `@earendil-works/pi-coding-agent`，可执行文件
+`pi`。配置根为 `$PI_CODING_AGENT_DIR`（默认 `~/.pi/agent`）；空或仅空白的 `PI_CODING_AGENT_DIR` 视为未设置。
+`PI_CODING_AGENT_DIR` 具有双重角色：它同时是配置根和 Pi 的可写状态目录（sessions/、settings.json、auth.json）。
+
+Pi 从全局 `~/.pi/agent/`、父目录和项目目录逐级加载 `AGENTS.md`（及 `CLAUDE.md`）。如果某目录存在
+`AGENTS.override.md`，Pi 会用它替代同目录的 `AGENTS.md`。Harnessmith 只托管用户全局这一层。
+
+#### 版本与兼容性
+
+Pi Agent 迭代迅速，当前**未锁定特定已验证 revision**。兼容性声明基于 Pi 文档化的 AGENTS.md 加载契约，而非
+特定 npm 版本或上游 commit。Host Eval 尚未提交。
+
+| 范围 | 谁负责 | 说明 |
+| --- | --- | --- |
+| 用户全局 `$PI_CODING_AGENT_DIR/AGENTS.md` | Harnessmith Adapter | 唯一安装的指令入口；同根下还有 `agent-harness/`、`.harnessmith/` |
+| 项目 `.pi/AGENTS.md`、父目录 `AGENTS.md`、`AGENTS.override.md` | 宿主 / 用户 | 按目录层级加载；**不在**安装范围 |
+| `SYSTEM.md`（替换系统 prompt）、context hook 扩展 | 宿主 / 扩展 | 扩展可在 AGENTS.md 到达模型前过滤其内容；enforcement 是真正的 advisory |
+| 权限、sandbox、工具白名单 | 用户进程 | Pi **没有**内建权限系统；以用户进程权限运行 |
+| sessions/、settings.json、auth.json、trust.json | 宿主 / 用户 | Harnessmith **不**写入这些文件 |
+
+| 状态 | Pi 边界 |
+| --- | --- |
+| 已实现（Implemented） | 用户全局路径解析、`install --dry-run` / `install` / `status` / `restore` / `uninstall`、SafePath、锁、备份、所有权标记与回滚；**不**声称托管完整加载链 |
+| 已在真实宿主验证（Verified on Host） | 尚未提交 maintainer-attested Pi Host Eval；文件存在 ≠ 已验证 Session baseline 注入；发布门禁仍只要求 Codex |
+| 由宿主负责（Delegated to the Host） | 项目/父目录指令发现、AGENTS.override.md、SYSTEM.md、模型循环、扩展系统、工具/权限、sessions 与凭证 |
 
 ## 数据与信任边界
 

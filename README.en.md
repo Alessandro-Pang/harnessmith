@@ -58,12 +58,20 @@ You can also ask a coding agent to read the installation protocol first:
 | OpenCode | global | `opencode` |
 | Kimi Code CLI | global | `kimi` (alias: `kimi-code`) |
 | DeepSeek Harness | global | `deepseek` (aliases: `dsh`, `deepseek-harness`) |
+| Pi Agent | global | `pi` (alias: `pi-agent`) |
 
 DeepSeek Adapter installs **only** the user-global `$DSH_HOME/AGENTS.md` (default `~/.dsh/AGENTS.md`).
 Project-root / nested instructions and permissions, sandbox, and approval remain host-owned; a
 successful install does not mean the full DSH scope chain or formal Host Eval is verified. Compatibility
 is currently claimed only for `@deepseek-ai/dsh@0.1.1-rc.2` / tag `dsh-v0.1.1-rc.2`; other revisions
 require re-validation.
+
+Pi Adapter installs **only** the user-global `$PI_CODING_AGENT_DIR/AGENTS.md` (default
+`~/.pi/agent/AGENTS.md`). `PI_CODING_AGENT_DIR` also serves as Pi's writable state directory
+(sessions/settings/auth); Harnessmith only writes AGENTS.md and agent-harness/. Pi has no built-in
+permission system and runs with user process permissions; if `AGENTS.override.md` exists, Pi loads it
+instead of `AGENTS.md`, and Harnessmith's installed content will be ignored. No specific Pi version is
+currently pinned.
 
 Cursor requires `--project /path/to/project`. See the
 [host guide](https://alexpang.cn/harnessmith/guide/hosts) for destinations, aliases, and support evidence.

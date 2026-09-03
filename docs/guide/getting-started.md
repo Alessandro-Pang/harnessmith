@@ -54,7 +54,7 @@ npx harnessmith status --agent codex
 
 ## 选择其他宿主
 
-`codex`、`claude-code`、`opencode`、`kimi-code` 与 `deepseek` 使用全局安装范围；`cursor` 使用项目范围：
+`codex`、`claude-code`、`opencode`、`kimi-code`、`deepseek` 与 `pi` 使用全局安装范围；`cursor` 使用项目范围：
 
 ```bash
 npx harnessmith install --agent cursor --project /path/to/project

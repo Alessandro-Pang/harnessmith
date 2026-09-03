@@ -8,7 +8,7 @@ lang: en
 # Harnessmith documentation
 
 Harnessmith is an npm initializer that distributes one personal Agent Harness across Codex, Cursor, Claude Code, OpenCode,
-Kimi Code CLI, and DeepSeek Harness. It manages installation, ownership checks, backups, restore, and uninstall while leaving model execution,
+Kimi Code CLI, DeepSeek Harness, and Pi Agent. It manages installation, ownership checks, backups, restore, and uninstall while leaving model execution,
 tools, sandboxing, and approvals to each host.
 
 Harnessmith grew from practical multi-project work: reusable instructions, document retrieval, and durable work notes came
