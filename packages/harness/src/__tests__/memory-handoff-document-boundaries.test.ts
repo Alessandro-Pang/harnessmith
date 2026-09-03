@@ -190,7 +190,18 @@ This heading is nested recovery content.`).replace(
 
 test('the shipped session template uses the canonical typed handoff contract', () => {
   const template = readFileSync(
-    join(import.meta.dirname, '..', '..', 'templates', 'project-agent-docs', 'session.md'),
+    join(
+      import.meta.dirname,
+      '..',
+      '..',
+      '..',
+      '..',
+      'template',
+      'agent-harness',
+      'templates',
+      'project-agent-docs',
+      'session.md',
+    ),
     'utf8',
   );
 

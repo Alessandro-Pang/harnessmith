@@ -70,7 +70,7 @@ test('typed experience deduplicates one conclusion and accumulates sourced evide
   assert.match(document, /# 理由\n\nAtomic rules preserve intent boundaries/);
   assert.match(document, /# 应用\n\nKeep one enforceable constraint/);
   assert.match(document, /docs\/prompt-review\.md/);
-  assert.match(document, /template\/agent-harness\/src\/__tests__\/docs-routing\.test\.ts/);
+  assert.match(document, /packages\/harness\/src\/__tests__\/docs-routing\.test\.ts/);
   assert.match(document, /compressed rule exceeded normal sentence complexity/);
   assert.match(document, /Natural-language routing regressed/);
   const core = readFileSync(join(project, '.agent-docs', 'core.md'), 'utf8');

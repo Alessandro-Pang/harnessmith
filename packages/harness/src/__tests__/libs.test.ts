@@ -274,7 +274,7 @@ test('project snapshot reports Git, package manager, manifests, and nearest inst
   writeFileSync(join(root, 'deleted.txt'), 'delete me\n');
   writeFileSync(join(root, 'rename-from.txt'), 'rename me\n');
   symlinkSync('AGENTS.md', join(root, 'agent-link'));
-  mkdirSync(join(root, 'packages/cli/src'));
+  mkdirSync(join(root, 'packages/cli/src'), { recursive: true });
   execFileSync('git', ['-C', root, 'add', '.']);
   execFileSync('git', [
     '-C',
