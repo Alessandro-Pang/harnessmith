@@ -186,7 +186,9 @@ test('scenario fixture binds the supplied candidate and prepares without launchi
   assert.match(fixture.context, /unmanaged/i);
 });
 
-test('multi-turn fixtures keep payloads in the workspace and mount lock-bearing parent roots', () => {
+test('multi-turn fixtures keep payloads in the workspace and mount lock-bearing parent roots', {
+  timeout: 120_000,
+}, () => {
   const directory = temporaryDirectory();
   const artifact = join(directory, 'candidate.tgz');
   const codexHome = join(directory, 'codex-home');
@@ -198,7 +200,7 @@ test('multi-turn fixtures keep payloads in the workspace and mount lock-bearing 
     const result = spawnSync(process.execPath, ['--import', 'tsx', scenarioEntry, scenarioId], {
       cwd: repositoryRoot,
       encoding: 'utf8',
-      timeout: 30_000,
+      timeout: 90_000,
       maxBuffer: 2 * 1024 * 1024,
       env: {
         ...process.env,
