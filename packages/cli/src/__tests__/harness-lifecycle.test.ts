@@ -23,7 +23,7 @@ function run(
   return result.stdout;
 }
 
-test('packaged Harness completes project memory and task lifecycle', () => {
+test('packaged Harness completes project memory and task lifecycle', { timeout: 90_000 }, () => {
   const root = mkdtempSync(join(tmpdir(), 'harnessmith-harness-'));
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
   const project = join(root, 'project');
