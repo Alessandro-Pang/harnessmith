@@ -50,7 +50,7 @@
     {
       "id": "long-high-loss-request",
       "categories": ["en", "long", "high-loss-signal", "topic"],
-      "query": "Change docs/status.txt from pending to ready. Acceptance: node verify-autopilot.mjs docs/status.txt exits 0 and no other tracked file changes. For all future tasks, keep status summaries to one sentence. This is a multi-stage task with a verified phase and context budget compaction.",
+      "query": "Change apps/docs/site/status.txt from pending to ready. Acceptance: node verify-autopilot.mjs apps/docs/site/status.txt exits 0 and no other tracked file changes. For all future tasks, keep status summaries to one sentence. This is a multi-stage task with a verified phase and context budget compaction.",
       "expected": { "status": "matched", "top1": "change", "topics": ["harness-cli-architecture", "long-running-tasks", "project-agent-docs", "user-profile-memory"], "forbiddenPlaybooks": [] }
     },
     {

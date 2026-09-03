@@ -253,7 +253,7 @@ function gitCommit(cwd = repo) {
 }
 
 function memoryDoc({ title, kind = 'episode', status = 'active', body, extra = '' }) {
-  return `---\ntitle: ${title}\ndescription: Disposable host evaluation memory.\ntype: ${kind}-memory\nmemory-kind: ${kind}\nstatus: ${status}\nowners: [\"eval\"]\ncreated: \"2026-08-24\"\nupdated: \"2026-08-24\"\nproject: \"host-eval\"\ntags: [\"host-eval\"]\nscope: [\"src\"]\nsource-refs: [\"docs/architecture.md\"]\nsource-of-truth: false\nschema-version: 1\nconfidence: high\n${extra}---\n\n${body}\n`;
+  return `---\ntitle: ${title}\ndescription: Disposable host evaluation memory.\ntype: ${kind}-memory\nmemory-kind: ${kind}\nstatus: ${status}\nowners: [\"eval\"]\ncreated: \"2026-08-24\"\nupdated: \"2026-08-24\"\nproject: \"host-eval\"\ntags: [\"host-eval\"]\nscope: [\"packages/cli/src\"]\nsource-refs: [\"docs/architecture.md\"]\nsource-of-truth: false\nschema-version: 1\nconfidence: high\n${extra}---\n\n${body}\n`;
 }
 
   return { run, checked, assertCleanroomMatchesCandidate, write, digest, safeReadFile, treeSnapshot, treeChangedPaths, pathWithin, markdownFiles, canonicalJson, exactJsonObject, git, gitCommit, memoryDoc };

@@ -1,0 +1,93 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.9/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true,
+    "root": "."
+  },
+  "files": {
+    "includes": [
+      "packages/cli/src/**/*.ts",
+      "packages/harness/src/**/*.ts",
+      "scripts/**/*.ts",
+      "evals/**/*.ts",
+      "bin/**/*.mjs",
+      "packages/cli/bin/**/*.mjs",
+      "config/*.config.{ts,mjs}",
+      "config/.markdownlint-cli2.mjs",
+      "package.json",
+      "tsconfig.json",
+      "config/biome.json"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "complexity": {
+        "noExcessiveCognitiveComplexity": {
+          "level": "error",
+          "options": {
+            "maxAllowedComplexity": 40
+          }
+        },
+        "noExcessiveLinesPerFunction": {
+          "level": "error",
+          "options": {
+            "maxLines": 80,
+            "skipBlankLines": false,
+            "skipIifes": false
+          }
+        }
+      },
+      "style": {
+        "noExcessiveLinesPerFile": {
+          "level": "error",
+          "options": {
+            "maxLines": 250,
+            "skipBlankLines": false
+          }
+        }
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": [
+        "**/__tests__/**/*.ts",
+        "**/*.test.ts"
+      ],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noExcessiveLinesPerFunction": "off"
+          },
+          "style": {
+            "noExcessiveLinesPerFile": {
+              "level": "error",
+              "options": {
+              "maxLines": 500,
+                "skipBlankLines": false
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "semicolons": "always",
+      "trailingCommas": "all"
+    }
+  },
+  "root": false
+}

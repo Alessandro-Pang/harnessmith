@@ -2,7 +2,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Command } from 'commander';
-import { evalAdapterEnum } from '../../../src/adapters/adapter-registry.js';
+import { evalAdapterEnum } from '../../../packages/cli/src/adapters/adapter-registry.js';
 
 export type EvalRunSchema = {
   properties?: {
@@ -16,7 +16,7 @@ export type EvalRunSchema = {
   };
 };
 
-export const repositoryRoot = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
+export const repositoryRoot = dirname(dirname(dirname(dirname(fileURLToPath(import.meta.url)))));
 
 /** Matches the compact `host.adapter.enum` object in evals/run.schema.json. */
 const hostAdapterEnumPattern = /("adapter"\s*:\s*\{\s*"enum"\s*:\s*)\[[^\]]*\]/;

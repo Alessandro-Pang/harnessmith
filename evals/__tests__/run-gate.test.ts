@@ -44,7 +44,7 @@ test('fingerprint binds the candidate package and every complete scenario contra
     'template/agent-harness/docs/README.md',
     'template/agent-harness/manifest.json',
     'template/agent-harness/schemas/task.schema.json',
-    'template/agent-harness/dist/harness.mjs',
+    'packages/harness/dist/harness.mjs',
     'template/agent-harness/templates/project-AGENTS.md',
   ]) {
     assert.ok(output.ruleSources.includes(source), `missing rule fingerprint source: ${source}`);
@@ -272,7 +272,7 @@ test('validator rejects a contradictory filesystem diff summary', () => {
   const runsDirectory = temporaryDirectory();
   const path = writeRun(runsDirectory);
   const record = JSON.parse(readFileSync(path, 'utf8'));
-  record.filesystemDiff.changedPaths = ['src/unexpected.ts'];
+  record.filesystemDiff.changedPaths = ['packages/cli/src/unexpected.ts'];
   record.filesystemDiff.clean = true;
   writeFileSync(path, `${JSON.stringify(record, null, 2)}\n`);
 

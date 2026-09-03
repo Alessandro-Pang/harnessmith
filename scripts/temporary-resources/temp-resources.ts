@@ -1,7 +1,7 @@
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Command } from 'commander';
-import { scanTemporaryResourceRoots } from '../../src/temporary-resources/temporary-resource.js';
+import { scanTemporaryResourceRoots } from '../../packages/cli/src/temporary-resources/temporary-resource.js';
 
 export function temporaryResourceReport(args: string[]): void {
   const program = new Command()

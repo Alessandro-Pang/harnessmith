@@ -791,7 +791,7 @@ if (scenarioId === 'progressive-disclosure') {
     ({ command, aggregatedOutput, exitCode, status }) =>
       status === 'completed' &&
       exitCode === 0 &&
-      command.includes('src/calc.mjs') &&
+      command.includes('packages/cli/src/calc.mjs') &&
       command.includes('test/calc.test.mjs') &&
       aggregatedOutput.includes('a - b') &&
       aggregatedOutput.includes('add(2, 3)'),
@@ -1189,7 +1189,7 @@ if (scenarioId === 'memory-autopilot-unprompted') {
   const inputs = existsSync(inputRoot)
     ? markdownFiles(inputRoot).map((path) => ({ path, content: readFileSync(path, 'utf8') }))
     : [];
-  const acceptance = 'Acceptance: node verify-autopilot.mjs docs/status.txt exits 0 and no other tracked file changes.';
+  const acceptance = 'Acceptance: node verify-autopilot.mjs apps/docs/site/status.txt exits 0 and no other tracked file changes.';
   const matchingInputs = inputs.filter(({ content }) => content.includes(acceptance));
   const core = readFileSync(join(repo, '.agent-docs', 'core.md'), 'utf8');
   const initialCore = turnByLabel.get('initial')?.observation.projectCore ?? '';

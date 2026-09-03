@@ -3,13 +3,13 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { isDeepStrictEqual } from 'node:util';
-import { evalAdapterEnum } from '../../../src/adapters/adapter-registry.js';
-import type { AgentName } from '../../../src/shared/types.js';
+import { evalAdapterEnum } from '../../../packages/cli/src/adapters/adapter-registry.js';
+import type { AgentName } from '../../../packages/cli/src/shared/types.js';
 import {
-  assertCandidatePackageFiles,
-  candidateRuleFingerprint,
-  type RuleFingerprint,
-} from './eval-rule-fingerprint.js';
+  type NpmPackageTarball,
+  readNpmPackageTarball,
+  releaseArtifactPath as resolveReleaseArtifactPath,
+} from '../../release/npm-tarball.js';
 import {
   readScenarioCatalog,
   type ScenarioCatalog,
@@ -17,10 +17,10 @@ import {
   worktreeScenarioCatalog,
 } from '../planning/eval-scenarios.js';
 import {
-  type NpmPackageTarball,
-  readNpmPackageTarball,
-  releaseArtifactPath as resolveReleaseArtifactPath,
-} from '../../release/npm-tarball.js';
+  assertCandidatePackageFiles,
+  candidateRuleFingerprint,
+  type RuleFingerprint,
+} from './eval-rule-fingerprint.js';
 
 export const repositoryRoot = dirname(dirname(dirname(dirname(fileURLToPath(import.meta.url)))));
 export const supportedAdapters = evalAdapterEnum();

@@ -11,7 +11,7 @@ updated: 2026-08-21
 
 | 问题 | 首选能力 | 验证/降级 |
 | --- | --- | --- |
-| 仓库结构、调用链、现有约定 | `rg`、源码、manifest、Git、项目脚本 | README 与项目 docs |
+| 仓库结构、调用链、现有约定 | `rg`、源码、manifest、Git、项目脚本 | README 与项目 apps/docs/site |
 | 库/框架/SDK/CLI 当前 API | 当前锁定版本的本地文档；Context7；官方文档 | 源码类型定义；注明版本不确定性 |
 | Web 运行、DOM、CSS、Console、Network | 浏览器或 Chrome DevTools | 项目 E2E/Playwright；截图仅保留关键证据 |
 | Figma 实现与视觉验收 | Figma Developer/授权设计源 | 设计 token、组件文档；无法读取时标 `Unverified` |

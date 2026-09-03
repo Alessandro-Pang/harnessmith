@@ -4,7 +4,7 @@ import writeFileAtomic from 'write-file-atomic';
 import {
   createTemporaryWorkspace,
   disposeTemporaryWorkspace,
-} from '../../src/temporary-resources/temporary-resource.js';
+} from '../../packages/cli/src/temporary-resources/temporary-resource.js';
 import { readNpmPackageTarball } from './npm-tarball.js';
 import {
   defaultRegistryRunner,

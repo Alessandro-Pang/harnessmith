@@ -10,14 +10,14 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { performance } from 'node:perf_hooks';
-import type { SearchSource } from '../../../template/agent-harness/src/lib/search/search.js';
-import { searchBackend } from '../../../template/agent-harness/src/lib/search/search-backend.js';
+import type { SearchSource } from '../../../packages/harness/src/lib/search/search.js';
+import { searchBackend } from '../../../packages/harness/src/lib/search/search-backend.js';
 import {
   searchIndexPath,
   searchWithIndex,
-} from '../../../template/agent-harness/src/lib/search/search-index.js';
-import { loadCurrentIndex } from '../../../template/agent-harness/src/lib/search/search-index-store.js';
-import type { Runtime } from '../../../template/agent-harness/src/types.js';
+} from '../../../packages/harness/src/lib/search/search-index.js';
+import { loadCurrentIndex } from '../../../packages/harness/src/lib/search/search-index-store.js';
+import type { Runtime } from '../../../packages/harness/src/types.js';
 
 interface BenchmarkResult {
   documents: number;
@@ -119,11 +119,11 @@ function timedQueries(
 function runSize(documents: number, iterations: number, chunksPerFile: number): BenchmarkResult {
   const root = mkdtempSync(join(tmpdir(), `harness-search-benchmark-${documents}-`));
   try {
-    const docs = join(root, 'docs');
-    mkdirSync(docs);
-    const files = generateCorpus(docs, documents, chunksPerFile);
+    const docsRoot = join(root, 'docs');
+    mkdirSync(docsRoot);
+    const files = generateCorpus(docsRoot, documents, chunksPerFile);
     const runtime = fixtureRuntime(root);
-    const sources: SearchSource[] = [{ root: docs, label: 'benchmark', trust: 'guidance' }];
+    const sources: SearchSource[] = [{ root: docsRoot, label: 'benchmark', trust: 'guidance' }];
     const query = `doc${documents - 1}unique`;
     const options = {
       maxEntries: files + 10,
@@ -139,7 +139,7 @@ function runSize(documents: number, iterations: number, chunksPerFile: number): 
     const buildMs = performance.now() - buildStarted;
     observedHeap.push(process.memoryUsage().heapUsed);
 
-    appendFileSync(join(docs, '000000.md'), '\n\nincrementalbenchmarkmarker\n');
+    appendFileSync(join(docsRoot, '000000.md'), '\n\nincrementalbenchmarkmarker\n');
     const incrementalStarted = performance.now();
     searchWithIndex(runtime, 'incrementalbenchmarkmarker', sources, {
       ...options,
@@ -182,7 +182,7 @@ function runSize(documents: number, iterations: number, chunksPerFile: number): 
 const iterations = positiveInteger(option('--iterations'), 100, 'Iterations');
 const chunksPerFile = positiveInteger(option('--chunks-per-file'), 10, 'Chunks per file');
 const results = benchmarkSizes().map((size) => runSize(size, iterations, chunksPerFile));
-const bundlePath = join('template', 'agent-harness', 'dist', 'harness.mjs');
+const bundlePath = join('packages', 'harness', 'dist', 'harness.mjs');
 console.log(
   JSON.stringify(
     {

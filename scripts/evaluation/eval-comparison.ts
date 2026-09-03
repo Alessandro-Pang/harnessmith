@@ -1,7 +1,7 @@
+import { readNpmPackageTarball } from '../release/npm-tarball.js';
 import type { RunRecord } from './records/eval-artifacts.js';
 import type { VerifiedRun } from './records/eval-records.js';
 import { validateEvaluationRecords } from './records/eval-records.js';
-import { readNpmPackageTarball } from '../release/npm-tarball.js';
 
 type HostIdentity = {
   adapter: string;

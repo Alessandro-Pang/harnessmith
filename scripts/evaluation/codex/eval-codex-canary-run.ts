@@ -1,4 +1,5 @@
 import { lstatSync, readFileSync } from 'node:fs';
+import type { HostEvalAttemptResult } from '../planning/eval-runner.js';
 import { checked, sha256 } from './eval-codex-canary-common.js';
 import {
   evaluateMachineErrorEvidence,
@@ -7,7 +8,6 @@ import {
 } from './eval-codex-canary-contract.js';
 import type { MachineErrorCanaryFixture } from './eval-codex-canary-fixture.js';
 import { createCodexHostEvalExecutor, type RunHostProcess } from './eval-codex-transport.js';
-import type { HostEvalAttemptResult } from '../planning/eval-runner.js';
 
 export type MachineErrorCanaryResult = {
   outcome: 'passed' | 'behavior-failed' | 'infra-inconclusive' | 'evaluator-failed';

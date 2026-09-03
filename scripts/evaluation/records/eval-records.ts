@@ -2,13 +2,13 @@ import { existsSync, lstatSync, readdirSync, readFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import type { AnySchema } from 'ajv';
 import { Ajv2020 } from 'ajv/dist/2020.js';
+import { verifyExecutionClassification } from '../contracts/eval-execution-contract.js';
 import {
   createArtifactVerificationBudget,
   type RunRecord,
   verifyHighConfidenceSecretRedaction,
   verifyRunArtifacts,
 } from './eval-artifacts.js';
-import { verifyExecutionClassification } from '../contracts/eval-execution-contract.js';
 import { evaluationScenarioFingerprints, repositoryRoot } from './eval-fingerprint.js';
 
 export type VerifiedRun = { path: string; record: RunRecord };

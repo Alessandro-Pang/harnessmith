@@ -2,9 +2,9 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { AnySchema } from 'ajv';
 import { Ajv2020 } from 'ajv/dist/2020.js';
-import type { AgentName } from '../../../src/shared/types.js';
-import { repositoryRoot } from '../records/eval-fingerprint.js';
+import type { AgentName } from '../../../packages/cli/src/shared/types.js';
 import { worktreeScenarioCatalog } from '../planning/eval-scenarios.js';
+import { repositoryRoot } from '../records/eval-fingerprint.js';
 
 type SupportState = 'executable' | 'inconclusive' | 'unsupported';
 type Support = { state: SupportState; reason: string; evidence: string[] };

@@ -23,8 +23,8 @@ const rulesSources = [
 ] as const;
 const candidateSources = [
   ...rulesSources,
-  'template/agent-harness/src/lib/documentation/docs-routing.ts',
-  'template/agent-harness/src/lib/routing/response-language.ts',
+  'packages/harness/src/lib/documentation/docs-routing.ts',
+  'packages/harness/src/lib/routing/response-language.ts',
 ] as const;
 
 function sha256(value: string | Buffer): string {

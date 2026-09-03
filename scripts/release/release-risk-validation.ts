@@ -1,4 +1,4 @@
-import { isAgentName } from '../../src/shared/agents.js';
+import { isAgentName } from '../../packages/cli/src/shared/agents.js';
 import type { ReleaseRiskAcceptance } from './release-state.js';
 
 function isExactStringSet(actual: readonly string[], expected: readonly string[]): boolean {

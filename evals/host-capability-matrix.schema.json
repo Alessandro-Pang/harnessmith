@@ -40,7 +40,7 @@
           "uniqueItems": true,
           "items": {
             "type": "string",
-            "pattern": "^(?:docs|evals|scripts|src|template)/(?!.*/(?:\\.\\.?)(?:/|$))[^\\\\]+$",
+            "pattern": "^(?:(?:docs|evals|scripts|src|template|packages|apps)/)(?!.*/(?:\\.\\.?)(?:/|$))[^\\\\]+$",
             "maxLength": 512
           }
         }
@@ -61,7 +61,7 @@
           "uniqueItems": true,
           "items": {
             "type": "string",
-            "pattern": "^(?:docs|evals|scripts|src|template)/(?!.*/(?:\\.\\.?)(?:/|$))[^\\\\]+$",
+            "pattern": "^(?:(?:docs|evals|scripts|src|template|packages|apps)/)(?!.*/(?:\\.\\.?)(?:/|$))[^\\\\]+$",
             "maxLength": 512
           }
         }

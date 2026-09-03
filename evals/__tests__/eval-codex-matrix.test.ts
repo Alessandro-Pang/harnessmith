@@ -4,17 +4,16 @@ import {
   chmodSync,
   existsSync,
   mkdirSync,
-  realpathSync,
   readdirSync,
   readFileSync,
+  realpathSync,
   symlinkSync,
   writeFileSync,
 } from 'node:fs';
 import { delimiter, dirname, join, relative } from 'node:path';
 import { test } from 'vitest';
-
-import { repositoryRoot } from '../../scripts/evaluation/records/eval-fingerprint.js';
 import { worktreeScenarioCatalog } from '../../scripts/evaluation/planning/eval-scenarios.js';
+import { repositoryRoot } from '../../scripts/evaluation/records/eval-fingerprint.js';
 import { temporaryDirectory } from './run-fixture.js';
 import { writeCandidateTarball } from './tarball-fixture.js';
 

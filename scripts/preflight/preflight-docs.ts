@@ -2,11 +2,11 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, extname, join, relative, resolve, sep } from 'node:path';
 import { fdir } from 'fdir';
 import { parse } from 'yaml';
-import { supportedAgentNames } from '../../src/shared/agents.js';
-import { parseFrontmatterDocument } from '../../template/agent-harness/src/lib/documentation/frontmatter.js';
-import { markdownLinkTargets } from '../../template/agent-harness/src/lib/documentation/markdown-links.js';
-import { capabilityEvidenceIssues } from '../evaluation/capability-evidence.js';
+import { supportedAgentNames } from '../../packages/cli/src/shared/agents.js';
+import { parseFrontmatterDocument } from '../../packages/harness/src/lib/documentation/frontmatter.js';
+import { markdownLinkTargets } from '../../packages/harness/src/lib/documentation/markdown-links.js';
 import { promptRuleContractIssues } from '../benchmarks/prompt-route/prompt-rule-contract.js';
+import { capabilityEvidenceIssues } from '../evaluation/capability-evidence.js';
 
 interface ManifestEntry {
   actionAliases?: unknown;
@@ -95,12 +95,12 @@ export function invalidManifestRouteMetadata(manifest: unknown): string[] {
 }
 
 function manifestRoutes(docsRoot: string, manifest: DocsManifest, check: Check): Set<string> {
-  check(manifest.version === 1, 'agent-harness docs manifest version must be 1');
+  check(manifest.version === 1, 'agent-harness apps/docs/site manifest version must be 1');
   const validEntries =
     Boolean(manifest.entries) &&
     typeof manifest.entries === 'object' &&
     !Array.isArray(manifest.entries);
-  check(validEntries, 'agent-harness docs manifest entries must be an object');
+  check(validEntries, 'agent-harness apps/docs/site manifest entries must be an object');
   const entries = validEntries ? (manifest.entries as Record<string, ManifestEntry>) : {};
   const invalidMetadata = new Set(invalidManifestRouteMetadata(manifest));
   const routed = new Set<string>();
@@ -123,7 +123,10 @@ function manifestRoutes(docsRoot: string, manifest: DocsManifest, check: Check):
     );
     if (!routePath) continue;
     const target = resolve(docsRoot, routePath);
-    check(target.startsWith(`${docsRoot}${sep}`), `docs route ${name} escapes the docs directory`);
+    check(
+      target.startsWith(`${docsRoot}${sep}`),
+      `docs route ${name} escapes the apps/docs/site directory`,
+    );
     check(existsSync(target), `docs route ${name} points to missing file: ${routePath}`);
     routed.add(target);
   }
@@ -140,7 +143,7 @@ function checkMarkdownDocs(docsRoot: string, routed: Set<string>, check: Check):
       check(frontmatter.metadata.has(field), `${name} is missing frontmatter field: ${field}`);
     }
     if (name !== 'README.md')
-      check(routed.has(path), `${name} is not routed by docs/manifest.yaml`);
+      check(routed.has(path), `${name} is not routed by apps/docs/site/manifest.yaml`);
     for (const link of markdownLinkTargets(content)) {
       const target = link.split('#')[0];
       if (!target || /^(?:https?:|mailto:)/.test(target)) continue;
@@ -182,7 +185,7 @@ function checkPortableTemplate(root: string, check: Check): void {
 }
 
 export function checkDocs({ root, harnessRoot, check }: DocsContext): void {
-  const capabilityEvidencePath = join(root, 'docs', 'capability-evidence.yaml');
+  const capabilityEvidencePath = join(root, 'apps', 'docs', 'site', 'capability-evidence.yaml');
   check(existsSync(capabilityEvidencePath), 'capability evidence matrix is missing');
   if (existsSync(capabilityEvidencePath)) {
     const evidence = parse(readFileSync(capabilityEvidencePath, 'utf8')) as unknown;
@@ -191,11 +194,11 @@ export function checkDocs({ root, harnessRoot, check }: DocsContext): void {
 
   const docsRoot = join(harnessRoot, 'docs');
   const manifestPath = join(docsRoot, 'manifest.yaml');
-  check(existsSync(manifestPath), 'agent-harness docs manifest is missing');
+  check(existsSync(manifestPath), 'agent-harness apps/docs/site manifest is missing');
   if (!existsSync(manifestPath)) return;
   const manifest = parse(readFileSync(manifestPath, 'utf8')) as DocsManifest;
   for (const id of missingCanonicalRouteIds(manifest)) {
-    check(false, `agent-harness docs manifest is missing canonical route: ${id}`);
+    check(false, `agent-harness apps/docs/site manifest is missing canonical route: ${id}`);
   }
   const routed = manifestRoutes(docsRoot, manifest, check);
   const promptRulesPath = join(docsRoot, 'prompt-rules.yaml');

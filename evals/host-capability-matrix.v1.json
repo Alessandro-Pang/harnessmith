@@ -11,25 +11,25 @@
       "id": "cursor",
       "state": "inconclusive",
       "reason": "The distribution adapter exists, but no Cursor real-Host transport and independent evaluator are implemented.",
-      "evidence": ["src/adapters/adapter-registry.ts", "evals/README.md"]
+      "evidence": ["packages/cli/src/adapters/adapter-registry.ts", "evals/README.md"]
     },
     {
       "id": "claude",
       "state": "inconclusive",
       "reason": "The distribution adapter exists, but no Claude Code real-Host transport and independent evaluator are implemented.",
-      "evidence": ["src/adapters/adapter-registry.ts", "evals/README.md"]
+      "evidence": ["packages/cli/src/adapters/adapter-registry.ts", "evals/README.md"]
     },
     {
       "id": "opencode",
       "state": "inconclusive",
       "reason": "The distribution adapter exists, but no OpenCode real-Host transport and independent evaluator are implemented.",
-      "evidence": ["src/adapters/adapter-registry.ts", "evals/README.md"]
+      "evidence": ["packages/cli/src/adapters/adapter-registry.ts", "evals/README.md"]
     },
     {
       "id": "kimi",
       "state": "inconclusive",
       "reason": "The distribution adapter exists, but no Kimi Code CLI real-Host transport and independent evaluator are implemented.",
-      "evidence": ["src/adapters/adapter-registry.ts", "evals/README.md"]
+      "evidence": ["packages/cli/src/adapters/adapter-registry.ts", "evals/README.md"]
     }
   ],
   "capabilities": [

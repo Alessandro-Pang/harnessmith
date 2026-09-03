@@ -3,12 +3,12 @@ import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Command } from 'commander';
+import { evaluationFingerprint, repositoryRoot } from '../records/eval-fingerprint.js';
 import { checked } from './eval-codex-canary-common.js';
 import { validateCanaryOptions } from './eval-codex-canary-contract.js';
 import { writeCanaryEvidence } from './eval-codex-canary-evidence.js';
 import { prepareMachineErrorCanary } from './eval-codex-canary-fixture.js';
 import { executePreparedMachineErrorCanary } from './eval-codex-canary-run.js';
-import { evaluationFingerprint, repositoryRoot } from '../records/eval-fingerprint.js';
 
 export {
   evaluateMachineErrorEvidence,

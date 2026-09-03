@@ -11,6 +11,12 @@ overrides:
 
 importers:
 
+  apps/docs: {}
+
+  packages/cli: {}
+
+  packages/harness: {}
+
   .:
     dependencies:
       '@clack/prompts':

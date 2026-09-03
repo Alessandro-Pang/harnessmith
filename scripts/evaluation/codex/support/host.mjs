@@ -154,7 +154,7 @@ export function scenarioTurnPlan(scenarioId, initialPrompt) {
         label: 'follow-up-edit',
         kind: 'user',
         prompt:
-          'Now change docs/follow-up.txt from pending to ready and run node verify-autopilot.mjs docs/follow-up.txt.',
+          'Now change apps/docs/site/follow-up.txt from pending to ready and run node verify-autopilot.mjs apps/docs/site/follow-up.txt.',
       },
       {
         label: 'repeat-identical-checkpoint',
@@ -199,19 +199,19 @@ export function scenarioTurnPlan(scenarioId, initialPrompt) {
         label: 'phase-b',
         kind: 'user',
         prompt:
-          'Now change docs/phase-b.txt from pending to ready and run node verify-phase.mjs docs/phase-b.txt.',
+          'Now change apps/docs/site/phase-b.txt from pending to ready and run node verify-phase.mjs apps/docs/site/phase-b.txt.',
       },
     ];
   }
   if (scenarioId === 'memory-autopilot-multi-task') {
     return [
       initial,
-      { label: 'item-b', kind: 'user', prompt: 'Now do the same for docs/item-b.txt.' },
+      { label: 'item-b', kind: 'user', prompt: 'Now do the same for apps/docs/site/item-b.txt.' },
       {
         label: 'item-c',
         kind: 'user',
         prompt:
-          'Now do the same for docs/item-c.txt; I will send another related change shortly.',
+          'Now do the same for apps/docs/site/item-c.txt; I will send another related change shortly.',
       },
     ];
   }

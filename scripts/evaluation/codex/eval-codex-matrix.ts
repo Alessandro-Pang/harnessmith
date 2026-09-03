@@ -4,11 +4,11 @@ import { fileURLToPath } from 'node:url';
 import { Command } from 'commander';
 import { execa } from 'execa';
 import { whichCommand } from 'which-command';
-import { createScenarioExecutor } from './eval-codex-scenario-process.js';
 import { gateEvaluationRecords, validateEvaluationRecords } from '../contracts/eval-contract.js';
-import { evaluationFingerprint, repositoryRoot } from '../records/eval-fingerprint.js';
 import { type HostEvalRunnerOptions, runHostEvalScenarios } from '../planning/eval-runner.js';
 import { worktreeScenarioCatalog } from '../planning/eval-scenarios.js';
+import { evaluationFingerprint, repositoryRoot } from '../records/eval-fingerprint.js';
+import { createScenarioExecutor } from './eval-codex-scenario-process.js';
 
 export { createScenarioExecutor } from './eval-codex-scenario-process.js';
 

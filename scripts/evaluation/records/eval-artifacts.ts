@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { existsSync, lstatSync, readFileSync, realpathSync } from 'node:fs';
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path';
-import { containsHighConfidenceSecret } from '../../../template/agent-harness/src/lib/security/secret-hygiene.js';
+import { containsHighConfidenceSecret } from '../../../packages/harness/src/lib/security/secret-hygiene.js';
 import { repositoryRoot, type supportedAdapters } from './eval-fingerprint.js';
 
 type Artifact = { artifactRef: string; sha256: string };

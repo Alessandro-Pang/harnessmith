@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { supportedAgentNames } from '../../src/adapters/adapter-registry.js';
-import { withTemporaryWorkspace } from '../../src/temporary-resources/temporary-resource.js';
+import { supportedAgentNames } from '../../packages/cli/src/adapters/adapter-registry.js';
+import { withTemporaryWorkspace } from '../../packages/cli/src/temporary-resources/temporary-resource.js';
 
 type Check = (condition: unknown, message: string) => void;
 type RunNode = (entry: string, args: string[], env?: NodeJS.ProcessEnv) => string;
@@ -88,7 +88,7 @@ function checkInstall(
     const installedHarness = result.harness || '';
     check(existsSync(result.record || ''), `${result.adapter} install record was not created`);
     check(
-      !existsSync(join(installedHarness, 'src')),
+      !existsSync(join(installedHarness, 'packages/cli/src')),
       `${result.adapter} installed Harness unexpectedly contains TypeScript sources`,
     );
     const validation = JSON.parse(

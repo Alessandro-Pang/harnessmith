@@ -1,4 +1,4 @@
-import { inspectGit } from '../../src/adapters/adapters.js';
+import { inspectGit } from '../../packages/cli/src/adapters/adapters.js';
 import { validBranchName } from './branch-contract.js';
 
 export { validBranchName };

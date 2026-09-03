@@ -131,7 +131,7 @@ eligible for coverage. A tie at the latest timestamp is ambiguous and fails clos
 therefore cannot mask a newer failed or inconclusive evaluation.
 
 The rule fingerprint covers the files that are actually packaged: outer `bin/` and compiled `dist/`, embedded
-Harness `bin/` and compiled `dist/`, schemas, `template/AGENTS.md`, routed Harness docs, and generated
+Harness `bin/` and compiled `dist/`, schemas, `template/AGENTS.md`, routed Harness apps/docs/site, and generated
 personal/project rule templates. The fingerprint output lists package-relative paths read from the candidate;
 changing packaged executable behavior invalidates prior host records even if a maintainer forgets to bump a
 version string.

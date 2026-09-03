@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, onTestFinished } from 'vitest';
-import type { AgentName } from '../../src/shared/types.js';
+import type { AgentName } from '../../packages/cli/src/shared/types.js';
 import { writeCandidateTarball } from './tarball-fixture.js';
 
 export const root = dirname(dirname(dirname(fileURLToPath(import.meta.url))));

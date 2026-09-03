@@ -17,18 +17,18 @@ tsup 生成自包含 bundle；
 ```text
 bin/harness.mjs
   └── dist/harness.mjs          # tsup 自包含运行产物
-        └── src/cli.ts          # Commander 命令契约
-        ├── src/commands/*.ts
-        │     └── src/lib/*.ts
-        └── src/runtime.ts
+        └── packages/cli/src/cli.ts          # Commander 命令契约
+        ├── packages/cli/src/commands/*.ts
+        │     └── packages/cli/src/lib/*.ts
+        └── packages/cli/src/runtime.ts
 ```
 
 - `bin/`：进程边界，只加载 bundle、处理顶层异常和退出码；不放业务逻辑。
 - `dist/`：由 tsup 生成并随 npm 包分发的运行产物；禁止手工编辑。
-- `src/cli.ts`：用 Commander 声明公开命令语法、帮助和分发；不直接读写文件。
-- `src/commands/`：一个文件负责一组用户用例，组合底层能力并产生用户输出。
-- `src/lib/`：无命令语义的可复用能力；优先纯函数或小型同步原语。
-- `src/runtime.ts`：集中解析 HOME、可覆盖路径、owner、日期和源码位置；命令不得自行读取相同
+- `packages/cli/src/cli.ts`：用 Commander 声明公开命令语法、帮助和分发；不直接读写文件。
+- `packages/cli/src/commands/`：一个文件负责一组用户用例，组合底层能力并产生用户输出。
+- `packages/cli/src/lib/`：无命令语义的可复用能力；优先纯函数或小型同步原语。
+- `packages/cli/src/runtime.ts`：集中解析 HOME、可覆盖路径、owner、日期和源码位置；命令不得自行读取相同
   环境变量或硬编码用户路径。
 - `templates/`：安装时保留动态 token，实际初始化全局或项目记忆时再渲染。
 - `docs/`：Agent 按需读取的规则、playbook、标准和研究；不放可执行源码。
@@ -52,7 +52,7 @@ frontmatter，Ajv 负责 JSON Schema，`write-file-atomic` 负责原子写。路
 
 1. 先判断能力属于通用原语还是用户用例，分别放入 `lib` 或 `commands`。
 2. 命令函数首参接收 `runtime`，输出通过可注入的 `io`，避免测试依赖真实 HOME 和 console。
-3. 在 `src/cli.ts` 增加 Commander 参数契约和分发，并同步根 README 与相关专题文档。
+3. 在 `packages/cli/src/cli.ts` 增加 Commander 参数契约和分发，并同步根 README 与相关专题文档。
 4. 成功返回 `0`；可预期的“无搜索结果”返回 `1`；非法输入或状态抛出带精确上下文的 Error。
 5. 涉及文件写入必须幂等、保护已有内容并使用原子写。
 6. 为领域规则增加单元测试，为用户命令增加临时 HOME 端到端测试。
@@ -95,7 +95,7 @@ Top-5/Top-10 均为 100%；Orama 分别为 418 ms、254.5 MiB、108.5 MiB，中�
 访问 1000 个普通文件、读取单文件 1 MiB、总计 8 MiB，并运行 2 秒；读取前先 stat。显式索引
 刷新把发现上限扩展到 50000 个文件、256 MiB 和 60 秒，但仍可由相同预算参数收窄。JSON 结果除
 source、trust、path、line 和结果 `truncated` 外，还携带 `retrieval`、`scanTruncated`、`scanLimits`、
-`scanStats` 和至多 50 条结构化跳过详情；超出的详情数仍在统计中可见。项目 docs 与记忆默认标为
+`scanStats` 和至多 50 条结构化跳过详情；超出的详情数仍在统计中可见。项目 apps/docs/site 与记忆默认标为
 untrusted。
 
 `audit record` 是 Host-neutral 的显式事件接入点，不是自动 Host hook。它只接受 payload-file 中的
@@ -240,13 +240,13 @@ list、search、check、maintain 和 route 保持只读。锁只保证 CLI 并�
 
 ## 调试路径
 
-- 参数或帮助异常：从 `src/cli.ts` 开始。
-- 自动初始化或 ignore 异常：`src/commands/init.ts`。
-- 记忆索引、引用或 metadata 异常：`src/commands/memory.ts` 与 `src/lib/frontmatter.ts`。
-- 搜索结果异常：`src/commands/search.ts`、`src/lib/search.ts` 与 `src/lib/search-index*.ts`。
-- 文档路由异常：`src/commands/route.ts`、`src/lib/docs-routing.ts` 与 `docs/manifest.yaml`。
-- 路径在不同机器不一致：`src/runtime.ts` 与模板 token。
-- 环境诊断异常：`src/commands/doctor.ts`、`src/commands/health.ts` 与 `src/lib/health.ts`。
+- 参数或帮助异常：从 `packages/cli/src/cli.ts` 开始。
+- 自动初始化或 ignore 异常：`packages/cli/src/commands/init.ts`。
+- 记忆索引、引用或 metadata 异常：`packages/cli/src/commands/memory.ts` 与 `packages/cli/src/lib/frontmatter.ts`。
+- 搜索结果异常：`packages/cli/src/commands/search.ts`、`packages/cli/src/lib/search.ts` 与 `packages/cli/src/lib/search-index*.ts`。
+- 文档路由异常：`packages/cli/src/commands/route.ts`、`packages/cli/src/lib/docs-routing.ts` 与 `docs/manifest.yaml`。
+- 路径在不同机器不一致：`packages/cli/src/runtime.ts` 与模板 token。
+- 环境诊断异常：`packages/cli/src/commands/doctor.ts`、`packages/cli/src/commands/health.ts` 与 `packages/cli/src/lib/health.ts`。
 
 测试命令：
 

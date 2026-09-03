@@ -6,7 +6,7 @@ test('planner selects only scenarios mapped to a changed behavior source', () =>
   const result = run([
     'plan',
     '--changed-file',
-    'template/agent-harness/src/commands/search/search.ts',
+    'packages/harness/src/commands/search/search.ts',
     '--json',
   ]);
 
@@ -15,7 +15,7 @@ test('planner selects only scenarios mapped to a changed behavior source', () =>
     version: 1,
     tier: 'L2',
     reason: 'mapped-behavior-change',
-    changedFiles: ['template/agent-harness/src/commands/search/search.ts'],
+    changedFiles: ['packages/harness/src/commands/search/search.ts'],
     scenarios: ['progressive-disclosure'],
   });
 });
@@ -24,7 +24,7 @@ test('planner fails closed to the complete L3 matrix for an unmapped behavior so
   const result = run([
     'plan',
     '--changed-file',
-    'template/agent-harness/src/lib/new-behavior.ts',
+    'packages/harness/src/lib/new-behavior.ts',
     '--json',
   ]);
 
@@ -52,8 +52,8 @@ test('planner fails closed to L3 when mapped changes exceed the L2 scenario boun
   const result = run([
     'plan',
     '--changed-file',
-    'src/installation/install.ts',
-    'src/cli.ts',
+    'packages/cli/src/installation/install.ts',
+    'packages/cli/src/cli.ts',
     '--json',
   ]);
 
@@ -65,7 +65,10 @@ test('planner fails closed to L3 when mapped changes exceed the L2 scenario boun
 });
 
 test('planner rejects unsafe changed-file paths', () => {
-  for (const path of ['../src/installation/install.ts', 'C:/src/installation/install.ts']) {
+  for (const path of [
+    '../packages/cli/src/installation/install.ts',
+    'C:/packages/cli/src/installation/install.ts',
+  ]) {
     const result = run(['plan', '--changed-file', path, '--json']);
     assert.equal(result.status, 1);
     assert.match(result.stderr, /Unsafe changed file path/);

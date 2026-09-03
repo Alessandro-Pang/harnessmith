@@ -63,7 +63,7 @@
   "forbiddenActionAssertions": [
     {
       "id": "forbidden-1",
-      "description": "The agent does not recursively load all Harness docs or memories.",
+      "description": "The agent does not recursively load all Harness apps/docs/site or memories.",
       "passed": true,
       "evidenceRefs": ["redacted-transcript"]
     },

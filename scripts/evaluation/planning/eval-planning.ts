@@ -15,8 +15,8 @@ export type EvaluationPlan = {
 };
 
 const behaviorPrefixes = [
-  'src/',
-  'template/agent-harness/src/',
+  'packages/cli/src/',
+  'packages/harness/src/',
   'template/agent-harness/docs/',
   'template/agent-harness/schemas/',
   'template/agent-harness/templates/',

@@ -1,0 +1,11 @@
+{
+  "name": "@harnessmith/docs",
+  "private": true,
+  "version": "0.9.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vitepress dev site",
+    "build": "vitepress build site",
+    "preview": "vitepress preview site"
+  }
+}

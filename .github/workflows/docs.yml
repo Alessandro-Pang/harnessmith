@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'docs/**'
+      - 'apps/docs/**'
       - 'README*.md'
       - 'package.json'
       - 'pnpm-lock.yaml'
@@ -12,7 +12,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'docs/**'
+      - 'apps/docs/**'
       - 'README*.md'
       - 'package.json'
       - 'pnpm-lock.yaml'
@@ -47,7 +47,7 @@ jobs:
       - if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/.vitepress/dist
+          path: apps/docs/site/.vitepress/dist
 
   deploy:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'

@@ -23,16 +23,16 @@ host-neutrality test passing.
 ## Architecture boundaries
 
 - Host identity metadata (canonical name, label, aliases, capabilities) belongs in
-  `src/adapters/adapter-registry.ts`. Host paths, instruction file layout, environment variables, and ignore
-  rules belong in `src/adapters/adapters.ts`. Instruction render shapes for markdown/mdc (and future formats)
-  belong in `src/adapters/instruction-formats.ts`. Do not put host identity into `template/`.
-- To add a built-in Adapter: register it in `src/adapters/adapter-registry.ts`, add an exhaustive path
-  resolver in `src/adapters/adapters.ts`, then run `pnpm run eval:schema:generate` so
+  `packages/cli/src/adapters/adapter-registry.ts`. Host paths, instruction file layout, environment variables, and ignore
+  rules belong in `packages/cli/src/adapters/adapters.ts`. Instruction render shapes for markdown/mdc (and future formats)
+  belong in `packages/cli/src/adapters/instruction-formats.ts`. Do not put host identity into `template/`.
+- To add a built-in Adapter: register it in `packages/cli/src/adapters/adapter-registry.ts`, add an exhaustive path
+  resolver in `packages/cli/src/adapters/adapters.ts`, then run `pnpm run eval:schema:generate` so
   `evals/run.schema.json` `host.adapter.enum` is rewritten from the registry. Preflight runs
   `eval:schema:check` (and `pnpm run eval:schema:check`) to reject drift. Rely on
-  `src/__tests__/adapter-conformance.test.ts` for shared lifecycle coverage. Do not add a dynamic
+  `packages/cli/src/__tests__/adapter-conformance.test.ts` for shared lifecycle coverage. Do not add a dynamic
   plugin loader or Pack Registry.
-- Runtime source is strict TypeScript under `src/` and `template/agent-harness/src/`. Generated `dist/`
+- Runtime source is strict TypeScript under `packages/cli/src/` and `packages/harness/src/`. Generated `dist/`
   files are build products: change the TypeScript source and run `pnpm run build`; never edit them directly.
 - Biome is the shared formatter and linter, Knip rejects unreachable files or exports, and Secretlint scans
   source plus prompt/document surfaces for known credential formats. Run `pnpm run format` after source
@@ -41,12 +41,12 @@ host-neutrality test passing.
   Harness document routing, frontmatter, relative links, template tokens, and host-neutrality.
 - Vitest owns unit and integration tests. Its V8 gate covers imported runtime and release helpers; c8 merges
   coverage from the preflight and eval CLI subprocesses. Both thresholds are regression floors.
-- Keep tests beside their owning code under `src/__tests__/`,
-  `template/agent-harness/src/__tests__/`, or `evals/__tests__/`; do not recreate a root `test/` directory.
+- Keep tests beside their owning code under `packages/cli/src/__tests__/`,
+  `packages/harness/src/__tests__/`, or `evals/__tests__/`; do not recreate a root `test/` directory.
   Changes to the embedded runtime require focused tests under its own `__tests__/` directory; run them with
   `pnpm run test:harness`. End-to-end installation tests do not replace source-level command and library tests.
 - `template/` is the portable Harness core and must not identify a specific host product.
-- Stable rules go in the compact instruction template; detailed workflows go in routed Harness docs.
+- Stable rules go in the compact instruction template; detailed workflows go in routed Harness apps/docs/site.
 - `.agent-docs` is non-authoritative memory, never the only source of project facts or rules. The personal
   overlay is user-owned and lives outside managed installation outputs.
 - Prefer maintained libraries for generic infrastructure, but keep Harness domain rules local. Dependencies used

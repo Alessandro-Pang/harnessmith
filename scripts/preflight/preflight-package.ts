@@ -81,7 +81,7 @@ export function checkPackage(root: string, harnessRoot: string, check: Check): v
     'CHANGELOG.md',
     'CONTRIBUTING.md',
     'RELEASING.md',
-    'docs/architecture.md',
+    'apps/docs/site/architecture.md',
     'evals/README.md',
     'evals/run.example.json',
   ]) {

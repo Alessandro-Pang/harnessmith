@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { onTestFinished, test } from 'vitest';
-import { evalAdapterEnum } from '../../src/adapters/adapter-registry.js';
+import { evalAdapterEnum } from '../../packages/cli/src/adapters/adapter-registry.js';
 
 const root = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const entry = join(root, 'scripts', 'evaluation', 'contracts', 'eval-run-schema.ts');

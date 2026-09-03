@@ -1,0 +1,36 @@
+{
+  "$schema": "../node_modules/knip/schema.json",
+  "entry": [
+    "../bin/harnessmith.mjs",
+    "../apps/docs/site/.vitepress/config.ts",
+    "../scripts/evaluation/records/eval-gate.ts",
+    "../scripts/evaluation/contracts/eval-run-schema.ts",
+    "../scripts/preflight/preflight.ts",
+    "../scripts/release/release-publish.ts",
+    "../template/agent-harness/bin/harness.mjs",
+    "config/*.config.{ts,mjs}",
+    "config/.markdownlint-cli2.mjs"
+  ],
+  "ignoreDependencies": [
+    "@braintree/sanitize-url",
+    "@secretlint/secretlint-rule-preset-recommend",
+    "cytoscape",
+    "cytoscape-cose-bilkent",
+    "dayjs",
+    "debug",
+    "mermaid",
+    "@commitlint/config-conventional",
+    "tar",
+    "vitepress-plugin-mermaid"
+  ],
+  "project": [
+    "../packages/cli/src/**/*.ts",
+    "../scripts/**/*.ts",
+    "../evals/__tests__/**/*.ts",
+    "../packages/harness/src/**/*.ts"
+  ],
+  "ignore": [
+    "apps/docs/site/.vitepress/**",
+    "template/agent-harness/dist/**"
+  ]
+}

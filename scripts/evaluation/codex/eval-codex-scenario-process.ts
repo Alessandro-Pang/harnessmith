@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import { execa } from 'execa';
-import { repositoryRoot } from '../records/eval-fingerprint.js';
 import type { HostEvalAttempt, HostEvalAttemptResult } from '../planning/eval-runner.js';
+import { repositoryRoot } from '../records/eval-fingerprint.js';
 
 type ScenarioExecutorOptions = {
   packageArtifact: string;

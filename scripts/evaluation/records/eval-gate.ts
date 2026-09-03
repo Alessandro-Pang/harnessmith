@@ -1,9 +1,9 @@
 import { Command, InvalidArgumentError } from 'commander';
-import { compareHostEvaluationEvidence } from '../eval-comparison.js';
 import { gateEvaluationRecords, validateEvaluationRecords } from '../contracts/eval-contract.js';
-import { evaluationFingerprint, releaseArtifactPath } from './eval-fingerprint.js';
-import { EvaluationGateError } from '../records/eval-gate-failure.js';
+import { compareHostEvaluationEvidence } from '../eval-comparison.js';
 import { planEvaluation } from '../planning/eval-planning.js';
+import { EvaluationGateError } from '../records/eval-gate-failure.js';
+import { evaluationFingerprint, releaseArtifactPath } from './eval-fingerprint.js';
 
 function positiveNumber(value: string): number {
   const parsed = Number(value);

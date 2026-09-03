@@ -1,0 +1,19 @@
+{
+  "name": "harnessmith",
+  "private": false,
+  "version": "0.9.0",
+  "type": "module",
+  "description": "Distribute and safely manage a cross-host personal harness and durable work state.",
+  "bin": {
+    "harnessmith": "bin/harnessmith.mjs"
+  },
+  "scripts": {
+    "build": "pnpm --dir ../.. run build:emit && mkdir -p dist && cp -R ../../dist/. dist/",
+    "test": "pnpm --dir ../.. run test:unit",
+    "pack": "pnpm --dir ../.. pack"
+  },
+  "files": [
+    "bin",
+    "dist"
+  ]
+}

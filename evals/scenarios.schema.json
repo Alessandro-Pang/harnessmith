@@ -33,7 +33,7 @@
       "uniqueItems": true,
       "items": {
         "type": "string",
-        "pattern": "^(?:src|template)/(?!.*/(?:\\.\\.?)(?:/|$))[^\\\\]+$",
+        "pattern": "^(?:(?:src|template|packages|apps)/)(?!.*/(?:\\.\\.?)(?:/|$))[^\\\\]+$",
         "maxLength": 512
       }
     },

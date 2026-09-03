@@ -2,16 +2,16 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createAdapter } from '../../../src/adapters/adapters.js';
-import { installAll } from '../../../src/installation/install.js';
-import { describeLifecycle } from '../../../src/installation/lifecycle-plan.js';
+import { createAdapter } from '../../../packages/cli/src/adapters/adapters.js';
+import { installAll } from '../../../packages/cli/src/installation/install.js';
+import { describeLifecycle } from '../../../packages/cli/src/installation/lifecycle-plan.js';
 import {
   createSetupGuide,
   setupVerificationPassed,
   verifySetup,
-} from '../../../src/setup/setup.js';
-import { explainStatus } from '../../../src/status/status-explanation.js';
-import { inspectStatusAll } from '../../../src/status/status-inspection.js';
+} from '../../../packages/cli/src/setup/setup.js';
+import { explainStatus } from '../../../packages/cli/src/status/status-explanation.js';
+import { inspectStatusAll } from '../../../packages/cli/src/status/status-inspection.js';
 
 export function runFirstValueLoop() {
   const root = mkdtempSync(join(tmpdir(), 'harnessmith-first-value-loop-'));

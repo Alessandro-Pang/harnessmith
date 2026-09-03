@@ -4,6 +4,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { evalAdapterEnum } from '../../packages/cli/src/adapters/adapter-registry.js';
 import {
   applyEvalAdapterEnum,
   checkEvalRunSchemaAdapterEnum,
@@ -13,7 +14,6 @@ import {
   readEvalAdapterEnum,
   rewriteEvalAdapterEnumSource,
 } from '../../scripts/evaluation/contracts/eval-run-schema.js';
-import { evalAdapterEnum } from '../../src/adapters/adapter-registry.js';
 
 const repositoryRoot = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const entry = join(repositoryRoot, 'scripts', 'evaluation', 'contracts', 'eval-run-schema.ts');

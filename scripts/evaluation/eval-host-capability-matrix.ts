@@ -1,13 +1,13 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { readHostCapabilityMatrix } from './contracts/eval-host-capability-matrix-contract.js';
 import type { RunRecord } from './records/eval-artifacts.js';
 import {
   evaluationFingerprint,
   releaseArtifactPath,
   repositoryRoot,
 } from './records/eval-fingerprint.js';
-import { readHostCapabilityMatrix } from './contracts/eval-host-capability-matrix-contract.js';
 import {
   latestEvaluationRecords,
   type VerifiedRun,

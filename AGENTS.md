@@ -6,9 +6,9 @@ Harnessmith 是跨 Codex、Cursor、Claude Code、OpenCode、Kimi Code CLI 分�
 
 ## 不可破坏的边界
 
-- `src/` 只负责宿主 Adapter、安装事务、备份、恢复与发布边界；通用 Harness 能力放在
-  `template/agent-harness/src/`。
-- `template/agent-harness/dist/` 和根 `dist/` 是构建产物，只修改 TypeScript 源码。
+- `packages/cli/src/` 只负责宿主 Adapter、安装事务、备份、恢复与发布边界；通用 Harness 能力放在
+  `packages/harness/src/`。
+- `packages/harness/dist/` 和根 `dist/` 是构建产物，只修改 TypeScript 源码。
 - 测试跟随所属代码放入就近的 `__tests__/`；不要在仓库根目录新建 `test/` 或 `tests/`。
 - 受管理分发、可变 `state/`、共享个人规则 `~/.agent-harness/` 和非权威记忆 `.agent-docs/`
   必须保持分离。

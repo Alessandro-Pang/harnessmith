@@ -120,7 +120,7 @@ schema-version: 1
 关闭或正式规则承接。输入长度不是资格标准；不能用字数门槛漏掉短但高损失的禁止项。
 
 捕获前同时选择生命周期：`workstream` 只对绑定工作流有效，工作流完成后用 `close-input` 标为 complete 并
-退出 core；`durable` 跨任务有效，进入正式 docs/ADR/测试/schema/规则后应 supersede 并指向正式来源。
+退出 core；`durable` 跨任务有效，进入正式 apps/docs/site/ADR/测试/schema/规则后应 supersede 并指向正式来源。
 版本绑定的风险接受使用 `risk-decision + workstream`，不能无限期保持 active。
 
 输入模式必须显式选择。`verbatim` 正文只允许用户原始字节，不能加入 Agent 解释；任何补全、概括或上下文

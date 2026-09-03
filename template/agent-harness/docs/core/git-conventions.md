@@ -56,7 +56,7 @@ refactor/20260817_repository-layer
 默认 `type`：
 
 ```text
-build chore ci docs feat fix perf refactor revert style test
+build chore ci apps/docs/site feat fix perf refactor revert style test
 ```
 
 - `type` 必填并小写；有明确模块边界时可加小写 `scope`，不要为了形式臆造 scope。

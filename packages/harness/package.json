@@ -1,0 +1,11 @@
+{
+  "name": "@harnessmith/harness",
+  "private": true,
+  "version": "0.9.0",
+  "type": "module",
+  "description": "Host-neutral embedded Harness runtime for Harnesssmith",
+  "scripts": {
+    "build": "pnpm --dir ../.. run build:emit",
+    "test": "pnpm --dir ../.. run test:harness"
+  }
+}

@@ -92,7 +92,7 @@ test('fingerprint rejects distributed rules that do not match the release worktr
   const fingerprint = JSON.parse(firstResult.stdout);
   assert.ok(fingerprint.ruleSources.includes('template/AGENTS.md'));
   assert.ok(fingerprint.ruleSources.includes('dist/cli.js'));
-  assert.ok(!fingerprint.ruleSources.some((path: string) => path.startsWith('src/')));
+  assert.ok(!fingerprint.ruleSources.some((path: string) => path.startsWith('packages/cli/src/')));
   assert.equal(secondResult.status, 1);
   assert.match(secondResult.stderr, /distributed rules do not match the release worktree/i);
 });
@@ -214,7 +214,7 @@ test('fingerprint requires the npm tgz extension and core distribution files', (
     incomplete,
     tarGzip(
       candidateEntries(process.cwd()).filter(
-        ({ path }) => path !== 'package/template/agent-harness/dist/harness.mjs',
+        ({ path }) => path !== 'package/packages/harness/dist/harness.mjs',
       ),
     ),
   );

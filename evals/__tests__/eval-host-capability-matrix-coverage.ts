@@ -4,9 +4,9 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { evaluationFingerprint } from '../../scripts/evaluation/records/eval-fingerprint.js';
-import { buildHostCapabilityMatrixReport } from '../../scripts/evaluation/eval-host-capability-matrix.js';
 import { readHostCapabilityMatrix } from '../../scripts/evaluation/contracts/eval-host-capability-matrix-contract.js';
+import { buildHostCapabilityMatrixReport } from '../../scripts/evaluation/eval-host-capability-matrix.js';
+import { evaluationFingerprint } from '../../scripts/evaluation/records/eval-fingerprint.js';
 import { writeCandidateTarball } from './tarball-fixture.js';
 
 const root = dirname(dirname(dirname(fileURLToPath(import.meta.url))));

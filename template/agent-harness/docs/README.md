@@ -58,7 +58,7 @@ updated: 2026-08-28
 ```bash
 # 使用 manifest 中英 aliases 返回命中文档，不加载正文
 node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs route --intent review 评审 permissions --json
-# 在 Harness、项目 docs 与记忆中做有界检索
+# 在 Harness、项目 apps/docs/site 与记忆中做有界检索
 node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs search --project /absolute/project/path \
   --limit 20 --max-line-length 300 --json "authentication"
 # 显式构建或增量刷新本地全文索引；之后 auto 会优先使用有效索引

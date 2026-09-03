@@ -1,5 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, symlinkSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
+import { readNpmPackageTarball } from '../../release/npm-tarball.js';
+import { evaluationFingerprint, repositoryRoot } from '../records/eval-fingerprint.js';
 import {
   checked,
   gitCommit,
@@ -7,8 +9,6 @@ import {
   shellArgument,
   writeCanaryFile,
 } from './eval-codex-canary-common.js';
-import { evaluationFingerprint, repositoryRoot } from '../records/eval-fingerprint.js';
-import { readNpmPackageTarball } from '../../release/npm-tarball.js';
 
 export type MachineErrorCanaryFixture = {
   scenarioId: 'machine-error-contract';

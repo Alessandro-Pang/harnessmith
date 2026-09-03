@@ -21,7 +21,7 @@ rules:
     guarantee: guided
     boundary:
       - template/agent-harness/docs/standards/project-agent-docs.md
-      - template/agent-harness/src/lib/memory/memory-capture-eligibility.ts
+      - packages/harness/src/lib/memory/memory-capture-eligibility.ts
     confusingWith: [user-task-read-only]
 
   - id: managed-work-state-write-path
@@ -34,12 +34,12 @@ rules:
     evidence:
       implementation:
         - scripts/preflight/preflight-architecture.ts
-        - template/agent-harness/src/lib/memory/memory-write.ts
-        - template/agent-harness/src/lib/task/task-store.ts
+        - packages/harness/src/lib/memory/memory-write.ts
+        - packages/harness/src/lib/task/task-store.ts
       verification:
-        - src/__tests__/preflight-architecture.test.ts
-        - template/agent-harness/src/__tests__/memory-write-safety.test.ts
-        - template/agent-harness/src/__tests__/memory-handoff-safety.test.ts
+        - packages/cli/src/__tests__/preflight-architecture.test.ts
+        - packages/harness/src/__tests__/memory-write-safety.test.ts
+        - packages/harness/src/__tests__/memory-handoff-safety.test.ts
 
   - id: task-completion-gate
     owner: long-running-tasks
@@ -50,12 +50,12 @@ rules:
     guarantee: enforced
     evidence:
       implementation:
-        - template/agent-harness/src/commands/task/task.ts
-        - template/agent-harness/src/lib/task/task-evidence.ts
+        - packages/harness/src/commands/task/task.ts
+        - packages/harness/src/lib/task/task-evidence.ts
       verification:
-        - src/__tests__/preflight-architecture.test.ts
-        - template/agent-harness/src/__tests__/task-evidence.test.ts
-        - template/agent-harness/src/__tests__/task-core-safety.test.ts
+        - packages/cli/src/__tests__/preflight-architecture.test.ts
+        - packages/harness/src/__tests__/task-evidence.test.ts
+        - packages/harness/src/__tests__/task-core-safety.test.ts
     confusingWith: [completion-curation]
 
   - id: completion-curation
@@ -67,11 +67,11 @@ rules:
     guarantee: enforced
     evidence:
       implementation:
-        - template/agent-harness/src/commands/memory/memory-curation.ts
-        - template/agent-harness/src/lib/memory/memory-curation-documents.ts
+        - packages/harness/src/commands/memory/memory-curation.ts
+        - packages/harness/src/lib/memory/memory-curation-documents.ts
       verification:
-        - template/agent-harness/src/__tests__/memory-curation.test.ts
-        - template/agent-harness/src/__tests__/task-core-safety.test.ts
+        - packages/harness/src/__tests__/memory-curation.test.ts
+        - packages/harness/src/__tests__/task-core-safety.test.ts
     confusingWith: [task-completion-gate]
 
   - id: action-intent-routing
@@ -83,9 +83,9 @@ rules:
     guarantee: enforced
     evidence:
       implementation:
-        - template/agent-harness/src/lib/documentation/docs-routing.ts
+        - packages/harness/src/lib/documentation/docs-routing.ts
       verification:
-        - template/agent-harness/src/__tests__/docs-routing.test.ts
+        - packages/harness/src/__tests__/docs-routing.test.ts
 
   - id: multilingual-routing-and-response
     owner: operating-model
@@ -96,12 +96,12 @@ rules:
     guarantee: enforced
     evidence:
       implementation:
-        - template/agent-harness/src/lib/documentation/docs-routing.ts
-        - template/agent-harness/src/lib/routing/response-language.ts
+        - packages/harness/src/lib/documentation/docs-routing.ts
+        - packages/harness/src/lib/routing/response-language.ts
         - template/agent-harness/docs/manifest.yaml
       verification:
-        - template/agent-harness/src/__tests__/docs-routing.test.ts
-        - src/__tests__/multilingual-prompt.test.ts
+        - packages/harness/src/__tests__/docs-routing.test.ts
+        - packages/cli/src/__tests__/multilingual-prompt.test.ts
         - evals/__tests__/prompt-route-benchmark.test.ts
 
   - id: payload-consumption-boundary
@@ -113,9 +113,9 @@ rules:
     guarantee: enforced
     evidence:
       implementation:
-        - template/agent-harness/src/cli.ts
+        - packages/harness/src/cli.ts
       verification:
-        - template/agent-harness/src/__tests__/memory-payload-file.test.ts
+        - packages/harness/src/__tests__/memory-payload-file.test.ts
 
   - id: host-event-delivery
     owner: observability
@@ -125,7 +125,7 @@ rules:
     fallback: Report unsupported, not configured, or inconclusive without inventing an event.
     guarantee: host-dependent
     boundary:
-      - docs/architecture.md
+      - apps/docs/site/architecture.md
       - template/agent-harness/docs/core/observability.md
 
   - id: host-signal-replay-proof
@@ -137,8 +137,8 @@ rules:
     guarantee: enforced
     evidence:
       implementation:
-        - template/agent-harness/src/lib/replay/replay-contract.ts
-        - template/agent-harness/src/commands/replay/replay.ts
+        - packages/harness/src/lib/replay/replay-contract.ts
+        - packages/harness/src/commands/replay/replay.ts
       verification:
-        - template/agent-harness/src/__tests__/replay-contract.test.ts
-        - template/agent-harness/src/__tests__/host-signal-replay.test.ts
+        - packages/harness/src/__tests__/replay-contract.test.ts
+        - packages/harness/src/__tests__/host-signal-replay.test.ts
