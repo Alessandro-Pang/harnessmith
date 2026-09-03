@@ -27,7 +27,7 @@ export function evaluateCorpus(
   corpus: PromptRouteCorpus,
   repositoryRoot: string,
 ): CorpusEvaluation {
-  const docsRoot = join(repositoryRoot, 'packages', 'harness', 'docs');
+  const docsRoot = join(repositoryRoot, 'template', 'agent-harness', 'docs');
   const counts = {
     actionTotal: 0,
     actionCorrect: 0,

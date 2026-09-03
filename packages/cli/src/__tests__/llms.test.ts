@@ -257,7 +257,7 @@ test('npm package publishes the Harness runtime without its TypeScript sources',
   for (const path of [
     'template/AGENTS.md',
     'template/agent-harness/bin',
-    'packages/harness/dist',
+    'template/agent-harness/dist',
     'template/agent-harness/docs',
     'template/agent-harness/manifest.json',
     'template/agent-harness/schemas',

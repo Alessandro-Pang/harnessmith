@@ -437,7 +437,7 @@ test('memory check enforces profile.md as the single canonical user profile', ()
   );
 });
 
-test('context search combines Harness, global memory, project memory, and project docs', () => {
+test('context search combines Harness, global memory, project memory, and project apps/docs/site', () => {
   const root = temporaryRoot();
   const project = join(root, 'project');
   mkdirSync(join(project, 'docs'), { recursive: true });

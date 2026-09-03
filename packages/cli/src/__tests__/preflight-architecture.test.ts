@@ -33,6 +33,8 @@ test('architecture preflight catches module syntax missed by the legacy from reg
     import.meta.dirname,
     '..',
     '..',
+    '..',
+    '..',
     'scripts',
     'preflight',
     'preflight-architecture.ts',

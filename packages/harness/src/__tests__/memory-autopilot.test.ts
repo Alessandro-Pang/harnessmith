@@ -242,7 +242,7 @@ test('Handoff snapshots preserve recovery fields unless an update explicitly cle
   assert.doesNotMatch(snapshot, /# 未解决事项|The host evaluation is pending/);
   assert.match(snapshot, /# 关键决策\n\nKeep writes local and atomic/);
   assert.match(snapshot, /# 验证证据\n\nFocused tests passed: 12\/12/);
-  assert.match(snapshot, /scope:\n {2}- template\/agent-harness\/packages\/cli\/src/);
+  assert.match(snapshot, /scope:\n {2}- packages\/harness\/src/);
   assert.match(snapshot, /source-refs:\n {2}- docs\/architecture\.md/);
 });
 

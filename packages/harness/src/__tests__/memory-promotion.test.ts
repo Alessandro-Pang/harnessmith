@@ -184,7 +184,7 @@ test('memory promotion produces a proposal without writing authoritative docs', 
 
   const schema = JSON.parse(
     readFileSync(
-      join(process.cwd(), 'packages', 'harness', 'schemas', 'memory-promotion.schema.json'),
+      join(process.cwd(), 'template', 'agent-harness', 'schemas', 'memory-promotion.schema.json'),
       'utf8',
     ),
   );

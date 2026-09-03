@@ -26,7 +26,7 @@ test('behavior evaluation catalog has unique, observable scenarios', () => {
     assert.ok(Array.isArray(scenario.automatedChecks) && scenario.automatedChecks.length > 0);
     assert.ok(Array.isArray(scenario.dependencyPaths) && scenario.dependencyPaths.length > 0);
     for (const dependencyPath of scenario.dependencyPaths) {
-      assert.match(dependencyPath, /^(?:src|template)\//);
+      assert.match(dependencyPath, /^(?:src|template|packages|apps)\//);
       assert.equal(existsSync(join(root, dependencyPath)), true, dependencyPath);
     }
     for (const check of scenario.automatedChecks) {
@@ -129,7 +129,7 @@ test('memory autopilot evaluation measures discovery without lexical or semantic
   assert.match(scenario.pass.join(' '), /session episode/i);
   assert.match(scenario.pass.join(' '), /same session document/i);
   assert.match(scenario.forbidden.join(' '), /permission/i);
-  assert.match(scenario.prompt, /docs\/status\.txt.*pending.*ready/i);
+  assert.match(scenario.prompt, /(?:docs\/|apps\/docs\/site\/)status\.txt.*pending.*ready/i);
   assert.match(scenario.prompt, /For all future tasks.*one sentence/i);
   assert.match(scenario.setup.join(' '), /verify-autopilot\.mjs/i);
   assert.match(scenario.setup.join(' '), /context_budget_remaining=8%/i);
@@ -147,11 +147,11 @@ test('memory autopilot evaluation measures discovery without lexical or semantic
   assert.match(scenario.pass.join(' '), /omitted.*decisions.*preserved/i);
   assert.match(
     scenario.pass.join(' '),
-    /node verify-autopilot\.mjs docs\/status\.txt.*exit 0.*concrete follow-up action.*node verify-autopilot\.mjs docs\/follow-up\.txt.*checkpoint-reason compaction/i,
+    /node verify-autopilot\.mjs apps\/docs\/site\/status\.txt.*exit 0.*concrete follow-up action.*node verify-autopilot\.mjs apps\/docs\/site\/follow-up\.txt.*checkpoint-reason compaction/i,
   );
   assert.match(
     scenario.pass.join(' '),
-    /clearOpen:true.*node verify-autopilot\.mjs docs\/follow-up\.txt.*exit 0.*open absent/i,
+    /clearOpen:true.*node verify-autopilot\.mjs apps\/docs\/site\/follow-up\.txt.*exit 0.*open absent/i,
   );
   assert.match(
     scenario.pass.join(' '),
