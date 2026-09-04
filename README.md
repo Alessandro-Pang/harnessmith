@@ -117,7 +117,7 @@ node <harness-path>/bin/harness.mjs repository-map check --json
 node <harness-path>/bin/harness.mjs health --json
 ```
 
-完整参数、退出码与失败处理见 [CLI 参考](https://alexpang.cn/harnessmith/reference/cli)；
+完整参数、退出码与失败处理见 [安装器 CLI](https://alexpang.cn/harnessmith/reference/cli)；
 安装、升级、恢复、卸载各阶段的安全保证见
 [安全生命周期](https://alexpang.cn/harnessmith/guide/lifecycle)。Repository Map 的关系模型、证据门槛和维护命令见
 [运行时 CLI](https://alexpang.cn/harnessmith/reference/runtime-cli#repository-map-维护跨项目关系)。
@@ -133,7 +133,7 @@ node <harness-path>/bin/harness.mjs health --json
 | `host-verified` | 在真实宿主里完成一次只读受控任务，并保留了验证证据 |
 
 前两步装完就有；`host-verified` 要你亲手在真实任务里确认——安装器代劳不了。完整路径见
-[First Value Loop](https://alexpang.cn/harnessmith/guide/first-value-loop)。
+[首次价值循环](https://alexpang.cn/harnessmith/guide/first-value-loop)。
 
 ## 装完之后怎么用
 
@@ -161,9 +161,9 @@ node <harness-path>/bin/harness.mjs health --json
 
 ## 深入了解
 
-- [完整文档](https://alexpang.cn/harnessmith/) · [快速开始](https://alexpang.cn/harnessmith/guide/getting-started) · [历史与思想来源](https://alexpang.cn/harnessmith/concepts/history-and-influences)
+- [完整文档](https://alexpang.cn/harnessmith/) · [快速开始](https://alexpang.cn/harnessmith/guide/getting-started) · [历史与渊源](https://alexpang.cn/harnessmith/concepts/history-and-influences)
 - [架构](https://alexpang.cn/harnessmith/concepts/architecture) · [设计原则](https://alexpang.cn/harnessmith/concepts/design-principles) · [责任边界](https://alexpang.cn/harnessmith/concepts/boundaries)
-- [Memory 与 Task](https://alexpang.cn/harnessmith/concepts/memory-and-tasks)（含 Memory Autopilot） · [版本与迁移](https://alexpang.cn/harnessmith/reference/migrations)
+- [记忆与任务](https://alexpang.cn/harnessmith/concepts/memory-and-tasks)（含 Memory Autopilot） · [迁移指南](https://alexpang.cn/harnessmith/reference/migrations)
 - [贡献指南](./CONTRIBUTING.md) · [安全策略](./SECURITY.md) · [许可证](./LICENSE)
 
 ## 参与开发

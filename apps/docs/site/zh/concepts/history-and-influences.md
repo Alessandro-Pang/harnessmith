@@ -1,10 +1,10 @@
 ---
-title: 历史与思想来源
+title: 历史与渊源
 description: 从个人实践、文档治理到 Personal Harness 的真实演进路径
 owner: maintainers
 ---
 
-# 历史与思想来源
+# 历史与渊源
 
 Harnessmith 不是先有一套 Harness Engineering 理论，再照着它设计出来的。它起初只是为了解决一个很实际的问题：我需要在
 多个项目之间反复切换，希望把已经验证有效的 `AGENTS.md`、文档检索和工作记录整理成一套可复用的工具，让不同项目、不同

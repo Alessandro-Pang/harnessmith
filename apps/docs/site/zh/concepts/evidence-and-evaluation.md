@@ -32,7 +32,7 @@ owner: maintainers
 
 `pnpm run eval:first-value` 在 disposable 本地目录中复现 setup preview、managed install、deterministic health、status explain 和 restore preview，并输出 version 1 acceptance record。它能发现 journey 术语、下一步指引、安装与恢复入口的回归，且默认不上传 telemetry。
 
-该记录明确把 `installed`、`healthy` 与 `host-configured`、`host-verified` 分开。本地 baseline 通过时，Host-owned 状态仍为 `inconclusive`，`firstValueAchieved` 固定为 `false`；npm downloads、GitHub traffic 和本地 tests 均被列为不能用于推断 active users 的指标。完整 journey 见 [First Value Loop](/guide/first-value-loop)。
+该记录明确把 `installed`、`healthy` 与 `host-configured`、`host-verified` 分开。本地 baseline 通过时，Host-owned 状态仍为 `inconclusive`，`firstValueAchieved` 固定为 `false`；npm downloads、GitHub traffic 和本地 tests 均被列为不能用于推断 active users 的指标。完整 journey 见 [首次价值循环](/guide/first-value-loop)。
 
 ### 真实宿主评测
 

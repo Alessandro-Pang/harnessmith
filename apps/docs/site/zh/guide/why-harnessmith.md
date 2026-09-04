@@ -21,7 +21,7 @@ Harnessmith 面向同时使用一个或多个 Coding Agent、并且打算长期�
 先交代出身，免得对它产生错误的想象：它并不是先按一套 Harness Engineering 理论设计出来的。最初只是想把实际
 项目中已经有效的 `AGENTS.md`、文档检索和工作记录方法抽出来，让它们可以跨项目、跨 Coding Agent 复用；
 宿主、授权、Memory、生命周期和验证这些边界，都是在通用化过程中逐渐出现的。完整过程见
-[历史与思想来源](/concepts/history-and-influences)。
+真实演进顺序见[历史与渊源](/concepts/history-and-influences)。
 
 ## 问题不是少写一份规则
 

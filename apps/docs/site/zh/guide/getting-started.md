@@ -80,7 +80,7 @@ npx harnessmith status --agent codex --explain
 npx harnessmith diagnostics --agent <agent> --json
 ```
 
-然后进入真实宿主，跑完你的第一个受控任务。起点、终点、owner、失败出口与零遥测回归的完整定义，见 [First Value Loop](/guide/first-value-loop)。
+然后进入真实宿主，跑完你的第一个受控任务。起点、终点、owner、失败出口与零遥测回归的完整定义，见 [首次价值循环](/guide/first-value-loop)。
 
 ## 装到其他宿主
 
@@ -106,7 +106,7 @@ npx harnessmith setup --agent codex,opencode,kimi-code
 
 这样的请求会先命中入口中的信任与发现规则，再按需路由到具体 playbook。Harnessmith 提供的是上下文和工作契约；宿主是否执行命令、是否要求权限批准，仍由宿主自己决定。
 
-只有真实宿主完成该任务并保留工具、文件系统与 verifier 证据，才算到达 `host-verified`。在那之前，先看一眼 `status --explain` 和 `restore --dry-run`，把恢复路径确认清楚。这是 First Value Loop 里 `recovery-aware` 检查点的要求。
+只有真实宿主完成该任务并保留工具、文件系统与 verifier 证据，才算到达 `host-verified`。在那之前，先看一眼 `status --explain` 和 `restore --dry-run`，把恢复路径确认清楚。这是首次价值循环里 `recovery-aware` 检查点的要求。
 
 ## 让 Agent 帮你装
 

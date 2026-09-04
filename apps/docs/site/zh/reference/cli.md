@@ -1,10 +1,10 @@
 ---
-title: CLI 参考
+title: 安装器 CLI
 description: Harnessmith 外层 CLI 的命令、选项与示例
 owner: maintainers
 ---
 
-# CLI 参考
+# 安装器 CLI
 
 Harnessmith 有两条 CLI，分工不同：外层 `harnessmith` 负责「装进去、装得安全」——宿主 Adapter、安装事务、备份与恢复；安装后日常使用的路由、检索、Memory、Task 命令属于内嵌 Runtime，见[运行时 CLI](/reference/runtime-cli)。这一页只讲外层。
 
@@ -57,7 +57,7 @@ npx harnessmith setup --agent cursor --project /path/to/project --yes --json
 
 计划把目标区分为 `missing`、`managed`、`unmanaged` 和 `modified`，并明确 `unsupported` 与 `host-dependent` 边界。确认步骤不会绕过安全策略：`unmanaged` / `modified` 默认拒绝，只有审阅所有权和备份行为后才能显式使用 `--force`。安装事务失败会尝试回滚，并给出 dry-run → status → restore 的恢复顺序。
 
-成功报告里的 `installed-and-healthy` 只表示安装所有权与内嵌 Runtime 的确定性检查通过；真实 Host 中的模型行为、工具权限、认证或运行时事件不在其中。报告内的 First Value 状态使用统一的 `installed`、`healthy`、`host-configured`、`host-verified`：setup 可本地证明前两项，后两项在没有真实 Host 证据时保持 `inconclusive`。下一步先运行 `diagnostics --agent <agent> --json`，再执行文档中的首次只读受控任务；完整 journey 见 [First Value Loop](/guide/first-value-loop)。
+成功报告里的 `installed-and-healthy` 只表示安装所有权与内嵌 Runtime 的确定性检查通过；真实 Host 中的模型行为、工具权限、认证或运行时事件不在其中。报告内的 First Value 状态使用统一的 `installed`、`healthy`、`host-configured`、`host-verified`：setup 可本地证明前两项，后两项在没有真实 Host 证据时保持 `inconclusive`。下一步先运行 `diagnostics --agent <agent> --json`，再执行文档中的首次只读受控任务；完整 journey 见 [首次价值循环](/guide/first-value-loop)。
 
 ## 安全接管 `adopt`
 
@@ -159,4 +159,4 @@ npx harnessmith uninstall --agent codex
 | 4 | operation lock 冲突 |
 | 5 | 没有可操作的安装状态（如 restore 找不到安装记录） |
 
-命令行参数是外层分发器契约。安装后内嵌的 Harness CLI 拥有独立命令面，负责文档路由、Memory、Task、仓库关系与审计；完整用户命令见[运行时 CLI](/reference/runtime-cli)，设计边界见[Memory 与 Task](/concepts/memory-and-tasks)。
+命令行参数是外层分发器契约。安装后内嵌的 Harness CLI 拥有独立命令面，负责文档路由、Memory、Task、仓库关系与审计；完整用户命令见[运行时 CLI](/reference/runtime-cli)，设计边界见[记忆与任务](/concepts/memory-and-tasks)。

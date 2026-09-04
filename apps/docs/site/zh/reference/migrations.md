@@ -1,10 +1,10 @@
 ---
-title: 版本与迁移
+title: 迁移指南
 description: npm 版本、Runtime schema、升级和发布记录边界
 owner: maintainers
 ---
 
-# 版本与迁移
+# 迁移指南
 
 Harnessmith 有三个不同的版本维度，不能混为一个数字——混在一起，你将无法判断一次升级到底改变了什么。三个维度分别回答三个问题：发行了什么、运行时能力变了什么、本地数据还能不能读。
 

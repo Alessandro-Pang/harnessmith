@@ -4,7 +4,7 @@ description: Harnessmith 的分层、数据流、组件边界与关键取舍
 owner: maintainers
 ---
 
-# Harnessmith 架构设计
+# 架构设计
 
 一句话定位：Harnessmith 是**跨 Host 的 Personal Harness 分发与工作状态控制层**。它把一套宿主中立的规则、文档和本地 Runtime 安全地接入 Codex、Cursor、Claude Code、OpenCode、Kimi Code CLI 与 Zed Agent，但不替代这些宿主的 Agent Runtime。宿主怎么跑 Agent 是宿主的事，Harnessmith 管的是你的工作方式如何安全地进入并延续。
 

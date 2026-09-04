@@ -66,7 +66,7 @@ hero:
     <span class="home-card-index">04 / BOUNDARY</span>
     <h2>把不归它管的，提前说清楚</h2>
     <p>模型循环、sandbox、工具执行、权限批准，全部留在宿主一侧。Markdown 规则是行为指导，不是权限强制；仓库也不把「文档写了」包装成「系统保证了」。</p>
-    <a href="/harnessmith/concepts/boundaries">查看责任边界 <span aria-hidden="true">→</span></a>
+    <a href="/harnessmith/concepts/boundaries">查看职责边界 <span aria-hidden="true">→</span></a>
   </article>
 </section>
 

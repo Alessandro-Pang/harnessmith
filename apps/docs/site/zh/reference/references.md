@@ -53,7 +53,7 @@ owner: maintainers
 - [Agent Harness Engineering: A Survey（2026）](https://picrew.github.io/LLM-Harness/)：覆盖 170 多个开源项目，并提出 ETCLOVG 七层分类。按当前资料状态尚未经过双盲评审，且作者声明语料和分类边界存在限制；本站将其作为研究地图，不作为规范。
 - [Lost in the Middle](https://aclanthology.org/2024.tacl-1.9/)：长上下文中的信息位置影响，为渐进披露提供研究背景。
 
-项目如何从手工维护 `AGENTS.md` 与跨项目搜索实践演变而来，见[历史与思想来源](/concepts/history-and-influences)。
+项目如何从手工维护 `AGENTS.md` 与跨项目搜索实践演变而来，见[历史与渊源](/concepts/history-and-influences)。
 
 ## 文档站点与交付
 
