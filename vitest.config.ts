@@ -9,8 +9,11 @@ export default defineConfig({
       'evals/__tests__/**/*.test.ts',
     ],
     pool: 'forks',
-    testTimeout: 30_000,
-    hookTimeout: 30_000,
+    // Windows runners have materially slower filesystem/process startup for
+    // the install and clean-room fixture tests. Keep the fast default on Unix
+    // while giving those platform-specific subprocesses enough room to finish.
+    testTimeout: process.platform === 'win32' ? 60_000 : 30_000,
+    hookTimeout: process.platform === 'win32' ? 60_000 : 30_000,
     coverage: {
       provider: 'v8',
       include: [

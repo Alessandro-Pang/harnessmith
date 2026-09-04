@@ -1,7 +1,7 @@
 # Harnessmith
 
 > Harnessmith is a cross-host Personal Harness distribution and work-state control plane for Codex, Cursor,
-> Claude Code, OpenCode, Kimi Code CLI, and DeepSeek Harness.
+> Claude Code, OpenCode, Kimi Code CLI, DeepSeek Harness, and Pi Agent.
 > This file is an operational guide for an LLM helping a user install or initialize it.
 
 Project: https://www.npmjs.com/package/harnessmith
@@ -62,13 +62,27 @@ use the published `npx --yes harnessmith` commands below.
     patches; `settings.yaml`; credentials; permissions, sandbox, tool allowlists, and approval
   - Do not tell the user that installing the file enforces DSH security controls or verifies a real
     Session baseline; file presence is not Host Eval evidence
+- `pi` (alias: `pi-agent`)
+  - Official coordinates: `@earendil-works/pi-coding-agent`, executable `pi`
+  - Instructions: `$PI_CODING_AGENT_DIR/AGENTS.md` when set to a non-empty value; otherwise
+    `~/.pi/agent/AGENTS.md`
+  - Harness: `agent-harness` under the same effective Pi Agent config directory
+  - PI_CODING_AGENT_DIR has a dual role: it serves as both the config root and Pi's writable state
+    directory for sessions, settings, and authentication; Harnessmith only writes AGENTS.md,
+    agent-harness/, and `.harnessmith/install.json` metadata into this directory
+  - No verified revision pinned: Pi Agent iterates rapidly; compatibility is claimed for the documented
+    AGENTS.md loading contract, not a specific version
+  - Out of scope: `AGENTS.override.md` overrides; `SYSTEM.md` replacement; context hook extensions;
+    `trust.json` project gating; project-scope instructions; session, settings, and auth state management
+  - Do not tell the user that installing the file enforces Pi security controls; Pi has no built-in
+    permission system and runs with user process permissions; file presence is not Host Eval evidence
 
 ## LLM installation protocol
 
 1. Verify the runtime with `node --version`. Stop and explain the requirement if Node.js is older than 24.12.
 2. Determine the exact agent selection from the user's request. Accepted values are `codex`, `cursor`,
-   `claude`, `claude-code`, `opencode`, `kimi`, `kimi-code`, `deepseek`, `dsh`, `deepseek-harness`, and
-   `all`. Never infer `all` from an ambiguous request.
+   `claude`, `claude-code`, `opencode`, `kimi`, `kimi-code`, `deepseek`, `dsh`, `deepseek-harness`,
+   `pi`, `pi-agent`, and `all`. Never infer `all` from an ambiguous request.
 3. If Cursor is selected, determine the intended project path. Ask the user if more than one repository is
    plausible. Prefer an absolute path.
 4. Preview resolved destinations before writing:

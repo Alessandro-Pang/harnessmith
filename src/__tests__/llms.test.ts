@@ -26,6 +26,8 @@ test('llms.txt exposes a complete non-interactive install protocol', () => {
     'OPENCODE_CONFIG_DIR',
     'KIMI_CODE_HOME',
     'DSH_HOME',
+    'Pi Agent',
+    'PI_CODING_AGENT_DIR',
     '.backup-<timestamp>',
     '--force',
     'conflict',
