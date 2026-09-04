@@ -6,7 +6,7 @@ import { test } from 'vitest';
 const root = process.cwd();
 
 test('public repair guidance preserves proposal, identity, rollback, and verifier boundaries', () => {
-  const runtimeCli = readFileSync(join(root, 'apps/docs/site/reference/runtime-cli.md'), 'utf8');
+  const runtimeCli = readFileSync(join(root, 'apps/docs/site/zh/reference/runtime-cli.md'), 'utf8');
   const architecture = readFileSync(
     join(root, 'template/agent-harness/docs/core/harness-cli-architecture.md'),
     'utf8',

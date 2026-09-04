@@ -8,9 +8,9 @@ const root = dirname(dirname(dirname(dirname(dirname(fileURLToPath(import.meta.u
 
 test('setup, status, and journey apps/docs/site use the same First Value states and next step', () => {
   const sources = [
-    'apps/docs/site/guide/first-value-loop.md',
-    'apps/docs/site/guide/getting-started.md',
-    'apps/docs/site/reference/cli.md',
+    'apps/docs/site/zh/guide/first-value-loop.md',
+    'apps/docs/site/zh/guide/getting-started.md',
+    'apps/docs/site/zh/reference/cli.md',
     'llms.txt',
   ].map((path) => readFileSync(join(root, path), 'utf8'));
 
@@ -24,7 +24,7 @@ test('setup, status, and journey apps/docs/site use the same First Value states 
 
 test('public journey rejects download, traffic, and local-test activity claims', () => {
   const journey = readFileSync(
-    join(root, 'apps', 'docs', 'site', 'guide', 'first-value-loop.md'),
+    join(root, 'apps', 'docs', 'site', 'zh', 'guide', 'first-value-loop.md'),
     'utf8',
   );
   assert.match(journey, /npm downloads/);

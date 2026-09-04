@@ -9,7 +9,7 @@ const read = (path: string) => readFileSync(join(root, path), 'utf8');
 
 test('Host Eval apps/docs/site expose bounded execution and failure classes', () => {
   const documents = [
-    read('apps/docs/site/concepts/evidence-and-evaluation.md'),
+    read('apps/docs/site/zh/concepts/evidence-and-evaluation.md'),
     read('evals/README.md'),
   ];
   for (const content of documents) {
@@ -31,7 +31,7 @@ test('Host Eval apps/docs/site expose bounded execution and failure classes', ()
 
 test('Host Eval apps/docs/site expose dependency-scoped incremental selection', () => {
   const documents = [
-    read('apps/docs/site/concepts/evidence-and-evaluation.md'),
+    read('apps/docs/site/zh/concepts/evidence-and-evaluation.md'),
     read('evals/README.md'),
   ];
   for (const content of documents) {
@@ -46,7 +46,7 @@ test('Host Eval apps/docs/site expose dependency-scoped incremental selection', 
 });
 
 test('Host Eval apps/docs/site expose bounded parallel runner and circuit breaker', () => {
-  const evaluation = read('apps/docs/site/concepts/evidence-and-evaluation.md');
+  const evaluation = read('apps/docs/site/zh/concepts/evidence-and-evaluation.md');
   const evalReadme = read('evals/README.md');
   const capabilities = read('apps/docs/site/capability-evidence.yaml');
 
@@ -61,7 +61,7 @@ test('Host Eval apps/docs/site expose bounded parallel runner and circuit breake
 });
 
 test('Host Eval apps/docs/site expose release evidence state without counting infrastructure blocks', () => {
-  const evaluation = read('apps/docs/site/concepts/evidence-and-evaluation.md');
+  const evaluation = read('apps/docs/site/zh/concepts/evidence-and-evaluation.md');
   const evalReadme = read('evals/README.md');
   const capabilities = read('apps/docs/site/capability-evidence.yaml');
 

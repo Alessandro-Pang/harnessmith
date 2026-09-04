@@ -125,7 +125,7 @@ rules:
     fallback: Report unsupported, not configured, or inconclusive without inventing an event.
     guarantee: host-dependent
     boundary:
-      - apps/docs/site/architecture.md
+      - apps/docs/site/zh/concepts/architecture.md
       - template/agent-harness/docs/core/observability.md
 
   - id: host-signal-replay-proof
