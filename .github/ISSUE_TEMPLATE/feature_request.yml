@@ -1,12 +1,12 @@
 name: '💡 Feature Request / 功能建议'
-description: Propose a focused Harnesssmith capability / 提议一项聚焦的 Harnesssmith 能力
+description: Propose a focused Harnessmith capability / 提议一项聚焦的 Harnessmith 能力
 title: '[Feature]: '
 body:
   - type: markdown
     attributes:
       value: |
-        Tell us which Harnesssmith workflow you want to improve and the outcome you need.
-        请告诉我们你希望改进哪个 Harnesssmith 工作流，以及期望获得什么结果。
+        Tell us which Harnessmith workflow you want to improve and the outcome you need.
+        请告诉我们你希望改进哪个 Harnessmith 工作流，以及期望获得什么结果。
 
   - type: textarea
     id: problem

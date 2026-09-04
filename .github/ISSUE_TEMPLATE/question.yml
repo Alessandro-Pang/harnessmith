@@ -1,5 +1,5 @@
 name: '💬 Question / 使用问题'
-description: Ask about using or contributing to Harnesssmith / 咨询 Harnesssmith 使用或贡献问题
+description: Ask about using or contributing to Harnessmith / 咨询 Harnessmith 使用或贡献问题
 title: '[Question]: '
 body:
   - type: markdown
