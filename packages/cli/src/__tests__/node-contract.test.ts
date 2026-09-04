@@ -102,7 +102,7 @@ test('npm package includes runtime guidance and eval contracts without source-on
     'CONTRIBUTING.md',
     'RELEASING.md',
     'CHANGELOG.md',
-    'apps/docs/site/architecture.md',
+    'apps/docs/site/zh/concepts/architecture.md',
     'evals/README.md',
     'evals/run.example.json',
   ])
@@ -179,7 +179,7 @@ test('public guidance does not duplicate the package version', () => {
     'README.en.md',
     'SECURITY.md',
     'llms.txt',
-    'apps/docs/site/architecture.md',
+    'apps/docs/site/zh/concepts/architecture.md',
   ];
 
   for (const path of guidancePaths) {

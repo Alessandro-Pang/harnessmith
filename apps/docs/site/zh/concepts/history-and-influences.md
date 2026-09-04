@@ -10,15 +10,18 @@ Harnessmith 不是先有一套 Harness Engineering 理论，再照着它设计�
 多个项目之间反复切换，希望把已经验证有效的 `AGENTS.md`、文档检索和工作记录整理成一套可复用的工具，让不同项目、不同
 Coding Agent 都能直接使用。
 
-但真正开始做通用化后，问题很快超出了“把几份文件分发出去”的范围：不同宿主如何适配，操作权限如何约束，Memory 如何
+但真正开始做通用化后，问题很快超出了「把几份文件分发出去」的范围：不同宿主如何适配，操作权限如何约束，Memory 如何
 管理，安装和升级如何收尾，结果又该如何验证。解决这些问题的过程中，我才发现 Harnessmith 正在走向业界所说的 Harness
 Engineering。也正因如此，项目后来才开始系统调研这一领域，并据此重新梳理自己的定位和边界。
+
+这一页按时间顺序记录这条路径：先有工作区的实践，再有文档治理，然后是通用化，最后才是领域调研。它解释「为什么走到
+这里」，不定义「当前实现了什么」。后一个问题由代码、测试和正式文档回答。
 
 ```mermaid
 flowchart LR
   Pain["多项目协作痛点"] --> Early["第一阶段<br/>AGENTS.md + .agent-docs"]
   Early --> Governed["第二阶段<br/>路由 · 检索 · 文档治理"]
-  Governed --> Generalize["最初的 Harnesssmith<br/>把已有能力通用化"]
+  Governed --> Generalize["最初的 Harnessmith<br/>把已有能力通用化"]
   Generalize --> Boundaries["通用化遇到边界<br/>宿主 · 授权 · Memory · 生命周期 · 验证"]
   Boundaries --> Research["重新调研<br/>Harness Engineering"]
   Research --> Current["当前方向<br/>Personal Harness 分发与工作状态控制"]
@@ -26,9 +29,9 @@ flowchart LR
 
 ## 第一阶段：AGENTS.md 与 .agent-docs
 
-最初面对的是一个很具体的问题：一个需求经常横跨多个关联仓库，每次切换项目或新建会话，都要重新解释项目关系、业务背景、
-当前进度和开发约束。第一阶段还没有构建通用 Harness 的目标，只是在工作区根目录维护 `AGENTS.md`，同时用 `.agent-docs`
-保存任务过程中不断产生的工作文档。
+故事开始于一个很具体的痛点：一个需求经常横跨多个关联仓库，每次切换项目或新建会话，都要重新解释项目关系、业务背景、
+当前进度和开发约束。重复口述这些背景，是日常里最浪费上下文的一件事。第一阶段还没有构建通用 Harness 的目标，只是在
+工作区根目录维护 `AGENTS.md`，同时用 `.agent-docs` 保存任务过程中不断产生的工作文档。
 
 ### AGENTS.md：先建立工作区地图
 
@@ -139,9 +142,9 @@ flowchart LR
 `memory maintain` 分别负责 Memory 的元信息发现、完整性检查与生命周期候选。正式 `docs` 的 source 与日期过滤不属于当前
 契约；当前参数和预算始终以[运行时 CLI](/reference/runtime-cli)为准。
 
-## Harnesssmith 最初只想把第二阶段通用化
+## Harnessmith 最初只想把第二阶段通用化
 
-Harnesssmith 最初只想把第二阶段通用化：把已经验证过的短规则入口、文档路由、搜索 CLI、`.agent-docs` 结构和维护约定，
+Harnessmith 最初只想把第二阶段通用化：把已经验证过的短规则入口、文档路由、搜索 CLI、`.agent-docs` 结构和维护约定，
 从单个项目中抽出来，变成一套不绑定具体业务、可以安装到不同项目和 Coding Agent 的通用能力。
 
 最初并不是为了实现一套行业定义的 Harness，也没有先按某个 Harness 分层模型规划功能。最早的判断更简单：如果这些规则、
@@ -164,7 +167,7 @@ Harnesssmith 最初只想把第二阶段通用化：把已经验证过的短规�
 | 仓库测试不能证明真实 Agent Host 行为 | 只跑单测就声称支持 | 确定性门禁、Host Eval 与人工复核分开 |
 
 这些问题已经超出“通用文档工具”的范围：它们开始涉及上下文怎样进入 Agent、状态怎样跨会话延续、变更怎样安全落地、结果怎样
-被验证，以及哪些能力必须留给宿主。Harnesssmith 因此逐渐形成两层结构：外层 CLI 负责跨宿主分发和安全生命周期，内层
+被验证，以及哪些能力必须留给宿主。Harnessmith 因此逐渐形成两层结构：外层 CLI 负责跨宿主分发和安全生命周期，内层
 Personal Harness 负责规则路由、文档检索、非权威 Memory、Task 和有限审计。
 
 ## 后来才重新调研 Harness Engineering
@@ -174,7 +177,7 @@ Personal Harness 负责规则路由、文档检索、非权威 Memory、Task 和
 
 重新调研时，传统 [test harness](https://en.wikipedia.org/wiki/Test_harness) 提供了“固定输入、执行与结果比较”的基础语义，
 [lm-evaluation-harness](https://github.com/EleutherAI/lm-evaluation-harness) 展示了模型评测场景中的 Harness；它们帮助区分测试、
-评测基础设施和面向 Coding Agent 的工作层，并不直接定义 Harnesssmith 的功能。
+评测基础设施和面向 Coding Agent 的工作层，并不直接定义 Harnessmith 的功能。
 
 [Anthropic: Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents)
 讨论跨上下文增量工作与交接 artifact；[OpenAI Harness Engineering](https://openai.com/index/harness-engineering/) 强调仓库知识、
@@ -183,12 +186,12 @@ Context、Lifecycle、Observability、Verification、Governance 七层整理 Age
 更完整的检查坐标：文档路由属于 Context，Task 与恢复属于 Lifecycle，门禁与 Host Eval 属于 Verification，授权和 owner
 属于 Governance。
 
-这些研究改变的是项目对自身边界和方向的认识，而不是重写项目起源。Harnesssmith 从“通用化一套规则、检索和 Memory 能力”
-进一步明确为“跨 Host 的 Personal Harness 分发与工作状态控制层”，并开始系统检查自己在 Harness 各层做了什么、没有做什么。
+这些研究改变的是项目对自身边界和方向的认识，而不是重写项目起源。Harnessmith 从「通用化一套规则、检索和 Memory 能力」
+进一步明确为「跨 Host 的 Personal Harness 分发与工作状态控制层」，并开始系统检查自己在 Harness 各层做了什么、没有做什么。
 
 按当前资料状态，该综述尚未经过双盲评审，语料和分类边界也有明确限制。因此它是研究地图，不是行业标准或功能清单。
-Harnesssmith 也不因为采用 Harness Engineering 的视角，就声称实现模型循环、工具调度、sandbox、权限批准或多 Agent 编排；
-这些仍由 Coding Agent 宿主负责。
+地图告诉你方向，但不能替你走路。Harnessmith 也不因为采用 Harness Engineering 的视角，就声称实现模型循环、工具调度、
+sandbox、权限批准或多 Agent 编排；这些仍由 Coding Agent 宿主负责。
 
 ## 什么才是当前事实
 

@@ -7,6 +7,11 @@ export default withMermaid(defineConfig({
   description: '跨宿主分发和安全管理个人 Agent Harness',
   base: '/harnessmith/',
   cleanUrls: true,
+  // 中文源码按阅读组放在 zh/ 下，rewrites 将 zh 映射为默认语言根 URL。
+  // 开发侧沉淀文档（ADR、内部提案）位于仓库根 docs/，不进入站点源码与构建。
+  rewrites: {
+    'zh/:rest*': ':rest*',
+  },
   lastUpdated: true,
   sitemap: { hostname: 'https://alexpang.cn' },
   locales: {
@@ -81,15 +86,9 @@ export default withMermaid(defineConfig({
       ],
       '/': [
         {
-          text: '认识 Harnessmith',
+          text: '认识与上手',
           items: [
             { text: '它解决什么问题', link: '/guide/why-harnessmith' },
-            { text: 'Harness Engineering', link: '/concepts/harness-engineering' },
-          ],
-        },
-        {
-          text: '开始使用',
-          items: [
             { text: '快速开始', link: '/guide/getting-started' },
             { text: 'First Value Loop', link: '/guide/first-value-loop' },
             { text: '宿主支持', link: '/guide/hosts' },
@@ -99,26 +98,31 @@ export default withMermaid(defineConfig({
         {
           text: '理解设计',
           items: [
+            { text: 'Harness Engineering', link: '/concepts/harness-engineering' },
             { text: 'Harnessmith 如何工作', link: '/concepts/how-it-works' },
-            { text: '架构', link: '/architecture' },
-            { text: 'ADR-0001 Monorepo 分层', link: '/adr/0001-monorepo-boundaries' },
+            { text: '架构', link: '/concepts/architecture' },
             { text: '设计原则', link: '/concepts/design-principles' },
             { text: '责任与安全边界', link: '/concepts/boundaries' },
             { text: 'Memory 与 Task', link: '/concepts/memory-and-tasks' },
             { text: '证据与评测', link: '/concepts/evidence-and-evaluation' },
+            { text: '历史与思想来源', link: '/concepts/history-and-influences' },
+          ],
+        },
+        {
+          text: '参考',
+          items: [
+            { text: '安装器 CLI', link: '/reference/cli' },
+            { text: '运行时 CLI', link: '/reference/runtime-cli' },
+            { text: '临时资源', link: '/reference/temporary-resources' },
+            { text: '版本与迁移', link: '/reference/migrations' },
+            { text: '参考资料', link: '/reference/references' },
           ],
         },
         {
           text: '维护与贡献',
           items: [
-            { text: '安装器 CLI', link: '/reference/cli' },
-            { text: '运行时 CLI', link: '/reference/runtime-cli' },
-            { text: '临时资源', link: '/temporary-resources' },
-            { text: '版本与迁移', link: '/versions/migrations' },
-            { text: '贡献指南', link: '/contributing' },
-            { text: '内容策略', link: '/content-strategy' },
-            { text: '历史与思想来源', link: '/project/history-and-influences' },
-            { text: '参考资料', link: '/references' },
+            { text: '贡献指南', link: '/maintain/contributing' },
+            { text: '内容策略', link: '/maintain/content-strategy' },
           ],
         },
       ],
@@ -126,12 +130,12 @@ export default withMermaid(defineConfig({
     search: { provider: 'local' },
     socialLinks: [{ icon: 'github', link: 'https://github.com/Alessandro-Pang/harnessmith' }],
     editLink: {
-      pattern: 'https://github.com/Alessandro-Pang/harnessmith/edit/main/docs/:path',
+      pattern: 'https://github.com/Alessandro-Pang/harnessmith/edit/main/apps/docs/site/:path',
       text: '在 GitHub 上编辑此页',
     },
     footer: {
       message: 'Released under the MIT License.',
-      copyright: 'Harnesssmith contributors',
+      copyright: 'Harnessmith contributors',
     },
   },
 }));

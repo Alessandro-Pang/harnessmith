@@ -76,9 +76,9 @@ test('articles rely on theme prev-next navigation instead of handwritten reading
 
 test('architecture and lifecycle diagrams render through Mermaid', () => {
   for (const path of [
-    'apps/docs/site/architecture.md',
-    'apps/docs/site/concepts/how-it-works.md',
-    'apps/docs/site/concepts/memory-and-tasks.md',
+    'apps/docs/site/zh/concepts/architecture.md',
+    'apps/docs/site/zh/concepts/how-it-works.md',
+    'apps/docs/site/zh/concepts/memory-and-tasks.md',
   ]) {
     const content = read(path);
     assert.match(content, /```mermaid\n/);
@@ -89,7 +89,7 @@ test('architecture and lifecycle diagrams render through Mermaid', () => {
 });
 
 test('home and theme provide a distinctive responsive visual system', () => {
-  const home = read('apps/docs/site/index.md');
+  const home = read('apps/docs/site/zh/index.md');
   const styles = read('apps/docs/site/.vitepress/theme/custom.css');
 
   assert.doesNotMatch(home, /^features:/m);
@@ -109,7 +109,7 @@ test('home and theme provide a distinctive responsive visual system', () => {
 
 test('project logo is available in both themes and shown on the home page and READMEs', () => {
   const config = read('apps/docs/site/.vitepress/config.ts');
-  const home = read('apps/docs/site/index.md');
+  const home = read('apps/docs/site/zh/index.md');
   const styles = read('apps/docs/site/.vitepress/theme/custom.css');
   const chinese = read('README.md');
   const english = read('README.en.md');
@@ -133,11 +133,11 @@ test('project logo is available in both themes and shown on the home page and RE
   );
   assert.match(
     chinese,
-    /^# Harnessmith\n\n<p align="center">\n\s*<img src="\.\/docs\/public\/brand\/harnessmith-logo\.svg"/,
+    /^# Harnessmith\n\n<p align="center">\n\s*<img src="\.\/apps\/docs\/site\/public\/brand\/harnessmith-logo\.svg"/,
   );
   assert.match(
     english,
-    /^# Harnessmith\n\n<p align="center">\n\s*<img src="\.\/docs\/public\/brand\/harnessmith-logo\.svg"/,
+    /^# Harnessmith\n\n<p align="center">\n\s*<img src="\.\/apps\/docs\/site\/public\/brand\/harnessmith-logo\.svg"/,
   );
 
   for (const asset of [
@@ -153,7 +153,7 @@ test('project logo is available in both themes and shown on the home page and RE
 
 test('language switching is the only English entry in the Chinese site chrome', () => {
   const config = read('apps/docs/site/.vitepress/config.ts');
-  const home = read('apps/docs/site/index.md');
+  const home = read('apps/docs/site/zh/index.md');
   const styles = read('apps/docs/site/.vitepress/theme/custom.css');
   const primaryNav = config.match(/nav:\s*\[([\s\S]*?)\],\n\s*sidebar:/)?.[1] ?? '';
 
@@ -172,8 +172,8 @@ test('language switching is the only English entry in the Chinese site chrome', 
 });
 
 test('history reflects the project origin without presenting the blind review as project history', () => {
-  const history = read('apps/docs/site/project/history-and-influences.md');
-  const references = read('apps/docs/site/references.md');
+  const history = read('apps/docs/site/zh/concepts/history-and-influences.md');
+  const references = read('apps/docs/site/zh/reference/references.md');
 
   assert.match(history, /^## 第一阶段：AGENTS\.md 与 \.agent-docs$/m);
   assert.match(history, /工作区地图/);
@@ -199,7 +199,7 @@ test('history reflects the project origin without presenting the blind review as
   assert.match(history, /起初只是为了.*多个项目.*AGENTS\.md.*可复用/s);
   assert.match(history, /真正开始做通用化后.*宿主.*权限.*Memory.*验证/s);
   assert.match(history, /解决这些问题的过程中.*才发现.*Harness Engineering/s);
-  assert.match(history, /^## Harnesssmith 最初只想把第二阶段通用化$/m);
+  assert.match(history, /^## Harnessmith 最初只想把第二阶段通用化$/m);
   assert.match(history, /最初并不是为了实现一套行业定义的 Harness/);
   assert.match(history, /^## 通用化为什么把问题推向 Harness$/m);
   assert.match(history, /宿主差异.*授权边界.*Memory.*生命周期.*验证/s);
@@ -218,7 +218,7 @@ test('history reflects the project origin without presenting the blind review as
 });
 
 test('memory and task overview links to the current canonical runtime protocols', () => {
-  const overview = read('apps/docs/site/concepts/memory-and-tasks.md');
+  const overview = read('apps/docs/site/zh/concepts/memory-and-tasks.md');
 
   assert.match(overview, /template\/agent-harness\/docs\/standards\/project-agent-docs\.md/);
   assert.match(overview, /template\/agent-harness\/docs\/core\/long-running-tasks\.md/);
@@ -226,7 +226,7 @@ test('memory and task overview links to the current canonical runtime protocols'
 });
 
 test('release documentation distinguishes post-publish registry clean-room evidence', () => {
-  const evaluation = read('apps/docs/site/concepts/evidence-and-evaluation.md');
+  const evaluation = read('apps/docs/site/zh/concepts/evidence-and-evaluation.md');
   const capabilities = read('apps/docs/site/capability-evidence.yaml');
   const contributing = read('CONTRIBUTING.md');
 
@@ -242,7 +242,7 @@ test('release documentation distinguishes post-publish registry clean-room evide
 test('cross-repository relationships remain a first-class public capability', () => {
   const readme = read('README.md');
   const english = read('README.en.md');
-  const architecture = read('apps/docs/site/architecture.md');
+  const architecture = read('apps/docs/site/zh/concepts/architecture.md');
   const evidence = read('apps/docs/site/capability-evidence.yaml');
 
   assert.match(readme, /repository-map check/);
@@ -266,7 +266,7 @@ test('architecture invariants have implementation and executable verification ev
 });
 
 test('capture eligibility has public architecture and executable evidence', () => {
-  const architecture = read('apps/docs/site/architecture.md');
+  const architecture = read('apps/docs/site/zh/concepts/architecture.md');
   const evidence = read('apps/docs/site/capability-evidence.yaml');
 
   assert.match(architecture, /capture eligibility/i);
@@ -276,9 +276,9 @@ test('capture eligibility has public architecture and executable evidence', () =
 });
 
 test('advanced README material remains available in the documentation site', () => {
-  const runtime = read('apps/docs/site/reference/runtime-cli.md');
+  const runtime = read('apps/docs/site/zh/reference/runtime-cli.md');
   const config = read('apps/docs/site/.vitepress/config.ts');
-  const strategy = read('apps/docs/site/content-strategy.md');
+  const strategy = read('apps/docs/site/zh/maintain/content-strategy.md');
 
   for (const topic of [
     'route',
@@ -303,7 +303,7 @@ test('advanced README material remains available in the documentation site', () 
 
 test('maintenance decisions live in subject documentation instead of a standalone ADR section', () => {
   const config = read('apps/docs/site/.vitepress/config.ts');
-  const strategy = read('apps/docs/site/content-strategy.md');
+  const strategy = read('apps/docs/site/zh/maintain/content-strategy.md');
 
   assert.doesNotMatch(config, /text:\s*['"]ADR['"]|\/decisions\//);
   assert.equal(existsSync(join(root, 'apps/docs/site/decisions/index.md')), false);
@@ -316,7 +316,7 @@ test('maintenance decisions live in subject documentation instead of a standalon
 });
 
 test('markdown emphasis and Mermaid labels avoid known clipping patterns', () => {
-  const architecture = read('apps/docs/site/architecture.md');
+  const architecture = read('apps/docs/site/zh/concepts/architecture.md');
 
   assert.doesNotMatch(architecture, /）\*\*[^\s]/u);
   assert.match(architecture, /Coding Agent 宿主<br\/>模型循环 · 工具\/MCP<br\/>sandbox/);
@@ -325,26 +325,26 @@ test('markdown emphasis and Mermaid labels avoid known clipping patterns', () =>
 
 test('documentation site covers user, contributor, architecture, boundary, and history routes', () => {
   const pages = [
-    'apps/docs/site/index.md',
-    'apps/docs/site/guide/why-harnessmith.md',
-    'apps/docs/site/guide/getting-started.md',
-    'apps/docs/site/guide/hosts.md',
-    'apps/docs/site/guide/lifecycle.md',
-    'apps/docs/site/reference/cli.md',
-    'apps/docs/site/reference/runtime-cli.md',
-    'apps/docs/site/temporary-resources.md',
-    'apps/docs/site/architecture.md',
-    'apps/docs/site/concepts/how-it-works.md',
-    'apps/docs/site/concepts/harness-engineering.md',
-    'apps/docs/site/concepts/design-principles.md',
-    'apps/docs/site/concepts/boundaries.md',
-    'apps/docs/site/concepts/memory-and-tasks.md',
-    'apps/docs/site/concepts/evidence-and-evaluation.md',
-    'apps/docs/site/project/history-and-influences.md',
-    'apps/docs/site/content-strategy.md',
-    'apps/docs/site/contributing.md',
-    'apps/docs/site/references.md',
-    'apps/docs/site/versions/migrations.md',
+    'apps/docs/site/zh/index.md',
+    'apps/docs/site/zh/guide/why-harnessmith.md',
+    'apps/docs/site/zh/guide/getting-started.md',
+    'apps/docs/site/zh/guide/hosts.md',
+    'apps/docs/site/zh/guide/lifecycle.md',
+    'apps/docs/site/zh/reference/cli.md',
+    'apps/docs/site/zh/reference/runtime-cli.md',
+    'apps/docs/site/zh/reference/temporary-resources.md',
+    'apps/docs/site/zh/concepts/architecture.md',
+    'apps/docs/site/zh/concepts/how-it-works.md',
+    'apps/docs/site/zh/concepts/harness-engineering.md',
+    'apps/docs/site/zh/concepts/design-principles.md',
+    'apps/docs/site/zh/concepts/boundaries.md',
+    'apps/docs/site/zh/concepts/memory-and-tasks.md',
+    'apps/docs/site/zh/concepts/evidence-and-evaluation.md',
+    'apps/docs/site/zh/concepts/history-and-influences.md',
+    'apps/docs/site/zh/maintain/content-strategy.md',
+    'apps/docs/site/zh/maintain/contributing.md',
+    'apps/docs/site/zh/reference/references.md',
+    'apps/docs/site/zh/reference/migrations.md',
     'apps/docs/site/en/index.md',
     'apps/docs/site/en/getting-started.md',
   ];
@@ -353,7 +353,7 @@ test('documentation site covers user, contributor, architecture, boundary, and h
     assert.equal(existsSync(join(root, page)), true, `${page} must exist`);
     const content = read(page);
     assert.match(content, /^---\n[\s\S]*?owner:\s*maintainers\n[\s\S]*?---\n/);
-    if (page === 'apps/docs/site/index.md') {
+    if (page === 'apps/docs/site/zh/index.md') {
       assert.match(content, /^layout:\s*home$/m);
       assert.match(content, /^hero:\n[\s\S]*?^\s+name:\s*.+$/m);
     } else {
@@ -364,44 +364,44 @@ test('documentation site covers user, contributor, architecture, boundary, and h
 
 test('core documentation follows a human question path and separates current facts from influences', () => {
   const config = read('apps/docs/site/.vitepress/config.ts');
-  assert.match(config, /认识 Harnessmith/);
+  assert.match(config, /认识与上手/);
   assert.match(config, /理解设计/);
   assert.match(config, /维护与贡献/);
 
-  const home = read('apps/docs/site/index.md');
+  const home = read('apps/docs/site/zh/index.md');
   assert.match(home, /你是否遇到过/);
   assert.match(home, /从这些实际问题中长出来/);
   assert.match(home, /不替代 Coding Agent/);
   assert.match(home, /从这里开始/);
 
-  const why = read('apps/docs/site/guide/why-harnessmith.md');
+  const why = read('apps/docs/site/zh/guide/why-harnessmith.md');
   assert.match(why, /问题不是少写一份规则/);
   assert.match(why, /并不是先按一套 Harness Engineering 理论设计出来的/);
   assert.match(why, /历史文档.*不能.*直接删除.*挤占上下文.*幻觉/s);
   assert.match(why, /安装前/);
   assert.match(why, /安装后/);
 
-  const harnessEngineering = read('apps/docs/site/concepts/harness-engineering.md');
+  const harnessEngineering = read('apps/docs/site/zh/concepts/harness-engineering.md');
   assert.match(harnessEngineering, /不是从 Harness Engineering 的概念或分层模型出发设计的/);
   assert.match(harnessEngineering, /实际使用.*后来.*高度重合/s);
 
-  const how = read('apps/docs/site/concepts/how-it-works.md');
+  const how = read('apps/docs/site/zh/concepts/how-it-works.md');
   assert.match(how, /安装时/);
   assert.match(how, /Agent 工作时/);
   assert.match(how, /不传递授权/);
 
-  const architecture = read('apps/docs/site/architecture.md');
+  const architecture = read('apps/docs/site/zh/concepts/architecture.md');
   assert.match(architecture, /先记住一个模型/);
   assert.match(architecture, /为什么分成两层/);
   assert.match(architecture, /不会启动第三方宿主.*不负责登录或认证/s);
 
-  const evaluation = read('apps/docs/site/concepts/evidence-and-evaluation.md');
+  const evaluation = read('apps/docs/site/zh/concepts/evidence-and-evaluation.md');
   assert.match(evaluation, /确定性仓库验证/);
   assert.match(evaluation, /真实宿主评测/);
   assert.match(evaluation, /不负责启动、登录或认证第三方宿主/);
   assert.match(evaluation, /不能证明/);
 
-  const history = read('apps/docs/site/project/history-and-influences.md');
+  const history = read('apps/docs/site/zh/concepts/history-and-influences.md');
   assert.match(history, /^## 第一阶段：AGENTS\.md 与 \.agent-docs$/m);
   assert.match(history, /工作区地图/);
   assert.match(history, /计划、分析、输出、原型和证据/);
@@ -414,12 +414,12 @@ test('core documentation follows a human question path and separates current fac
   assert.match(history, /尚未经过双盲评审/);
   assert.match(history, /当前事实/);
 
-  const temporaryResources = read('apps/docs/site/temporary-resources.md');
+  const temporaryResources = read('apps/docs/site/zh/reference/temporary-resources.md');
   assert.match(temporaryResources, /^# 临时资源生命周期$/m);
   assert.match(temporaryResources, /不能单独构成删除依据/);
-  assert.match(config, /临时资源.*\/temporary-resources/s);
+  assert.match(config, /临时资源.*\/reference\/temporary-resources/s);
 
-  const versions = read('apps/docs/site/versions/migrations.md');
+  const versions = read('apps/docs/site/zh/reference/migrations.md');
   assert.doesNotMatch(versions, /当前公开 npm 版本线|`0\.8\.x`/);
   assert.match(versions, /不在长期文档里复制当前版本/);
 });
@@ -445,9 +445,23 @@ test('concise bilingual READMEs preserve onboarding and safety while routing dep
     assert.match(content, /Claude Code/);
     assert.match(content, /OpenCode/);
     assert.match(content, /Kimi Code/);
-    assert.match(content, /docs\/capability-evidence\.yaml/);
+    assert.match(content, /apps\/docs\/site\/capability-evidence\.yaml/);
   }
 
   assert.doesNotMatch(chinese, /^### 分层记忆$/m);
   assert.doesNotMatch(english, /^### Layered memory$/m);
+});
+
+test('README repository-relative links resolve to files that exist', () => {
+  for (const readme of ['README.md', 'README.en.md']) {
+    const content = read(readme);
+    const targets = [
+      ...[...content.matchAll(/<img\s+src="(\.[^"]+)"/g)].map((match) => match[1]),
+      ...[...content.matchAll(/\]\((\.[^)#]+)(?:#[^)]*)?\)/g)].map((match) => match[1]),
+    ];
+    assert.ok(targets.length > 0, `${readme} should link repository files`);
+    for (const target of targets) {
+      assert.equal(existsSync(join(root, target)), true, `${readme} link ${target} must exist`);
+    }
+  }
 });

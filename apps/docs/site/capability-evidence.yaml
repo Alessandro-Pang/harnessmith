@@ -339,7 +339,7 @@ claims:
     boundary:
       - README.md
       - README.en.md
-      - apps/docs/site/architecture.md
+      - apps/docs/site/zh/concepts/architecture.md
       - template/agent-harness/docs/core/observability.md
 
   - id: trusted-host-execution-attestation
@@ -347,7 +347,7 @@ claims:
     owner: maintainer CI or external attestation service
     claim: Trusted proof that a real third-party Host produced an Eval record must come from outside the repository.
     boundary:
-      - apps/docs/site/architecture.md
+      - apps/docs/site/zh/concepts/architecture.md
 
   - id: general-agent-runtime
     status: unsupported
@@ -356,7 +356,7 @@ claims:
     boundary:
       - README.md
       - README.en.md
-      - apps/docs/site/architecture.md
+      - apps/docs/site/zh/concepts/architecture.md
 
   - id: autonomous-rule-evolution
     status: unsupported
@@ -365,4 +365,4 @@ claims:
     boundary:
       - README.md
       - README.en.md
-      - apps/docs/site/architecture.md
+      - apps/docs/site/zh/concepts/architecture.md
