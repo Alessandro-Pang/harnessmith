@@ -193,7 +193,7 @@ version 1 报告把 `execute`、`skip-duplicate`、`new-payload-required` 与 `r
 当前 candidate/workspace 的 verifier 是可判定输入；stdout 仅是可选证据，缺失时不能替代持久化状态证明。
 失败或中断 attempt 的 payload 永久冻结，重试必须使用新路径；报告不扩大 Host 权限。
 
-Harnesssmith 外层临时 workspace 使用带 owner、purpose、创建时间和 lifecycle 的受管理 marker；成功与
+Harnessmith 外层临时 workspace 使用带 owner、purpose、创建时间和 lifecycle 的受管理 marker；成功与
 普通失败通过统一 disposer 清理，只有明确的 recovery 需要才保留并返回精确路径。release 候选与 Host Eval
 证据属于 workstream/evidence，不得当作匿名 `/tmp` 内容通配删除。历史维护先运行仓库的 `pnpm run
 temp:scan` dry-run；未知目录、活动 lock/proof 和 recovery 引用不进入自动删除路径。

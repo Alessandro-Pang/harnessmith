@@ -20,7 +20,7 @@ function resolvePackageRoot(start: string): string {
       // Missing or malformed manifests do not identify the distribution root.
     }
     const parent = dirname(current);
-    if (parent === current) throw new Error('Unable to locate Harnesssmith package root');
+    if (parent === current) throw new Error('Unable to locate Harnessmith package root');
     current = parent;
   }
 }

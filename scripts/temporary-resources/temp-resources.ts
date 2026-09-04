@@ -6,7 +6,7 @@ import { scanTemporaryResourceRoots } from '../../packages/cli/src/temporary-res
 export function temporaryResourceReport(args: string[]): void {
   const program = new Command()
     .name('temp-resources')
-    .description('report managed Harnesssmith temporary resources without deleting them')
+    .description('report managed Harnessmith temporary resources without deleting them')
     .option('--root <path>', 'temporary root to scan')
     .option('--json', 'write a machine-readable dry-run report')
     .allowExcessArguments(false)
