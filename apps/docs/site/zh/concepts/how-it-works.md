@@ -1,10 +1,10 @@
 ---
-title: Harnessmith 如何工作
+title: 工作原理
 description: 从安装事务到 Agent 实际工作的完整数据流
 owner: maintainers
 ---
 
-# Harnessmith 如何工作
+# 工作原理
 
 要理解 Harnessmith，只需要记住一个组合：**安装器 + 本地工作层**。安装器负责把同一份 Harness 安全地接进不同宿主；工作层在 Agent 执行任务时提供规则入口、按需文档、Memory、Task 和验证命令。两者都不接管宿主的模型循环——那是宿主自己的领域。
 
@@ -38,7 +38,7 @@ owner: maintainers
 
 新会话面对的问题是「上次做到哪了」。Memory 帮 Agent 重新找到值得核对的历史线索，但它被明确设计为非权威。线索只指向「回去核对」，不等于结论。举个例子：上次会话结束后，Memory 里记录了一条「项目使用 Redis 7.2 的 Stream 特性处理支付回调」。新会话读到这条线索，去 `docker-compose.yml` 里核对 Redis 版本，发现实际是 7.0。Stream 特性在 7.0 中可用但 API 略有不同。Memory 的价值是「提醒你去核对 Redis 版本」，而不是「直接复用 7.2 的 API」。
 
-Task 围绕一个明确目标保存状态、检查点、下一步、验收条件和证据；只有通过 acceptance gate 才能进入 `complete`，自然语言声称、过期证据或受限环境中的阴性结果都不能自动变成确定通过。两者的分工与细节见[Memory 与 Task](/concepts/memory-and-tasks)。
+Task 围绕一个明确目标保存状态、检查点、下一步、验收条件和证据；只有通过 acceptance gate 才能进入 `complete`，自然语言声称、过期证据或受限环境中的阴性结果都不能自动变成确定通过。两者的分工与细节见[记忆与任务](/concepts/memory-and-tasks)。
 
 ## 验证时：不同证据回答不同问题
 

@@ -1,14 +1,14 @@
 ---
-title: Harness Engineering 与 Harnessmith
+title: 工程视角
 description: 一个后来进入项目的领域视角，以及 Harnessmith 在其中的位置
 owner: maintainers
 ---
 
-# Harness Engineering 与 Harnessmith
+# 工程视角
 
 先说结论：Harnessmith 不是从 Harness Engineering 的概念或分层模型出发设计的。项目先在实际使用中解决规则复用、文档检索和工作记录的问题；后来做通用化时撞上宿主适配、授权、Memory、生命周期和验证边界，回头再看，才发现这些问题的形状与业界讨论的 Harness Engineering 高度重合。换句话说，这个概念是事后找到的坐标系，不是事前的蓝图。它帮助核对已做的事，而不是解释为什么去做。
 
-真实演进顺序见[历史与思想来源](/concepts/history-and-influences)。本页只解释这个领域概念本身，以及它如何帮你看清 Harnessmith 当前做了什么、没做什么。
+真实演进顺序见[历史与渊源](/concepts/history-and-influences)。本页只解释这个领域概念本身，以及它如何帮你看清 Harnessmith 当前做了什么、没做什么。
 
 ## 什么是 Harness Engineering
 

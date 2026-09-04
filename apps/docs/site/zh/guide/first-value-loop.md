@@ -1,10 +1,10 @@
 ---
-title: First Value Loop
+title: 首次价值循环
 description: 从理解定位到真实宿主验证的首次价值路径与证据边界
 owner: maintainers
 ---
 
-# First Value Loop
+# 首次价值循环
 
 这一页回答一个问题：装完之后，什么时候才算真正「用上了」。Harnessmith 对 First Value 的定义不是安装量、下载量或一片绿色测试，而是：你选定的真实宿主加载了受管理规则，完成了文档里的首次只读受控任务，留下了可复核的证据，而且你已经亲眼确认过检查与恢复的路径。这四件事都发生，才算闭环。
 

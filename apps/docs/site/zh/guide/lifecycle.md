@@ -14,7 +14,7 @@ owner: maintainers
 npx harnessmith install --agent codex
 ```
 
-`install` 是安装或升级的直接命令，裸命令 `npx harnessmith` 默认执行的就是它。第一次接触某个宿主时更推荐用 `setup`：它按「预览 → 确认 → 安装 → 自动健康检查」的引导流程走，每一步都有人工确认的机会。两个命令的完整选项见 [CLI 参考](/reference/cli)。
+`install` 是安装或升级的直接命令，裸命令 `npx harnessmith` 默认执行的就是它。第一次接触某个宿主时更推荐用 `setup`：它按「预览 → 确认 → 安装 → 自动健康检查」的引导流程走，每一步都有人工确认的机会。两个命令的完整选项见 [安装器 CLI](/reference/cli)。
 
 升级就是再跑一次 install。目标不存在，或仍与上一层安装记录一致时，可以安全接管；升级会保留可变 `state/`，不会把你的运行记录和受管理模板混在一起重置。
 

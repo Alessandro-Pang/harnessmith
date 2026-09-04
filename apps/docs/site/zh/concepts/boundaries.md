@@ -1,10 +1,10 @@
 ---
-title: 责任与安全边界
+title: 职责边界
 description: Harnessmith 能保证什么、宿主负责什么、哪些结果仍需用户判断
 owner: maintainers
 ---
 
-# 责任与安全边界
+# 职责边界
 
 最容易误解 Harnessmith 的方式，是把它看成「另一个 Coding Agent」。它实际管理的是 Agent 周围的个人工作层：有些保证可以由 Harnessmith 用代码机械实现；有些必须留给宿主，因为它们本来就在宿主的职权范围内；还有些只能由用户或外部可信系统决定，任何本地工具都不该越权代答。
 
