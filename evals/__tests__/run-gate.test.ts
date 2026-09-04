@@ -416,7 +416,10 @@ test('declared package release workflow gates the exact tarball before publicati
 test('evaluation and release docs distinguish contracts from real fresh host evidence', () => {
   const evalReadme = readFileSync(join(root, 'evals', 'README.md'), 'utf8');
   const releasing = readFileSync(join(root, 'RELEASING.md'), 'utf8');
-  const architecture = readFileSync(join(root, 'apps', 'docs', 'site', 'architecture.md'), 'utf8');
+  const architecture = readFileSync(
+    join(root, 'apps', 'docs', 'site', 'zh', 'concepts', 'architecture.md'),
+    'utf8',
+  );
 
   for (const required of [
     'pnpm run eval:fingerprint',

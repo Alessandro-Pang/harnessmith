@@ -7,7 +7,7 @@ const root = process.cwd();
 
 test('public curation apps/docs/site preserve explicit typed apply and acceptance boundaries', () => {
   const runtime = readFileSync(
-    join(root, 'apps', 'docs', 'site', 'reference', 'runtime-cli.md'),
+    join(root, 'apps', 'docs', 'site', 'zh', 'reference', 'runtime-cli.md'),
     'utf8',
   );
   const architecture = readFileSync(

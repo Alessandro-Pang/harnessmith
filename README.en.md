@@ -23,9 +23,9 @@ decisions were made.
 Harnessmith packages the fixes into one installable unit: personal rules that already work in practice, on-demand
 document retrieval, Memory that never pretends to be fact, and long-running task tools with an acceptance gate.
 Install it once across coding-agent hosts, and upgrading, backing up, restoring, and uninstalling all follow explicit
-paths — you preview before anything is written, and you can always go back. Everything runs locally with no cloud
-service, and Harnessmith does not replace your coding agent: how models reason, how tools are authorized, and how
-sandboxes isolate — that stays with the host.
+paths — you preview before anything is written, and you can always go back. In one line: Harnessmith is a cross-host Personal Harness distribution and work-state control plane. Everything
+runs locally with no cloud service, and Harnessmith does not replace your coding agent: how models reason, how tools
+are authorized, and how sandboxes isolate — that stays with the host.
 
 ## Who it is for
 
@@ -153,7 +153,7 @@ of truth. `--mode fulltext` fails closed when the index is unavailable, and `--m
 | State | Harnessmith's contract |
 | --- | --- |
 | Implemented | Adapter distribution, preflight, backups, locks, rollback, non-authoritative Memory, Task gates, privacy-safe audit records, and redacted diagnostics previews |
-| Delegated to the host | Model loops, tool/MCP scheduling, sandboxing, approvals, tokens, and cost |
+| Delegated to the Host | Model loops, tool/MCP scheduling, sandboxing, approvals, tokens, and cost |
 | Unsupported | A universal Runtime, Policy Engine, Pack/Registry, multi-agent orchestration, and automatic rule promotion |
 
 Two hard lines, stated plainly: Markdown rules are behavioral guidance, not permission enforcement; and audit and

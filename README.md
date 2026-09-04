@@ -22,8 +22,8 @@ Harnessmith 的做法是把解法打包成可安装的整体：验证有效的�
 带验收门禁的长任务工具。一次装进多个 Coding Agent，之后的升级、备份、恢复和卸载都有明确路径——写之前能预览，
 出问题能退回。
 
-它完全跑在本地，不依赖云端服务；也不替代 Coding Agent。模型怎么推理、工具怎么授权、沙箱怎么隔离，
-始终由宿主自己负责。
+一句话定位：Harnessmith 是跨 Host 的 Personal Harness 分发与工作状态控制层。它完全跑在本地，不依赖云端服务；
+也不替代 Coding Agent。模型怎么推理、工具怎么授权、沙箱怎么隔离，始终由宿主自己负责。
 
 ## 适合谁
 
@@ -146,7 +146,7 @@ node <harness-path>/bin/harness.mjs health --json
 
 | 状态 | Harnessmith 的承诺 |
 | --- | --- |
-| 已实现 | Adapter 分发、预检、备份、锁、回滚、非权威 Memory、Task gate、隐私安全的审计记录与脱敏诊断预览 |
+| 已实现 | Adapter 分发、预检、备份、锁、回滚、非权威 Memory、Task gate、隐私安全的 `audit record` 与脱敏诊断预览 |
 | 由宿主负责 | 模型循环、工具/MCP 调度、sandbox、权限批准、token 与成本 |
 | 不支持 | 通用 Runtime、Policy Engine、Pack/Registry、多 Agent 调度、自动规则提升 |
 
