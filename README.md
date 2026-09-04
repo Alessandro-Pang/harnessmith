@@ -64,8 +64,8 @@ DeepSeek Adapter **只**安装用户全局 `$DSH_HOME/AGENTS.md`（默认 `~/.ds
 `@deepseek-ai/dsh@0.1.1-rc.2` / tag `dsh-v0.1.1-rc.2` 的验证结果声明，其他 revision 需重新验证。
 
 Pi Adapter **只**安装用户全局 `$PI_CODING_AGENT_DIR/AGENTS.md`（默认 `~/.pi/agent/AGENTS.md`）。
-`PI_CODING_AGENT_DIR` 同时是 Pi 的可写状态目录（sessions/settings/auth），Harnessmith 只写入 AGENTS.md
-与 agent-harness/。Pi 没有内建权限系统，以用户进程权限运行；如果存在 `AGENTS.override.md`，Pi 会用它替代
+`PI_CODING_AGENT_DIR` 同时是 Pi 的可写状态目录（sessions/settings/auth），Harnessmith 只写入 AGENTS.md、
+agent-harness/ 与 `.harnessmith/install.json` 元数据。Pi 没有内建权限系统，以用户进程权限运行；如果存在 `AGENTS.override.md`，Pi 会用它替代
 `AGENTS.md`，Harnessmith 安装的内容将被忽略。当前未锁定特定 Pi 版本。
 
 Cursor 需用 `--project /path/to/project` 指定项目根。目标路径、别名和支持证据见

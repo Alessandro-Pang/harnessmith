@@ -18,7 +18,7 @@ import { onTestFinished, test } from 'vitest';
 const packageRoot = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const cli = join(packageRoot, 'bin', 'harnessmith.mjs');
 
-function execute(root: string, args: string[]) {
+function execute(root: string, args: string[], envOverrides: NodeJS.ProcessEnv = {}) {
   return spawnSync(process.execPath, [cli, ...args], {
     cwd: root,
     encoding: 'utf8',
@@ -31,6 +31,7 @@ function execute(root: string, args: string[]) {
       HARNESS_PERSONAL_HOME: join(root, 'personal-harness'),
       HARNESS_REPOSITORY_ROOT: join(root, 'repos'),
       HARNESS_OWNER: 'pi-test',
+      ...envOverrides,
     },
   });
 }
@@ -83,6 +84,18 @@ test('Pi install, status, restore, and uninstall use the effective Pi home', () 
   assert.equal(readFileSync(rules, 'utf8'), 'existing pi rules');
   assert.equal(existsSync(join(agentHome, 'agent-harness')), false);
   assert.equal(existsSync(join(agentHome, '.harnessmith', 'install.json')), false);
+});
+
+test('Pi CLI expands a literal tilde in PI_CODING_AGENT_DIR', () => {
+  const root = mkdtempSync(join(tmpdir(), 'harnessmith-pi-tilde-'));
+  onTestFinished(() => rmSync(root, { recursive: true, force: true }));
+
+  const dryRun = execute(root, ['install', '--agent', 'pi', '--dry-run', '--json'], {
+    PI_CODING_AGENT_DIR: '~/.custom-pi',
+  });
+  assert.equal(dryRun.status, 0, dryRun.stderr);
+  const plan = JSON.parse(dryRun.stdout.trim().split('\n')[0]);
+  assert.equal(plan.home, join(realpathSync.native(root), '.custom-pi'));
 });
 
 test('Pi aliases resolve to the pi adapter', () => {

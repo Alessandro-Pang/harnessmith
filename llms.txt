@@ -68,8 +68,8 @@ use the published `npx --yes harnessmith` commands below.
     `~/.pi/agent/AGENTS.md`
   - Harness: `agent-harness` under the same effective Pi Agent config directory
   - PI_CODING_AGENT_DIR has a dual role: it serves as both the config root and Pi's writable state
-    directory for sessions, settings, and authentication; Harnessmith only writes AGENTS.md and
-    agent-harness/ into this directory
+    directory for sessions, settings, and authentication; Harnessmith only writes AGENTS.md,
+    agent-harness/, and `.harnessmith/install.json` metadata into this directory
   - No verified revision pinned: Pi Agent iterates rapidly; compatibility is claimed for the documented
     AGENTS.md loading contract, not a specific version
   - Out of scope: `AGENTS.override.md` overrides; `SYSTEM.md` replacement; context hook extensions;

@@ -154,7 +154,7 @@ DeepSeek Harness 仍处于 developer preview，版本间可能 breaking change�
 `pi`。配置根为 `$PI_CODING_AGENT_DIR`（默认 `~/.pi/agent`）；空或仅空白的 `PI_CODING_AGENT_DIR` 视为未设置。
 `PI_CODING_AGENT_DIR` 具有双重角色：它同时是配置根和 Pi 的可写状态目录（sessions/、settings.json、auth.json）。
 
-Pi 从全局 `~/.pi/agent/`、父目录和项目目录逐级加载 `AGENTS.md`（及 `CLAUDE.md`）。如果某目录存在
+Pi 从有效的 `agentDir`（默认 `~/.pi/agent/`）、父目录和项目目录逐级加载 `AGENTS.md`（及 `CLAUDE.md`）。如果某目录存在
 `AGENTS.override.md`，Pi 会用它替代同目录的 `AGENTS.md`。Harnessmith 只托管用户全局这一层。
 
 #### 版本与兼容性

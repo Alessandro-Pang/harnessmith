@@ -68,7 +68,8 @@ require re-validation.
 
 Pi Adapter installs **only** the user-global `$PI_CODING_AGENT_DIR/AGENTS.md` (default
 `~/.pi/agent/AGENTS.md`). `PI_CODING_AGENT_DIR` also serves as Pi's writable state directory
-(sessions/settings/auth); Harnessmith only writes AGENTS.md and agent-harness/. Pi has no built-in
+(sessions/settings/auth); Harnessmith only writes AGENTS.md, agent-harness/, and `.harnessmith/install.json`
+metadata. Pi has no built-in
 permission system and runs with user process permissions; if `AGENTS.override.md` exists, Pi loads it
 instead of `AGENTS.md`, and Harnessmith's installed content will be ignored. No specific Pi version is
 currently pinned.

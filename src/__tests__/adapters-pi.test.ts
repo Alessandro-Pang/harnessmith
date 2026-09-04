@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { createAdapter } from '../adapters.js';
+import { normalizePiAgentDir } from '../pi-paths.js';
 
 test('Pi adapter installs its global rule under PI_CODING_AGENT_DIR when set', () => {
   const root = mkdtempSync(join(tmpdir(), 'harness-pi-config-'));
@@ -27,6 +28,34 @@ test('Pi adapter installs its global rule under PI_CODING_AGENT_DIR when set', (
   assert.equal(adapter.capabilities.scope, 'global');
   assert.equal(adapter.capabilities.instructionFormat, 'markdown');
   assert.equal(adapter.capabilities.nativeRuleActivation, 'host-default');
+});
+
+test('Pi adapter expands a literal tilde in PI_CODING_AGENT_DIR', () => {
+  const root = mkdtempSync(join(tmpdir(), 'harness-pi-tilde-'));
+  onTestFinished(() => rmSync(root, { recursive: true, force: true }));
+  const canonicalRoot = realpathSync.native(root);
+
+  const adapter = createAdapter('pi', {
+    env: { HOME: root, PI_CODING_AGENT_DIR: '~/.custom-pi' },
+  });
+
+  assert.equal(adapter.home, join(canonicalRoot, '.custom-pi'));
+  assert.equal(adapter.instructions[0].path, join(canonicalRoot, '.custom-pi', 'AGENTS.md'));
+});
+
+test('Pi path normalization accepts Windows shell paths', () => {
+  assert.equal(
+    normalizePiAgentDir('/mnt/c/Users/pi/.pi/agent', 'C:\\Users\\pi', 'win32'),
+    'C:\\Users\\pi\\.pi\\agent',
+  );
+  assert.equal(
+    normalizePiAgentDir('/cygdrive/d/work/pi', 'C:\\Users\\pi', 'win32'),
+    'D:\\work\\pi',
+  );
+  assert.equal(
+    normalizePiAgentDir('~/custom-pi', 'C:\\Users\\pi', 'win32'),
+    'C:\\Users\\pi\\custom-pi',
+  );
 });
 
 test('Pi adapter treats empty PI_CODING_AGENT_DIR as unset', () => {

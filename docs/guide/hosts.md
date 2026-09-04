@@ -40,7 +40,7 @@ Cursor 只把 Harnessmith 自己管理的文件写入 repository-local Git exclu
 `$DSH_HOME/AGENTS.md`；项目根/嵌套候选、权限与 sandbox 仍由宿主负责。Pi Adapter 面向官方
 `@earendil-works/pi-coding-agent`，只托管用户全局 `$PI_CODING_AGENT_DIR/AGENTS.md`（默认
 `~/.pi/agent/AGENTS.md`）。`PI_CODING_AGENT_DIR` 同时是 Pi 的可写状态目录（sessions/settings/auth），
-Harnessmith 只写入指令文件与 Runtime。Pi 没有内建权限系统，以用户进程权限运行；如果同目录存在
+Harnessmith 只写入指令文件、Runtime 与 `.harnessmith/install.json` 元数据。Pi 没有内建权限系统，以用户进程权限运行；如果同目录存在
 `AGENTS.override.md`，Pi 会用它替代 `AGENTS.md`。当前未锁定特定 Pi 版本——Pi 迭代迅速，兼容性声明基于
 AGENTS.md 加载契约而非特定 revision。
 
