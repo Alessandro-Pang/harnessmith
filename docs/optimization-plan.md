@@ -1,12 +1,15 @@
 ---
-title: Harnesssmith 优化方案
+title: Harnessmith 优化方案
 description: 面向真实 Coding Agent 体验的 Prompt、Memory、功能与评测优化路线
 owner: maintainers
 status: proposal
 updated: 2026-09-03
 ---
 
-# Harnesssmith 优化方案
+# Harnessmith 优化方案
+
+> 开发侧文档：内部提案，面向仓库维护者，不发布到文档站点，不构成当前承诺。
+> 已实现的当前能力以代码、测试与 `apps/docs/site/capability-evidence.yaml` 为准。
 
 ## 执行基线校准（2026-09-03）
 
@@ -29,7 +32,7 @@ updated: 2026-09-03
 
 ## 1. 决策结论
 
-Harnesssmith 不需要重新定义为通用 Agent Runtime。当前最合理的方向是继续做“跨 Host 的 Personal Harness 分发与工作状态控制层”，但把产品优化重点从“增加更多治理契约”转向“证明 Agent 真的更容易工作”。
+Harnessmith 不需要重新定义为通用 Agent Runtime。当前最合理的方向是继续做“跨 Host 的 Personal Harness 分发与工作状态控制层”，但把产品优化重点从“增加更多治理契约”转向“证明 Agent 真的更容易工作”。
 
 本方案的核心目标是建立一条可测量的闭环：
 
@@ -146,7 +149,7 @@ Lite 不应初始化完整维护者工作流；只有用户进入长任务、跨
   → repeated / explicit confirmation
   → typed input / experience
   → 事实源核对
-  → formal apps/docs/site / rules / tests（需要明确写入授权）
+  → formal docs / rules / tests（需要明确写入授权）
 ```
 
 候选记忆只允许进入受控的 proposal 区域，不进入 canonical profile、active core 或规则上下文，除非满足既有 typed writer 条件。
