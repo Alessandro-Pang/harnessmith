@@ -55,7 +55,7 @@ You can also ask a coding agent to follow the install protocol:
 | Kimi Code CLI | global | `kimi` (alias: `kimi-code`) |
 | Zed Agent | global | `zed` |
 
-A global install writes to the host's personal configuration directory and applies to every project. A project install applies to one project. Cursor accepts `--project /path/to/project`; when omitted, it uses the current working directory. The [host guide](https://alexpang.cn/harnessmith/guide/hosts) lists actual destinations, environment variables, activation behavior, and evidence status.
+A global install writes to the host's personal configuration directory and applies to every project. A project install applies to one project. Cursor accepts `--project /path/to/project`; when omitted, it uses the current working directory. The [host guide](https://alexpang.cn/harnessmith/en/guide/hosts) lists actual destinations, environment variables, activation behavior, and evidence status.
 
 ## Common operations
 
@@ -91,7 +91,7 @@ node <harness-path>/bin/harness.mjs repository-map check --json
 
 In a new host session, the rule entry participates in task routing automatically. For long-running work, use `task checkpoint` to save progress and `task verify` to bind mechanical evidence. Only the acceptance gate allows `task close --status complete`. `search` and `memory search` default to `--mode auto`: they use full-text search when a valid index exists and fall back to a bounded scan otherwise. `--mode fulltext` fails when the index is unavailable; `--mode scan` always scans. The index is written only with explicit `--refresh-index` and remains a rebuildable cache.
 
-See the [CLI reference](https://alexpang.cn/harnessmith/reference/cli) for commands, options, exit codes, and failure handling. The [lifecycle guide](https://alexpang.cn/harnessmith/guide/lifecycle) explains the guarantees for install, upgrade, restore, and uninstall. The [Runtime CLI reference](https://alexpang.cn/harnessmith/reference/runtime-cli#repository-map) covers Memory, Task, search, and Repository Map commands.
+See the [CLI reference](https://alexpang.cn/harnessmith/en/reference/cli) for commands, options, exit codes, and failure handling. The [lifecycle guide](https://alexpang.cn/harnessmith/en/guide/lifecycle) explains the guarantees for install, upgrade, restore, and uninstall. The [Runtime CLI reference](https://alexpang.cn/harnessmith/en/reference/runtime-cli#repository-map) covers Memory, Task, search, and Repository Map commands.
 
 ## What “installed” means
 
@@ -104,7 +104,7 @@ The documentation uses four states:
 | `host-configured` | A real host loaded the rules, authentication, and permission configuration required by its own contract |
 | `host-verified` | A real host completed the first controlled task and left reviewable evidence |
 
-The installer can establish only the first two states. The last two require a real host session. Local tests, npm downloads, and GitHub traffic cannot replace host evidence. See the [First Value Loop](https://alexpang.cn/harnessmith/guide/first-value-loop).
+The installer can establish only the first two states. The last two require a real host session. Local tests, npm downloads, and GitHub traffic cannot replace host evidence. See the [First Value Loop](https://alexpang.cn/harnessmith/en/guide/first-value-loop).
 
 ## Safety boundaries
 
@@ -118,8 +118,8 @@ Audit and diagnostics emit only schema-allowed metadata. A constrained `audit re
 
 ## Learn more
 
-- [Full documentation](https://alexpang.cn/harnessmith/en/) · [Getting started](https://alexpang.cn/harnessmith/en/getting-started) · [Why Harnessmith](https://alexpang.cn/harnessmith/guide/why-harnessmith) (Chinese)
-- [Architecture](https://alexpang.cn/harnessmith/concepts/architecture) · [Boundaries](https://alexpang.cn/harnessmith/concepts/boundaries) · [Memory and Tasks](https://alexpang.cn/harnessmith/concepts/memory-and-tasks) (Chinese)
+- [Full documentation](https://alexpang.cn/harnessmith/en/) · [Getting started](https://alexpang.cn/harnessmith/en/guide/getting-started) · [Why Harnessmith](https://alexpang.cn/harnessmith/en/guide/why-harnessmith)
+- [Architecture](https://alexpang.cn/harnessmith/en/concepts/architecture) · [Boundaries](https://alexpang.cn/harnessmith/en/concepts/boundaries) · [Memory and Tasks](https://alexpang.cn/harnessmith/en/concepts/memory-and-tasks)
 - [Contributing](./CONTRIBUTING.md) · [Security](./SECURITY.md) · [License](./LICENSE)
 
 ## Contributing
@@ -130,4 +130,4 @@ pnpm run preflight
 pnpm run docs:dev
 ```
 
-See the [documentation contribution guide](https://alexpang.cn/harnessmith/maintain/contributing).
+See the [documentation contribution guide](https://alexpang.cn/harnessmith/en/maintain/contributing).

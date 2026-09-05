@@ -23,6 +23,9 @@ hero:
       link: /guide/why-harnessmith
 ---
 
+<!-- 以下自定义区块是原生 HTML；VitePress 只为 Markdown 链接自动补 base 前缀，
+     原生 HTML 的 href 必须手写 /harnessmith/ 前缀（与 config.ts 的 base 保持一致），否则线上 404。 -->
+
 <section class="home-signal" aria-label="Harnessmith 概览">
   <p class="home-eyebrow">Personal Agent Harness · Local first</p>
   <div class="home-signal-grid">
@@ -38,7 +41,7 @@ hero:
     <h2>宿主越换越多，规则却越写越散。</h2>
   </div>
   <div>
-    <p>你是否遇到过这些情况：同一套安全边界，在 Codex 里写了一遍，到 Claude Code 还得再写一遍，改一处忘一处；`AGENTS.md` 越攒越长，Agent 却越来越难在里面找到关键约束；一个任务做到一半，上下文被压缩，新会话只能靠猜接着做；想升级个人配置，又怕脚本把辛苦攒下的文件直接覆盖掉。</p>
+    <p>你是否遇到过这些情况：同一套安全边界，在 Codex 里写了一遍，到 Claude Code 还得再写一遍，改一处忘一处；<code>AGENTS.md</code> 越攒越长，Agent 却越来越难在里面找到关键约束；一个任务做到一半，上下文被压缩，新会话只能靠猜接着做；想升级个人配置，又怕脚本把辛苦攒下的文件直接覆盖掉。</p>
     <p>这些不是模型能力问题，是工作方式没有地方安放。Harnessmith 从这些实际问题中长出来：把实践中已经验证有效的规则、检索方法和任务记录，做成一套可以安全安装、按需加载的本地工作层。它不替代 Coding Agent。模型怎么推理、工具怎么授权，仍由宿主自己负责。</p>
   </div>
 </section>
@@ -70,7 +73,7 @@ hero:
     <span class="home-card-index">04 / BOUNDARY</span>
     <h2>把不归它管的，提前说清楚</h2>
     <p>模型循环、sandbox、工具执行、权限批准，全部留在宿主一侧。Markdown 规则是行为指导，不是权限强制；仓库也不把「文档写了」包装成「系统保证了」。</p>
-    <a href="/concepts/boundaries">查看职责边界 <span aria-hidden="true">→</span></a>
+    <a href="/harnessmith/concepts/boundaries">查看职责边界 <span aria-hidden="true">→</span></a>
   </article>
 </section>
 
@@ -80,9 +83,9 @@ hero:
     <h2 id="home-path-title">按你现在最想解决的问题读</h2>
   </div>
   <nav aria-label="文档阅读路径">
-    <a href="/guide/why-harnessmith"><span>01</span><strong>它适合我吗？</strong><small>三个老问题、一份适用边界</small></a>
-    <a href="/guide/getting-started"><span>02</span><strong>先装一个试试</strong><small>先用 dry-run 看清改动范围</small></a>
-    <a href="/concepts/how-it-works"><span>03</span><strong>它是怎么运转的？</strong><small>从安装到任务执行的全链路</small></a>
-    <a href="/concepts/architecture"><span>04</span><strong>为什么这样设计？</strong><small>两层架构与每个取舍的代价</small></a>
+    <a href="/harnessmith/guide/why-harnessmith"><span>01</span><strong>它适合我吗？</strong><small>三个老问题、一份适用边界</small></a>
+    <a href="/harnessmith/guide/getting-started"><span>02</span><strong>先装一个试试</strong><small>先用 dry-run 看清改动范围</small></a>
+    <a href="/harnessmith/concepts/how-it-works"><span>03</span><strong>它是怎么运转的？</strong><small>从安装到任务执行的全链路</small></a>
+    <a href="/harnessmith/concepts/architecture"><span>04</span><strong>为什么这样设计？</strong><small>两层架构与每个取舍的代价</small></a>
   </nav>
 </section>

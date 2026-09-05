@@ -104,7 +104,7 @@ test('home and theme provide a distinctive responsive visual system', () => {
   assert.match(styles, /html\.dark/);
   assert.match(styles, /\.home-card-boundary a\s*{[^}]*position:\s*static/s);
   assert.match(styles, /\.home-card-boundary a\s*{[^}]*margin-top:\s*auto/s);
-  assert.match(styles, /\.mermaid \.nodeLabel\s*{[^}]*line-height:\s*1\.3/s);
+  assert.match(styles, /\.mermaid \.nodeLabel\s*\{[^}]*line-height:\s*1\.3/s);
 });
 
 test('project logo is available in both themes and shown on the home page and READMEs', () => {
@@ -155,20 +155,27 @@ test('language switching is the only English entry in the Chinese site chrome', 
   const config = read('apps/docs/site/.vitepress/config.ts');
   const home = read('apps/docs/site/zh/index.md');
   const styles = read('apps/docs/site/.vitepress/theme/custom.css');
-  const primaryNav = config.match(/nav:\s*\[([\s\S]*?)\],\n\s*sidebar:/)?.[1] ?? '';
+  const navPattern = /nav:\s*\[([\s\S]*?)\],\n\s*sidebar:/g;
+  const localeNavs = [...config.matchAll(navPattern)].map((match) => match[1]);
+  assert.ok(localeNavs.length >= 2, 'every locale nav must be paired with its sidebar');
 
-  assert.doesNotMatch(primaryNav, /text:\s*['"]English['"]/);
+  for (const nav of localeNavs) {
+    assert.doesNotMatch(nav, /text:\s*['"]English['"]/);
+  }
   assert.doesNotMatch(home, /English reader|English overview|home-english/);
   assert.doesNotMatch(styles, /\.home-english\s*{/);
 
-  assert.match(config, /i18nRouting:\s*false/);
+  // Language switching must stay on the corresponding page; `i18nRouting: false`
+  // degrades the switcher to locale home pages (see theme-default/composables/langs.js).
+  assert.doesNotMatch(config, /i18nRouting:\s*false/);
   assert.match(config, /logoLink:\s*['"]\/harnessmith\/['"]/);
+  assert.match(config, /logoLink:\s*['"]\/harnessmith\/en\/['"]/);
   assert.match(
     config,
     /en:\s*{\s*label:\s*['"]English['"],\s*lang:\s*['"]en['"],\s*link:\s*['"]\/en\/['"]\s*}/,
   );
   assert.match(read('apps/docs/site/en/index.md'), /English getting-started guide/);
-  assert.match(read('apps/docs/site/en/getting-started.md'), /^#\s+Getting started/m);
+  assert.match(read('apps/docs/site/en/guide/getting-started.md'), /^#\s+Getting started/m);
 });
 
 test('history reflects the project origin without presenting the blind review as project history', () => {
@@ -346,14 +353,33 @@ test('documentation site covers user, contributor, architecture, boundary, and h
     'apps/docs/site/zh/reference/references.md',
     'apps/docs/site/zh/reference/migrations.md',
     'apps/docs/site/en/index.md',
-    'apps/docs/site/en/getting-started.md',
+    'apps/docs/site/en/guide/getting-started.md',
+    'apps/docs/site/en/guide/why-harnessmith.md',
+    'apps/docs/site/en/guide/hosts.md',
+    'apps/docs/site/en/guide/lifecycle.md',
+    'apps/docs/site/en/guide/first-value-loop.md',
+    'apps/docs/site/en/concepts/harness-engineering.md',
+    'apps/docs/site/en/concepts/how-it-works.md',
+    'apps/docs/site/en/concepts/architecture.md',
+    'apps/docs/site/en/concepts/design-principles.md',
+    'apps/docs/site/en/concepts/boundaries.md',
+    'apps/docs/site/en/concepts/memory-and-tasks.md',
+    'apps/docs/site/en/concepts/evidence-and-evaluation.md',
+    'apps/docs/site/en/concepts/history-and-influences.md',
+    'apps/docs/site/en/reference/cli.md',
+    'apps/docs/site/en/reference/runtime-cli.md',
+    'apps/docs/site/en/reference/temporary-resources.md',
+    'apps/docs/site/en/reference/migrations.md',
+    'apps/docs/site/en/reference/references.md',
+    'apps/docs/site/en/maintain/contributing.md',
+    'apps/docs/site/en/maintain/content-strategy.md',
   ];
 
   for (const page of pages) {
     assert.equal(existsSync(join(root, page)), true, `${page} must exist`);
     const content = read(page);
     assert.match(content, /^---\n[\s\S]*?owner:\s*maintainers\n[\s\S]*?---\n/);
-    if (page === 'apps/docs/site/zh/index.md') {
+    if (page === 'apps/docs/site/zh/index.md' || page === 'apps/docs/site/en/index.md') {
       assert.match(content, /^layout:\s*home$/m);
       assert.match(content, /^hero:\n[\s\S]*?^\s+name:\s*.+$/m);
     } else {

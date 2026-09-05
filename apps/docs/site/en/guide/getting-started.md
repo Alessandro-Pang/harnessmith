@@ -15,7 +15,7 @@ npm initializer, so run it with `npx`; no global install is needed. The only req
 
 The whole process takes about five minutes if you're installing to a single host. The examples below use Codex. Other
 hosts use the same three-stage flow, but Cursor is project-scoped and requires `--project`; check the
-[host support guide](/guide/hosts) before copying a command.
+[host support guide](/en/guide/hosts) before copying a command.
 
 ## Before you start
 
@@ -80,7 +80,7 @@ code for the next step. It does not change files or run the suggested action.
 - **Unmanaged or modified files.** The default is denial. If Harnessmith finds files at target locations that it
   didn't create (or that were created but have been modified), it stops rather than overwrite. Inspect with dry-run
   and status first. If you're sure you want to take over, go through `adopt` (see the
-  [lifecycle guide](/guide/lifecycle)) or `--force`, but understand what you're overwriting first.
+  [lifecycle guide](/en/guide/lifecycle)) or `--force`, but understand what you're overwriting first.
 - **Unsupported host.** Harnessmith stops before resolving or writing any targets. No partial installs. If you see
   this error, check the supported hosts list. You may have a typo in the `--agent` value, or you may be trying to
   use a host that isn't yet supported.
@@ -93,7 +93,7 @@ host session. The vocabulary is precise: `installed`, `healthy`, `host-configure
 the first two locally; the last two remain `inconclusive` without real host evidence.
 
 `installed` is a local file check. `host-verified` requires a real host session that loads the rules and completes a
-controlled task. The [First Value Loop](/guide/first-value-loop) describes that additional check.
+controlled task. The [First Value Loop](/en/guide/first-value-loop) guide describes that additional check.
 
 After install, run:
 
@@ -101,8 +101,8 @@ After install, run:
 npx harnessmith diagnostics --agent <agent> --json
 ```
 
-Then switch to a real host and complete the first controlled task. The detailed, evidence-based journey is currently
-maintained in Chinese: [首次价值循环](/guide/first-value-loop).
+Then switch to a real host and complete the first controlled task. The detailed, evidence-based journey is documented
+in the [First Value Loop](/en/guide/first-value-loop) guide.
 
 ## Other hosts
 
@@ -118,7 +118,7 @@ Multiple hosts at once:
 npx harnessmith setup --agent codex,opencode,kimi-code
 ```
 
-Exact paths, aliases, and support status: [host support](/guide/hosts).
+Exact paths, aliases, and support status: [host support](/en/guide/hosts).
 
 ## Recovery
 
@@ -136,6 +136,6 @@ created or modified after install. If you edited a managed file, uninstall will 
 unless you explicitly acknowledge the loss. This is deliberate. Silent data loss is worse than an extra
 confirmation step.
 
-Continue with the Chinese [host support](/guide/hosts), [lifecycle guide](/guide/lifecycle), or full
-[CLI reference](/reference/cli). These pages are the current technical source of truth for host paths and advanced
-operations.
+Continue with the [host support](/en/guide/hosts), [lifecycle guide](/en/guide/lifecycle), or full
+[CLI reference](/en/reference/cli). The Chinese pages remain the canonical technical source of truth for host paths
+and advanced operations.
