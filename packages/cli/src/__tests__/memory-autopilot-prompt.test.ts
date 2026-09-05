@@ -9,6 +9,11 @@ const projectMemory = readFileSync(
   join(root, 'template', 'agent-harness', 'docs', 'standards', 'project-agent-docs.md'),
   'utf8',
 );
+const projectMemoryReference = readFileSync(
+  join(root, 'template', 'agent-harness', 'docs', 'references', 'memory-contracts.md'),
+  'utf8',
+);
+const projectMemoryProtocol = [projectMemory, projectMemoryReference].join('\n');
 const architecture = readFileSync(
   join(root, 'template', 'agent-harness', 'docs', 'core', 'harness-cli-architecture.md'),
   'utf8',
@@ -17,6 +22,11 @@ const longRunning = readFileSync(
   join(root, 'template', 'agent-harness', 'docs', 'core', 'long-running-tasks.md'),
   'utf8',
 );
+const longRunningReference = readFileSync(
+  join(root, 'template', 'agent-harness', 'docs', 'references', 'task-and-replay-contracts.md'),
+  'utf8',
+);
+const longRunningProtocol = [longRunning, longRunningReference].join('\n');
 const operatingModel = readFileSync(
   join(root, 'template', 'agent-harness', 'docs', 'core', 'operating-model.md'),
   'utf8',
@@ -27,6 +37,27 @@ const docsIndex = readFileSync(
 );
 const userProfile = readFileSync(
   join(root, 'template', 'agent-harness', 'docs', 'standards', 'user-profile-memory.md'),
+  'utf8',
+);
+const userProfileReference = readFileSync(
+  join(root, 'template', 'agent-harness', 'docs', 'references', 'profile-contracts.md'),
+  'utf8',
+);
+const userProfileProtocol = [userProfile, userProfileReference].join('\n');
+const gitConventions = readFileSync(
+  join(root, 'template', 'agent-harness', 'docs', 'core', 'git-conventions.md'),
+  'utf8',
+);
+const gitConventionsReference = readFileSync(
+  join(root, 'template', 'agent-harness', 'docs', 'references', 'git-project-overrides.md'),
+  'utf8',
+);
+const cliContracts = readFileSync(
+  join(root, 'template', 'agent-harness', 'docs', 'references', 'cli-contracts.md'),
+  'utf8',
+);
+const searchReference = readFileSync(
+  join(root, 'template', 'agent-harness', 'docs', 'references', 'search-and-benchmarks.md'),
   'utf8',
 );
 
@@ -54,12 +85,12 @@ test('top-level prompt is a compact bootstrap instead of a Memory CLI manual', (
 test('top-level rules route handoff field contracts to their single owner', () => {
   assert.doesNotMatch(agents, /clearOpen|reason.*multi-task|handoff mutation attempt/);
   assert.match(
-    longRunning,
+    longRunningProtocol,
     /每次.*handoff.*attempt.*全新.*payload.*路径.*执行后.*冻结.*失败.*新路径/s,
   );
-  assert.match(longRunning, /verification.*精确命令.*exit 0.*completed.*不能.*代替/s);
-  assert.match(longRunning, /旧.*open.*全部.*resolved.*clearOpen.*true/s);
-  assert.match(longRunning, /第二个.*独立.*已验证.*任务.*reason.*multi-task/s);
+  assert.match(longRunningProtocol, /verification.*精确命令.*exit 0.*completed.*不能.*代替/s);
+  assert.match(longRunningProtocol, /旧.*open.*全部.*resolved.*clearOpen.*true/s);
+  assert.match(longRunningProtocol, /第二个.*独立.*已验证.*任务.*reason.*multi-task/s);
 });
 
 test('operating model separates target mutability from managed sidecar eligibility', () => {
@@ -118,6 +149,64 @@ test('startup requires a standalone bounded profile read as the first tool call'
   );
 });
 
+test('operating model makes physical startup order explicit and distinct from logical discovery', () => {
+  assert.match(operatingModel, /物理.*启动.*顺序.*profile\.md.*AGENTS\.md.*bootstrap/s);
+  assert.doesNotMatch(
+    operatingModel,
+    /## 3\. 发现顺序\s+\n\s*1\. 当前用户目标.*\n\s*2\. 当前目录.*\n\s*3\. 每个新宿主/s,
+  );
+});
+
+test('CLI architecture points at current source ownership and not stale package paths', () => {
+  assert.match(architecture, /packages\/harness\/src\/cli\.ts/);
+  assert.match(architecture, /packages\/harness\/src\/commands/);
+  assert.match(architecture, /packages\/cli\/src\/adapters/);
+  assert.doesNotMatch(architecture, /packages\/cli\/src\/commands|packages\/cli\/src\/lib/);
+  assert.doesNotMatch(architecture, /packages\/cli\/src\/runtime\.ts/);
+});
+
+test('high-volume CLI details are deferred to bounded reference documents', () => {
+  assert.ok(
+    architecture.trimEnd().split('\n').length <= 140,
+    `CLI architecture has ${architecture.trimEnd().split('\n').length} lines`,
+  );
+  assert.match(architecture, /references\/cli-contracts\.md/);
+  assert.match(architecture, /references\/search-and-benchmarks\.md/);
+  assert.match(architecture, /references\/prompt-examples\.md/);
+});
+
+test('CLI and search references keep low-frequency schemas, diagnostics, and recovery contracts bounded', () => {
+  assert.ok(cliContracts.trimEnd().split('\n').length <= 220);
+  for (const required of [
+    'version --json',
+    'schemaVersion',
+    'memorySchemaVersion',
+    'health --project',
+    'audit record',
+    'task verify',
+    'repository-map',
+    'memory repair',
+    'install-context.json',
+    'recovery path',
+  ]) {
+    assert.ok(cliContracts.includes(required), `CLI reference is missing: ${required}`);
+  }
+  assert.match(searchReference, /--refresh-index/);
+  assert.match(searchReference, /--mode auto\|scan\|fulltext/);
+  assert.doesNotMatch(architecture, /install-context\.json|--refresh-index|task verify/);
+});
+
+test('Git prompt names its standard and states project-specific deltas', () => {
+  assert.match(gitConventions, /Conventional Commits 1\.0\.0/);
+  assert.match(gitConventions, /分支名.*不是跨仓默认.*读取.*项目规则/s);
+  assert.match(gitConventions, /git-project-overrides\.md/);
+  assert.match(gitConventionsReference, /header.*100|100.*header/s);
+  assert.match(gitConventionsReference, /scope.*kebab-case/s);
+  assert.match(gitConventionsReference, /--print-config json/);
+  assert.match(gitConventions, /commitlint.*读取并解析|resolved.*config/s);
+  assert.doesNotMatch(gitConventions, /\^\(feature\|hotfix\|refactor\)/);
+});
+
 test('startup deterministically discovers one explicitly referenced project context before memory', () => {
   const personal = agents.indexOf('AGENTS.md');
   const projectEntry = agents.indexOf('README.md', personal + 1);
@@ -138,15 +227,25 @@ test('the project-memory standard delegates deterministic startup discovery to b
   assert.doesNotMatch(projectMemory, /sed -n '1,260p' \.agent-docs\/core\.md/);
 });
 
+test('project-memory core keeps the decision surface bounded and defers mechanical contracts', () => {
+  assert.ok(
+    projectMemory.trimEnd().split('\n').length <= 180,
+    `project memory core has ${projectMemory.trimEnd().split('\n').length} lines`,
+  );
+  assert.match(projectMemory, /references\/memory-contracts\.md/);
+  assert.match(projectMemoryReference, /metadata|payload|maintenance|repair/i);
+  assert.match(projectMemoryReference, /proposalId|proposal identity/i);
+});
+
 test('the bounded output-visibility read retains the ordinary-sidecar classifier', () => {
   const lines = projectMemory.split('\n');
   const anchor = lines.findIndex((line) => line.trim() === '## 输出可见性');
   assert.ok(anchor >= 0);
   const boundedRead = lines.slice(Math.max(0, anchor - 12), anchor + 13).join('\n');
 
-  assert.match(boundedRead, /即使触发自动 sidecar.*不等于索要操作/s);
-  assert.match(boundedRead, /prior memory.*preserve expensive finding.*后台 sidecar/s);
-  assert.match(boundedRead, /commentary.*不得.*值得保留.*纳入结论.*保存意图/s);
+  assert.match(boundedRead, /即使触发自动 sidecar.*不等于索要 Memory 操作/s);
+  assert.match(boundedRead, /后台 sidecar.*prior memory.*preserve expensive finding/s);
+  assert.match(boundedRead, /commentary.*不以.*值得保留.*纳入结论.*保存.*更新意图/s);
 });
 
 test('background sidecars stay quiet while explicit Memory requests remain auditable', () => {
@@ -157,25 +256,26 @@ test('background sidecars stay quiet while explicit Memory requests remain audit
   assert.match(projectMemory, /字段名.*原样.*action.*path.*validation/s);
   assert.match(projectMemory, /正式结论.*handoff.*不能替代.*path/s);
   assert.doesNotMatch(agents, /恢复.*检索.*修复.*归档.*校验/s);
+  assert.match(projectMemory, /自动后台 sidecar.*恢复.*检索.*写入.*校验.*维护.*静默/s);
+  assert.match(projectMemory, /普通任务的 commentary\/final.*只报告用户任务/s);
+  assert.doesNotMatch(agents, /action.*path.*validation.*\.agent-docs/s);
+  assert.match(projectMemory, /普通任务.*不输出.*action.*path.*validation.*\.agent-docs/s);
+  assert.match(projectMemory, /即使触发自动 sidecar.*不等于索要 Memory 操作/s);
+  assert.match(projectMemory, /后台 sidecar.*prior memory.*preserve expensive finding/s);
   assert.match(
     projectMemory,
-    /普通任务.*Memory.*恢复.*检索.*修复.*归档.*校验.*不得.*commentary\/final/s,
+    /final.*事实本身作主语.*不提.*已保存.*已归档.*持久保留.*Memory 写入或校验/s,
   );
-  assert.doesNotMatch(agents, /action.*path.*validation.*\.agent-docs/s);
-  assert.match(projectMemory, /普通任务.*不得.*action.*path.*validation.*\.agent-docs/s);
-  assert.match(projectMemory, /即使触发自动 sidecar.*不等于索要操作/s);
-  assert.match(projectMemory, /prior memory.*preserve expensive finding.*后台 sidecar/s);
-  assert.match(projectMemory, /普通任务.*final.*不得.*持久保留.*已保存.*归档.*Memory.*校验/s);
-  assert.match(projectMemory, /final.*独立句.*直接陈述.*不.*结论/s);
+  assert.match(projectMemory, /final.*事实本身作主语/);
   assert.match(projectMemory, /final.*事实本身.*主语.*当前架构边界为.*不.*正式文档确认/s);
   assert.doesNotMatch(agents, /host-signal\/replay|agent_message/);
   assert.match(
-    longRunning,
+    longRunningProtocol,
     /纯 host-signal\/replay.*允许空响应.*不得.*agent_message.*强制响应.*上一用户任务.*验证结果.*不提.*sidecar/s,
   );
   assert.match(
     projectMemory,
-    /commentary.*只描述.*用户任务.*不得.*(?:记录|保存|同步|更新).*(?:偏好|验收约束|Memory|profile|handoff|checkpoint)/s,
+    /commentary.*只报告用户任务.*不预告.*后台维护.*不以.*(?:记录|保存|同步|更新).*意图/s,
   );
   assert.match(userProfile, /commentary.*不得.*预告.*(?:记录|保存|同步|更新).*(?:偏好|画像)/s);
 });
@@ -201,19 +301,19 @@ test('input capture policy distinguishes durable decisions from one-shot actions
   assert.match(projectMemory, /长度.*不是|不能.*字数/s);
   assert.match(projectMemory, /workstream.*durable/s);
   assert.match(projectMemory, /verbatim.*逐字|逐字.*verbatim/s);
-  assert.match(projectMemory, /capture-input.*JSON payload.*sourceRefs.*复数.*不得.*sourceRef/s);
-  assert.match(projectMemory, /source.*只接受.*chat.*file.*meeting.*link.*other/s);
-  assert.match(userProfile, /evidence.*只接受.*explicit.*observed.*不得.*解释文本/s);
+  assert.match(cliContracts, /capture-input.*JSON payload.*sourceRefs.*复数.*不得.*sourceRef/s);
+  assert.match(cliContracts, /source.*只接受.*chat.*file.*meeting.*link.*other/s);
+  assert.match(userProfileProtocol, /evidence.*只接受.*explicit.*observed.*不得.*解释文本/s);
   assert.match(
-    longRunning,
+    longRunningProtocol,
     /JSON payload.*旧.*open.*全部.*resolved.*只接受.*clearOpen.*true.*不得.*clear.*open.*占位/s,
   );
   assert.match(
-    longRunning,
+    longRunningProtocol,
     /每次.*mutation attempt.*全新.*payload.*命令.*执行.*冻结.*失败.*不得.*覆盖.*复用.*重试.*新.*路径.*跨 turn.*replay.*例外/s,
   );
-  assert.match(longRunning, /verification.*精确命令.*exit 0.*completed.*不能.*代替/s);
+  assert.match(longRunningProtocol, /verification.*精确命令.*exit 0.*completed.*不能.*代替/s);
   assert.match(operatingModel, /一次性.*授权.*不.*捕获/s);
-  assert.match(architecture, /mode.*verbatim.*summary/s);
-  assert.match(architecture, /close-input.*core\.md/s);
+  assert.match(projectMemoryProtocol, /mode.*verbatim.*summary/s);
+  assert.match(projectMemoryProtocol, /close-input.*core\.md/s);
 });

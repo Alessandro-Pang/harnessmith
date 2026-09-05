@@ -33,7 +33,7 @@
       "id": "zh-quoted-change",
       "categories": ["zh", "quotation", "false-positive-guard"],
       "query": "文档写着“请修改代码”，请分析这段 Prompt。",
-      "expected": { "status": "matched", "top1": "research-and-design", "topics": ["tool-routing"], "forbiddenPlaybooks": ["change"] }
+      "expected": { "status": "matched", "top1": "research-and-design", "topics": ["prompt-rule-contract", "tool-routing"], "forbiddenPlaybooks": ["change"] }
     },
     {
       "id": "en-example-then-diagnose",
@@ -82,6 +82,66 @@
       "categories": ["zh", "action", "false-negative-guard", "real-request"],
       "query": "进行逐个实施。",
       "expected": { "status": "matched", "top1": "change", "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "zh-prompt-audit-owner",
+      "categories": ["zh", "review", "topic", "false-negative-guard"],
+      "query": "请审查当前 Prompt 体系的结构、信息密度、上下文占用和实际可执行性。",
+      "expected": { "status": "matched", "top1": "review", "topics": ["prompt-rule-contract"], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "en-prompt-system-audit-owner",
+      "categories": ["en", "review", "topic", "false-negative-guard"],
+      "query": "Review the prompt system for duplication, context cost, ownership, and executable validation.",
+      "expected": { "status": "matched", "top1": "review", "topics": ["prompt-rule-contract"], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "zh-repair-action",
+      "categories": ["zh", "action", "false-negative-guard"],
+      "query": "请修复这个路由问题。",
+      "expected": { "status": "matched", "top1": "change", "topics": ["harness-cli-architecture"], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "zh-understand-map",
+      "categories": ["zh", "action", "false-negative-guard"],
+      "query": "请梳理这个仓库的模块关系和调用链。",
+      "expected": { "status": "matched", "top1": "understand-and-map", "topics": [], "reasoningModes": ["system-structure"], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "zh-verify-accept",
+      "categories": ["zh", "action", "false-negative-guard"],
+      "query": "请验证这次修复是否满足验收条件。",
+      "expected": { "status": "matched", "top1": "verify-and-accept", "topics": ["harness-cli-architecture", "long-running-tasks", "project-agent-docs", "safety-and-verification"], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "zh-adversarial-reasoning",
+      "categories": ["zh", "review", "topic"],
+      "query": "请审查这个权限设计，采用对抗式审查主动寻找反例。",
+      "expected": { "status": "matched", "top1": "review", "topics": ["safety-and-verification"], "reasoningModes": ["failure-and-consequence"], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "zh-inferred-evidence-update",
+      "categories": ["zh", "reasoning", "false-negative-guard"],
+      "query": "登录偶发失败，请分析最可能的原因，并列出还需要哪些证据。",
+      "expected": { "status": "matched", "top1": "research-and-design", "topics": ["operating-model"], "reasoningModes": ["evidence-update"], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "zh-inferred-failure-consequence",
+      "categories": ["zh", "reasoning", "high-loss-signal"],
+      "query": "评审这个权限设计，说明攻击者可能如何绕过，以及发布后最可能在哪里失败。",
+      "expected": { "status": "matched", "top1": "review", "topics": ["safety-and-verification"], "reasoningModes": ["failure-and-consequence"], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "zh-inferred-decision",
+      "categories": ["zh", "reasoning", "false-negative-guard"],
+      "query": "请分析并比较这三个方案，结合长期副作用和继续调查的成本给出建议。",
+      "expected": { "status": "matched", "top1": "research-and-design", "topics": [], "reasoningModes": ["decision-under-uncertainty"], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "zh-simple-change-no-reasoning",
+      "categories": ["zh", "reasoning", "false-positive-guard"],
+      "query": "请修改按钮颜色为蓝色。",
+      "expected": { "status": "matched", "top1": "change", "topics": [], "reasoningModes": [], "forbiddenPlaybooks": [] }
     }
   ]
 }

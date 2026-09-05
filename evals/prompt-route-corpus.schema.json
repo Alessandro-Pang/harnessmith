@@ -41,6 +41,7 @@
               "status": { "enum": ["matched", "unmatched", "ambiguous"] },
               "top1": { "type": ["string", "null"], "maxLength": 128 },
               "topics": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 128 } },
+              "reasoningModes": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 128 } },
               "forbiddenPlaybooks": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 128 } }
             }
           }

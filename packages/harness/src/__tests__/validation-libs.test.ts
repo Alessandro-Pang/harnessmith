@@ -182,6 +182,9 @@ test('docs validation ignores Markdown-looking links inside code spans', () => {
 test('documentation routing rejects malformed and escaping manifest entries', () => {
   const root = temporaryRoot();
   const manifest = join(root, 'manifest.yaml');
+  writeFileSync(manifest, 'version: 2\nentries: {}\n');
+  assert.throws(() => routeDocumentation(root, ['review']), /manifest version must be 1/);
+
   writeFileSync(manifest, 'entries: []\n');
   assert.throws(() => routeDocumentation(root, ['review']), /entries must be an object/);
   assert.throws(() => routeDocumentation(root, ['  ']), /routing term/);
@@ -200,6 +203,106 @@ test('documentation routing rejects malformed and escaping manifest entries', ()
     'entries:\n  invalid: { kind: topic, path: ../outside.md, triggers: [review] }\n',
   );
   assert.throws(() => routeDocumentation(root, ['review']), /escapes docs root/);
+
+  writeFileSync(
+    manifest,
+    `version: 1
+entries:
+  duplicate:
+    kind: topic
+    path: duplicate.md
+    conceptAliases: [Git, git]
+`,
+  );
+  assert.throws(() => routeDocumentation(root, ['git']), /duplicate conceptAliases/);
+
+  writeFileSync(
+    manifest,
+    `version: 1
+entries:
+  deferred:
+    kind: topic
+    load: reference
+    path: deferred.md
+    conceptAliases: [reference]
+`,
+  );
+  assert.throws(() => routeDocumentation(root, ['reference']), /no owner for deferred reference/);
+
+  writeFileSync(
+    manifest,
+    `version: 1
+entries:
+  invalid:
+    kind: topic
+    load: reference
+    owner: invalid
+    path: invalid.md
+    conceptAliases: [reference]
+    activationRules: []
+`,
+  );
+  assert.throws(() => routeDocumentation(root, ['reference']), /invalid activationRules/);
+
+  writeFileSync(
+    manifest,
+    `version: 1
+entries:
+  invalid:
+    kind: topic
+    load: reference
+    owner: invalid
+    path: invalid.md
+    conceptAliases: [reference]
+    activationRules:
+      - mode: evidence-update
+        aliases: [evidence]
+        signals: [evidence]
+        minSignals: 2
+        section: Evidence
+        requiredArtifacts: [hypotheses]
+`,
+  );
+  assert.throws(
+    () => routeDocumentation(root, ['reference']),
+    /invalid activationRules minSignals/,
+  );
+});
+
+test('documentation routing rejects deferred references and invalid required aliases', () => {
+  const root = temporaryRoot();
+  const manifest = join(root, 'manifest.yaml');
+
+  writeFileSync(
+    manifest,
+    `entries:
+  deferred-required:
+    kind: topic
+    load: reference
+    path: reference.md
+    conceptAliases: [reference]
+    requiredConceptAliases: [reference]
+`,
+  );
+  assert.throws(
+    () => routeDocumentation(root, ['reference']),
+    /cannot require a deferred reference/,
+  );
+
+  writeFileSync(
+    manifest,
+    `entries:
+  malformed:
+    kind: topic
+    path: topic.md
+    conceptAliases: [Required]
+    requiredConceptAliases: [required, REQUIRED]
+`,
+  );
+  assert.throws(
+    () => routeDocumentation(root, ['required']),
+    /duplicate requiredConceptAliases|requiredConceptAliases.*not present|invalid requiredConceptAliases/,
+  );
 });
 
 test('documentation routing accepts an in-root filename that starts with two dots', () => {

@@ -11,8 +11,12 @@ test('public repair guidance preserves proposal, identity, rollback, and verifie
     join(root, 'template/agent-harness/docs/core/harness-cli-architecture.md'),
     'utf8',
   );
+  const reference = readFileSync(
+    join(root, 'template/agent-harness/docs/references/memory-contracts.md'),
+    'utf8',
+  );
   const llms = readFileSync(join(root, 'llms.txt'), 'utf8');
-  const combined = [runtimeCli, architecture, llms].join('\n');
+  const combined = [runtimeCli, architecture, reference, llms].join('\n');
 
   assert.match(
     combined,

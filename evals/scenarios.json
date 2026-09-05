@@ -40,8 +40,8 @@
       ],
       "automatedChecks": [
         "packages/harness/src/__tests__/memory.test.ts#context search combines Harness, global memory, project memory, and project apps/docs/site",
-        "packages/harness/src/__tests__/docs-routing.test.ts#CJK punctuation and mixed-language requests preserve action intent",
-        "packages/harness/src/__tests__/docs-routing.test.ts#response language priority is current explicit, persisted evidence, then detection",
+        "packages/harness/src/__tests__/docs-routing-edge-cases.test.ts#CJK punctuation and mixed-language requests preserve action intent",
+        "packages/harness/src/__tests__/docs-routing-edge-cases.test.ts#response language priority is current explicit, persisted evidence, then detection",
         "packages/cli/src/__tests__/multilingual-prompt.test.ts#entry guidance routes multilingual response policy without persisting one turn",
         "evals/__tests__/prompt-route-benchmark.test.ts#prompt route benchmark is versioned, reproducible, and passes deterministic thresholds"
       ]

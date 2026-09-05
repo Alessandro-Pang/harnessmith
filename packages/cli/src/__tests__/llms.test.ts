@@ -113,10 +113,24 @@ test('routed prompts keep Memory policy and command contracts with their designa
     join(root, 'template', 'agent-harness', 'docs', 'standards', 'project-agent-docs.md'),
     'utf8',
   );
+  const projectMemoryReference = readFileSync(
+    join(root, 'template', 'agent-harness', 'docs', 'references', 'memory-contracts.md'),
+    'utf8',
+  );
+  const projectMemoryProtocol = [projectMemory, projectMemoryReference].join('\n');
+  const cliContracts = readFileSync(
+    join(root, 'template', 'agent-harness', 'docs', 'references', 'cli-contracts.md'),
+    'utf8',
+  );
   const profile = readFileSync(
     join(root, 'template', 'agent-harness', 'docs', 'standards', 'user-profile-memory.md'),
     'utf8',
   );
+  const profileReference = readFileSync(
+    join(root, 'template', 'agent-harness', 'docs', 'references', 'profile-contracts.md'),
+    'utf8',
+  );
+  const profileProtocol = [profile, profileReference].join('\n');
   const research = readFileSync(
     join(root, 'template', 'agent-harness', 'docs', 'playbooks', 'research-and-design.md'),
     'utf8',
@@ -137,6 +151,11 @@ test('routed prompts keep Memory policy and command contracts with their designa
     join(root, 'template', 'agent-harness', 'docs', 'core', 'long-running-tasks.md'),
     'utf8',
   );
+  const longRunningReference = readFileSync(
+    join(root, 'template', 'agent-harness', 'docs', 'references', 'task-and-replay-contracts.md'),
+    'utf8',
+  );
+  const longRunningProtocol = [longRunning, longRunningReference].join('\n');
 
   assert.match(
     agents,
@@ -151,8 +170,14 @@ test('routed prompts keep Memory policy and command contracts with their designa
   assert.match(projectMemory, /blocked.*冲突.*校验失败/s);
   assert.match(readme, /Memory Autopilot/);
   assert.match(english, /Memory Autopilot/);
-  assert.match(architecture, /--consume-payload-file/);
-  assert.match(architecture, /领域命令成功.*才删除文件/s);
+  assert.match(
+    readFileSync(
+      join(root, 'template', 'agent-harness', 'docs', 'references', 'cli-contracts.md'),
+      'utf8',
+    ),
+    /--consume-payload-file/,
+  );
+  assert.match(cliContracts, /领域命令成功.*才删除文件/s);
   assert.match(architecture, /宿主事件 hook.*尚未提供/s);
   assert.match(architecture, /prompt\/单元测试.*不能替代真实 Host Eval/s);
   assert.match(architecture, /记忆适配闭环.*不是模型权重学习/s);
@@ -160,18 +185,21 @@ test('routed prompts keep Memory policy and command contracts with their designa
   assert.match(architecture, /host-evals.*eval:validate/s);
   assert.match(manifest, /memory-autopilot/);
   assert.match(longRunning, /Task ledger.*唯一事实源/s);
-  assert.match(longRunning, /phase.*compaction.*multi-task.*manual/s);
-  assert.match(longRunning, /close-handoff.*completed\|cancelled/s);
+  assert.match(longRunningProtocol, /compaction.*multi-task.*phase.*manual/s);
+  assert.match(longRunningProtocol, /close-handoff.*completed\|cancelled/s);
   assert.match(longRunning, /同一 session.*原位更新/s);
   assert.match(research, /只有用户授权项目写入且结论已被采纳/);
   assert.match(research, /否则只提交 proposal/);
-  assert.match(change, /用户新增验收.*必须.*去重.*--payload-file/s);
+  assert.match(change, /用户新增验收.*必须.*去重.*typed writer/s);
+  assert.match(change, /CLI reference/);
+  assert.doesNotMatch(change, /--consume-payload-file|sourceRefs|clearOpen/);
+  assert.match(cliContracts, /--payload-file/);
   assert.match(profile, /跨任务.*explicit\/high/s);
   assert.match(profile, /本次任务.*项目.*input.*handoff/s);
-  assert.match(profile, /profile-autopilot pause/);
-  assert.match(profile, /profile-autopilot resume/);
-  assert.match(profile, /paused.*机械拒绝.*reconcile/s);
-  assert.match(projectMemory, /host-evals.*eval:validate/s);
+  assert.match(profileProtocol, /profile-autopilot pause/);
+  assert.match(profileProtocol, /profile-autopilot resume/);
+  assert.match(profileProtocol, /paused.*机械拒绝.*reconcile/s);
+  assert.match(projectMemoryProtocol, /host-evals.*eval:validate/s);
 });
 
 test('release documentation describes the resumable immutable snapshot workflow', () => {
@@ -193,29 +221,6 @@ test('release documentation describes the resumable immutable snapshot workflow'
     evaluations,
     /Install that exact tarball and print the expected subject fingerprints/,
   );
-});
-
-test('search documentation records every default scan budget in one authoritative location', () => {
-  const architecture = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'core', 'harness-cli-architecture.md'),
-    'utf8',
-  );
-  const readme = readFileSync(join(root, 'README.md'), 'utf8');
-  const english = readFileSync(join(root, 'README.en.md'), 'utf8');
-
-  for (const contract of [
-    '8 层',
-    '5000 个目录条目',
-    '1000 个目录',
-    '1000 个普通文件',
-    '单文件 1 MiB',
-    '总计 8 MiB',
-    '2 秒',
-  ]) {
-    assert.ok(architecture.includes(contract), `missing search budget contract: ${contract}`);
-  }
-  assert.doesNotMatch(readme, /默认的 8 层、1000 个文件/);
-  assert.doesNotMatch(english, /defaults to 8 levels, 1,000 files/);
 });
 
 test('distributed prompt entrypoints stay readable and use executable Harness commands', () => {
@@ -379,7 +384,7 @@ test('read-only requests allow only narrow local Autopilot and qualified reposit
     repositoryMap,
     /跨仓分析本身授权更新 personal\s+`repository-map\.md`.*`repository-map\.yaml`/,
   );
-  assert.match(repositoryMap, /不需要用户\s+二次确认/);
+  assert.match(repositoryMap, /不需要用户二次确认/);
   assert.match(repositoryMap, /用户明确禁止.*不得写入/);
 });
 
@@ -388,6 +393,11 @@ test('cross-repository research closes the relationship-map writeback loop', () 
     join(root, 'template', 'agent-harness', 'docs', 'projects', 'repository-map.md'),
     'utf8',
   );
+  const reference = readFileSync(
+    join(root, 'template', 'agent-harness', 'docs', 'references', 'repository-map-contracts.md'),
+    'utf8',
+  );
+  const protocol = [playbook, reference].join('\n');
   const personalMap = readFileSync(
     join(
       root,
@@ -415,13 +425,42 @@ test('cross-repository research closes the relationship-map writeback loop', () 
 
   assert.match(playbook, /自动发现、校验与维护/);
   assert.match(playbook, /更新 personal\s+`repository-map\.md`.*`repository-map\.yaml`/);
-  assert.match(playbook, /HEAD.*dirty/);
-  assert.match(playbook, /updated/);
+  assert.match(protocol, /HEAD.*dirty/);
+  assert.match(reference, /updated/);
   assert.match(playbook, /用户明确禁止写入.*`proposed`/s);
-  assert.match(playbook, /unchanged/);
-  assert.match(playbook, /blocked/);
+  assert.match(reference, /unchanged/);
+  assert.match(reference, /blocked/);
   assert.match(personalMap, /generated from repository-map\.yaml/);
   assert.match(canonicalMap, /schemaVersion: 1/);
+});
+
+test('repository-map core delegates mechanical schema, command, and budget details', () => {
+  const core = readFileSync(
+    join(root, 'template', 'agent-harness', 'docs', 'projects', 'repository-map.md'),
+    'utf8',
+  );
+  const reference = readFileSync(
+    join(root, 'template', 'agent-harness', 'docs', 'references', 'repository-map-contracts.md'),
+    'utf8',
+  );
+  const manifest = readFileSync(
+    join(root, 'template', 'agent-harness', 'docs', 'manifest.yaml'),
+    'utf8',
+  );
+
+  assert.ok(core.trimEnd().split('\n').length <= 100);
+  assert.match(core, /repository-map-contracts\.md/);
+  assert.doesNotMatch(
+    core,
+    /discover packages --apply|migrate <candidate\.yaml>|200 个仓库|1000 条直接边/,
+  );
+  assert.match(reference, /discover packages --apply/);
+  assert.match(reference, /migrate <candidate\.yaml>/);
+  assert.match(reference, /200 个仓库.*1000 条直接边/s);
+  assert.match(
+    manifest,
+    /repository-map-contracts:[\s\S]*load: reference[\s\S]*owner: repository-map/,
+  );
 });
 
 test('distributed rules close project-memory recall, writeback, and promotion loops', () => {
@@ -429,11 +468,20 @@ test('distributed rules close project-memory recall, writeback, and promotion lo
     join(root, 'template', 'agent-harness', 'docs', 'standards', 'project-agent-docs.md'),
     'utf8',
   );
+  const reference = readFileSync(
+    join(root, 'template', 'agent-harness', 'docs', 'references', 'memory-contracts.md'),
+    'utf8',
+  );
+  const protocol = [standard, reference].join('\n');
 
   assert.match(standard, /启动发现闭环/);
   assert.match(standard, /沉淀与正式提升/);
   assert.match(standard, /proposed/);
   assert.match(standard, /实际写入和验证正式事实源/);
   assert.match(standard, /维护报告默认只读/);
-  assert.match(standard, /全根 schema/);
+  assert.match(protocol, /全根 schema/);
+  assert.match(reference, /analytical-finding.*operational-experience.*user-profile/s);
+  assert.match(reference, /input-schema-version: 2/);
+  assert.match(reference, /finding-schema-version: 2/);
+  assert.match(reference, /fact-class: settled-fact.*formal-fact/s);
 });

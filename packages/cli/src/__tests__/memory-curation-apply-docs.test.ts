@@ -18,12 +18,20 @@ test('public curation apps/docs/site preserve explicit typed apply and acceptanc
     join(root, 'template', 'agent-harness', 'docs', 'standards', 'project-agent-docs.md'),
     'utf8',
   );
+  const reference = readFileSync(
+    join(root, 'template', 'agent-harness', 'docs', 'references', 'memory-contracts.md'),
+    'utf8',
+  );
   const manifest = readFileSync(
     join(root, 'template', 'agent-harness', 'docs', 'manifest.yaml'),
     'utf8',
   );
 
-  for (const document of [runtime, architecture, standard]) {
+  for (const document of [
+    runtime,
+    [architecture, reference].join('\n'),
+    [standard, reference].join('\n'),
+  ]) {
     assert.match(document, /memory curate/);
     assert.match(document, /proposalId|proposal identity/i);
     assert.match(document, /source digest|sourceDigest/i);

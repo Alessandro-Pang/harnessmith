@@ -139,6 +139,20 @@ test('Harness route CLI accepts a validated explicit documentation intent', () =
   assert.equal(report.primaryPlaybook.name, 'research-and-design');
 });
 
+test.each([
+  ['understand-and-map', '请梳理这个仓库的模块关系和调用链。'],
+  ['verify-and-accept', '请验证这次修复是否满足验收条件。'],
+])('Harness route CLI accepts the explicit %s documentation intent', (intent, query) => {
+  const { runtime } = installedFixture();
+  const output = capturedIo();
+
+  assert.equal(runCli(['route', '--json', '--intent', intent, query], { runtime, io: output }), 0);
+  const report = JSON.parse(output.logs[0]);
+  assert.equal(report.intent.source, 'explicit');
+  assert.equal(report.intent.requested, intent);
+  assert.equal(report.primaryPlaybook.name, intent);
+});
+
 test('Harness route CLI fails closed for unmatched and ambiguous action intent', () => {
   const { runtime } = installedFixture();
   const unmatched = capturedIo();
@@ -154,6 +168,53 @@ test('Harness route CLI fails closed for unmatched and ambiguous action intent',
   assert.equal(report.status, 'ambiguous');
   assert.equal(report.top1, null);
   assert.deepEqual(report.ambiguity, ['diagnose', 'review']);
+});
+
+test('Harness route CLI fails closed when a required topic exceeds the context budget', () => {
+  const root = mkdtempSync(join(tmpdir(), 'harness-route-required-overflow-'));
+  onTestFinished(() => rmSync(root, { recursive: true, force: true }));
+  const docsRoot = join(root, 'docs');
+  mkdirSync(docsRoot, { recursive: true });
+  writeFileSync(
+    join(docsRoot, 'manifest.yaml'),
+    `version: 1
+entries:
+  required-a:
+    kind: topic
+    path: required-a.md
+    conceptAliases: [mandatory]
+    requiredConceptAliases: [mandatory]
+  required-b:
+    kind: topic
+    path: required-b.md
+    conceptAliases: [mandatory]
+    requiredConceptAliases: [mandatory]
+  required-c:
+    kind: topic
+    path: required-c.md
+    conceptAliases: [mandatory]
+    requiredConceptAliases: [mandatory]
+  required-d:
+    kind: topic
+    path: required-d.md
+    conceptAliases: [mandatory]
+    requiredConceptAliases: [mandatory]
+  required-e:
+    kind: topic
+    path: required-e.md
+    conceptAliases: [mandatory]
+    requiredConceptAliases: [mandatory]
+`,
+  );
+  const runtime = harnessRuntime(root, { docsRoot });
+  const output = capturedIo();
+
+  assert.equal(runCli(['route', '--json', 'mandatory'], { runtime, io: output }), 2);
+  const report = JSON.parse(output.logs[0]);
+  assert.deepEqual(
+    report.omittedRequiredTopics.map(({ name }: { name: string }) => name),
+    ['required-e'],
+  );
 });
 
 test('Harness explain uses the same progressive-disclosure routing contract', () => {
