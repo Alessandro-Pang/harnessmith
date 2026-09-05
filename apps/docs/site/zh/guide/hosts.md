@@ -9,7 +9,7 @@ updated: 2026-09-05
 
 # 宿主支持
 
-本文列出当前可用的六类 Adapter，说明它们的目标路径、安装范围和激活方式，并解释“支持”在本项目里具体承诺到哪一层。实际路径始终以当前版本的 `capabilities --json` 和 `setup --dry-run --json` 为准。
+本文回答三个实际问题：Harnessmith 能装进哪些 Coding Agent、文件会写到哪里、所谓“支持”到底承诺了什么。先看表格选择宿主，再用 `setup --dry-run --json` 查看你这台机器的最终路径；不要根据默认路径猜测写入位置。
 
 Harnessmith 当前为六类宿主提供 Adapter。可以把 Adapter 理解成「翻译层」：它负责路径解析和文件格式适配，让同一套个人规则落进不同宿主约定的位置。它不替代宿主自身的模型循环、工具调度、sandbox 或权限批准——那些仍然是宿主的地盘。
 
@@ -26,13 +26,19 @@ Harnessmith 当前为六类宿主提供 Adapter。可以把 Adapter 理解成「
 | Kimi Code CLI | `kimi`（别名 `kimi-code`） | `${KIMI_CODE_HOME:-~/.kimi-code}/AGENTS.md` | 全局；宿主默认 |
 | Zed Agent | `zed` | `~/.config/zed/AGENTS.md`（Windows：`%APPDATA%\Zed\AGENTS.md`） | 全局；宿主默认 |
 
-想核对当前版本的 Adapter 声明，直接问 CLI 要机器可读输出：
+想查看当前版本登记的宿主、别名和能力范围，可以使用：
 
 ```bash
 npx harnessmith capabilities --json
 ```
 
-这个命令输出每个宿主的范围、入口路径模板、环境变量和当前支持状态，适合在写脚本或排查「我的机器上到底会装到哪里」时使用。比起翻文档，它的优点是永远和你实际运行的版本一致。
+这个命令适合写脚本或确认“这个 Adapter 是否存在”。它输出的是 Adapter 的能力声明，不会替你解析当前项目根、环境变量和文件冲突，也不会写入文件。要得到本机本次安装的真实目标，请运行：
+
+```bash
+npx harnessmith setup --agent codex --dry-run --json
+```
+
+dry-run 输出包含解析后的目标、每个文件的状态、冲突、备份和恢复提示；它才是安装前判断“最终会改哪里”的依据。
 
 ## 全局宿主与项目宿主
 

@@ -11,7 +11,7 @@ updated: 2026-09-05
 
 命令退出码为 0、Agent 说“完成了”、真实宿主行为已经验证，这三件事经常被混成一个“通过”。Harnessmith 把它们分开，因为每个结论都需要对应层级的证据。本文说明四条验证链、评测阶段和发布后 clean-room 检查分别能证明什么，以及哪些结论必须保留为 `inconclusive`。
 
-这一页是全站技术密度最高的一页，讲四条互补的验证链、从任务到结论的五个阶段、以及发布前后各自的门禁。读完它，你应该能判断任何一条「Harnessmith 已验证某能力」的声明到底验证到了哪一层、还差哪几层。
+本文说明四条验证链、从任务到结论的五个阶段，以及发布前后的门禁。它们共同限定「Harnessmith 已验证某能力」这句话能覆盖到哪一层。
 
 ## 四条互补验证链
 
@@ -21,7 +21,7 @@ updated: 2026-09-05
 
 `pnpm run bench:prompt-route` 使用 `evals/prompt-route-corpus.v1.json` 的同一批输入运行 version 1 benchmark。报告绑定 corpus digest、仅含 id/query 的 input digest、规则 fingerprint 和当前 router candidate digest；使用 `--baseline-report <path>` 比较时，要求 corpus 与 input digest 完全相同，否则拒绝生成 delta。语料变了，比较就失去意义。
 
-确定性指标包括 action routing Top-1 accuracy、topic recall、ambiguity precision/recall/rate、forbidden action count 与整例 rule-adherence rate。阈值保存在 versioned corpus 中；每个案例保留 expected/actual、failure code 和 `false-positive-guard` / `false-negative-guard` 分类，不能只保留聚合分数——聚合分数会掩盖单例的失败模式。
+确定性指标包括 action routing Top-1 accuracy、topic recall、ambiguity precision/recall/rate、forbidden action count 与整例 rule-adherence rate。阈值保存在 versioned corpus 中；每个案例保留 expected/actual、failure code 和 `false-positive-guard` / `false-negative-guard` 分类。只保留聚合分数会掩盖单例失败，因此不满足证据要求。
 
 这条链有一个诚实的盲区声明：deterministic router 不读取项目事实，也没有模型 token 或 Host tool-call 遥测，因此 fact verification、token cost 和 tool-call cost 必须报告 `not-measured`，不得估算为 0；mock/evaluator 与 real Host 层没有证据时同样报告 `not-provided`。benchmark `passed` 只证明当前源码对该 corpus 的确定性契约达标，`sourceOfTruth` 与 `hostProof` 均为 false；它不能替代下述真实 Host Eval，也不能证明 Agent 实际遵从 Prompt、回查事实或控制 token/tool 成本。
 
@@ -39,7 +39,7 @@ updated: 2026-09-05
 
 ### 真实宿主评测
 
-一条完整的 Host Eval 使用某个精确候选 tarball，在真实宿主中执行场景，并采集脱敏的 JSONL、工具行为、文件差异和 verifier 结果。场景断言同时检查期望行为与禁止行为，避免只靠最终文本中的关键词判定成功。Harnessmith 仓库提供场景、记录 schema 和门禁脚本，但这些脚本本身不负责启动、登录或认证第三方宿主——真实执行需要维护者带着真实环境来做。
+一条完整的 Host Eval 使用精确候选 tarball，在真实宿主中执行场景，并采集脱敏 JSONL、工具行为、文件差异和 verifier 结果。场景断言同时检查期望行为与禁止行为，不靠最终文本关键词判定成功。仓库提供场景、记录 schema 和门禁脚本，但不负责启动、登录或认证第三方宿主；真实执行需要维护者准备环境。
 
 这条链成本更高，也更容易受到认证、网络、宿主版本、超时和评测基础设施故障影响。因此环境准备、候选绑定、失败归因和证据保留本身也是评测设计的一部分，而不只是「跑完收工」。
 
@@ -87,4 +87,4 @@ updated: 2026-09-05
 
 首先区分产品行为失败与评测基础设施失败。无法访问宿主、认证过期或 runner 超时只能得到 `infra-inconclusive`，不能直接证明 Harnessmith 不支持该宿主；evaluator 自身故障必须记为 `evaluator-failed`，不能伪装成 `behavior-failed`。同样，本地 `eval:validate` 通过也不能升级成「真实 Host 已验证」。
 
-具体命令见项目 `package.json` 中的 `eval:check`、`eval:validate`、`eval:gate`、`release:check` 和 `release:verify-registry`；当前公开能力与证据路径以[能力声明—证据矩阵](../../capability-evidence.yaml)为准。
+具体命令见项目 `package.json` 中的 `eval:check`、`eval:validate`、`eval:gate`、`release:check` 和 `release:verify-registry`；当前公开能力与证据路径以[能力声明—证据矩阵](https://github.com/Alessandro-Pang/harnessmith/blob/main/apps/docs/site/capability-evidence.yaml)为准。

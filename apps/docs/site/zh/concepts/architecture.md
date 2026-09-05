@@ -9,9 +9,9 @@ updated: 2026-09-05
 
 # 架构设计
 
-一句话定位：Harnessmith 是**跨 Host 的 Personal Harness 分发与工作状态控制层**。它把一套宿主中立的规则、文档和本地 Runtime 安全地接入 Codex、Cursor、Claude Code、OpenCode、Kimi Code CLI 与 Zed Agent，但不替代这些宿主的 Agent Runtime。宿主怎么跑 Agent 是宿主的事，Harnessmith 管的是你的工作方式如何安全地进入并延续。
+Harnessmith 是**跨 Host 的 Personal Harness 分发与工作状态控制层**。它把宿主中立的规则、文档和本地 Runtime 安全接入 Codex、Cursor、Claude Code、OpenCode、Kimi Code CLI 与 Zed Agent，但不替代这些宿主的 Agent Runtime。宿主负责运行 Agent，Harnessmith 负责把你的工作方式安全地带入并延续下去。
 
-这一页是全站的结构总图。公开能力始终分成三种状态：**已实现（Implemented）** 表示代码与可执行证据都存在；**由宿主负责（Delegated to the Host）** 表示 Harnessmith 只提供 guidance 或接入点；**不支持（Unsupported）** 表示当前明确不声称拥有。逐项 owner 和证据路径见[能力声明—证据矩阵](../../capability-evidence.yaml)。
+公开能力分成三种状态：**已实现（Implemented）** 表示代码与可执行证据都存在；**由宿主负责（Delegated to the Host）** 表示 Harnessmith 只提供 guidance 或接入点；**不支持（Unsupported）** 表示当前明确不声称拥有。逐项 owner 和证据路径见[能力声明—证据矩阵](https://github.com/Alessandro-Pang/harnessmith/blob/main/apps/docs/site/capability-evidence.yaml)。
 
 ## 先记住一个模型
 
@@ -25,7 +25,7 @@ flowchart BT
   Harness -->|"读取规则 · 运行本地命令"| Host
 ```
 
-三层各答一个问题：上层宿主负责「Agent 怎样运行」，中间 Harness 负责「Agent 怎样找到并延续你的工作方式」，外层 CLI 负责「这套工作方式怎样安全进入不同宿主」。遇到任何一项能力，先问它属于哪一层——基本就能判断该找谁、信谁。
+三层分别负责 Agent 的运行、工作方式的发现与延续，以及跨宿主分发。判断一项能力时，先确认它属于哪一层，再找对应的实现或责任方。
 
 ## 为什么分成两层
 
@@ -51,7 +51,7 @@ flowchart BT
 
 内嵌 Runtime 在项目 `.agent-docs/` 中维护非权威 Memory 和 Task ledger：Memory 用于重新发现经验，Task 记录目标、状态、检查点、下一步、验收条件和证据。并发写入持有任务锁，`complete` 只能通过 acceptance gate。
 
-这层刻意不自动把 Memory 提升成规则或源码。可持续学习需要提案、核对和明确写入目标，避免历史推断污染事实源。Memory capture eligibility 由一个只读、negative-first 的 evaluator 统一判定；用户任务是否只读不直接决定 sidecar 资格。evaluator 用稳定 status/reason code 区分跳过、提案、阻塞和未判断，实际 mutation 仍只能进入对应 typed writer，并由写入结果确认 created、updated 或 unchanged。换句话说：判定和写入是两个分离的环节，谁也不能绕过谁。
+这层不会自动把 Memory 提升成规则或源码。可持续学习需要提案、核对和明确的写入目标，避免历史推断污染事实源。Memory capture eligibility 由只读的 negative-first evaluator 判定；用户任务是否只读，不直接决定 sidecar 资格。evaluator 用稳定的 status/reason code 区分跳过、提案、阻塞和未判断。实际 mutation 只能进入对应的 typed writer，并由写入结果确认 created、updated 或 unchanged。判定和写入是两个独立环节。
 
 ### 4. Verification：区分可重复门禁与真实宿主证据
 
@@ -90,6 +90,8 @@ tests、schema、preflight、覆盖率与包检查验证仓库内确定性契约
 6. commit 前全量复检，每次 mkdir、rename 或 write 前再检查直接目标；
 7. 失败时只回滚本次记录的精确路径。
 
+七步是实现层的安全骨架，不是用户要记住的七条命令。用户指南把同一过程压缩为“预览 → 写入 → 核对”三个动作；[工作原理](/concepts/how-it-works)按五个可观察阶段解释数据流。三种说法的粒度不同，安全顺序相同。
+
 有一个诚实的工程说明：Node.js 不能在所有平台上提供等同于 `openat(O_NOFOLLOW)` 的原子语义，所以 TOCTOU 防护是「锁 + 反复复检」的 best effort，而不是绝对安全声明。检测到路径替换时会 fail closed。宁可拒绝，不放行可疑写入。
 
 ## Adapter 契约
@@ -105,7 +107,7 @@ tests、schema、preflight、覆盖率与包检查验证仓库内确定性契约
 | Zed Agent | global | Markdown | host-default | host |
 | Cursor | project | AGENTS.md + MDC | MDC always | host |
 
-「支持」表示 Adapter 生命周期、能力描述和回归测试存在，不表示每个宿主版本都完成真实运行评测。逐项状态以[能力声明—证据矩阵](../../capability-evidence.yaml)为准。
+「支持」表示 Adapter 生命周期、能力描述和回归测试存在，不表示每个宿主版本都完成真实运行评测。逐项状态以[能力声明—证据矩阵](https://github.com/Alessandro-Pang/harnessmith/blob/main/apps/docs/site/capability-evidence.yaml)为准。
 
 ## 数据与信任边界
 

@@ -10,30 +10,23 @@ lang: en
 
 # Harnessmith documentation
 
-Harnessmith is an npm initializer that distributes one personal Agent Harness across Codex, Cursor, Claude Code,
-OpenCode, Kimi Code CLI, and Zed Agent. It provides an ownership-checked, recoverable installation flow with backups,
-restore, and uninstall — while leaving model execution, tools, sandboxing, and approvals to the host.
+Harnessmith is an npm initializer for distributing one personal Agent Harness across Codex, Cursor, Claude Code,
+OpenCode, Kimi Code CLI, and Zed Agent. It installs rules and local runtime files with ownership checks, backups,
+restore, and uninstall. The host still owns model execution, tools, sandboxing, and approvals.
 
-Think of it this way: if you use multiple coding agents and have spent weeks curating rules, debugging workflows,
-and documenting hard-won lessons, those accumulated insights live in your `AGENTS.md` files, chat histories, and
-personal notes. Harnessmith turns that scattered experience into a structured, installable, and verifiable local
-work layer. You install it once, and it works across all your hosts — no cloud sync, no API keys, no new runtime
-to maintain. Historical documents remain available for traceability, but routing keeps unrelated history out of the
-model context by default.
+If you use more than one coding agent, your rules and lessons usually end up in several `AGENTS.md` files, chat
+histories, and personal notes. Harnessmith puts that material into a local work layer that can be installed and
+checked. You can use the same rules on each supported host without cloud sync, API keys, or a second service to run.
+Historical documents stay available for reference, while routing keeps unrelated material out of the model context.
 
-"Local work layer" is worth unpacking. It's not a cloud service: no network dependency, no account system, no
-server-side data to leak or lose. It's not an IDE plugin either, so it doesn't lock you into a specific editor. And
-it's not a prompt template that evaporates with each chat. It's closer to a work environment you build for yourself:
-a clear entry point (rule files), layered content (core boundaries up front, detailed procedures loaded on demand),
-state tracking (where tasks stand), and safety guarantees (you can recover if an install goes wrong). Individually
-none of these are novel; together they form a way of working that can evolve over time.
+The work layer is local. Harnessmith does not provide a cloud service, account system, or editor plugin. It also is not
+a prompt template that disappears with the next chat. You get a stable rule entry point, detailed procedures that are
+loaded when needed, task state that survives a new session, and an install record that supports recovery. Each part is
+small; the value comes from keeping them together.
 
-Start with the [English getting-started guide](/en/getting-started). The Chinese documentation is the canonical source
-for the complete technical design, and several pages are available only in Chinese. This isn't a translation gap we're
-embarrassed about. It's a deliberate choice. Maintaining parallel deep-dive translations is expensive, and stale
-translations are worse than no translations: readers follow outdated instructions and lose trust in the whole docs.
-We'd rather point you to the canonical source and let you decide whether to read it in Chinese or use machine
-translation, than leave an English copy that quietly goes stale.
+Start with the [English getting-started guide](/en/getting-started). It covers a single-host installation, preview,
+verification, and recovery. The Chinese pages are the maintained source for the full design and several advanced
+references. They are linked explicitly below instead of being represented by partial, potentially stale translations.
 
 The following pages cover the core technical content and are currently available only in Chinese:
 

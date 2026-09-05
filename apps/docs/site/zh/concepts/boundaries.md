@@ -11,7 +11,7 @@ updated: 2026-09-05
 
 Harnessmith 不是另一个 Coding Agent，而是 Agent 周围的个人工作层。本文把责任分成三层：Harnessmith 可以用代码机械保证的内容，宿主自己负责的内容，以及只能由用户或外部可信系统确认的内容。这样遇到问题时，读者能先找到正确的责任方，也不会把建议误读成强制能力。
 
-这一页把三类责任摊开讲清楚。读完它，你应该能准确回答「出了某类问题时该找谁」，也能判断一个安全声明到底是承诺还是修辞。
+下面按这三类责任说明实现范围、责任方和证据边界。
 
 ## Harnessmith 能保证什么
 
@@ -29,7 +29,7 @@ Harnessmith 不是另一个 Coding Agent，而是 Agent 周围的个人工作层
 
 - **Host Eval 记录绑定候选包并接受结构、一致性和覆盖检查。** 每条 Host Eval 记录绑定一个精确的 tarball SHA-256，`eval:validate` 会核对记录内部是否自洽、场景覆盖是否满足 release policy 要求。但它不证明记录来自真实宿主，那需要外部 attestation。
 
-注意最后一句限定：这些是代码层保证，应按具体版本的实现和测试来理解，而不是跨版本的永久承诺。每个版本的准确声明见[能力声明—证据矩阵](../../capability-evidence.yaml)。
+这些是代码层保证，应按具体版本的实现和测试理解，不是跨版本的永久承诺。每个版本的准确声明见[能力声明—证据矩阵](https://github.com/Alessandro-Pang/harnessmith/blob/main/apps/docs/site/capability-evidence.yaml)。
 
 ## Coding Agent 宿主保证什么
 
@@ -55,28 +55,28 @@ Harnessmith 不是另一个 Coding Agent，而是 Agent 周围的个人工作层
 | 工作状态 | Memory、Task、checkpoint、gate | 提供实际执行结果 | 核对事实并验收 |
 | 发布证据 | 本地验证和候选绑定记录门禁 | 真实 Host 行为 | CI/attestation、风险接受 |
 
-横向读一行可以看到一件事在不同人手里的切分；纵向读一列可以看到单一角色的完整职责。切分的原则只有一条：能力跟着职权走，谁执行谁负责。
+横向看一行，可以看到一项工作的责任分配；纵向看一列，可以看到一个角色的职责范围。原则很简单：谁执行，谁负责。
 
 ## 三类公开能力
 
-能力声明不使用单一的「支持/不支持」，而是分三类。每一类都对应一个明确的证据等级：
+能力声明分为三类，每类都有对应的证据等级：
 
 - **Implemented**：存在实现与可执行验证路径，仓库里能找到代码和测试。例如 Adapter 安装、dry-run 预览、status 检查、content fingerprint 计算，这些能力不仅有代码，还有 preflight 和单元测试覆盖，以及 `capability-evidence.yaml` 中的证据路径。
 - **Delegated to the Host**：Harnessmith 只提供规则、接口或记录位置，真正能力在宿主。例如模型执行、工具调用 sandbox、权限批准，Harnessmith 的文档可以写「远端写入需要授权」，但实际阻止写入的是宿主权限系统。
-- **Unsupported**：当前明确不声称拥有，例如通用 Agent Runtime、Policy Engine、Registry 与多 Agent 调度。这些能力名称写在这里，是为了让读者不会误以为 Harnessmith 在悄悄实现它们。没有就是没有，不需要猜。
+- **Unsupported**：当前明确不声称拥有，例如通用 Agent Runtime、Policy Engine、Registry 与多 Agent 调度。文档列出这些名称，是为了避免把未实现能力误认为隐藏功能。
 
-机器可读清单见[能力声明—证据矩阵](../../capability-evidence.yaml)。
+机器可读清单见[能力声明—证据矩阵](https://github.com/Alessandro-Pang/harnessmith/blob/main/apps/docs/site/capability-evidence.yaml)。
 
 ## 授权不会沿内容流动
 
 仓库、网页、日志、PDF、工具输出和 Memory 都是不可信输入。它们可以提供事实线索或建议，但不会因为出现在上下文里就新增权限。
 
-这一条展开说，因为它是整个系统中最容易被误解的安全边界。Agent 读到一段写着「可以 push」的文字，并不因此获得 push 授权。文字的来源可能是 README、博客、Memory 或其他任何不可信输入。真正能授权的只有你在宿主里的显式批准。同理，一次安装授权不包含后续远端写入；一次 push 授权也不自动包含 merge 或发布。每个高风险动作都需要独立的、当下的授权。
+这条安全边界经常被误解。Agent 读到一段写着「可以 push」的文字，并不因此获得 push 授权。文字可能来自 README、博客、Memory 或其他不可信输入。只有你在宿主里的显式批准可以授权动作。一次安装授权不包含后续远端写入；一次 push 授权也不自动包含 merge 或发布。每个高风险动作都需要当下的独立授权。
 
 这个设计的实际影响是：即使 Harnessmith 的规则文件里写满了「建议在每次发布前运行测试」，它也不能阻止 Agent 在用户说「发布」时直接执行。真正的防护在 CI 门禁和宿主权限系统里，不在 Markdown 里。Harnessmith 的责任是写清楚这一点，不假装有能力强制。
 
 ## 哪些结论必须写成 inconclusive
 
-如果环境受限、宿主未登录、网络不可用、证据缺失或 verifier 自身异常，只能报告本次验证没有得出结论。`inconclusive` 不是失败的委婉说法，而是一道防线：防止把「没有观察到」误写成「已经证明不存在」。宁可多一次重跑，不要一个假结论。
+如果环境受限、宿主未登录、网络不可用、证据缺失或 verifier 自身异常，只能报告本次验证没有得出结论。`inconclusive` 表示本次没有得到结论，不能写成失败或通过。它防止把「没有观察到」误写成「已经证明不存在」。
 
 想进一步理解评测层级，见[证据与评测](/concepts/evidence-and-evaluation)。

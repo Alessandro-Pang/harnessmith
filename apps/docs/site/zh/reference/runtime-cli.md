@@ -92,14 +92,14 @@ Memory 不是事实数据库。它保存来源、上下文、任务恢复信息�
 ### 查询、检查与生命周期
 
 ```bash
-node <harness-path>/bin/harness.mjs memory list project --json
-node <harness-path>/bin/harness.mjs memory search project "npm cache" --json
-node <harness-path>/bin/harness.mjs memory check project --indexed --json
+node <harness-path>/bin/harness.mjs memory list /path/to/project --json
+node <harness-path>/bin/harness.mjs memory search /path/to/project "npm cache" --json
+node <harness-path>/bin/harness.mjs memory check /path/to/project --indexed --json
 node <harness-path>/bin/harness.mjs memory relationships /absolute/project/path --json
-node <harness-path>/bin/harness.mjs memory maintain project --json
-node <harness-path>/bin/harness.mjs memory repair project --json
-node <harness-path>/bin/harness.mjs memory curate project --task task-id --json
-node <harness-path>/bin/harness.mjs memory curate project --task task-id --apply-file /tmp/curation-selection.json --yes --json
+node <harness-path>/bin/harness.mjs memory maintain /path/to/project --json
+node <harness-path>/bin/harness.mjs memory repair /path/to/project --json
+node <harness-path>/bin/harness.mjs memory curate /path/to/project --task task-id --json
+node <harness-path>/bin/harness.mjs memory curate /path/to/project --task task-id --apply-file /tmp/curation-selection.json --yes --json
 ```
 
 `memory relationships` 是项目级只读报告：统一列出 Task、默认 phase/workstream、Memory owner、session 与 lifecycle role，并报告 orphan task reference 和 cross-workstream binding。它不把 Task 完成推断为 workstream 完成，也不把 Handoff 当作 acceptance evidence 或事实源。关系归关系，验收归验收。
@@ -110,9 +110,29 @@ node <harness-path>/bin/harness.mjs memory curate project --task task-id --apply
 
 `memory repair` 默认是零写入诊断，只为 partial initialization、可机械压缩的 core index、损坏或缺失的派生检索索引，以及具备完整 owner、proposal、目标与内容 digest 的中断事务分别生成独立 proposal。实际修复必须同时传入上次诊断得到的 `--proposal <sha256:...> --yes`；任一目标变化都会使 proposal 失效。每项 proposal 都列出 authority、精确影响路径、backup/recovery path、前置条件、风险和 verifier。它没有通用 `clean`：unknown files、无 owner identity 的 marker/backup、普通 validation failure 与 failed sidecar 只报告 `inconclusive`，不会删除或猜测修复。active locks 会拒绝操作；只有 typed lock 获取同一把锁时，底层锁实现才按其 owner/age 契约处理 stale locks，不提供宽泛 lock 清理命令。
 
+### 保存一条可复核结论
+
+`capture-finding` 只接受有来源的分析、评审或研究结论。它不是随手记录区：命令要求写清结论、理由、应用方式、证据和来源，后续仍需回到代码、配置、测试或 schema 核对。
+
+```bash
+node <harness-path>/bin/harness.mjs memory capture-finding /path/to/project \
+  --kind review --retention workstream --workstream docs-review --expires 2026-12-31 \
+  --fact-class verification-pointer \
+  --title "文档命令与实现一致性" \
+  --conclusion "示例必须使用项目路径，而不是 project 关键字" \
+  --rationale "scope 参数按路径解析；project 会被当作相对目录" \
+  --application "文档示例统一使用 /path/to/project 或 ." \
+  --evidence "packages/harness/src/program/memory/memory.ts" \
+  --source-ref "apps/docs/site/zh/reference/runtime-cli.md" \
+  --json
+```
+
+需要批量或包含长文本时，使用受 schema 限制的 `--payload-file`；不要把未经处理的用户输入拼接进 shell 命令。`capture-finding` 默认写入对应 scope 的 Memory，但不会改变正式文档、规则或源码。
+
 ### Memory Autopilot 的窄写入口
 
 ```text
+capture-finding     保存一条有来源、可复核的分析、评审或研究结论
 capture-input       保存会影响后续决策的约束、验收标准、来源或风险决定
 close-input         在输入失效或完成后移出 active index
 capture-experience  去重维护有来源的 lesson 或 failure

@@ -70,7 +70,7 @@ hero:
     <span class="home-card-index">04 / BOUNDARY</span>
     <h2>把不归它管的，提前说清楚</h2>
     <p>模型循环、sandbox、工具执行、权限批准，全部留在宿主一侧。Markdown 规则是行为指导，不是权限强制；仓库也不把「文档写了」包装成「系统保证了」。</p>
-    <a href="/harnessmith/concepts/boundaries">查看职责边界 <span aria-hidden="true">→</span></a>
+    <a href="/concepts/boundaries">查看职责边界 <span aria-hidden="true">→</span></a>
   </article>
 </section>
 
@@ -80,9 +80,9 @@ hero:
     <h2 id="home-path-title">按你现在最想解决的问题读</h2>
   </div>
   <nav aria-label="文档阅读路径">
-    <a href="/harnessmith/guide/why-harnessmith"><span>01</span><strong>它适合我吗？</strong><small>三个老问题、一份适用边界</small></a>
-    <a href="/harnessmith/guide/getting-started"><span>02</span><strong>先装一个试试</strong><small>dry-run 起步，五分钟走完一遍</small></a>
-    <a href="/harnessmith/concepts/how-it-works"><span>03</span><strong>它是怎么运转的？</strong><small>从安装到任务执行的全链路</small></a>
-    <a href="/harnessmith/concepts/architecture"><span>04</span><strong>为什么这样设计？</strong><small>两层架构与每个取舍的代价</small></a>
+    <a href="/guide/why-harnessmith"><span>01</span><strong>它适合我吗？</strong><small>三个老问题、一份适用边界</small></a>
+    <a href="/guide/getting-started"><span>02</span><strong>先装一个试试</strong><small>先用 dry-run 看清改动范围</small></a>
+    <a href="/concepts/how-it-works"><span>03</span><strong>它是怎么运转的？</strong><small>从安装到任务执行的全链路</small></a>
+    <a href="/concepts/architecture"><span>04</span><strong>为什么这样设计？</strong><small>两层架构与每个取舍的代价</small></a>
   </nav>
 </section>
