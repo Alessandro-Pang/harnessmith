@@ -145,6 +145,19 @@ function resolvePiAdapter({ env, userHome }: AdapterResolveContext): Adapter {
   return globalMarkdownAdapter('pi', agentHome);
 }
 
+function resolveWorkBuddyAdapter({ env, userHome }: AdapterResolveContext): Adapter {
+  // Official CodeBuddy/WorkBuddy config root: $CODEBUDDY_CONFIG_DIR, default ~/.codebuddy.
+  // Empty/whitespace CODEBUDDY_CONFIG_DIR is treated as unset.
+  // User-global instructions only: CODEBUDDY.md (AGENTS.md is a host fallback when CODEBUDDY.md is absent).
+  const configured = env.CODEBUDDY_CONFIG_DIR;
+  const agentHome = canonicalPath(
+    configured !== undefined && configured.trim().length > 0
+      ? configured
+      : join(userHome, '.codebuddy'),
+  );
+  return globalMarkdownAdapter('workbuddy', agentHome, ['CODEBUDDY.md']);
+}
+
 function resolveCursorAdapter({ project }: AdapterResolveContext): Adapter {
   const definition = getAdapterDefinition('cursor');
   const root = projectRoot(project);
@@ -214,6 +227,7 @@ const adapterResolvers = {
   kimi: resolveKimiAdapter,
   deepseek: resolveDeepSeekAdapter,
   pi: resolvePiAdapter,
+  workbuddy: resolveWorkBuddyAdapter,
 } as const satisfies Record<AgentName, AdapterResolver>;
 
 export function createAdapter(

@@ -32,6 +32,7 @@ function fixture(prefix: string) {
     KIMI_CODE_HOME: join(root, 'kimi'),
     DSH_HOME: join(root, 'dsh'),
     PI_CODING_AGENT_DIR: join(root, 'pi'),
+    CODEBUDDY_CONFIG_DIR: join(root, 'codebuddy'),
     HARNESS_MEMORY_HOME: join(root, 'memory'),
     HARNESS_PERSONAL_HOME: join(root, 'personal'),
     HARNESS_REPOSITORY_ROOT: join(root, 'repositories'),

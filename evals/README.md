@@ -1,8 +1,8 @@
 # Harness behavior evaluations
 
 Unit tests prove deterministic file and CLI behavior. This directory defines a separate contract for
-recording a maintainer-observed Codex, Cursor, Claude Code, OpenCode, Kimi Code CLI, DeepSeek Harness, or Pi Agent run against the installed Harness. The
-current release policy requires Codex; Cursor, Claude Code, OpenCode, Kimi Code CLI, DeepSeek Harness, and Pi Agent records remain supported optional evidence. A schema
+recording a maintainer-observed Codex, Cursor, Claude Code, OpenCode, Kimi Code CLI, DeepSeek Harness, Pi Agent, or WorkBuddy run against the installed Harness. The
+current release policy requires Codex; Cursor, Claude Code, OpenCode, Kimi Code CLI, DeepSeek Harness, Pi Agent, and WorkBuddy records remain supported optional evidence. A schema
 fixture, scenario catalog, mocked transcript, or passing unit test is never real host evidence.
 
 ## Evidence contract
@@ -186,7 +186,7 @@ schemas remain readable; newly prepared releases write the explicit evidence sch
 The gate intentionally fails when records are absent, stale, `behavior-failed`, `infra-inconclusive`,
 `evaluator-failed`, tied to another behavior
 contract, or missing any scenario cell for a host required by the checked-in release policy. The
-current required host is Codex; Cursor, Claude Code, OpenCode, Kimi Code CLI, DeepSeek Harness, and Pi Agent can still be validated and retained as optional evidence.
+current required host is Codex; Cursor, Claude Code, OpenCode, Kimi Code CLI, DeepSeek Harness, Pi Agent, and WorkBuddy can still be validated and retained as optional evidence.
 The gate never launches, authenticates to, or spends money on a third-party host. Host execution and evidence
 capture remain explicit maintainer/CI responsibilities through the separate matrix driver; merely importing or
 testing either module does not create real Host evidence.

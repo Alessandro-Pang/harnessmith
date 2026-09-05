@@ -43,9 +43,9 @@ hero:
   <article class="home-card home-card-hosts">
     <span class="home-card-index">01 / DISTRIBUTE</span>
     <h2>一套方法，适配多个宿主</h2>
-    <p>Codex、Cursor、Claude Code、OpenCode、Kimi Code CLI、DeepSeek Harness 与 Pi Agent 共享宿主中立的 Harness；路径、入口和激活差异由 Adapter 处理。</p>
+    <p>Codex、Cursor、Claude Code、OpenCode、Kimi Code CLI、DeepSeek Harness、Pi Agent 与 WorkBuddy 共享宿主中立的 Harness；路径、入口和激活差异由 Adapter 处理。</p>
     <div class="host-list" aria-label="支持的宿主">
-      <span>Codex</span><span>Cursor</span><span>Claude Code</span><span>OpenCode</span><span>Kimi Code</span><span>DeepSeek</span><span>Pi Agent</span>
+      <span>Codex</span><span>Cursor</span><span>Claude Code</span><span>OpenCode</span><span>Kimi Code</span><span>DeepSeek</span><span>Pi Agent</span><span>WorkBuddy</span>
     </div>
   </article>
 

@@ -6,7 +6,7 @@ owner: maintainers
 
 # 宿主支持
 
-Harnessmith 当前为七类 Coding Agent 提供 Adapter。Adapter 负责路径与文件格式适配，不会替代宿主自身的
+Harnessmith 当前为八类 Coding Agent 提供 Adapter。Adapter 负责路径与文件格式适配，不会替代宿主自身的
 模型循环、工具调度、sandbox 或权限批准。
 
 | 宿主 | `--agent` | 默认规则入口 | 范围与激活 |
@@ -18,6 +18,7 @@ Harnessmith 当前为七类 Coding Agent 提供 Adapter。Adapter 负责路径�
 | Kimi Code CLI | `kimi`（别名 `kimi-code`） | `${KIMI_CODE_HOME:-~/.kimi-code}/AGENTS.md` | 全局；宿主默认 |
 | DeepSeek Harness | `deepseek`（别名 `dsh`、`deepseek-harness`） | `${DSH_HOME:-~/.dsh}/AGENTS.md` | 全局；宿主默认 |
 | Pi Agent | `pi`（别名 `pi-agent`） | `${PI_CODING_AGENT_DIR:-~/.pi/agent}/AGENTS.md` | 全局；宿主默认 |
+| WorkBuddy | `workbuddy`（别名 `codebuddy`、`codebuddy-code`） | `${CODEBUDDY_CONFIG_DIR:-~/.codebuddy}/CODEBUDDY.md` | 全局；宿主默认 |
 
 可以用机器可读输出核对当前版本的 Adapter 声明：
 
@@ -42,12 +43,17 @@ Cursor 只把 Harnessmith 自己管理的文件写入 repository-local Git exclu
 `~/.pi/agent/AGENTS.md`）。`PI_CODING_AGENT_DIR` 同时是 Pi 的可写状态目录（sessions/settings/auth），
 Harnessmith 只写入指令文件、Runtime 与 `.harnessmith/install.json` 元数据。Pi 没有内建权限系统，以用户进程权限运行；如果同目录存在
 `AGENTS.override.md`，Pi 会用它替代 `AGENTS.md`。当前未锁定特定 Pi 版本——Pi 迭代迅速，兼容性声明基于
-AGENTS.md 加载契约而非特定 revision。
+AGENTS.md 加载契约而非特定 revision。WorkBuddy Adapter 面向腾讯 WorkBuddy /
+CodeBuddy 引擎，只托管用户全局 `$CODEBUDDY_CONFIG_DIR/CODEBUDDY.md`（默认 `~/.codebuddy/CODEBUDDY.md`）；
+项目 `.codebuddy/`、`settings.json`、MCP 与权限仍由宿主负责。空或仅空白的 `CODEBUDDY_CONFIG_DIR` 视为未设置。
+与 CodeBuddy CLI 共存时，应先设置独立的 `CODEBUDDY_CONFIG_DIR` 再安装，避免争用默认 `~/.codebuddy`。
 
 DeepSeek 兼容性**仅针对已验证 revision** 声明：`@deepseek-ai/dsh@0.1.1-rc.2`、
 `@deepseek-ai/dsh-agent-instructions@0.1.1-rc.2`、上游 tag `dsh-v0.1.1-rc.2`（commit
 `b150a551b8d465e31e418e1b2eaf5e79bbb7d28e`）。developer preview 下其他版本在重新验证前不视为已支持。完整边界见
 [架构设计 — DeepSeek Harness 契约来源与验证边界](/architecture#deepseek-harness-契约来源与验证边界)。
+WorkBuddy 安装生命周期覆盖文档化的用户全局 `CODEBUDDY.md`；尚未提交真实 Host Eval，安装成功不等于会话注入已验证。
+完整边界见[架构设计 — WorkBuddy 契约来源与验证边界](/architecture#workbuddy-契约来源与验证边界)。
 
 ## 支持状态如何解释
 

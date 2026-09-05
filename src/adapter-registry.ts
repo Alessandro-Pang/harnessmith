@@ -106,6 +106,18 @@ export const adapterRegistry = [
       enforcement: defaultAdapterEnforcement,
     },
   },
+  {
+    name: 'workbuddy',
+    label: 'WorkBuddy',
+    aliases: ['codebuddy', 'codebuddy-code'],
+    hint: 'global configuration',
+    capabilities: {
+      scope: 'global',
+      instructionFormat: 'markdown',
+      nativeRuleActivation: 'host-default',
+      enforcement: defaultAdapterEnforcement,
+    },
+  },
 ] as const satisfies readonly AdapterRegistryEntry[];
 
 export type AgentName = (typeof adapterRegistry)[number]['name'];

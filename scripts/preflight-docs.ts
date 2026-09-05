@@ -165,7 +165,7 @@ function checkPortableTemplate(root: string, check: Check): void {
     }
     check(
       !new RegExp(
-        String.raw`\b(?:${supportedAgentNames.join('|')})\b|CODEX_HOME|CLAUDE_CONFIG_DIR|OPENCODE_CONFIG_DIR|KIMI_CODE_HOME|DSH_HOME`,
+        String.raw`\b(?:${supportedAgentNames.join('|')})\b|CODEX_HOME|CLAUDE_CONFIG_DIR|OPENCODE_CONFIG_DIR|KIMI_CODE_HOME|DSH_HOME|PI_CODING_AGENT_DIR|CODEBUDDY_CONFIG_DIR`,
         'i',
       ).test(content),
       `host-specific identity leaked into portable template: ${relative(root, path)}`,

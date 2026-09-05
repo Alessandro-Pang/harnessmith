@@ -114,6 +114,7 @@ test('bug reports collect one compact environment block and forbid public securi
   assert.match(serialized, /Kimi Code CLI/);
   assert.match(serialized, /DeepSeek Harness/);
   assert.match(serialized, /Pi Agent/);
+  assert.match(serialized, /WorkBuddy/);
   assert.match(serialized, /Node\.js/);
   const checks = byId.get('checks')?.attributes?.options as Array<{ required?: unknown }>;
   assert.equal(checks.filter(({ required }) => required === true).length, 1);

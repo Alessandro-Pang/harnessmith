@@ -7,7 +7,7 @@ owner: maintainers
 # Harnessmith 架构设计
 
 Harnessmith 是**跨 Host 的 Personal Harness 分发与工作状态控制层**。它把一套宿主中立的规则、文档和本地 Runtime
-安全地接入 Codex、Cursor、Claude Code、OpenCode、Kimi Code CLI、DeepSeek Harness 与 Pi Agent，但不替代这些宿主的 Agent
+安全地接入 Codex、Cursor、Claude Code、OpenCode、Kimi Code CLI、DeepSeek Harness、Pi Agent 与 WorkBuddy，但不替代这些宿主的 Agent
 Runtime。
 
 公开能力始终分成三种状态：**已实现（Implemented）** 表示代码与可执行证据都存在；**由宿主负责（Delegated to the
@@ -103,6 +103,7 @@ capabilities 输出与 Eval `host.adapter` 枚举都从该清单派生或与之�
 | Kimi Code CLI | global | Markdown | host-default | host |
 | DeepSeek Harness | global | Markdown | host-default | host |
 | Pi Agent | global | Markdown | host-default | host |
+| WorkBuddy | global | Markdown | host-default | host |
 | Cursor | project | AGENTS.md + MDC | MDC always | host |
 
 “支持”表示 Adapter 生命周期、能力描述和回归测试存在，不表示每个宿主版本都完成真实运行评测。逐项状态以
@@ -175,6 +176,38 @@ Pi Agent 迭代迅速，当前**未锁定特定已验证 revision**。兼容性�
 | 已实现（Implemented） | 用户全局路径解析、`install --dry-run` / `install` / `status` / `restore` / `uninstall`、SafePath、锁、备份、所有权标记与回滚；**不**声称托管完整加载链 |
 | 已在真实宿主验证（Verified on Host） | 尚未提交 maintainer-attested Pi Host Eval；文件存在 ≠ 已验证 Session baseline 注入；发布门禁仍只要求 Codex |
 | 由宿主负责（Delegated to the Host） | 项目/父目录指令发现、AGENTS.override.md、SYSTEM.md、模型循环、扩展系统、工具/权限、sessions 与凭证 |
+
+### WorkBuddy 契约来源与验证边界
+
+产品身份：腾讯 WorkBuddy 与腾讯云代码助手 CodeBuddy 共用 CodeBuddy 引擎。CLI 坐标为 npm 包
+`@tencent-ai/codebuddy-code`，可执行文件 `codebuddy`。配置根为 `$CODEBUDDY_CONFIG_DIR`（默认 `~/.codebuddy`）；
+空或仅空白的 `CODEBUDDY_CONFIG_DIR` 视为未设置。用户全局指令入口为 `CODEBUDDY.md`。官方规定：项目根若已存在
+`CODEBUDDY.md`，则不再加载 `AGENTS.md`。
+
+契约来源：
+
+- 安装与配置根：<https://www.codebuddy.ai/docs/cli/installation>
+- 目录与记忆加载顺序：<https://www.workbuddy.ai/docs/zh/cli/codebuddy-dir>
+- 规则与 `AGENTS.md` 兼容：<https://www.workbuddy.cn/docs/ide/User-guide/Rules>
+
+**不要把 Adapter 契约等同于「写一个全局 Markdown 文件」。** WorkBuddy/CodeBuddy 还有用户级 `rules/`、项目
+`.codebuddy/`、`settings.json` 与 MCP；Harnessmith 只托管用户全局 `CODEBUDDY.md`。
+
+| 范围 | 谁负责 | 说明 |
+| --- | --- | --- |
+| 用户全局 `$CODEBUDDY_CONFIG_DIR/CODEBUDDY.md` | Harnessmith Adapter | 唯一安装的指令入口；同根下还有 `agent-harness/`、`.harnessmith/` |
+| 项目 `.codebuddy/`、`CODEBUDDY.md` / `CODEBUDDY.local.md`、`rules/` | 宿主 / 工作区 | 按官方记忆加载顺序生效；**不在**安装范围 |
+| 权限、sandbox、工具白名单、审批 | 宿主 Runtime | 指令文件仅为 advisory，安装成功不等于强制执行 |
+| `settings.json`、MCP、凭证 | 宿主 / 用户 | Harnessmith **不**写入 |
+
+与 CodeBuddy CLI 共存时，官方建议用独立 `CODEBUDDY_CONFIG_DIR` 避免争用默认 `~/.codebuddy`。Adapter 尊重该环境变量，
+但不猜测 WorkBuddy 桌面端是否另有默认根。
+
+| 状态 | WorkBuddy 边界 |
+| --- | --- |
+| 已实现（Implemented） | 用户全局路径解析、`install --dry-run` / `install` / `status` / `restore` / `uninstall`、SafePath、锁、备份、所有权标记与回滚 |
+| 已在真实宿主验证（Verified on Host） | 尚未提交 maintainer-attested WorkBuddy Host Eval；文件存在 ≠ 已验证会话注入；发布门禁仍只要求 Codex |
+| 由宿主负责（Delegated to the Host） | 项目规则/技能/子代理、模型循环、工具/权限/sandbox/审批、会话存储与凭证 |
 
 ## 数据与信任边界
 

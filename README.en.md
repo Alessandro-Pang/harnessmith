@@ -59,6 +59,7 @@ You can also ask a coding agent to read the installation protocol first:
 | Kimi Code CLI | global | `kimi` (alias: `kimi-code`) |
 | DeepSeek Harness | global | `deepseek` (aliases: `dsh`, `deepseek-harness`) |
 | Pi Agent | global | `pi` (alias: `pi-agent`) |
+| WorkBuddy | global | `workbuddy` (aliases: `codebuddy`, `codebuddy-code`) |
 
 DeepSeek Adapter installs **only** the user-global `$DSH_HOME/AGENTS.md` (default `~/.dsh/AGENTS.md`).
 Project-root / nested instructions and permissions, sandbox, and approval remain host-owned; a
@@ -73,6 +74,11 @@ metadata. Pi has no built-in
 permission system and runs with user process permissions; if `AGENTS.override.md` exists, Pi loads it
 instead of `AGENTS.md`, and Harnessmith's installed content will be ignored. No specific Pi version is
 currently pinned.
+
+WorkBuddy Adapter installs **only** the user-global `$CODEBUDDY_CONFIG_DIR/CODEBUDDY.md` (default
+`~/.codebuddy/CODEBUDDY.md`). It targets the Tencent WorkBuddy / CodeBuddy engine user-memory
+entry; project `.codebuddy/`, `settings.json`, MCP, permissions, and sandbox remain host-owned. When
+WorkBuddy coexists with CodeBuddy CLI, set `CODEBUDDY_CONFIG_DIR` before installing.
 
 Cursor requires `--project /path/to/project`. See the
 [host guide](https://alexpang.cn/harnessmith/guide/hosts) for destinations, aliases, and support evidence.
