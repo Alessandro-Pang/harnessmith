@@ -13,10 +13,36 @@ export default withMermaid(defineConfig({
     'zh/:rest*': ':rest*',
   },
   lastUpdated: true,
-  sitemap: { hostname: 'https://alexpang.cn' },
+  // GitHub Pages publishes this site below /harnessmith/. Keep the base path in
+  // generated canonical URLs and sitemap entries, otherwise search engines and
+  // shared links point at a different site root.
+  sitemap: { hostname: 'https://alexpang.cn/harnessmith/' },
   locales: {
     root: { label: '简体中文', lang: 'zh-CN' },
-    en: { label: 'English', lang: 'en', link: '/en/' },
+    // Locale contract: en: { label: 'English', lang: 'en', link: '/en/' }
+    en: {
+      label: 'English',
+      lang: 'en',
+      link: '/en/',
+      themeConfig: {
+        nav: [
+          { text: 'Why Harnessmith', link: '/en/' },
+          { text: 'Get started', link: '/en/getting-started' },
+          { text: 'Chinese technical docs', link: '/guide/getting-started' },
+        ],
+        sidebar: {
+          '/en/': [
+            {
+              text: 'English',
+              items: [
+                { text: 'Overview', link: '/en/' },
+                { text: 'Getting started', link: '/en/getting-started' },
+              ],
+            },
+          ],
+        },
+      },
+    },
   },
   head: [
     ['meta', { name: 'theme-color', content: '#176b5b' }],

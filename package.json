@@ -23,6 +23,7 @@
     "template/agent-harness/manifest.json",
     "template/agent-harness/schemas",
     "template/agent-harness/templates",
+    "apps/docs/site/public/brand",
     "config/contracts/diagnostics-report.schema.json",
     "config/contracts/portable-config-bundle.schema.json",
     "evals/scenarios.json",
