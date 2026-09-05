@@ -1,9 +1,18 @@
 # Harness behavior evaluations
 
-Unit tests prove deterministic file and CLI behavior. This directory defines a separate contract for
-recording a maintainer-observed Codex, Cursor, Claude Code, OpenCode, Kimi Code CLI, or Zed Agent run against the installed Harness. The
-current release policy requires Codex; Cursor, Claude Code, OpenCode, Kimi Code CLI, and Zed Agent records remain supported optional evidence. A schema
-fixture, scenario catalog, mocked transcript, or passing unit test is never real host evidence.
+Unit tests cover deterministic file and CLI behavior. This directory describes how maintainers record an observed run of the installed Harness in Codex, Cursor, Claude Code, OpenCode, Kimi Code CLI, or Zed Agent. Codex is required by the current release policy; records from the other five hosts are optional evidence. A schema fixture, scenario catalog, mock transcript, or passing unit test does not count as Host evidence.
+
+## Before you start
+
+This is a maintainer workflow, not an end-user installation guide. Prepare the following before running it:
+
+- Node.js 24.12.0 or newer and the repository's pinned pnpm version; run `pnpm install --frozen-lockfile`.
+- A clean, disposable workspace with an absolute path. Do not use a production checkout or a directory containing credentials.
+- A built candidate tarball produced from the exact commit under review. Keep that file unchanged throughout installation, evaluation, and gating.
+- For `eval:codex-matrix`, an authenticated local Codex CLI, an explicitly selected model, and permission to run the opt-in Host process. The workflow does not log in, approve access, or create credentials for you.
+- A new evidence directory outside the candidate workspace, or an ignored `.agent-docs/host-evals/runs` directory. Never place raw credentials, cookies, private source, or unredacted transcripts in it.
+
+If a Host transport, login, network, model, or disposable workspace is unavailable, record the result as `infra-inconclusive` or `inconclusive`; do not turn missing Host evidence into a passing record.
 
 ## Multi-Host capability matrix
 
@@ -18,13 +27,12 @@ pnpm run eval:host-matrix -- \
   --runs-dir /absolute/path/to/host-eval-runs
 ```
 
-The report keeps `not-executed`, `unsupported`, `inconclusive`, `infra-inconclusive`,
-`evaluator-failed`, and `behavior-failed` separate. A `passed` cell requires a schema-valid exact-candidate
+The report distinguishes `not-executed`, `unsupported`, `inconclusive`, `infra-inconclusive`,
+`evaluator-failed`, and `behavior-failed`. A `passed` cell requires a schema-valid exact-candidate
 record, tool actions, filesystem evidence, passing positive and forbidden assertions, and an independent
 test/file/log/observation artifact. Missing concrete Host transports or dedicated verifier scenarios remain
 explicitly `inconclusive`; installed CLIs, mock evaluators, catalog validation, preflight, and successful
-Harness installation never upgrade those cells. The report is candidate-bound maintainer-attested structure,
-not trusted proof that a third-party Host performed the run.
+Harness installation never upgrade those cells. The report is bound to one candidate and records a maintainer's observations. It does not prove that a third-party Host performed the run.
 
 ## Deterministic Prompt and route benchmark
 
@@ -138,7 +146,7 @@ version string.
 
 ## Risk-based inheritance
 
-The artifact and behavior identities intentionally serve different purposes:
+Artifact and behavior identities answer different questions:
 
 - `packageArtifactSha256` identifies the exact npm tarball and changes on every metadata-only release;
 - `behaviorSha256` is domain-separated from the artifact digest and covers the distributed executable and rule
@@ -214,15 +222,15 @@ matrix contains those cells. Historical records whose scenario fingerprint no lo
 the evidence directory, but they are not eligible for current coverage. Legacy release state and attestation
 schemas remain readable; newly prepared releases write the explicit evidence schema.
 
-The gate intentionally fails when records are absent, stale, `behavior-failed`, `infra-inconclusive`,
+The gate fails when records are absent, stale, `behavior-failed`, `infra-inconclusive`,
 `evaluator-failed`, tied to another behavior
 contract, or missing any scenario cell for a host required by the checked-in release policy. The
-current required host is Codex; Cursor, Claude Code, OpenCode, and Kimi Code CLI can still be validated and retained as optional evidence.
+current required host is Codex; Cursor, Claude Code, OpenCode, Kimi Code CLI, and Zed Agent can still be validated and retained as optional evidence.
 The gate never launches, authenticates to, or spends money on a third-party host. Host execution and evidence
 capture remain explicit maintainer/CI responsibilities through the separate matrix driver; merely importing or
 testing either module does not create real Host evidence.
 
-Passing this gate means only that a complete, fresh **maintainer-attested structure** is internally consistent
+A passing gate proves that the complete, fresh maintainer record is internally consistent
 and bound to the selected candidate. Local JSON, hashes, and artifacts are forgeable by a repository writer;
 the gate cannot prove that a real Host produced the submitted artifacts, that the transcript is complete, or
 that the stated verdict is true. Trusted provenance requires an external CI/attestation system and review of

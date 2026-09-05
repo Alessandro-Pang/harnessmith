@@ -4,7 +4,7 @@
   <img src="./apps/docs/site/public/brand/harnessmith-logo.svg" alt="Harnessmith" width="176" />
 </p>
 
-> Forge once. Work consistently across coding agents.
+Harnessmith distributes one host-neutral Personal Agent Harness to several coding-agent hosts and keeps work state available across projects and sessions. You maintain the rules once. Adapters handle host-specific paths, previews, ownership checks, backups, upgrades, restore, and uninstall.
 
 [![npm version](https://img.shields.io/npm/v/harnessmith.svg)](https://www.npmjs.com/package/harnessmith)
 [![Node.js](https://img.shields.io/badge/Node.js-%E2%89%A524.12-43853d.svg)](https://nodejs.org/)
@@ -12,56 +12,41 @@
 
 **English** · [简体中文](./README.md) · [Full documentation](https://alexpang.cn/harnessmith/en/)
 
-## What problem it solves
+## What Harnessmith solves
 
-Anyone working across several projects and coding agents eventually hits the same wall: your personal rules live in
-Codex, Cursor, and Claude Code as separate copies, every change must be synced by hand, and one copy is always stale;
-project relationships, progress, and past decisions must be explained from scratch in every new session; and your
-growing history of documents cannot all fit into model context, but deleting it means losing the record of how
-decisions were made.
+People working across several projects and coding agents see the same drift: rules copied between Codex, Cursor, Claude Code, and other hosts diverge over time. An upgrade can also overwrite files that you still maintain. When a session ends, goals, decisions, and partial results are easy to lose. Loading a growing history of documents into every prompt wastes model context that the current task needs.
 
-Harnessmith packages the fixes into one installable unit: personal rules that already work in practice, on-demand document
-retrieval, Memory that never pretends to be fact, and long-running task tools with an acceptance gate. Install it once
-across coding-agent hosts; upgrading, backing up, restoring, and uninstalling all follow explicit paths. You preview
-before anything is written, and a rollback failure is reported with the paths that need attention. Everything runs locally
-with no cloud service, while model reasoning, tool authorization, and sandbox isolation stay with the host. Harnessmith
-is a cross-host Personal Harness distribution and work-state control plane.
+Harnessmith keeps those concerns separate:
 
-## Who it is for
+- one rule source is distributed through host-specific Adapters;
+- documents are routed to a task and read when needed;
+- Memory keeps sourced leads for later review instead of presenting them as project truth;
+- Tasks preserve goals, checkpoints, acceptance conditions, and evidence across sessions;
+- install, adopt, upgrade, restore, and uninstall preview their work, check ownership, keep backups, and retain a rollback path.
 
-Developers switching between multiple coding agents who want to maintain their rules once; maintainers who need
-safe upgrades, backups, restore, and uninstall for a personal Harness; people who want resumable long-running work
-without treating memory as project truth. If you use a single agent and your rules fit in ten lines, a hand-written
-`AGENTS.md` is the lighter, correct answer.
-
-```bash
-npx harnessmith
-```
+If you use one agent and your rules fit in a few lines, a hand-written `AGENTS.md` is usually simpler.
 
 ## Start in 30 seconds
 
 Node.js 24.12.0 or newer is required. No global installation is needed.
 
 ```bash
-# Step 1: look, don't touch. Preview the host, destinations, recovery, and capability boundaries
+# 1. Preview destinations, conflicts, backups, and recovery. Nothing is written.
 npx harnessmith setup --agent codex --dry-run
 
-# Step 2: once the plan looks right, install and run deterministic health checks
+# 2. Review the preview, then install and run deterministic health checks.
 npx harnessmith setup --agent codex
 ```
 
-Add `--yes` explicitly in non-interactive environments. Two things to know up front: a successful `setup` only proves
-the managed files and embedded Runtime are usable — model behavior, tool permissions, and authentication in real
-sessions need separate verification ("How far is installed" below); and if you already maintain your own rules, run
-`adopt` first — it inventories them read-only and produces a proposal you confirm before anything is written.
+Add `--yes` in non-interactive environments. If you already maintain host rules, run `adopt` first. It inventories existing files without writing and creates a content-bound proposal. Review the proposal, then confirm it with the same `proposalId`; existing files are not overwritten directly.
 
-You can also delegate the install to a coding agent, asking it to read the protocol first:
+You can also ask a coding agent to follow the install protocol:
 
 > Read [llms.txt from the npm latest release](https://unpkg.com/harnessmith@latest/llms.txt), install Harnessmith according to that protocol, run dry-run first, and ask me before writing.
 
 ## Supported hosts
 
-| Agent | Scope | Selector |
+| Host | Scope | Selector |
 | --- | --- | --- |
 | Codex | global | `codex` |
 | Cursor | project | `cursor` |
@@ -70,102 +55,71 @@ You can also delegate the install to a coding agent, asking it to read the proto
 | Kimi Code CLI | global | `kimi` (alias: `kimi-code`) |
 | Zed Agent | global | `zed` |
 
-Global hosts install into the agent's personal config directory and apply to every project; project hosts install
-into one project only. Cursor accepts `--project /path/to/project` to select a project explicitly; when omitted, the
-current working directory is used. See the
-[host guide](https://alexpang.cn/harnessmith/guide/hosts) for destinations, aliases, and support evidence.
+A global install writes to the host's personal configuration directory and applies to every project. A project install applies to one project. Cursor accepts `--project /path/to/project`; when omitted, it uses the current working directory. The [host guide](https://alexpang.cn/harnessmith/guide/hosts) lists actual destinations, environment variables, activation behavior, and evidence status.
 
 ## Common operations
 
 ```bash
-# Inspect ownership and file integrity
+# Inspect ownership, file integrity, and safe next steps
 npx harnessmith status --agent codex
-
-# Explain observed state, evidence, risks, and safe next steps that are not run automatically
 npx harnessmith status --agent codex --explain
 
-# Inventory existing rules without writing anything
+# Inventory existing rules without writing; confirm only after review
 npx harnessmith adopt --agent codex --json
-
-# Confirm the returned proposalId to complete adoption
 npx harnessmith adopt --agent codex --proposal <proposalId> --yes --json
 
-# Restore the previous installation layer
+# Restore the previous layer, or return to the pre-install state
 npx harnessmith restore --agent codex
-
-# Restore the pre-install state and remove installation records
 npx harnessmith uninstall --agent codex
 
-# Inspect machine-readable Adapter capability boundaries
+# Inspect Adapter capability boundaries and a local redacted diagnostic report
 npx harnessmith capabilities --json
-
-# Preview a local redacted diagnostics report; the command neither uploads nor persists it
 npx harnessmith diagnostics --agent codex --json
 
-# Export the portable personal overlay
+# Export a portable personal overlay; create a proposal before importing elsewhere
 npx harnessmith export --output ./harness-config.json --json
-
-# Import on another machine: a content-bound proposal is generated first and applied on confirmation
 npx harnessmith import --input ./harness-config.json --json
 npx harnessmith import --input ./harness-config.json --proposal <proposalId> --yes --json
 ```
 
-Day-to-day capabilities after installation (document search, Memory, Tasks, cross-repository relationships) come from the embedded Runtime:
+The installation result reports the Runtime path. Replace `<harness-path>` with that path to run a health check and inspect the Repository Map:
 
 ```bash
-# Check cross-repository relationships in your personal Repository Map
-node <harness-path>/bin/harness.mjs repository-map check --json
-
-# Check the embedded Runtime itself
 node <harness-path>/bin/harness.mjs health --json
+node <harness-path>/bin/harness.mjs repository-map check --json
 ```
 
-See the [CLI reference](https://alexpang.cn/harnessmith/reference/cli) for all options, exit codes, and failure
-handling, and the [safe lifecycle guide](https://alexpang.cn/harnessmith/guide/lifecycle) for what install,
-upgrade, restore, and uninstall each guarantee. The
-[Runtime CLI reference](https://alexpang.cn/harnessmith/reference/runtime-cli#repository-map-维护跨项目关系) covers the
-Repository Map model, evidence threshold, and maintenance commands.
+In a new host session, the rule entry participates in task routing automatically. For long-running work, use `task checkpoint` to save progress and `task verify` to bind mechanical evidence. Only the acceptance gate allows `task close --status complete`. `search` and `memory search` default to `--mode auto`: they use full-text search when a valid index exists and fall back to a bounded scan otherwise. `--mode fulltext` fails when the index is unavailable; `--mode scan` always scans. The index is written only with explicit `--refresh-index` and remains a rebuildable cache.
 
-## How far is "installed"
+See the [CLI reference](https://alexpang.cn/harnessmith/reference/cli) for commands, options, exit codes, and failure handling. The [lifecycle guide](https://alexpang.cn/harnessmith/guide/lifecycle) explains the guarantees for install, upgrade, restore, and uninstall. The [Runtime CLI reference](https://alexpang.cn/harnessmith/reference/runtime-cli#repository-map) covers Memory, Task, search, and Repository Map commands.
 
-These three words appear throughout the docs with fixed meanings:
+## What “installed” means
 
-| Stage | Meaning |
+The documentation uses four states:
+
+| State | What it proves |
 | --- | --- |
-| `installed` | Files written; preflight and backups passed |
+| `installed` | Managed files were written and the installation record, preflight, and backup relationships are valid |
 | `healthy` | Deterministic health checks of the embedded Runtime passed |
-| `host-verified` | A controlled read-only task completed in a real host, with verifier evidence kept |
+| `host-configured` | A real host loaded the rules, authentication, and permission configuration required by its own contract |
+| `host-verified` | A real host completed the first controlled task and left reviewable evidence |
 
-The first two come with the install. `host-verified` requires you to confirm the result in a real task — the installer cannot do it for you; see the [First Value Loop](https://alexpang.cn/harnessmith/guide/first-value-loop).
-
-## After installation
-
-Open a new host session and it reads the rule entry automatically — no prompt pasting. Give it a normal task and the
-entry routes to the matching playbook; across sessions, Task records goals and progress while Memory surfaces leads
-worth re-checking; at the end, `task verify` records evidence and `complete` is released by the acceptance gate.
-`search` / `memory search` use `--mode auto` by default: a valid local full-text index enables weighted BM25
-retrieval, otherwise the commands safely fall back to a bounded scan. The index is built atomically or updated
-incrementally under `state/search/` only when you pass `--refresh-index` — it is a rebuildable cache, never a source
-of truth. `--mode fulltext` fails closed when the index is unavailable, and `--mode scan` forces scanning.
+The installer can establish only the first two states. The last two require a real host session. Local tests, npm downloads, and GitHub traffic cannot replace host evidence. See the [First Value Loop](https://alexpang.cn/harnessmith/guide/first-value-loop).
 
 ## Safety boundaries
 
 | State | Harnessmith's contract |
 | --- | --- |
-| Implemented | Adapter distribution, preflight, backups, locks, rollback, non-authoritative Memory, Task gates, privacy-safe audit records, and redacted diagnostics previews |
-| Delegated to the Host | Model loops, tool/MCP scheduling, sandboxing, approvals, tokens, and cost |
-| Unsupported | A universal Runtime, Policy Engine, Pack/Registry, multi-agent orchestration, and automatic rule promotion |
+| Implemented | Adapter distribution, path preflight, backups, locks, rollback, non-authoritative Memory, Task acceptance gates, privacy-safe audit records, and redacted diagnostic previews |
+| Delegated to the host | Model loops, tool/MCP scheduling, sandboxing, approvals, authentication, tokens, and cost |
+| Unsupported | A universal Agent Runtime, Policy Engine, Pack/Registry, multi-agent orchestration, and automatic rule promotion |
 
-Two hard lines, stated plainly: Markdown rules are behavioral guidance, not permission enforcement; and audit and
-diagnostics schemas reject raw prompts, model output, tool arguments, file bodies, environment variables, and
-secrets — event authenticity belongs to the host or external attestation. Per-capability owners, states, and
-evidence paths are listed in [capability-evidence.yaml](./apps/docs/site/capability-evidence.yaml).
+Audit and diagnostics emit only schema-allowed metadata. A constrained `audit record` does not contain raw prompts, model output, tool arguments, file bodies, environment variables, or secrets. Whether an event actually occurred remains a host or external-attestation question. Per-capability owners, states, and evidence paths are in `apps/docs/site/capability-evidence.yaml` and its [online copy](https://github.com/Alessandro-Pang/harnessmith/blob/main/apps/docs/site/capability-evidence.yaml).
 
 ## Learn more
 
-- [Full documentation](https://alexpang.cn/harnessmith/en/) · [Getting started](https://alexpang.cn/harnessmith/en/getting-started) · [Project history](https://alexpang.cn/harnessmith/concepts/history-and-influences) (Chinese)
-- [Architecture](https://alexpang.cn/harnessmith/concepts/architecture) · [Design principles](https://alexpang.cn/harnessmith/concepts/design-principles) · [Boundaries](https://alexpang.cn/harnessmith/concepts/boundaries) (Chinese)
-- [Memory and Tasks](https://alexpang.cn/harnessmith/concepts/memory-and-tasks) (Chinese, includes Memory Autopilot) · [Versions and migrations](https://alexpang.cn/harnessmith/reference/migrations) (Chinese)
+- [Full documentation](https://alexpang.cn/harnessmith/en/) · [Getting started](https://alexpang.cn/harnessmith/en/getting-started) · [Why Harnessmith](https://alexpang.cn/harnessmith/guide/why-harnessmith) (Chinese)
+- [Architecture](https://alexpang.cn/harnessmith/concepts/architecture) · [Boundaries](https://alexpang.cn/harnessmith/concepts/boundaries) · [Memory and Tasks](https://alexpang.cn/harnessmith/concepts/memory-and-tasks) (Chinese)
 - [Contributing](./CONTRIBUTING.md) · [Security](./SECURITY.md) · [License](./LICENSE)
 
 ## Contributing
