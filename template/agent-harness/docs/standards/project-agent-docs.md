@@ -68,6 +68,10 @@ brief 验证 Memory 并计算 metadata、core、maintenance 与推荐，但只�
 
 经验只通过 typed lesson/failure 流程写入；高价值分析、评审或调研只通过 typed finding 写入，并保留结论、理由、应用、证据和来源。非权威 finding 不得自称 formal fact；Handoff 的状态和过期由长任务 owner 管理。新 typed 文档必须有与主题一致的 purpose/description，维护报告可提出 split proposal，但 proposal 不授权自动重写。
 
+## 自动沉淀触发
+
+每个用户回合在交付前都必须执行一次有界的沉淀判定：检查本回合是否产生跨回合仍有价值的约束、昂贵结论、未完成状态或恢复信息；命中时调用对应 typed writer（`capture-input`、`capture-finding`、`capture-experience` 或 `handoff`），并在写入后校验结果。宿主没有 session-end、turn-end 或 compaction hook 时，Agent 仍须在最终回复前自行调用 Harness CLI；没有匹配 writer、来源不足、未初始化或安全检查失败时保留 `proposed`/`blocked`，不得假装已沉淀。低价值、一次性、可廉价恢复的信息跳过。整个判定、写入、校验过程保持静默。
+
 ## 输出可见性
 
 - 自动后台 sidecar 的恢复、检索、写入、校验和维护保持静默；即使触发自动 sidecar，或用户说 `prior memory`、`preserve expensive finding`，也不等于索要 Memory 操作或审计。

@@ -31,6 +31,10 @@ const operatingModel = readFileSync(
   join(root, 'template', 'agent-harness', 'docs', 'core', 'operating-model.md'),
   'utf8',
 );
+const executionLoop = readFileSync(
+  join(root, 'template', 'agent-harness', 'docs', 'core', 'execution-loop.md'),
+  'utf8',
+);
 const docsIndex = readFileSync(
   join(root, 'template', 'agent-harness', 'docs', 'README.md'),
   'utf8',
@@ -103,6 +107,22 @@ test('operating model separates target mutability from managed sidecar eligibili
     /created.*updated.*unchanged.*proposed.*blocked.*not-evaluated.*reasonCode/s,
   );
   assert.match(projectMemory, /not-evaluated.*不得.*unchanged/s);
+});
+
+test('autopilot activation requires a bounded turn-end capture decision', () => {
+  assert.match(
+    agents,
+    /每个用户回合交付前.*跨回合仍有价值.*必须静默执行对应 typed writer.*没有 sidecar hook.*最终回复前自行调用 Harness CLI/s,
+  );
+  assert.match(
+    projectMemory,
+    /每个用户回合.*交付前.*有界.*沉淀判定.*调用对应 typed writer.*写入后校验/s,
+  );
+  assert.match(projectMemory, /没有匹配 writer.*proposed.*blocked/);
+  assert.match(
+    executionLoop,
+    /每个用户回合.*deliver.*前.*有界 Memory 判定.*typed writer.*自行调用 Harness CLI/s,
+  );
 });
 
 test('top-level routing uses one primary playbook plus supporting topics without category exceptions', () => {

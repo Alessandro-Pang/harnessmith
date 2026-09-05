@@ -24,6 +24,21 @@ frame → observe → decide → act → verify → deliver
 - `verify`：用最直接的测试、schema、CLI、日志、契约或 Host verifier 检查 claim。
 - `deliver`：只交付已有证据支持的结果，分别列出未验证范围、风险和下一步。
 
+## 交付前沉淀检查
+
+每个用户回合在 `deliver` 前执行一次有界的 Memory 判定，不等待用户再次提醒：
+
+1. 检查本回合是否产生跨回合仍有价值的约束、昂贵结论、失败经验、未完成状态或恢复信息。
+2. 先将回合事实结构化（可用 `memory discover-candidates` 生成候选），再补齐候选的来源、价值、授权和 root 状态并运行
+   `memory evaluate-capture`；通过后只使用对应 typed writer：用户约束用 `capture-input`，高价值分析用 `capture-finding`，可复用经验或失败经验用 `capture-experience`，未完成工作用 `handoff`。
+3. 用户明确表达跨任务默认或纠正时，按 `user-profile-memory` owner 调用 `reconcile-profile`；单次行为只能保留为候选或
+   `proposed`，不得升级为画像事实。
+4. 写入后立即运行最小 `memory check` 或对应 verifier；失败保留 `blocked`/`proposed` 和恢复路径，不能把发现候选当成已沉淀。
+
+该检查保持后台静默，不在普通回复中披露路径或写入动作。宿主没有 turn-end/session-end hook 时，Agent 必须在最终回复前自行调用
+Harness CLI；这仍是 Agent-guided 行为，不能冒充 Host 级自动保证。被中断、超时或没有安全 writer 时，保留未消费 payload 或
+`inconclusive` 证据供下一回合恢复。
+
 ## 每一步的最小记录
 
 ```text

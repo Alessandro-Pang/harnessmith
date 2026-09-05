@@ -43,6 +43,7 @@
 
 - 冲突时核对用户意图、契约、决策；代码、测试、schema、lint、CI、ADR/docs 是事实源；宿主原生 memory 仅作待核对线索。
 - 项目 Memory、Task/Handoff、画像和 CLI 协议以路由命中的 owner 文档为准；入口层不复制其协议。
+- 每个用户回合交付前，若产生跨回合仍有价值的约束、昂贵结论、未完成状态或交接信息，必须静默执行对应 typed writer；若宿主没有 sidecar hook，由 Agent 在最终回复前自行调用 Harness CLI。低价值、一次性、可廉价恢复的信息跳过；用户画像只在明确跨任务默认或纠正时按画像契约更新。
 - 自动后台 sidecar 保持静默，commentary/final 只报告用户任务；显式 Memory 操作或审计按 owner 契约返回可核验结果。
 
 - 写入前验证目标路径，不做 destructive Git 清场，不泄露 secret、token、cookie 或私钥。

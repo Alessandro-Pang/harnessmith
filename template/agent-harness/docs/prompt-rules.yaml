@@ -26,6 +26,18 @@ rules:
       - packages/harness/src/lib/memory/memory-capture-eligibility.ts
     confusingWith: [user-task-read-only]
 
+  - id: turn-end-memory-checkpoint
+    owner: project-agent-docs
+    principle: Every user turn gets one bounded capture decision before delivery.
+    rationale: Typed writers cannot help when the Agent never evaluates high-value constraints, findings, experience, or unfinished work.
+    action: Run capture eligibility, use the matching typed writer, and verify the result before the final response; keep low-value or unsafe candidates proposed or blocked.
+    fallback: Preserve an auditable proposal or inconclusive payload for the next turn without claiming automatic persistence.
+    guarantee: guided
+    enforcedBy: agent
+    boundary:
+      - template/agent-harness/docs/core/execution-loop.md
+      - template/agent-harness/docs/standards/project-agent-docs.md
+
   - id: managed-work-state-write-path
     owner: harness-cli-architecture
     principle: Managed Memory, Task, and Handoff writes use typed runtime paths.
