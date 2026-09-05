@@ -132,4 +132,4 @@ pnpm run preflight
 pnpm run docs:dev
 ```
 
-See the [documentation contribution guide](https://alexpang.cn/harnessmith/en/maintain/contributing).
+See the [documentation contribution guide](https://alexpang.cn/harnessmith/en/maintain/contributing-docs).

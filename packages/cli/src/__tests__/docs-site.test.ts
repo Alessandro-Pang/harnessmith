@@ -350,6 +350,7 @@ test('documentation site covers user, contributor, architecture, boundary, and h
     'apps/docs/site/zh/concepts/history-and-influences.md',
     'apps/docs/site/zh/maintain/content-strategy.md',
     'apps/docs/site/zh/maintain/contributing.md',
+    'apps/docs/site/zh/maintain/contributing-docs.md',
     'apps/docs/site/zh/reference/references.md',
     'apps/docs/site/zh/reference/migrations.md',
     'apps/docs/site/en/index.md',
@@ -372,6 +373,7 @@ test('documentation site covers user, contributor, architecture, boundary, and h
     'apps/docs/site/en/reference/migrations.md',
     'apps/docs/site/en/reference/references.md',
     'apps/docs/site/en/maintain/contributing.md',
+    'apps/docs/site/en/maintain/contributing-docs.md',
     'apps/docs/site/en/maintain/content-strategy.md',
   ];
 

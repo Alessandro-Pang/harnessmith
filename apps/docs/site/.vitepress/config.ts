@@ -67,7 +67,8 @@ export default withMermaid(defineConfig({
             {
               text: '维护与贡献',
               items: [
-                { text: '贡献文档', link: '/maintain/contributing' },
+                { text: '项目贡献', link: '/maintain/contributing' },
+                { text: '文档贡献', link: '/maintain/contributing-docs' },
                 { text: '内容策略', link: '/maintain/content-strategy' },
               ],
             },
@@ -131,7 +132,8 @@ export default withMermaid(defineConfig({
             {
               text: 'Maintenance and contributing',
               items: [
-                { text: 'Contributing', link: '/en/maintain/contributing' },
+                { text: 'Project contributions', link: '/en/maintain/contributing' },
+                { text: 'Documentation contributions', link: '/en/maintain/contributing-docs' },
                 { text: 'Content strategy', link: '/en/maintain/content-strategy' },
               ],
             },

@@ -1,108 +1,59 @@
 ---
-title: 贡献文档
-description: 文档站点的本地开发、质量检查与发布流程
+title: 项目贡献
+description: 给 Harnessmith 贡献代码的流程：环境、边界、验证与从 Issue 到发布
 owner: maintainers
 audience: maintainers
 status: active
 updated: 2026-09-05
 ---
 
-# 贡献文档
+# 项目贡献
 
-本文说明如何修改、预览和验证 Harnessmith 文档。它面向提交文档 PR 的贡献者；项目通用贡献规则仍以仓库根目录的 [`CONTRIBUTING.md`](https://github.com/Alessandro-Pang/harnessmith/blob/main/CONTRIBUTING.md) 为准。
+本页覆盖给 Harnessmith 项目贡献代码的完整流程。文档站点内容的修改、预览与发布规则见[文档贡献](/maintain/contributing-docs)。项目贡献规则以仓库根目录的 [`CONTRIBUTING.md`](https://github.com/Alessandro-Pang/harnessmith/blob/main/CONTRIBUTING.md) 为准，本页是便于上手的摘要；两者不一致时，以根目录文件为准。
 
-## 先确定改哪一层
+## 环境与验证
 
-| 需求 | 应修改的位置 | 判断标准 |
-| --- | --- | --- |
-| 第一次认识项目、安装和最短成功路径 | 根目录 `README.md` / `README.en.md` | 读者读完能决定是否使用并开始安装 |
-| 使用步骤、宿主差异、故障排查 | `apps/docs/site/zh/guide/` | 用户需要按步骤完成一件事 |
-| 原理、边界、设计取舍 | `apps/docs/site/zh/concepts/` | 读者需要理解“为什么这样做” |
-| 命令、参数和退出码 | `apps/docs/site/zh/reference/` | 读者需要查一个准确的接口 |
-| 贡献流程、内容规则和证据 | `apps/docs/site/zh/maintain/` | 维护者需要修改或审核文档 |
-| 仅供工程讨论的草稿 | 根目录 `docs/` | 内容还不是对外承诺 |
-
-先改事实源，再改说明文字。代码、schema、测试和 manifest 决定实际行为；文档解释使用场景、边界和恢复方式，不能用措辞替代实现。
-
-## 本地预览
-
-环境要求：Node.js `24.12.0` 或更高版本，以及仓库声明的 pnpm 版本。
+要求：Node.js `24.12.0` 或更高版本、pnpm `10.13.0`、Git。
 
 ```bash
-pnpm install --frozen-lockfile
-pnpm run docs:dev
-```
-
-开发服务器默认监听 `5173`。提交前构建一次发布产物：
-
-```bash
-pnpm run docs:build
-pnpm run docs:preview
-```
-
-`docs:build` 检查 VitePress 页面、生成搜索索引和静态资源；`docs:preview` 用构建后的文件启动本地预览。构建通过并不等于外部网站、第三方链接或真实宿主行为已经验证，后者需要单独的检查或 Host Eval 证据。
-
-## 提交前检查
-
-推荐按下面的顺序执行：
-
-```bash
-pnpm run docs:check
-pnpm exec vitest run --config config/vitest.config.ts packages/cli/src/__tests__/docs-site.test.ts
-pnpm run lint:md
+pnpm install --frozen-lockfile --ignore-scripts
+pnpm run format
 pnpm run preflight
+pnpm run test:coverage
+npm pack --dry-run
 ```
 
-各命令的责任不同：
+- `format`：Biome 是共享的格式化器和 linter，源码改动后必须执行；
+- `preflight`：仓库级完整门禁（类型、包与 CLI 契约、Harness 文档路由、全部测试），`pre-push` 钩子会完整执行一遍；
+- `test:coverage`：覆盖率门禁，阈值是回归下限，只能保持或提高，不能降低；
+- `npm pack --dry-run`：校验 npm 发布清单；仓库自身的依赖与脚本工作流一律使用 pnpm；
+- `test:harness`：嵌入式 Runtime（`packages/harness/`）的定向测试。
 
-- `docs:check`：检查站点能否构建，以及 VitePress 能发现的内部页面链接；
-- `docs-site.test.ts`：检查关键页面、frontmatter、导航事实、README 命令和内容契约；
-- `lint:md`：检查 Markdown 语法和格式；
-- `preflight`：执行仓库级类型、测试和质量门禁。
+每个行为变更都要新增或更新测试。安装类变更应视情况覆盖全新安装、冲突、升级、回滚、恢复和卸载路径；`template/` 下的改动必须保持宿主中立测试通过。端到端安装测试不能替代源码级的命令与库测试。
 
-下列项目不会由上述命令自动证明，改动相关内容时要单独核对：
+## 代码结构与硬边界
 
-- 外部网站和 GitHub 链接是否仍可访问；
-- sitemap 的 hostname、`base` 路径和 GitHub Pages 部署地址；
-- `public/` 中发布的 YAML、图片和下载文件；
-- 命令示例是否能在当前构建产物上执行；
-- 真实 Host 的模型、工具权限、认证和宿主事件。
+| 位置 | 职责 | 不可破坏的边界 |
+| --- | --- | --- |
+| `packages/cli/src/` | 宿主 Adapter、安装事务、备份、恢复与发布边界 | 宿主身份、路径和环境变量只能进入外层 Adapter |
+| `packages/harness/src/` | 通用 Harness 能力（嵌入式 Runtime） | 源码是严格 TypeScript；改动需配套自身 `__tests__/` 下的定向测试 |
+| `packages/harness/dist/`、根 `dist/` | 构建产物 | 只修改 TypeScript 源码再运行 `pnpm run build`，永远不要直接编辑产物 |
+| `template/` | 随安装分发的可移植 Harness 核心 | 不得标识任何具体宿主产品 |
+| 就近 `__tests__/` | 单元与集成测试 | 测试跟随所属代码，位于 `packages/cli/src/__tests__/`、`packages/harness/src/__tests__/` 或 `evals/__tests__/`；不要在仓库根目录新建 `test/` |
 
-网络或宿主条件不足时，结果写成 `inconclusive`，不要写成“已验证”。
+新增内置 Adapter 的步骤：在 `packages/cli/src/adapters/adapter-registry.ts` 注册宿主身份（规范名、标签、别名、能力），在 `packages/cli/src/adapters/adapters.ts` 添加穷举路径解析器，markdown/mdc 等指令渲染形状放在 `packages/cli/src/adapters/instruction-formats.ts`；然后运行 `pnpm run eval:schema:generate`，让 `evals/run.schema.json` 的 `host.adapter.enum` 从注册表重新生成。preflight 会运行 `eval:schema:check` 拒绝漂移，共享生命周期覆盖由 `packages/cli/src/__tests__/adapter-conformance.test.ts` 提供。不要添加动态插件加载器或 Pack Registry。
 
-## 修改事实时同步测试
+以下不变量不接受评审妥协：受管理分发、可变 `state/`、共享个人规则 `~/.agent-harness/` 和非权威记忆 `.agent-docs/` 必须彼此分离；文件接管默认拒绝 `unmanaged` / `modified` 目标，跨 Adapter 操作必须先完整预检并支持回滚；Task 的 `complete` 只能通过 acceptance gate，并发写入必须持有任务锁。稳定规则放在紧凑指令模板，详细工作流放在按需路由的文档；`.agent-docs` 是非权威记忆，永远不能成为项目事实或规则的唯一来源；个人 overlay 归用户所有，位于受管安装产物之外。
 
-如果 CLI 命令、默认值、宿主能力、路径、环境变量、状态名或证据文件发生变化，请在同一变更中检查：
+质量工具各司其职：Knip 拒绝不可达文件与导出；Secretlint 扫描源码、prompt 与文档面中的已知凭据格式；Markdownlint 检查仓库文档；`scripts/preflight/preflight.ts` 检查包与 CLI 契约、Harness 文档路由、frontmatter、相对链接、模板 token 与宿主中立性；Vitest 的 V8 gate 覆盖被导入的运行时与发布辅助模块，c8 合并 preflight 和 eval CLI 子进程的覆盖率。通用基础设施优先使用维护中的库，但 Harness 领域规则保持本地实现；仅被嵌入式 Runtime 使用的依赖放在 `devDependencies` 并打包进产物——Agent home 不允许二次安装依赖。
 
-1. 相关指南和参考页；
-2. README 中的最短路径和安全边界；
-3. `docs-site.test.ts`、schema 或 preflight 中锁定旧事实的断言；
-4. `apps/docs/site/public/` 中需要随源文件发布的静态资源。
+## 从 Issue 到发布
 
-测试失败时先判断是实现变了还是文档写错。事实发生变化就更新断言并说明原因；文档写错就修正文档。不要为了让检查通过而删除覆盖范围。
+1. 先开一个聚焦的 Issue，写清问题、范围、验收标准与相关边界；
+2. 分支命名 `<type>/<issue>-<slug>`，例如 `feat/12-indexed-doc-search` 或 `fix/15-clean-temp-files`；`gh issue develop 12 --checkout --name feat/12-indexed-doc-search` 一步创建并关联；
+3. 使用 Conventional Commits，尽早开 Draft PR；PR 正文保留 `Closes #<issue>`，填完模板每一节，关闭的 Issue 编号与分支一致；
+4. 按需打 `enhancement`、`bug` 或 `documentation` 标签；`skip-changelog` 只用于不应出现在生成发布说明中的变更；定向验证和完整验证都通过后移出 Draft；
+5. `PR Contract`、`CI Required`、评审对话与验收标准全部通过后 squash 合并；关联 Issue 由 PR 关键词关闭；
+6. 打 tag 的发布先验证 npm，再创建 GitHub Release；publish job 上传 registry clean-room 报告，把官方 metadata、完整性、provenance、下载字节与隔离 smoke 结果绑定到确切 tag。`CHANGELOG.md` 保持固定指针，不累积发布历史。
 
-## 页面写作标准
-
-每页尽量按同一条阅读路径组织：
-
-1. 开头说明这页解决什么问题、适合谁，以及不能证明什么；
-2. 先给最短可执行步骤，再解释原因和内部机制；
-3. 命令附近说明前置条件、是否写入、成功结果和失败后的下一步；
-4. 用“已实现 / 由宿主负责 / 不支持 / `inconclusive`”区分事实等级；
-5. 首次出现的术语给出解释，后文保持同一写法；
-6. 结尾保留限制、恢复入口和相关页面链接。
-
-标题使用动作或清晰名词，段落一次只解决一个问题。避免“可以帮助用户更好地……”等无法验收的空话，也不要用营销语气掩盖限制。
-
-页面 frontmatter 至少包含 `title`、`description`、`owner`、`audience`、`status` 和 `updated`。`updated` 只在事实或结构发生变化时更新。
-
-## 发布流程
-
-Pull Request 只构建站点，不会自动发布。合并到 `main` 后，Docs workflow 才会上传静态产物并部署到 [https://alexpang.cn/harnessmith/](https://alexpang.cn/harnessmith/)。
-
-发布前应确认：
-
-- 构建产物中的 sitemap 包含 `/harnessmith/` base 路径；
-- `public/` 文件在产物中存在；
-- 中英文入口的导航语言和链接正确；
-- 代码、文档和测试对同一事实没有冲突。
+Commitlint 通过 Husky `commit-msg` 钩子强制 Conventional Commits；`pre-commit` 钩子检查暂存的代码与文档；`pre-push` 运行完整的 `pnpm run preflight`。preflight 接受长期分支、Dependabot 分支和上述 Issue 关联分支契约。
