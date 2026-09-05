@@ -230,7 +230,7 @@ The gate never launches, authenticates to, or spends money on a third-party host
 capture remain explicit maintainer/CI responsibilities through the separate matrix driver; merely importing or
 testing either module does not create real Host evidence.
 
-A passing gate proves that the complete, fresh maintainer record is internally consistent
+A passing gate means only that the complete, fresh **maintainer-attested structure** is internally consistent
 and bound to the selected candidate. Local JSON, hashes, and artifacts are forgeable by a repository writer;
 the gate cannot prove that a real Host produced the submitted artifacts, that the transcript is complete, or
 that the stated verdict is true. Trusted provenance requires an external CI/attestation system and review of

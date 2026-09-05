@@ -6,6 +6,8 @@
 
 Harnessmith 把一套宿主无关的个人 Agent Harness 分发到多个 Coding Agent，并保存跨会话、跨项目的工作状态。你只维护一份规则，Harnessmith 负责适配宿主、预检目标、备份文件，以及在升级、恢复和卸载时保护现有内容。
 
+一句话定位：Harnessmith 是跨 Host 的 Personal Harness 分发与工作状态控制层。它完全跑在本地，不依赖云端服务，也不替代 Coding Agent；模型怎么推理、工具怎么授权、沙箱怎么隔离，始终由宿主自己负责。
+
 [![npm version](https://img.shields.io/npm/v/harnessmith.svg)](https://www.npmjs.com/package/harnessmith)
 [![Node.js](https://img.shields.io/badge/Node.js-%E2%89%A524.12-43853d.svg)](https://nodejs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
@@ -119,7 +121,7 @@ node <harness-path>/bin/harness.mjs repository-map check --json
 ## 继续阅读
 
 - [完整文档](https://alexpang.cn/harnessmith/) · [快速开始](https://alexpang.cn/harnessmith/guide/getting-started) · [为什么需要 Harnessmith](https://alexpang.cn/harnessmith/guide/why-harnessmith)
-- [架构设计](https://alexpang.cn/harnessmith/concepts/architecture) · [职责边界](https://alexpang.cn/harnessmith/concepts/boundaries) · [记忆与任务](https://alexpang.cn/harnessmith/concepts/memory-and-tasks)
+- [架构设计](https://alexpang.cn/harnessmith/concepts/architecture) · [职责边界](https://alexpang.cn/harnessmith/concepts/boundaries) · [记忆与任务](https://alexpang.cn/harnessmith/concepts/memory-and-tasks)（含 Memory Autopilot）
 - [贡献指南](./CONTRIBUTING.md) · [安全策略](./SECURITY.md) · [许可证](./LICENSE)
 
 ## 参与开发

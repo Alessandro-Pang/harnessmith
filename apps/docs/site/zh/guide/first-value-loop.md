@@ -22,7 +22,7 @@ updated: 2026-09-05
 | `host-configured` | 真实宿主已读取规则，并具备预期认证和权限条件 | Host | 不可以 |
 | `host-verified` | 真实宿主完成首次受控任务，且证据可复核 | Host 与用户 | 不可以 |
 
-`setup` 和 `status` 只负责前两项。它们不会读取宿主的模型会话，也不会替宿主批准工具调用。`host-configured` 与 `host-verified` 没有证据时必须保持 `inconclusive`。
+`setup` 和 `status` 只负责前两项。它们不会读取宿主的模型会话，也不会替宿主批准工具调用。`host-configured` 与 `host-verified` 没有证据时必须保持 `inconclusive`。本地测试、npm downloads 或 GitHub traffic 都不能替代或推断它们。
 
 ## 推荐路径：八个检查点
 
@@ -50,7 +50,7 @@ npx harnessmith status --agent codex --explain
 npx harnessmith diagnostics --agent codex --json
 ```
 
-`status` 确认安装所有权和完整性；`diagnostics` 运行确定性 Runtime 检查。到这里最多得到 `installed` 和 `healthy`。
+`status` 确认安装所有权和完整性；`diagnostics` 运行确定性 Runtime 检查。到这里最多得到 `installed` 和 `healthy`。命令中的 `codex` 可替换为任意受支持宿主；`installed` 之后统一的下一步是 `npx harnessmith diagnostics --agent <agent> --json`，确定性 health 通过后再进入真实宿主。
 
 ### 5. 准备一个低风险受控任务
 
@@ -109,7 +109,7 @@ npx harnessmith restore --agent codex --dry-run
 pnpm run eval:first-value
 ```
 
-该命令在 disposable 目录中回归 preview、install、health、status explain 和 restore preview，并生成 `evals/first-value-record.schema.json` 规定的本地 acceptance record。它只能证明本地基线通过；`hostConfigured`、`hostVerified` 和 `firstValueAchieved` 仍应是 `inconclusive` 或 `false`。它不启动、登录或遥测第三方宿主。
+该命令在 disposable 目录中回归 preview、install、health、status explain 和 restore preview，并生成 `evals/first-value-record.schema.json` 规定的本地 acceptance record。基础回归通过时，结果是 `local-baseline-passed`，但`hostConfigured`、`hostVerified` 和 `firstValueAchieved` 仍应是 `inconclusive` 或 `false`。它不启动、登录或遥测第三方宿主。
 
 ## 何时算完成
 

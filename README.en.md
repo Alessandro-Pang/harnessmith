@@ -6,6 +6,8 @@
 
 Harnessmith distributes one host-neutral Personal Agent Harness to several coding-agent hosts and keeps work state available across projects and sessions. You maintain the rules once. Adapters handle host-specific paths, previews, ownership checks, backups, upgrades, restore, and uninstall.
 
+In one line: Harnessmith is a cross-host Personal Harness distribution and work-state control plane. Everything runs locally with no cloud service, and Harnessmith does not replace your coding agent: how models reason, how tools are authorized, and how sandboxes isolate — that stays with the host.
+
 [![npm version](https://img.shields.io/npm/v/harnessmith.svg)](https://www.npmjs.com/package/harnessmith)
 [![Node.js](https://img.shields.io/badge/Node.js-%E2%89%A524.12-43853d.svg)](https://nodejs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
@@ -111,7 +113,7 @@ The installer can establish only the first two states. The last two require a re
 | State | Harnessmith's contract |
 | --- | --- |
 | Implemented | Adapter distribution, path preflight, backups, locks, rollback, non-authoritative Memory, Task acceptance gates, privacy-safe audit records, and redacted diagnostic previews |
-| Delegated to the host | Model loops, tool/MCP scheduling, sandboxing, approvals, authentication, tokens, and cost |
+| Delegated to the Host | Model loops, tool/MCP scheduling, sandboxing, approvals, authentication, tokens, and cost |
 | Unsupported | A universal Agent Runtime, Policy Engine, Pack/Registry, multi-agent orchestration, and automatic rule promotion |
 
 Audit and diagnostics emit only schema-allowed metadata. A constrained `audit record` does not contain raw prompts, model output, tool arguments, file bodies, environment variables, or secrets. Whether an event actually occurred remains a host or external-attestation question. Per-capability owners, states, and evidence paths are in `apps/docs/site/capability-evidence.yaml` and its [online copy](https://github.com/Alessandro-Pang/harnessmith/blob/main/apps/docs/site/capability-evidence.yaml).
@@ -119,7 +121,7 @@ Audit and diagnostics emit only schema-allowed metadata. A constrained `audit re
 ## Learn more
 
 - [Full documentation](https://alexpang.cn/harnessmith/en/) · [Getting started](https://alexpang.cn/harnessmith/en/guide/getting-started) · [Why Harnessmith](https://alexpang.cn/harnessmith/en/guide/why-harnessmith)
-- [Architecture](https://alexpang.cn/harnessmith/en/concepts/architecture) · [Boundaries](https://alexpang.cn/harnessmith/en/concepts/boundaries) · [Memory and Tasks](https://alexpang.cn/harnessmith/en/concepts/memory-and-tasks)
+- [Architecture](https://alexpang.cn/harnessmith/en/concepts/architecture) · [Boundaries](https://alexpang.cn/harnessmith/en/concepts/boundaries) · [Memory and Tasks](https://alexpang.cn/harnessmith/en/concepts/memory-and-tasks) (includes Memory Autopilot)
 - [Contributing](./CONTRIBUTING.md) · [Security](./SECURITY.md) · [License](./LICENSE)
 
 ## Contributing

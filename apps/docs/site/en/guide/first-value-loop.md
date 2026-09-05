@@ -29,7 +29,7 @@ last two must be confirmed in a real host session. Without host evidence, write 
 
 `setup` and `status` cover only the first two. They don't read the host's model sessions, and they don't
 approve tool calls on the host's behalf. Without evidence, `host-configured` and `host-verified` must remain
-`inconclusive`.
+`inconclusive`. Local tests, npm downloads, and GitHub traffic can never replace or imply them.
 
 ## Recommended path: eight checkpoints
 
@@ -63,7 +63,9 @@ npx harnessmith diagnostics --agent codex --json
 ```
 
 `status` confirms install ownership and integrity; `diagnostics` runs deterministic Runtime checks. At this
-point you can have at most `installed` and `healthy`.
+point you can have at most `installed` and `healthy`. Replace `codex` with any supported host; the unified
+next step after `installed` is `npx harnessmith diagnostics --agent <agent> --json`. Enter the real host only
+after deterministic health passes.
 
 ### 5. Prepare a low-risk controlled task
 
@@ -132,9 +134,10 @@ pnpm run eval:first-value
 ```
 
 This command regresses preview, install, health, status explain, and restore preview in a disposable
-directory, and produces the local acceptance record specified by `evals/first-value-record.schema.json`. It
-can only prove the local baseline passes; `hostConfigured`, `hostVerified`, and `firstValueAchieved` should
-remain `inconclusive` or `false`. It does not launch, log into, or send telemetry to third-party hosts.
+directory, and produces the local acceptance record specified by `evals/first-value-record.schema.json`. When
+the baseline regression passes, the result is `local-baseline-passed`; `hostConfigured`, `hostVerified`, and
+`firstValueAchieved` should remain `inconclusive` or `false`. It does not launch, log into, or send telemetry
+to third-party hosts.
 
 ## When it counts as complete
 
