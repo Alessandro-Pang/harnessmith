@@ -132,6 +132,15 @@ test('finding source references reject absolute and traversal paths', () => {
       ),
     /memory source references must stay project-relative/i,
   );
+  assert.throws(
+    () =>
+      captureFinding(runtime, project, { ...base, sourceRefs: ['task:../outside'] }, capturedIo()),
+    /task source references must stay project-relative/i,
+  );
+  assert.throws(
+    () => captureFinding(runtime, project, { ...base, sourceRefs: ['C:outside'] }, capturedIo()),
+    /source references must be project-relative/i,
+  );
 });
 
 test('the same purpose does not merge semantically different conclusions', () => {
@@ -393,9 +402,26 @@ test('experience semantic validation is versioned and requires reusable sections
       ]),
       incompleteIo,
     ),
-    3,
+    4,
   );
   assert.match(incompleteIo.errors.join('\n'), /non-empty 理由/);
   assert.match(incompleteIo.errors.join('\n'), /non-empty 应用/);
   assert.match(incompleteIo.errors.join('\n'), /non-empty 证据/);
+  assert.match(incompleteIo.errors.join('\n'), /source references/);
+
+  const unsafeIo = capturedIo();
+  assert.equal(
+    validateExperienceSemantics(
+      'unsafe.md',
+      '# 结论\n\nReusable conclusion.\n\n# 理由\n\nStable rationale.\n\n# 应用\n\nStable application.\n\n# 证据\n\n- Stable evidence.\n',
+      new Map<string, unknown>([
+        ['type', 'operational-experience'],
+        ['experience-schema-version', 2],
+        ['source-refs', ['task:../outside']],
+      ]),
+      unsafeIo,
+    ),
+    1,
+  );
+  assert.match(unsafeIo.errors.join('\n'), /source reference/);
 });

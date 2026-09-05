@@ -170,6 +170,16 @@ test('a bare handoff request loads the long-running task owner', () => {
   );
 });
 
+test.each([
+  ['我想评审这个方案。', 'review'],
+  ['我需要修复这个路由问题。', 'change'],
+  ['请帮忙诊断这个失败。', 'diagnose'],
+  ['I want to review this design.', 'review'],
+  ['I need to fix this routing issue.', 'change'],
+])('documentation routing recognizes natural request prefixes for %s', (query, expected) => {
+  assert.equal(routeDocumentation(docsRoot, [query]).primaryPlaybook?.name, expected);
+});
+
 test.each(['阶段交接', '关闭交接', '上下文预算信号'])(
   'high-loss Chinese handoff signal is required-routed for %s',
   (query) => {

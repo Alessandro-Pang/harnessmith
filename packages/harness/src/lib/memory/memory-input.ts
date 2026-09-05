@@ -34,7 +34,7 @@ export function assertSourceReferenceBoundary(
       throw new Error(`${label} source references must be bounded strings`);
     }
     const value = reference.trim();
-    if (/^(?:\/|\\\\|~\/|[A-Za-z]:[\\/])/.test(value)) {
+    if (/^(?:\/|\\\\|~\/|[A-Za-z]:)/u.test(value)) {
       throw new Error(`${label} source references must be project-relative or typed pointers`);
     }
     const separator = value.indexOf(':');
@@ -49,11 +49,16 @@ export function assertSourceReferenceBoundary(
     if (!/^[a-z][a-z0-9+.-]*$/i.test(scheme) || payload.length === 0) {
       throw new Error(`${label} source references must contain a non-empty typed pointer`);
     }
+    // Typed pointers may contain opaque commands (for example verifier:git
+    // rev-parse HEAD), but their payload must never become a host path. Keep
+    // the same traversal/absolute-path boundary for every scheme so a future
+    // pointer type cannot accidentally reintroduce path escape.
     if (
-      scheme === 'memory' &&
-      (payload.startsWith('/') || payload.split(/[\\/]/u).includes('..'))
+      payload.startsWith('/') ||
+      /^[A-Za-z]:[\\/]/u.test(payload) ||
+      payload.split(/[\\/]/u).includes('..')
     ) {
-      throw new Error(`${label} memory source references must stay project-relative`);
+      throw new Error(`${label} ${scheme} source references must stay project-relative`);
     }
   }
 }

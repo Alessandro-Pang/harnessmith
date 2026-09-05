@@ -4,6 +4,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { AnySchema } from 'ajv';
 import { Ajv2020 } from 'ajv/dist/2020.js';
+import { loadDocumentationManifest } from '../../../packages/harness/src/lib/documentation/docs-routing-manifest.js';
 import { benchmarkMetrics, evaluateCorpus } from './prompt-route-benchmark-evaluate.js';
 import type {
   PromptRouteBenchmarkComparison,
@@ -88,7 +89,82 @@ function readCorpus(): { corpus: PromptRouteCorpus; bytes: Buffer } {
   const corpus = value as PromptRouteCorpus;
   const ids = corpus.cases.map(({ id }) => id);
   if (new Set(ids).size !== ids.length) throw new Error('Prompt route corpus ids must be unique');
+  validateCorpusReferences(corpus, join(repositoryRoot, 'template', 'agent-harness', 'docs'));
   return { corpus, bytes };
+}
+
+/**
+ * Check that expected route names in a corpus are backed by the current
+ * documentation manifest. Without this semantic check a typo in the corpus
+ * could make a route regression invisible while the benchmark still passes.
+ */
+interface CorpusReferenceSets {
+  playbooks: Set<string>;
+  supporting: Set<string>;
+  reasoningModes: Set<string>;
+}
+
+function corpusReferenceSets(docsRoot: string): CorpusReferenceSets {
+  const { entries } = loadDocumentationManifest(docsRoot);
+  const playbooks = new Set<string>();
+  const supporting = new Set<string>();
+  const reasoningModes = new Set<string>();
+  for (const [name, entry] of Object.entries(entries)) {
+    if (entry.kind === 'playbook') playbooks.add(name);
+    if (entry.kind === 'topic' || entry.kind === 'standard') supporting.add(name);
+    if (Array.isArray(entry.activationRules)) {
+      for (const rule of entry.activationRules) {
+        if (rule && typeof rule === 'object' && 'mode' in rule && typeof rule.mode === 'string') {
+          reasoningModes.add(rule.mode);
+        }
+      }
+    }
+  }
+  return { playbooks, supporting, reasoningModes };
+}
+
+function validateCorpusCaseReferences(
+  entry: PromptRouteCorpus['cases'][number],
+  references: CorpusReferenceSets,
+): void {
+  const { playbooks, supporting, reasoningModes } = references;
+  const expected = entry.expected;
+  if (expected.top1 !== null && !playbooks.has(expected.top1)) {
+    throw new Error(
+      `Prompt route corpus case ${entry.id} references unknown playbook: ${expected.top1}`,
+    );
+  }
+  for (const name of expected.forbiddenPlaybooks) {
+    if (!playbooks.has(name)) {
+      throw new Error(
+        `Prompt route corpus case ${entry.id} references unknown forbidden playbook: ${name}`,
+      );
+    }
+  }
+  for (const name of expected.topics) {
+    if (!supporting.has(name)) {
+      throw new Error(`Prompt route corpus case ${entry.id} references unknown topic: ${name}`);
+    }
+  }
+  for (const mode of expected.reasoningModes ?? []) {
+    if (!reasoningModes.has(mode)) {
+      throw new Error(
+        `Prompt route corpus case ${entry.id} references unknown reasoning mode: ${mode}`,
+      );
+    }
+  }
+  if (expected.status !== 'matched' && expected.top1 !== null) {
+    throw new Error(
+      `Prompt route corpus case ${entry.id} must not define top1 for ${expected.status} status`,
+    );
+  }
+}
+
+export function validateCorpusReferences(corpus: PromptRouteCorpus, docsRoot: string): void {
+  const references = corpusReferenceSets(docsRoot);
+  for (const entry of corpus.cases) {
+    validateCorpusCaseReferences(entry, references);
+  }
 }
 
 export function runPromptRouteBenchmark(): PromptRouteBenchmarkReport {

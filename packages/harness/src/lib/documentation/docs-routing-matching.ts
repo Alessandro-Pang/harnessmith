@@ -57,7 +57,14 @@ function routingMatchIsRequestedAction(term: string, position: number): boolean 
       .at(-1) ?? '';
   const prefix = clause.trim();
   if (prefix === '') return true;
-  return /^(?:(?:please|can you|could you|would you|i want you to|i need you to|let(?:'s| us)|now|then|also)(?:\s+\p{L}+){0,4}|(?:(?:请你?|帮我|给我|现在|继续|重新|开始|进行|执行|来|需要|要求|希望|想要|逐个|并|只)\s*)+|(?:结合|基于|根据)[\p{L}\p{N} ._-]{0,40}(?:来)?)$/u.test(
+  if (
+    /^(?:please|can you|could you|would you|i want you to|i need you to|i(?:'d)?\s+(?:want|need|would like)\s+to|we\s+(?:need|want)\s+to|please\s+help\s+me|(?:can|could|would) you please|let(?:'s| us)|now|then|also)$/u.test(
+      prefix,
+    )
+  ) {
+    return true;
+  }
+  return /^(?:(?:(?:请你?|请帮忙|请协助|帮我|给我|我想(?:要)?|我需要|我希望|希望你?|现在|继续|重新|开始|进行|执行|来|需要|要求|想要|逐个|并|只)\s*)+|(?:结合|基于|根据)[\p{L}\p{N} ._-]{0,40}(?:来)?)$/u.test(
     prefix,
   );
 }

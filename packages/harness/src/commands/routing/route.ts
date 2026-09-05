@@ -33,6 +33,13 @@ export function route(
         `Required documentation routes omitted: ${report.omittedRequiredTopics.map(({ name }) => name).join(', ')}`,
       );
     }
+    if (report.omittedReasoningModes.length > 0) {
+      io.error(
+        `Reasoning modes omitted by budget: ${report.omittedReasoningModes
+          .map(({ mode }) => mode)
+          .join(', ')}`,
+      );
+    }
   }
   return report.status === 'matched' && report.omittedRequiredTopics.length === 0 ? 0 : 2;
 }

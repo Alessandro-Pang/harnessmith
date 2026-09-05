@@ -1,7 +1,7 @@
 import type { Io } from '../../types.js';
 import { isMemoryFactClass } from './memory-fact-semantics.js';
 import { type FindingKind, findingDigest, findingSection } from './memory-finding.js';
-import { normalizedInputContent } from './memory-input.js';
+import { assertSourceReferenceBoundary, normalizedInputContent } from './memory-input.js';
 
 const findingKinds = new Set(['analysis', 'review', 'research']);
 
@@ -25,6 +25,36 @@ function requiredSections(path: string, body: string, io: Io): number {
     failures += 1;
   }
   return failures;
+}
+
+function sourceReferenceIssues(
+  path: string,
+  sourceRefs: unknown,
+  label: 'Finding' | 'Experience',
+  io: Io,
+): number {
+  if (!Array.isArray(sourceRefs) || sourceRefs.length === 0) {
+    io.error(`Typed ${label.toLowerCase()} requires source references: ${path}`);
+    return 1;
+  }
+  if (
+    sourceRefs.some(
+      (entry) =>
+        typeof entry !== 'string' || !entry.trim() || /\r|\n/.test(entry) || entry.length > 500,
+    )
+  ) {
+    io.error(
+      `Typed ${label.toLowerCase()} source references must be bounded single lines: ${path}`,
+    );
+    return 1;
+  }
+  try {
+    assertSourceReferenceBoundary(sourceRefs, label);
+    return 0;
+  } catch (error) {
+    io.error(`Invalid typed ${label.toLowerCase()} source reference: ${path}: ${String(error)}`);
+    return 1;
+  }
 }
 
 export function validateFindingDocument(
@@ -56,10 +86,7 @@ export function validateFindingDocument(
     io.error(`Invalid finding kind: ${path}`);
     failures += 1;
   }
-  if (!Array.isArray(sourceRefs) || sourceRefs.length === 0) {
-    io.error(`Typed finding requires source references: ${path}`);
-    failures += 1;
-  }
+  failures += sourceReferenceIssues(path, sourceRefs, 'Finding', io);
   failures += requiredSections(path, body, io);
   const conclusion = findingSection(body, '结论');
   if (findingKinds.has(String(kind)) && conclusion) {
@@ -123,5 +150,6 @@ export function validateExperienceSemantics(
       failures += 1;
     }
   }
+  failures += sourceReferenceIssues(path, metadata.get('source-refs'), 'Experience', io);
   return failures;
 }

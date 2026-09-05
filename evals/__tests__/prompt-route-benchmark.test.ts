@@ -10,6 +10,7 @@ import {
   comparePromptRouteBenchmarks,
   repositoryRoot,
   runPromptRouteBenchmark,
+  validateCorpusReferences,
 } from '../../scripts/benchmarks/prompt-route/prompt-route-benchmark-lib.js';
 import type { PromptRouteCorpus } from '../../scripts/benchmarks/prompt-route/prompt-route-benchmark-types.js';
 
@@ -57,6 +58,29 @@ test('the corpus covers bilingual routing risks and keeps false-positive and fal
   ]) {
     assert.ok(categories.has(required), required);
   }
+});
+
+test('corpus references must resolve to manifest route names', () => {
+  const corpus = {
+    cases: [
+      {
+        id: 'bad-reference',
+        categories: ['action'],
+        query: 'test',
+        expected: {
+          status: 'matched',
+          top1: 'missing-playbook',
+          topics: [],
+          forbiddenPlaybooks: [],
+        },
+      },
+    ],
+  } as unknown as PromptRouteCorpus;
+  assert.throws(
+    () =>
+      validateCorpusReferences(corpus, join(repositoryRoot, 'template', 'agent-harness', 'docs')),
+    /unknown playbook: missing-playbook/,
+  );
 });
 
 test('baseline comparison requires identical inputs and reports metric deltas', () => {

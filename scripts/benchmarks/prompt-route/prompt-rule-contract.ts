@@ -36,6 +36,18 @@ function evidencePaths(value: unknown, key: 'implementation' | 'verification'): 
 
 function pathIssues(root: string, id: string, kind: string, paths: string[]): string[] {
   return paths.flatMap((path) => {
+    // Evidence is distributed with the repository and must stay portable.
+    // Reject absolute and traversal spellings before resolve(), otherwise an
+    // absolute path inside the checkout or a normalized ../ path could look
+    // valid while referring to a host-specific location.
+    if (
+      path.startsWith('/') ||
+      path.startsWith('\\\\') ||
+      /^[A-Za-z]:/u.test(path) ||
+      path.split(/[\\/]/u).includes('..')
+    ) {
+      return [`prompt rule ${id} references unsafe ${kind} evidence path: ${path}`];
+    }
     const target = resolve(root, path);
     return target.startsWith(`${resolve(root)}${sep}`) && existsSync(target)
       ? []
