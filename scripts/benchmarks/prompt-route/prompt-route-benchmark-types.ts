@@ -8,6 +8,7 @@ interface PromptRouteCorpusCase {
     status: RouteStatus;
     top1: string | null;
     topics: string[];
+    reasoningModes?: string[];
     forbiddenPlaybooks: string[];
   };
 }
@@ -86,6 +87,7 @@ export interface PromptRouteBenchmarkReport {
       status: RouteStatus;
       top1: string | null;
       topics: string[];
+      reasoningModes: string[];
       ambiguity: string[];
     };
     failures: string[];

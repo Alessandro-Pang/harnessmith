@@ -45,6 +45,7 @@ export function evaluateCorpus(
       status: route.status,
       top1: route.top1?.name ?? null,
       topics: route.topics.map(({ name }) => name).sort(),
+      reasoningModes: route.reasoningModes.map(({ mode }) => mode).sort(),
       ambiguity: [...route.ambiguity].sort(),
     };
     if (entry.expected.top1 !== null) {
@@ -68,6 +69,12 @@ export function evaluateCorpus(
     if (actual.status !== entry.expected.status) failures.push('status-mismatch');
     if (actual.top1 !== entry.expected.top1) failures.push('top1-mismatch');
     if (!sameStrings(actual.topics, entry.expected.topics)) failures.push('topics-mismatch');
+    if (
+      entry.expected.reasoningModes !== undefined &&
+      !sameStrings(actual.reasoningModes, entry.expected.reasoningModes)
+    ) {
+      failures.push('reasoning-modes-mismatch');
+    }
     if (forbidden) failures.push('forbidden-action-selected');
     if (failures.length === 0) counts.adherent += 1;
     return {

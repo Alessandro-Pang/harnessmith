@@ -7,20 +7,19 @@ import { parseFrontmatterDocument } from '../../packages/harness/src/lib/documen
 import { markdownLinkTargets } from '../../packages/harness/src/lib/documentation/markdown-links.js';
 import { promptRuleContractIssues } from '../benchmarks/prompt-route/prompt-rule-contract.js';
 import { capabilityEvidenceIssues } from '../evaluation/capability-evidence.js';
+import {
+  type DocsManifest,
+  documentRouteOwnershipIssues,
+  invalidManifestRouteMetadata,
+  type ManifestEntry,
+  missingCanonicalRouteIds,
+} from './preflight-docs-manifest.js';
 
-interface ManifestEntry {
-  actionAliases?: unknown;
-  conceptAliases?: unknown;
-  kind?: unknown;
-  path?: unknown;
-  priority?: unknown;
-  triggers?: unknown;
-}
-
-interface DocsManifest {
-  version?: number;
-  entries?: unknown;
-}
+export {
+  documentRouteOwnershipIssues,
+  invalidManifestRouteMetadata,
+  missingCanonicalRouteIds,
+} from './preflight-docs-manifest.js';
 
 interface DocsContext {
   root: string;
@@ -42,59 +41,17 @@ export function filesUnder(
     .sort();
 }
 
-type Check = DocsContext['check'];
-
-const CANONICAL_ROUTE_IDS = [
-  'operating-model',
-  'tool-routing',
-  'safety-and-verification',
-  'git-conventions',
-  'harness-cli-architecture',
-  'long-running-tasks',
-  'change',
-  'diagnose',
-  'review',
-  'research-and-design',
-  'release-and-external',
-  'repository-map',
-  'project-agents',
-  'project-agent-docs',
-  'prompt-rule-contract',
-  'user-profile-memory',
-] as const;
-
-export function missingCanonicalRouteIds(manifest: unknown): string[] {
-  const entries =
-    manifest && typeof manifest === 'object' && !Array.isArray(manifest)
-      ? (manifest as DocsManifest).entries
-      : undefined;
-  const routes =
-    entries && typeof entries === 'object' && !Array.isArray(entries)
-      ? (entries as Record<string, unknown>)
-      : {};
-  return CANONICAL_ROUTE_IDS.filter((id) => !Object.hasOwn(routes, id));
+function manifestAliases(entry: ManifestEntry): unknown[] {
+  const aliases = entry.kind === 'playbook' ? entry.actionAliases : entry.conceptAliases;
+  const values = aliases === undefined ? entry.triggers : aliases;
+  return Array.isArray(values) ? values : [];
 }
 
-export function invalidManifestRouteMetadata(manifest: unknown): string[] {
-  const entries =
-    manifest && typeof manifest === 'object' && !Array.isArray(manifest)
-      ? (manifest as DocsManifest).entries
-      : undefined;
-  if (!entries || typeof entries !== 'object' || Array.isArray(entries)) return [];
-  const kinds = new Set(['playbook', 'topic', 'standard']);
-  return Object.entries(entries as Record<string, ManifestEntry>)
-    .filter(([, entry]) => {
-      if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return true;
-      if (typeof entry.kind !== 'string' || !kinds.has(entry.kind)) return true;
-      if (entry.kind === 'playbook')
-        return !Number.isInteger(entry.priority) || (entry.priority as number) <= 0;
-      return entry.priority !== undefined && !Number.isInteger(entry.priority);
-    })
-    .map(([id]) => id)
-    .sort();
-}
-
-function manifestRoutes(docsRoot: string, manifest: DocsManifest, check: Check): Set<string> {
+function manifestRoutes(
+  docsRoot: string,
+  manifest: DocsManifest,
+  check: DocsContext['check'],
+): Set<string> {
   check(manifest.version === 1, 'agent-harness apps/docs/site manifest version must be 1');
   const validEntries =
     Boolean(manifest.entries) &&
@@ -109,17 +66,12 @@ function manifestRoutes(docsRoot: string, manifest: DocsManifest, check: Check):
     check(validEntry, `docs route ${name} must be an object`);
     check(!invalidMetadata.has(name), `docs route ${name} has invalid kind or priority`);
     const routePath = validEntry && typeof entry.path === 'string' ? entry.path.trim() : '';
-    const aliasField = entry.kind === 'playbook' ? 'actionAliases' : 'conceptAliases';
-    const aliases = validEntry && Array.isArray(entry[aliasField]) ? entry[aliasField] : [];
+    const aliases = validEntry ? manifestAliases(entry) : [];
     check(Boolean(routePath), `docs route ${name} has no path`);
-    check(aliases.length > 0, `docs route ${name} has no ${aliasField}`);
+    check(aliases.length > 0, `docs route ${name} has no aliases`);
     check(
       aliases.every((alias) => typeof alias === 'string' && alias.trim().length > 0),
-      `docs route ${name} has invalid ${aliasField}`,
-    );
-    check(
-      new Set(aliases).size === aliases.length,
-      `docs route ${name} has duplicate ${aliasField}`,
+      `docs route ${name} has invalid aliases`,
     );
     if (!routePath) continue;
     const target = resolve(docsRoot, routePath);
@@ -133,8 +85,12 @@ function manifestRoutes(docsRoot: string, manifest: DocsManifest, check: Check):
   return routed;
 }
 
-function checkMarkdownDocs(docsRoot: string, routed: Set<string>, check: Check): void {
-  for (const path of filesUnder(docsRoot, (path) => extname(path) === '.md')) {
+function checkMarkdownDocs(
+  docsRoot: string,
+  routed: Set<string>,
+  check: DocsContext['check'],
+): void {
+  for (const path of filesUnder(docsRoot, (file) => extname(file) === '.md')) {
     const name = relative(docsRoot, path);
     const content = readFileSync(path, 'utf8');
     const frontmatter = parseFrontmatterDocument(content);
@@ -142,8 +98,9 @@ function checkMarkdownDocs(docsRoot: string, routed: Set<string>, check: Check):
     for (const field of ['title', 'type', 'status', 'updated']) {
       check(frontmatter.metadata.has(field), `${name} is missing frontmatter field: ${field}`);
     }
-    if (name !== 'README.md')
+    if (name !== 'README.md') {
       check(routed.has(path), `${name} is not routed by apps/docs/site/manifest.yaml`);
+    }
     for (const link of markdownLinkTargets(content)) {
       const target = link.split('#')[0];
       if (!target || /^(?:https?:|mailto:)/.test(target)) continue;
@@ -152,7 +109,7 @@ function checkMarkdownDocs(docsRoot: string, routed: Set<string>, check: Check):
   }
 }
 
-function checkPortableTemplate(root: string, check: Check): void {
+function checkPortableTemplate(root: string, check: DocsContext['check']): void {
   const allowedTokens = new Set([
     'HARNESS_HOME',
     'HARNESS_MEMORY_HOME',
@@ -164,6 +121,10 @@ function checkPortableTemplate(root: string, check: Check): void {
     'DATE',
     'TIMESTAMP',
   ]);
+  const hostIdentity = new RegExp(
+    String.raw`\b(?:${supportedAgentNames.join('|')})\b|CODEX_HOME|CLAUDE_CONFIG_DIR|OPENCODE_CONFIG_DIR|KIMI_CODE_HOME`,
+    'i',
+  );
   for (const path of filesUnder(join(root, 'template'))) {
     if (path.includes(`${sep}dist${sep}`) || path.includes(`${sep}__tests__${sep}`)) continue;
     if (statSync(path).size > 250_000) continue;
@@ -175,10 +136,7 @@ function checkPortableTemplate(root: string, check: Check): void {
       );
     }
     check(
-      !new RegExp(
-        String.raw`\b(?:${supportedAgentNames.join('|')})\b|CODEX_HOME|CLAUDE_CONFIG_DIR|OPENCODE_CONFIG_DIR|KIMI_CODE_HOME`,
-        'i',
-      ).test(content),
+      !hostIdentity.test(content),
       `host-specific identity leaked into portable template: ${relative(root, path)}`,
     );
   }
@@ -201,6 +159,7 @@ export function checkDocs({ root, harnessRoot, check }: DocsContext): void {
     check(false, `agent-harness apps/docs/site manifest is missing canonical route: ${id}`);
   }
   const routed = manifestRoutes(docsRoot, manifest, check);
+  for (const issue of documentRouteOwnershipIssues(docsRoot, manifest)) check(false, issue);
   const promptRulesPath = join(docsRoot, 'prompt-rules.yaml');
   check(existsSync(promptRulesPath), 'prompt rule contract is missing');
   if (existsSync(promptRulesPath)) {

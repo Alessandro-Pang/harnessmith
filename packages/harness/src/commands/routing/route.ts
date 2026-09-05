@@ -21,6 +21,18 @@ export function route(
     for (const match of report.routes) {
       io.log(`${match.name}: ${match.path} [${match.matchedAliases.join(', ')}]`);
     }
+    if (report.reasoningModes.length > 0) {
+      io.log(
+        `Reasoning modes: ${report.reasoningModes
+          .map(({ mode, activation }) => `${mode} (${activation})`)
+          .join(', ')}`,
+      );
+    }
+    if (report.omittedRequiredTopics.length > 0) {
+      io.error(
+        `Required documentation routes omitted: ${report.omittedRequiredTopics.map(({ name }) => name).join(', ')}`,
+      );
+    }
   }
-  return report.status === 'matched' ? 0 : 2;
+  return report.status === 'matched' && report.omittedRequiredTopics.length === 0 ? 0 : 2;
 }

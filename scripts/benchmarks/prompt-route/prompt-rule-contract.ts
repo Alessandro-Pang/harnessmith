@@ -10,6 +10,7 @@ interface PromptRule {
   action?: unknown;
   fallback?: unknown;
   guarantee?: unknown;
+  enforcedBy?: unknown;
   evidence?: unknown;
   boundary?: unknown;
   confusingWith?: unknown;
@@ -60,6 +61,15 @@ function baseRuleIssues(rule: PromptRule, index: number, owners: Set<string>): s
     !['enforced', 'guided', 'host-dependent'].includes(rule.guarantee)
   )
     issues.push(`prompt rule ${id} has invalid guarantee`);
+  if (!nonEmptyString(rule.enforcedBy)) issues.push(`prompt rule ${id} has no enforcement subject`);
+  else if (!['agent', 'host', 'runtime', 'verifier'].includes(rule.enforcedBy))
+    issues.push(`prompt rule ${id} has invalid enforcement subject`);
+  else if (rule.guarantee === 'guided' && rule.enforcedBy !== 'agent')
+    issues.push(`guided prompt rule ${id} must be enforced by agent`);
+  else if (rule.guarantee === 'host-dependent' && rule.enforcedBy !== 'host')
+    issues.push(`host-dependent prompt rule ${id} must be enforced by host`);
+  else if (rule.guarantee === 'enforced' && rule.enforcedBy === 'agent')
+    issues.push(`enforced prompt rule ${id} cannot be enforced by agent`);
   return issues;
 }
 
