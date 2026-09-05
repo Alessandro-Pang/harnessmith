@@ -120,9 +120,14 @@ test('autopilot activation requires a bounded turn-end capture decision', () => 
   );
   assert.match(projectMemory, /没有匹配 writer.*proposed.*blocked/);
   assert.match(
-    executionLoop,
-    /每个用户回合.*deliver.*前.*有界 Memory 判定.*typed writer.*自行调用 Harness CLI/s,
+    projectMemory,
+    /Harnesssmith 自身的产品目标、验收约束和实现缺陷属于项目正式事实或项目 Memory.*禁止提升为全局用户画像/s,
   );
+  assert.match(
+    executionLoop,
+    /每个用户回合[\s\S]*deliver.*前[\s\S]*有界.*Memory 判定[\s\S]*typed writer/,
+  );
+  assert.match(executionLoop, /宿主没有 turn-end\/session-end hook.*自行调用\nHarness CLI/s);
 });
 
 test('top-level routing uses one primary playbook plus supporting topics without category exceptions', () => {
