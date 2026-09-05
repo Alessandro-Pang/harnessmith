@@ -105,6 +105,35 @@ test('typed durable finding deduplicates a conclusion and accumulates evidence',
   );
 });
 
+test('finding source references reject absolute and traversal paths', () => {
+  const { project, runtime } = fixture();
+  const base = {
+    kind: 'analysis' as const,
+    retention: 'durable' as const,
+    factClass: 'settled-fact' as const,
+    title: 'Reject unsafe source pointers',
+    conclusion: 'Source references must remain attributable to the project.',
+    rationale: 'Absolute and traversal paths escape the project boundary.',
+    application: 'Keep only relative paths or typed pointers.',
+    evidence: ['The writer validates source pointer boundaries.'],
+  };
+  assert.throws(
+    () =>
+      captureFinding(runtime, project, { ...base, sourceRefs: ['/tmp/secret.log'] }, capturedIo()),
+    /source references must be project-relative/i,
+  );
+  assert.throws(
+    () =>
+      captureFinding(
+        runtime,
+        project,
+        { ...base, sourceRefs: ['memory:../outside'] },
+        capturedIo(),
+      ),
+    /memory source references must stay project-relative/i,
+  );
+});
+
 test('the same purpose does not merge semantically different conclusions', () => {
   const { project, runtime } = fixture();
   const base = {

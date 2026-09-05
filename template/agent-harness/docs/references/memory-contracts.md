@@ -60,6 +60,10 @@ durable 规则，也不能代替事实源或 Task/Handoff 的关闭门禁。
 `capture-experience` 只接受 typed `lesson` 或 `failure`。新文档必须有非空 `conclusion`、`rationale`、
 `application`、`evidence` 和来源引用；证据与来源必须是有界单行，不能把完整日志或源码复制进正文。
 
+来源引用必须保持可追溯边界：项目文件使用相对路径，跨对象来源使用带非空载荷的 typed pointer（例如
+`task:<id>`、`memory:<relative-path>`、`verifier:<command>`）。绝对路径、主机路径遍历和空指针会被 writer 拒绝；
+引用本身不等于事实证明，仍需由对应 verifier 或事实源重新核验。
+
 `capture-finding` 只接受 `analysis`、`review`、`research`，并显式标注 `settled-fact`、`current-state`、
 `verification-pointer`、`recovery-state` 或 `formal-fact`。非权威 finding 不得标为 `formal-fact`；易漂移的
 current/recovery state 只能保存重取状态的 verifier pointer。`durable` finding 进入 `distilled`，`workstream`

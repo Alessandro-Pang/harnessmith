@@ -1,5 +1,6 @@
 import { prepareManifestEntry } from './docs-routing-manifest.js';
 import {
+  matchesReasoningTerm,
   matchesRoutingTerm,
   normalizeRoutingText,
   playbookAliasEvidence,
@@ -28,7 +29,7 @@ function reasoningModeMatches(
 ): ReasoningModeActivation[] {
   return entry.activationRules.flatMap((rule): ReasoningModeActivation[] => {
     const explicit = rule.aliases.filter((alias) =>
-      conceptTerms.some((term) => matchesRoutingTerm(alias, term)),
+      conceptTerms.some((term) => matchesReasoningTerm(alias, term)),
     );
     if (explicit.length > 0) {
       return [
@@ -42,7 +43,7 @@ function reasoningModeMatches(
       ];
     }
     const signals = rule.signals.filter((signal) =>
-      conceptTerms.some((term) => matchesRoutingTerm(signal, term)),
+      conceptTerms.some((term) => matchesReasoningTerm(signal, term)),
     );
     return signals.length >= rule.minSignals
       ? [
@@ -129,8 +130,11 @@ export function matchManifestRoutes(
   return { supportingRoutes, referenceRoutes, playbookEvidence, reasoningModes };
 }
 
-export function boundReasoningModes(modes: ReasoningModeActivation[]): ReasoningModeActivation[] {
-  return modes
+export function boundReasoningModesWithOmissions(modes: ReasoningModeActivation[]): {
+  reasoningModes: ReasoningModeActivation[];
+  omittedReasoningModes: ReasoningModeActivation[];
+} {
+  const ranked = modes
     .map((mode, index) => ({ mode, index }))
     .sort(
       (left, right) =>
@@ -138,9 +142,12 @@ export function boundReasoningModes(modes: ReasoningModeActivation[]): Reasoning
           Number(left.mode.activation === 'explicit') ||
         right.mode.matchedSignals.length - left.mode.matchedSignals.length ||
         left.index - right.index,
-    )
-    .slice(0, 2)
-    .map(({ mode }) => mode);
+    );
+  const reasoningModes = ranked.slice(0, 2).map(({ mode }) => mode);
+  return {
+    reasoningModes,
+    omittedReasoningModes: ranked.slice(2).map(({ mode }) => mode),
+  };
 }
 
 function rankedRoutes(routes: DocumentationRoute[]): DocumentationRoute[] {

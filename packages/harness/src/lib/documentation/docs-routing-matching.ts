@@ -44,7 +44,7 @@ function routingMatchIsNegated(term: string, position: number): boolean {
       .slice(0, position)
       .split(/[,.!?;，。！？；]/u)
       .at(-1) ?? '';
-  return /(?:\b(?:do\s+not|don't|not|never|without|no)\s+(?:\p{L}+\s+){0,2}|(?:不要|无需|不必|别|禁止|避免|不)\s*)$/u.test(
+  return /(?:\b(?:do\s+not|don't|not|never|without|no)\s+(?:\p{L}+\s+){0,2}|(?:不要|无需|不必|别|禁止|避免|不)(?:[\p{Script=Han}\p{L}\p{N}]+\s*){0,2})$/u.test(
     clause,
   );
 }
@@ -64,7 +64,7 @@ function routingMatchIsRequestedAction(term: string, position: number): boolean 
 
 function routingMatchIsIllustrative(term: string, position: number): boolean {
   const prefix = term.slice(Math.max(0, position - 48), position);
-  return /(?:\b(?:for example|e\.g\.|such as)\s*,?\s*|(?:例如|比如|譬如)\s*[：:,，]?\s*)$/u.test(
+  return /(?:\b(?:for example|e\.g\.|such as)(?:\s+[\p{L}\p{N}]+){0,3}\s*,?\s*|(?:例如|比如|譬如|举例(?:说明)?)(?:[\p{Script=Han}\p{L}\p{N}]+\s*){0,3}[：:,，]?\s*)$/u.test(
     prefix,
   );
 }
@@ -117,6 +117,23 @@ export function matchesRoutingTerm(trigger: string, term: string): boolean {
   if (!candidate) return false;
   return routingMatchPositions(candidate, term).some(
     (position) => !routingMatchIsNegated(term, position),
+  );
+}
+
+/**
+ * Match a reasoning alias only when it is an actionable concept. Quoted,
+ * illustrative, nominal, and negated mentions are retained as context but do
+ * not activate a mode.
+ */
+export function matchesReasoningTerm(trigger: string, term: string): boolean {
+  const candidate = normalizeRoutingText(trigger);
+  if (!candidate) return false;
+  return routingMatchPositions(candidate, term).some(
+    (position) =>
+      !routingMatchIsNegated(term, position) &&
+      !routingMatchIsQuoted(term, position) &&
+      !routingMatchIsIllustrative(term, position) &&
+      !routingMatchIsNominalReference(candidate, term, position),
   );
 }
 

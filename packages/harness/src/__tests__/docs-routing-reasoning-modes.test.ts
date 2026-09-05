@@ -98,3 +98,29 @@ test('explicit reasoning activation exposes the selected section and output cont
     },
   ]);
 });
+
+test.each([
+  '不要使用贝叶斯推理分析原因。',
+  '例如使用贝叶斯推理分析原因。',
+  '请解释“贝叶斯推理”这个概念。',
+])(
+  'documentation routing does not activate reasoning aliases in negated, illustrative, or quoted references: %s',
+  (query) => {
+    const report = routeDocumentation(docsRoot, [query], { intent: 'research-and-design' });
+    assert.equal(
+      report.reasoningModes.some(({ mode }) => mode === 'evidence-update'),
+      false,
+    );
+  },
+);
+
+test('documentation routing reports explicit reasoning modes omitted by the hard mode budget', () => {
+  const report = routeDocumentation(
+    docsRoot,
+    ['请使用第一性原理、贝叶斯推理、对抗式审查和决策矩阵。'],
+    { intent: 'research-and-design' },
+  );
+  assert.equal(report.reasoningModes.length, 2);
+  assert.equal(report.omittedReasoningModes.length, 2);
+  assert.ok(report.omittedReasoningModes.every(({ activation }) => activation === 'explicit'));
+});

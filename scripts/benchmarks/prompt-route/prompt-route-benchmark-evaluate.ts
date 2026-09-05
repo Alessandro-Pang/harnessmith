@@ -17,6 +17,7 @@ export interface CorpusEvaluation {
   trueAmbiguous: number;
   forbiddenActions: number;
   adherent: number;
+  reasoningModeExtras: number;
 }
 
 function sameStrings(left: string[], right: string[]): boolean {
@@ -38,6 +39,7 @@ export function evaluateCorpus(
     trueAmbiguous: 0,
     forbiddenActions: 0,
     adherent: 0,
+    reasoningModeExtras: 0,
   };
   const cases: PromptRouteBenchmarkReport['cases'] = corpus.cases.map((entry) => {
     const route = routeDocumentation(docsRoot, [entry.query]);
@@ -69,10 +71,11 @@ export function evaluateCorpus(
     if (actual.status !== entry.expected.status) failures.push('status-mismatch');
     if (actual.top1 !== entry.expected.top1) failures.push('top1-mismatch');
     if (!sameStrings(actual.topics, entry.expected.topics)) failures.push('topics-mismatch');
-    if (
-      entry.expected.reasoningModes !== undefined &&
-      !sameStrings(actual.reasoningModes, entry.expected.reasoningModes)
-    ) {
+    const expectedReasoningModes = entry.expected.reasoningModes ?? [];
+    counts.reasoningModeExtras += actual.reasoningModes.filter(
+      (mode) => !expectedReasoningModes.includes(mode),
+    ).length;
+    if (!sameStrings(actual.reasoningModes, expectedReasoningModes)) {
       failures.push('reasoning-modes-mismatch');
     }
     if (forbidden) failures.push('forbidden-action-selected');
@@ -94,14 +97,14 @@ function measured(
   threshold: number,
   direction: 'minimum' | 'maximum' = 'minimum',
 ): MeasuredMetric {
-  const value = denominator === 0 ? 1 : numerator / denominator;
+  const value = denominator === 0 ? 0 : numerator / denominator;
   return {
     status: 'measured',
     value,
     numerator,
     denominator,
     threshold,
-    passed: direction === 'minimum' ? value >= threshold : value <= threshold,
+    passed: denominator > 0 && (direction === 'minimum' ? value >= threshold : value <= threshold),
   };
 }
 
@@ -148,6 +151,7 @@ export function benchmarkMetrics(
       corpus.cases.length,
       thresholds.ruleAdherenceRate,
     ),
+    reasoningModeExtraCount: measured(evaluation.reasoningModeExtras, 1, 0, 'maximum'),
     factVerification: {
       status: 'not-measured',
       reason:

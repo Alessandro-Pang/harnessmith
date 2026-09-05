@@ -70,6 +70,12 @@ function baseRuleIssues(rule: PromptRule, index: number, owners: Set<string>): s
     issues.push(`host-dependent prompt rule ${id} must be enforced by host`);
   else if (rule.guarantee === 'enforced' && rule.enforcedBy === 'agent')
     issues.push(`enforced prompt rule ${id} cannot be enforced by agent`);
+  else if (
+    rule.guarantee === 'enforced' &&
+    rule.enforcedBy !== 'runtime' &&
+    rule.enforcedBy !== 'verifier'
+  )
+    issues.push(`enforced prompt rule ${id} must be enforced by runtime or verifier`);
   return issues;
 }
 

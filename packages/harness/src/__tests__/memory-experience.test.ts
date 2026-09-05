@@ -98,3 +98,25 @@ test('typed failure experience requires evidence and source references', () => {
     /evidence.*source references/i,
   );
 });
+
+test('experience source references reject absolute paths', () => {
+  const { project, runtime } = fixture();
+  assert.throws(
+    () =>
+      captureExperience(
+        runtime,
+        project,
+        {
+          kind: 'lesson',
+          title: 'Keep source pointers bounded',
+          conclusion: 'Experience sources must remain attributable to the project.',
+          rationale: 'Absolute paths can expose unrelated host files.',
+          application: 'Use project-relative paths or typed pointers.',
+          evidence: ['The writer rejects absolute source paths.'],
+          sourceRefs: ['/etc/passwd'],
+        },
+        capturedIo(),
+      ),
+    /source references must be project-relative/i,
+  );
+});

@@ -6,7 +6,7 @@ import {
 import { loadDocumentationManifest } from './docs-routing-manifest.js';
 import { normalizeRoutingText } from './docs-routing-matching.js';
 import {
-  boundReasoningModes,
+  boundReasoningModesWithOmissions,
   boundReferenceRoutes,
   boundSupportingRoutes,
   matchManifestRoutes,
@@ -54,6 +54,8 @@ export interface DocumentationRouteReport {
   omittedReferences: DocumentationRoute[];
   /** Reasoning modes selected from explicit concepts or inferred task signals. */
   reasoningModes: ReasoningModeActivation[];
+  /** Reasoning modes omitted because the hard mode budget was exceeded. */
+  omittedReasoningModes: ReasoningModeActivation[];
   intent: {
     requested: string | null;
     source: 'explicit' | 'inferred' | 'none';
@@ -74,7 +76,7 @@ function routingTerms(query: string[]): { terms: string[]; phrase: string } {
 }
 
 function selectPlaybook(
-  evidence: Map<string, { route: DocumentationRoute; requested: boolean }>,
+  evidence: Map<string, { route: DocumentationRoute; requested: boolean; negated: boolean }>,
   intent: DocumentationIntent | undefined,
 ): {
   primary: DocumentationRoute | null;
@@ -83,6 +85,13 @@ function selectPlaybook(
 } {
   const explicit = intent ? evidence.get(intent) : undefined;
   if (intent && !explicit) throw new Error(`Documentation intent has no playbook route: ${intent}`);
+  if (intent && explicit?.negated) {
+    return {
+      primary: null,
+      ambiguity: [`intent-conflict:${intent}`],
+      selected: [],
+    };
+  }
   const inferred = [...evidence.values()].filter(({ requested }) => requested);
   const selected = explicit ? [explicit] : inferred;
   const ambiguity =
@@ -107,7 +116,8 @@ export function routeDocumentation(
   const matches = matchManifestRoutes(docsRoot, entries, [phrase], [phrase, ...terms]);
   const playbooks = selectPlaybook(matches.playbookEvidence, options.intent);
   const topics = boundSupportingRoutes(matches.supportingRoutes);
-  const reasoningModes = boundReasoningModes(matches.reasoningModes);
+  const boundedReasoningModes = boundReasoningModesWithOmissions(matches.reasoningModes);
+  const reasoningModes = boundedReasoningModes.reasoningModes;
   const references = boundReferenceRoutes(
     matches.referenceRoutes,
     reasoningModes.length > 0 ? ['reasoning-modes'] : [],
@@ -138,8 +148,9 @@ export function routeDocumentation(
     references: references.references,
     omittedReferences: references.omittedReferences,
     reasoningModes,
+    omittedReasoningModes: boundedReasoningModes.omittedReasoningModes,
     intent: {
-      requested: playbooks.primary?.name ?? null,
+      requested: options.intent ?? playbooks.primary?.name ?? null,
       source: options.intent ? 'explicit' : playbooks.selected.length > 0 ? 'inferred' : 'none',
       mentionedActions,
       negatedActions,

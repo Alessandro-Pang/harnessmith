@@ -103,6 +103,7 @@ export function runPromptRouteBenchmark(): PromptRouteBenchmarkReport {
     metrics.ambiguityRate,
     metrics.forbiddenActionCount,
     metrics.ruleAdherenceRate,
+    metrics.reasoningModeExtraCount,
   ];
   return {
     version: 1,
@@ -146,6 +147,7 @@ const comparableMetrics = [
   'ambiguityRate',
   'forbiddenActionCount',
   'ruleAdherenceRate',
+  'reasoningModeExtraCount',
 ] as const;
 
 export function comparePromptRouteBenchmarks(

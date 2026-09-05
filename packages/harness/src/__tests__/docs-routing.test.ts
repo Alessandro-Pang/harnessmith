@@ -60,6 +60,16 @@ test('documentation routing maps an explicit intent without re-inferring it from
   assert.equal(report.primaryPlaybook?.name, 'research-and-design');
 });
 
+test('documentation routing fails closed when explicit intent conflicts with a negated action', () => {
+  const report = routeDocumentation(docsRoot, ['不要修改代码，只诊断失败'], { intent: 'change' });
+
+  assert.equal(report.primaryPlaybook, null);
+  assert.equal(report.status, 'ambiguous');
+  assert.deepEqual(report.ambiguity, ['intent-conflict:change']);
+  assert.equal(report.intent.requested, 'change');
+  assert.deepEqual(report.intent.negatedActions, ['change']);
+});
+
 test.each([
   ['分析当前项目，实现方面是否合理。', 'research-and-design'],
   ['实现思想是否合理？', null],

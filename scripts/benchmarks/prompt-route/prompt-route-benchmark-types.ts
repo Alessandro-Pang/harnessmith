@@ -71,6 +71,7 @@ export interface PromptRouteBenchmarkReport {
     ambiguityRate: MeasuredMetric;
     forbiddenActionCount: MeasuredMetric;
     ruleAdherenceRate: MeasuredMetric;
+    reasoningModeExtraCount: MeasuredMetric;
     factVerification: UnmeasuredMetric;
     tokenCost: UnmeasuredMetric;
     toolCallCost: UnmeasuredMetric;

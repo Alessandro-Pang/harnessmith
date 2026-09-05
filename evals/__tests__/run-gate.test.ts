@@ -361,7 +361,7 @@ test('validator rejects duplicate run identities across evidence files', () => {
   assert.match(result.stderr, /duplicate runId: codex-progressive-disclosure/);
 });
 
-test('release gate retains the global rule fingerprint as audit data', () => {
+test('release gate rejects records from a different distributed rules fingerprint', () => {
   const runsDirectory = temporaryDirectory();
   const path = writeRun(runsDirectory);
   const record = JSON.parse(readFileSync(path, 'utf8'));
@@ -371,7 +371,7 @@ test('release gate retains the global rule fingerprint as audit data', () => {
   const result = run(['gate', '--runs-dir', runsDirectory]);
 
   assert.equal(result.status, 1);
-  assert.doesNotMatch(result.stderr, /subject-drift rulesSha256/);
+  assert.match(result.stderr, /subject-drift rulesSha256/);
   assert.match(result.stderr, /codex\/bootstrap-global-memory/);
 });
 

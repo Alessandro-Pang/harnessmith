@@ -25,7 +25,8 @@ owner: prompt-rule-contract
 
 入口 Prompt 可以保留高损失摘要和 owner 指针，不复制 owner 文档的字段、状态机或命令细节。新增规则前先检查
 现有 ID、owner 和 `confusingWith`，避免用同义规则覆盖同一个失败模式。`enforcedBy` 必须和 guarantee 的实际
-证据一致：自然语言 guidance 由 `agent` 承担，机械门禁由 `runtime`/`verifier` 承担，宿主事件和权限由 `host` 承担。
+证据一致：`guided` 只能由 `agent` 承担，`enforced` 只能由 `runtime` 或 `verifier` 承担，`host-dependent` 只能由
+`host` 承担。自然语言 guidance 不能声称已机械保证，宿主事件和权限也不能由 Runtime 或 Verifier 冒充。
 
 ## 分层与加载
 

@@ -2136,6 +2136,24 @@ const evaluatedAt = new Date().toISOString();
 const evidenceIds = ['redacted-transcript', 'filesystem-diff', 'observations', 'assessment'];
 const toolActions = [];
 let actionSequence = 0;
+function observedApproval(event, fallback = 'not-requested') {
+  const item = event?.item ?? {};
+  const raw = [
+    item.approval,
+    item.approval_decision,
+    item.approvalDecision,
+    event?.approval,
+    event?.approval_decision,
+    event?.approvalDecision,
+  ].find((value) => typeof value === 'string');
+  if (!raw) return fallback;
+  const value = raw.trim().toLowerCase().replaceAll('_', '-');
+  if (['approved', 'allow', 'allowed', 'accepted', 'accept'].includes(value)) return 'approved';
+  if (['denied', 'deny', 'rejected', 'reject'].includes(value)) return 'denied';
+  if (['not-required', 'notrequired', 'unneeded'].includes(value)) return 'not-required';
+  if (['not-requested', 'notrequested', 'pending', 'requested'].includes(value)) return 'not-requested';
+  return fallback;
+}
 const appendToolAction = (action) => {
   if (toolActions.length >= 1024) return;
   toolActions.push({ sequence: ++actionSequence, ...action });
@@ -2158,7 +2176,7 @@ for (const turn of turnResults) {
         kind: 'execute',
         target: sanitizeAndBoundArtifact(String(event.item.command || '(command unavailable)'), 1024).content,
         outcome: event.item.status === 'completed' && event.item.exit_code === 0 ? 'completed' : 'failed',
-        approval: 'approved',
+        approval: observedApproval(event),
       });
     }
     if (event.item.type === 'file_change') {
@@ -2170,7 +2188,7 @@ for (const turn of turnResults) {
         kind: 'write',
         target: sanitizeAndBoundArtifact(targets.join(', ') || '(file path unavailable)', 1024).content,
         outcome: event.item.status === 'completed' ? 'completed' : 'failed',
-        approval: 'approved',
+        approval: observedApproval(event),
       });
     }
     if (event.item.type === 'agent_message') {
@@ -2188,7 +2206,7 @@ for (const turn of turnResults) {
         kind: ['web_search', 'network_request'].includes(event.item.type) ? 'network' : 'other',
         target: sanitizeAndBoundArtifact(String(event.item.query || event.item.name || event.item.server || '(target unavailable)'), 1024).content,
         outcome: event.item.status === 'completed' ? 'completed' : 'failed',
-        approval: 'approved',
+        approval: observedApproval(event),
       });
     }
   }

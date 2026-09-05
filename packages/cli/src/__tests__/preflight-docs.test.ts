@@ -271,6 +271,32 @@ test('prompt rule contracts align guarantee level with its enforcement subject',
   assert.ok(issues.includes('host-dependent prompt rule host-runtime must be enforced by host'));
 });
 
+test('enforced prompt rules require a runtime or verifier enforcement subject', () => {
+  const root = mkdtempSync(join(tmpdir(), 'harness-prompt-rule-enforced-subject-'));
+  onTestFinished(() => rmSync(root, { recursive: true, force: true }));
+  writeFileSync(join(root, 'rules.md'), '# Rules\n');
+  const manifest = { entries: { operating: { kind: 'topic' } } };
+  const issues = promptRuleContractIssues(root, manifest, {
+    version: 1,
+    rules: [
+      {
+        id: 'enforced-host',
+        owner: 'operating',
+        principle: 'Keep the boundary.',
+        rationale: 'Avoid silent drift.',
+        action: 'Check the boundary.',
+        fallback: 'Stop safely.',
+        guarantee: 'enforced',
+        enforcedBy: 'host',
+        evidence: { implementation: ['rules.md'], verification: ['rules.md'] },
+      },
+    ],
+  });
+  assert.ok(
+    issues.includes('enforced prompt rule enforced-host must be enforced by runtime or verifier'),
+  );
+});
+
 test('docs preflight validates route kinds and requires explicit playbook priority', () => {
   assert.deepEqual(
     invalidManifestRouteMetadata({

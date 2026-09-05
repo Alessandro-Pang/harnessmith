@@ -6,7 +6,10 @@ import { parseFrontmatterDocument } from '../../lib/documentation/frontmatter.js
 import { assertSafePath } from '../../lib/filesystem/safe-path.js';
 import { escapeCoreLabel, upsertCoreReference } from '../../lib/memory/memory-core.js';
 import { documentPurposeMetadata } from '../../lib/memory/memory-document-purpose.js';
-import { normalizedInputContent } from '../../lib/memory/memory-input.js';
+import {
+  assertSourceReferenceBoundary,
+  normalizedInputContent,
+} from '../../lib/memory/memory-input.js';
 import {
   markdownFiles,
   memoryReference,
@@ -86,11 +89,13 @@ function assertOptions(options: ExperienceOptions): void {
   }
   if (
     [...options.evidence, ...options.sourceRefs].some(
-      (entry) => !entry?.trim() || /\r|\n/.test(entry) || entry.length > 500,
+      (entry) =>
+        typeof entry !== 'string' || !entry.trim() || /\r|\n/.test(entry) || entry.length > 500,
     )
   ) {
     throw new Error('Experience evidence and source references must be bounded single lines');
   }
+  assertSourceReferenceBoundary(options.sourceRefs, 'Experience');
 }
 
 function existingEvidence(body: string): string[] {

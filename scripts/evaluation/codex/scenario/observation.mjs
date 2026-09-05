@@ -55,7 +55,9 @@ function hostCommand(threadId, persistent, configOverrides = []) {
     env: { ...commonEnv, HOME: home, CODEX_HOME: configHomePath() },
     version: process.env.HARNESS_EVAL_HOST_VERSION ?? 'Codex CLI',
     model,
-    modelVersion: model,
+    // `model` is the requested model identifier. Keep provider/runtime
+    // version independent unless the Host reports it explicitly.
+    modelVersion: process.env.HARNESS_EVAL_MODEL_VERSION ?? 'unspecified',
   };
 }
 

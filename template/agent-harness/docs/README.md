@@ -43,7 +43,7 @@ updated: 2026-09-04
 ## 读取原则
 
 1. 能够可靠判断当前动作时，显式 `intent` 只选择唯一 playbook（即 `primaryPlaybook`）；自动推断多个动作返回歧义，无法匹配返回 `unmatched`，不可靠时不猜。
-2. `route` 同时保留 `rawQuery` 和 `normalizedQuery`；先加载 primary playbook 和 execution loop，再加载预算内的 `requiredTopics`，最后按顺序加载可选 `topics`。如果报告包含 `reasoningModes`，读取 `references/reasoning-modes.md` 中返回模式对应的章节后再行动；`matchedSignals` 用于审计触发原因。
+2. `route` 同时保留 `rawQuery` 和 `normalizedQuery`；先加载 primary playbook 和 execution loop，再加载预算内的 `requiredTopics`，最后按顺序加载可选 `topics`。如果报告包含 `reasoningModes`，读取 `references/reasoning-modes.md` 中返回模式对应的章节后再行动；`matchedSignals` 用于审计触发原因。`omittedReasoningModes` 表示超过模式预算的候选，不能解释为未命中；需要执行被省略模式时应先缩小任务范围或显式重新路由。
 3. topic 总数默认最多四个，required 优先；`omittedTopics` 只是延迟候选，不能解释为不存在，`omittedRequiredTopics` 非空时停止并报告缺失。
 4. 更具体的 `AGENTS.md`、skill 或项目事实源优先；路由只决定发现，不授予权限。
 5. 检索先返回标题、元信息或命中段落，确认相关后才读全文；长期规则在本目录，单次证据在项目 `.agent-docs/`。

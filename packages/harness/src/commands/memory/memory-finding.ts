@@ -16,7 +16,10 @@ import {
   findingListSection,
   findingSlug,
 } from '../../lib/memory/memory-finding.js';
-import { normalizedInputContent } from '../../lib/memory/memory-input.js';
+import {
+  assertSourceReferenceBoundary,
+  normalizedInputContent,
+} from '../../lib/memory/memory-input.js';
 import {
   markdownFiles,
   memoryReference,
@@ -32,7 +35,6 @@ import { withProjectMemoryTransaction } from '../../lib/project/project-memory.j
 import { assertNoHighConfidenceSecret } from '../../lib/security/secret-hygiene.js';
 import { assertRuntimeCanMutate, calendarDate } from '../../runtime.js';
 import type { Io, Runtime } from '../../types.js';
-
 export interface FindingOptions {
   kind: FindingKind;
   retention: FindingRetention;
@@ -47,7 +49,6 @@ export interface FindingOptions {
   expires?: string;
   json?: boolean;
 }
-
 function assertOptions(options: FindingOptions): void {
   assertNoHighConfidenceSecret(
     [
@@ -92,11 +93,13 @@ function assertOptions(options: FindingOptions): void {
   }
   if (
     [...options.evidence, ...options.sourceRefs].some(
-      (entry) => !entry?.trim() || /\r|\n/.test(entry) || entry.length > 500,
+      (entry) =>
+        typeof entry !== 'string' || !entry.trim() || /\r|\n/.test(entry) || entry.length > 500,
     )
   ) {
     throw new Error('Finding evidence and source references must be bounded single lines');
   }
+  assertSourceReferenceBoundary(options.sourceRefs, 'Finding');
   if (options.retention === 'workstream') {
     if (!options.workstream || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(options.workstream)) {
       throw new Error('Finding workstream is required and must be a stable identifier');
@@ -108,7 +111,6 @@ function assertOptions(options: FindingOptions): void {
     throw new Error('Durable finding must not declare workstream or expires');
   }
 }
-
 function render(
   runtime: Runtime,
   projectName: string,
