@@ -4,17 +4,29 @@
   <img src="./apps/docs/site/public/brand/harnessmith-logo.svg" alt="Harnessmith" width="176" />
 </p>
 
-Harnessmith distributes one host-neutral Personal Agent Harness to several coding-agent hosts and keeps work state available across projects and sessions. You maintain the rules once. Adapters handle host-specific paths, previews, ownership checks, backups, upgrades, restore, and uninstall.
+<p align="center">
+  <a href="https://www.npmjs.com/package/harnessmith">
+    <img alt="NPM Version" src="https://img.shields.io/npm/v/harnessmith?color=orange">
+  </a>
+  <a href="https://www.npmjs.com/package/harnessmith">
+    <img alt="NPM Downloads" src="https://img.shields.io/npm/d18m/harnessmith">
+  </a>
+  <a href="https://www.npmjs.com/package/harnessmith">
+    <img alt="npm bundle size" src="https://img.shields.io/bundlephobia/minzip/harnessmith">
+  </a>
+  <a href="https://nodejs.org/"><img alt="Node.js" src="https://img.shields.io/badge/Node.js-%E2%89%A524.12-43853d.svg" /></a>
+  <a href="./LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
+</p>
 
-In one line: Harnessmith is a cross-host Personal Harness distribution and work-state control plane. Everything runs locally with no cloud service, and Harnessmith does not replace your coding agent: how models reason, how tools are authorized, and how sandboxes isolate — that stays with the host.
-
-[![npm version](https://img.shields.io/npm/v/harnessmith.svg)](https://www.npmjs.com/package/harnessmith)
-[![Node.js](https://img.shields.io/badge/Node.js-%E2%89%A524.12-43853d.svg)](https://nodejs.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+![Alt](https://repobeats.axiom.co/api/embed/4a00cfbec88908df6e48df475db48a0cf056caa1.svg "Repobeats analytics image")
 
 **English** · [简体中文](./README.md) · [Full documentation](https://alexpang.cn/harnessmith/en/)
 
-## What Harnessmith solves
+> Harnessmith is a cross-host Personal Harness distribution and work-state control plane: it distributes one host-neutral Personal Agent Harness to several coding-agent hosts and keeps work state available across projects and sessions.
+
+You maintain the rules once. Adapters handle host-specific paths, previews, ownership checks, backups, upgrades, restore, and uninstall. Everything runs locally with no cloud service, and Harnessmith does not replace your coding agent: how models reason, how tools are authorized, and how sandboxes isolate — that stays with the host.
+
+## ✨ What Harnessmith solves
 
 People working across several projects and coding agents see the same drift: rules copied between Codex, Cursor, Claude Code, and other hosts diverge over time. An upgrade can also overwrite files that you still maintain. When a session ends, goals, decisions, and partial results are easy to lose. Loading a growing history of documents into every prompt wastes model context that the current task needs.
 
@@ -28,7 +40,7 @@ Harnessmith keeps those concerns separate:
 
 If you use one agent and your rules fit in a few lines, a hand-written `AGENTS.md` is usually simpler.
 
-## Start in 30 seconds
+## 🚀 Start in 30 seconds
 
 Node.js 24.12.0 or newer is required. No global installation is needed.
 
@@ -46,7 +58,7 @@ You can also ask a coding agent to follow the install protocol:
 
 > Read [llms.txt from the npm latest release](https://unpkg.com/harnessmith@latest/llms.txt), install Harnessmith according to that protocol, run dry-run first, and ask me before writing.
 
-## Supported hosts
+## 🤖 Supported hosts
 
 | Host | Scope | Selector |
 | --- | --- | --- |
@@ -59,7 +71,7 @@ You can also ask a coding agent to follow the install protocol:
 
 A global install writes to the host's personal configuration directory and applies to every project. A project install applies to one project. Cursor accepts `--project /path/to/project`; when omitted, it uses the current working directory. The [host guide](https://alexpang.cn/harnessmith/en/guide/hosts) lists actual destinations, environment variables, activation behavior, and evidence status.
 
-## Common operations
+## 🧰 Common operations
 
 ```bash
 # Inspect ownership, file integrity, and safe next steps
@@ -95,7 +107,7 @@ In a new host session, the rule entry participates in task routing automatically
 
 See the [CLI reference](https://alexpang.cn/harnessmith/en/reference/cli) for commands, options, exit codes, and failure handling. The [lifecycle guide](https://alexpang.cn/harnessmith/en/guide/lifecycle) explains the guarantees for install, upgrade, restore, and uninstall. The [Runtime CLI reference](https://alexpang.cn/harnessmith/en/reference/runtime-cli#repository-map) covers Memory, Task, search, and Repository Map commands.
 
-## What “installed” means
+## ✅ What “installed” means
 
 The documentation uses four states:
 
@@ -108,7 +120,7 @@ The documentation uses four states:
 
 The installer can establish only the first two states. The last two require a real host session. Local tests, npm downloads, and GitHub traffic cannot replace host evidence. See the [First Value Loop](https://alexpang.cn/harnessmith/en/guide/first-value-loop).
 
-## Safety boundaries
+## 🔒 Safety boundaries
 
 | State | Harnessmith's contract |
 | --- | --- |
@@ -118,13 +130,12 @@ The installer can establish only the first two states. The last two require a re
 
 Audit and diagnostics emit only schema-allowed metadata. A constrained `audit record` does not contain raw prompts, model output, tool arguments, file bodies, environment variables, or secrets. Whether an event actually occurred remains a host or external-attestation question. Per-capability owners, states, and evidence paths are in `apps/docs/site/capability-evidence.yaml` and its [online copy](https://github.com/Alessandro-Pang/harnessmith/blob/main/apps/docs/site/capability-evidence.yaml).
 
-## Learn more
+## 📚 Learn more
 
 - [Full documentation](https://alexpang.cn/harnessmith/en/) · [Getting started](https://alexpang.cn/harnessmith/en/guide/getting-started) · [Why Harnessmith](https://alexpang.cn/harnessmith/en/guide/why-harnessmith)
 - [Architecture](https://alexpang.cn/harnessmith/en/concepts/architecture) · [Boundaries](https://alexpang.cn/harnessmith/en/concepts/boundaries) · [Memory and Tasks](https://alexpang.cn/harnessmith/en/concepts/memory-and-tasks) (includes Memory Autopilot)
-- [Contributing](./CONTRIBUTING.md) · [Security](./SECURITY.md) · [License](./LICENSE)
 
-## Contributing
+## 🤝 Contributing
 
 ```bash
 pnpm install --frozen-lockfile
@@ -132,4 +143,28 @@ pnpm run preflight
 pnpm run docs:dev
 ```
 
-See the [documentation contribution guide](https://alexpang.cn/harnessmith/en/maintain/contributing-docs).
+Contribution workflow: [CONTRIBUTING](./CONTRIBUTING.md). Vulnerability disclosure: [SECURITY](./SECURITY.md). Documentation maintenance rules: [documentation contribution guide](https://alexpang.cn/harnessmith/en/maintain/contributing-docs).
+
+## ⭐ Star History
+
+<a href="https://www.star-history.com/?repos=alessandro-pang%2Fharnessmith&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=alessandro-pang/harnessmith&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=alessandro-pang/harnessmith&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=alessandro-pang/harnessmith&type=date&legend=top-left" />
+ </picture>
+</a>
+
+## 👥 Supporters
+
+[![Stargazers repo roster for @Alessandro-Pang/harnessmith](https://reporoster.com/stars/Alessandro-Pang/harnessmith)](https://github.com/Alessandro-Pang/harnessmith/stargazers)
+
+[![Forkers repo roster for @Alessandro-Pang/harnessmith](https://reporoster.com/forks/Alessandro-Pang/harnessmith)](https://github.com/Alessandro-Pang/harnessmith/network/members)
+
+## 📄 License
+
+[MIT](./LICENSE)
+
+---
+
+Questions, issue reports, and pull requests are welcome on [GitHub Issues](https://github.com/Alessandro-Pang/harnessmith/issues)!

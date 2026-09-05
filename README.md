@@ -4,17 +4,22 @@
   <img src="./apps/docs/site/public/brand/harnessmith-logo.svg" alt="Harnessmith" width="176" />
 </p>
 
-Harnessmith 把一套宿主无关的个人 Agent Harness 分发到多个 Coding Agent，并保存跨会话、跨项目的工作状态。你只维护一份规则，Harnessmith 负责适配宿主、预检目标、备份文件，以及在升级、恢复和卸载时保护现有内容。
+<p align="center">
+  <a href="https://www.npmjs.com/package/harnessmith"><img alt="npm version" src="https://img.shields.io/npm/v/harnessmith.svg?color=orange" /></a>
+  <a href="https://www.npmjs.com/package/harnessmith"><img alt="npm downloads" src="https://img.shields.io/npm/d18m/harnessmith" /></a>
+  <a href="https://nodejs.org/"><img alt="Node.js" src="https://img.shields.io/badge/Node.js-%E2%89%A524.12-43853d.svg" /></a>
+  <a href="./LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
+</p>
 
-一句话定位：Harnessmith 是跨 Host 的 Personal Harness 分发与工作状态控制层。它完全跑在本地，不依赖云端服务，也不替代 Coding Agent；模型怎么推理、工具怎么授权、沙箱怎么隔离，始终由宿主自己负责。
-
-[![npm version](https://img.shields.io/npm/v/harnessmith.svg)](https://www.npmjs.com/package/harnessmith)
-[![Node.js](https://img.shields.io/badge/Node.js-%E2%89%A524.12-43853d.svg)](https://nodejs.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+![Alt](https://repobeats.axiom.co/api/embed/4a00cfbec88908df6e48df475db48a0cf056caa1.svg "Repobeats analytics image")
 
 [English](./README.en.md) · **简体中文** · [完整文档](https://alexpang.cn/harnessmith/)
 
-## Harnessmith 解决什么问题
+> Harnessmith 是跨 Host 的 Personal Harness 分发与工作状态控制层：把一套宿主无关的个人 Agent Harness 分发到多个 Coding Agent，并保存跨会话、跨项目的工作状态。
+
+你只维护一份规则，Harnessmith 负责适配宿主、预检目标、备份文件，以及在升级、恢复和卸载时保护现有内容。它完全跑在本地，不依赖云端服务，也不替代 Coding Agent；模型怎么推理、工具怎么授权、沙箱怎么隔离，始终由宿主自己负责。
+
+## ✨ 解决什么问题
 
 在多个项目和 Coding Agent 之间切换时，规则很容易出现副本、版本漂移和覆盖冲突。会话结束后，任务目标、进度和决定也可能丢失。历史文档需要保留，但把整套历史文档反复放进模型上下文，又会挤占当前任务需要的空间。
 
@@ -28,7 +33,7 @@ Harnessmith 将这些问题分成几条可检查的边界。Repository Map 负�
 
 如果你只使用一个 Agent，规则也只有几行，手写一个简短的 `AGENTS.md` 往往更省事。
 
-## 30 秒开始
+## 🚀 30 秒开始
 
 要求 Node.js 24.12.0 或更高版本，不需要全局安装。
 
@@ -46,7 +51,7 @@ npx harnessmith setup --agent codex
 
 > 阅读 npm latest 发布包中的 [llms.txt](https://unpkg.com/harnessmith@latest/llms.txt)，按协议安装 Harnessmith。先执行 dry-run，写入前向我确认。
 
-## 支持的宿主
+## 🤖 支持的宿主
 
 | 宿主 | 安装范围 | 选择值 |
 | --- | --- | --- |
@@ -59,7 +64,7 @@ npx harnessmith setup --agent codex
 
 全局安装写入宿主的个人配置目录，对所有项目生效；项目安装只作用于一个项目。Cursor 可以通过 `--project /path/to/project` 指定项目，省略时使用当前工作目录。实际目标路径、环境变量和宿主激活方式见[宿主支持](https://alexpang.cn/harnessmith/guide/hosts)。
 
-## 常用操作
+## 🧰 常用操作
 
 ```bash
 # 查看所有权、文件完整性和风险说明
@@ -95,7 +100,7 @@ node <harness-path>/bin/harness.mjs repository-map check --json
 
 完整命令、选项、退出码和失败处理见[安装器 CLI](https://alexpang.cn/harnessmith/reference/cli)与[运行时 CLI](https://alexpang.cn/harnessmith/reference/runtime-cli)。
 
-## “安装完成”意味着什么
+## ✅ “安装完成”意味着什么
 
 文档中统一使用以下四个状态：
 
@@ -108,7 +113,7 @@ node <harness-path>/bin/harness.mjs repository-map check --json
 
 安装器最多直接证明前两项。后两项必须在真实宿主会话中确认；本地测试、npm 下载量和 GitHub 流量都不能替代宿主证据。完整流程见[首次价值循环](https://alexpang.cn/harnessmith/guide/first-value-loop)。
 
-## 安全边界
+## 🔒 安全边界
 
 | 状态 | Harnessmith 的职责 |
 | --- | --- |
@@ -118,13 +123,12 @@ node <harness-path>/bin/harness.mjs repository-map check --json
 
 审计和诊断只输出 schema 允许的元数据。受限的 `audit record` 不包含原始 prompt、模型输出、tool arguments、文件正文、环境变量或 secret。事件是否真实发生，仍由宿主或外部 attestation 负责。逐项能力、owner 和证据路径见仓库源文件 `apps/docs/site/capability-evidence.yaml` 及其[在线版本](https://github.com/Alessandro-Pang/harnessmith/blob/main/apps/docs/site/capability-evidence.yaml)。
 
-## 继续阅读
+## 📚 继续阅读
 
 - [完整文档](https://alexpang.cn/harnessmith/) · [快速开始](https://alexpang.cn/harnessmith/guide/getting-started) · [为什么需要 Harnessmith](https://alexpang.cn/harnessmith/guide/why-harnessmith)
 - [架构设计](https://alexpang.cn/harnessmith/concepts/architecture) · [职责边界](https://alexpang.cn/harnessmith/concepts/boundaries) · [记忆与任务](https://alexpang.cn/harnessmith/concepts/memory-and-tasks)（含 Memory Autopilot）
-- [贡献指南](./CONTRIBUTING.md) · [安全策略](./SECURITY.md) · [许可证](./LICENSE)
 
-## 参与开发
+## 🤝 参与开发
 
 ```bash
 pnpm install --frozen-lockfile
@@ -132,4 +136,28 @@ pnpm run preflight
 pnpm run docs:dev
 ```
 
-文档维护规则见[文档站点贡献指南](https://alexpang.cn/harnessmith/maintain/contributing-docs)。
+贡献流程见[贡献指南](./CONTRIBUTING.md)，漏洞披露见[安全策略](./SECURITY.md)，文档维护规则见[文档站点贡献指南](https://alexpang.cn/harnessmith/maintain/contributing-docs)。
+
+## ⭐ Star History
+
+<a href="https://www.star-history.com/?repos=alessandro-pang%2Fharnessmith&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=alessandro-pang/harnessmith&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=alessandro-pang/harnessmith&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=alessandro-pang/harnessmith&type=date&legend=top-left" />
+ </picture>
+</a>
+
+## 👥 Supporters
+
+[![Stargazers repo roster for @Alessandro-Pang/harnessmith](https://reporoster.com/stars/Alessandro-Pang/harnessmith)](https://github.com/Alessandro-Pang/harnessmith/stargazers)
+
+[![Forkers repo roster for @Alessandro-Pang/harnessmith](https://reporoster.com/forks/Alessandro-Pang/harnessmith)](https://github.com/Alessandro-Pang/harnessmith/network/members)
+
+## 📄 License
+
+[MIT](./LICENSE)
+
+---
+
+欢迎在 [GitHub Issues](https://github.com/Alessandro-Pang/harnessmith/issues) 上讨论、报告问题或提交 Pull Request！
