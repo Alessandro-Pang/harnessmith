@@ -19,6 +19,7 @@ test.each([
   '请做一次事前验尸，判断这个发布方案如何失败。',
   '请使用信息价值原则决定是否继续调查。',
   '请用 OODA 循环推进这个多步骤任务。',
+  '请用批判性思维审查这个实现方案。',
 ])(
   'documentation routing exposes requested reasoning modes as deferred references: %s',
   (query) => {
@@ -60,6 +61,21 @@ test('documentation routing does not activate a reasoning mode for a simple low-
     report.references.some(({ name }) => name === 'reasoning-modes'),
     false,
   );
+});
+
+test('documentation routing challenges a prescribed complex means before execution', () => {
+  const report = routeDocumentation(
+    docsRoot,
+    ['实现权限功能，必须引入复杂策略引擎和多层抽象架构。'],
+    { intent: 'change' },
+  );
+  const activation = report.reasoningModes.find(({ mode }) => mode === 'pre-execution-judgment');
+  assert.ok(activation);
+  assert.equal(activation.activation, 'inferred');
+  assert.ok(activation.matchedSignals.length >= 3);
+  assert.ok(activation.requiredArtifacts.includes('proposed-means'));
+  assert.ok(activation.requiredArtifacts.includes('alternatives'));
+  assert.ok(report.references.some(({ name }) => name === 'reasoning-modes'));
 });
 
 test('explicit reasoning activation exposes the selected section and output contract', () => {

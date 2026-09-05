@@ -140,8 +140,14 @@ entries:
     load: reference
     owner: operating-model
     path: references/reasoning-modes.md
-    conceptAliases: [first-principles, first-principle, problem-framing, surface-vs-root-cause, root-cause, mece, bayesian, bayesian-updating, falsification, scientific-method, calibration, adversarial-review, red-team, threat-model, counterexample, reverse-thinking, pre-mortem, second-order-thinking, invariant, property-based, systems-thinking, theory-of-constraints, failure-mode, expected-value, value-of-information, minimax-regret, opportunity-cost, decision-matrix, ooda, feedback-control, pdca, 第一性原理, 问题建模, 现象与本质, 根因推导, 贝叶斯推理, 证伪主义, 科学方法, 校准思维, 对抗式审查, 红队审查, 威胁建模, 反例审查, 逆向思维, 事前验尸, 二阶思维, 不变量, 属性测试, 系统思维, 约束理论, 故障模式, 期望价值, 信息价值, 最小遗憾, 机会成本, 决策矩阵, 闭环行动, 反馈控制]
+    conceptAliases: [first-principles, first-principle, problem-framing, surface-vs-root-cause, root-cause, mece, bayesian, bayesian-updating, falsification, scientific-method, calibration, adversarial-review, red-team, threat-model, counterexample, reverse-thinking, pre-mortem, second-order-thinking, invariant, property-based, systems-thinking, theory-of-constraints, failure-mode, expected-value, value-of-information, minimax-regret, opportunity-cost, decision-matrix, ooda, feedback-control, pdca, pre-execution-judgment, critical-thinking, constructive-dissent, premise-checking, ends-means, anti-sycophancy, spirit-over-letter, occams-razor, minimum-sufficient-solution, 第一性原理, 问题建模, 现象与本质, 根因推导, 贝叶斯推理, 证伪主义, 科学方法, 校准思维, 对抗式审查, 红队审查, 威胁建模, 反例审查, 逆向思维, 事前验尸, 二阶思维, 不变量, 属性测试, 系统思维, 约束理论, 故障模式, 期望价值, 信息价值, 最小遗憾, 机会成本, 决策矩阵, 闭环行动, 反馈控制, 执行前判断, 批判性思维, 建设性异议, 前提审查, 目的手段分离, 反迎合, 忠实于意图, 奥卡姆剃刀, 最小充分方案]
     activationRules:
+      - mode: pre-execution-judgment
+        aliases: [pre-execution-judgment, critical-thinking, constructive-dissent, premise-checking, ends-means, anti-sycophancy, spirit-over-letter, occams-razor, minimum-sufficient-solution, 执行前判断, 批判性思维, 建设性异议, 前提审查, 目的手段分离, 反迎合, 忠实于意图, 奥卡姆剃刀, 最小充分方案]
+        signals: [必须, 强制, 采用, 使用, 引入, 拆成, 多层, 复杂, 架构, 微服务, 策略引擎, 抽象, 框架, must, force, adopt, use, introduce, split, multi-layer, complex, architecture, microservice, engine, abstraction, framework]
+        minSignals: 3
+        section: 0. 执行前判断
+        requiredArtifacts: [goal, proposed-means, hard-constraints, unverified-premises, alternatives, recommendation, confirmation-needed]
       - mode: problem-framing
         aliases: [first-principles, problem-framing, surface-vs-root-cause, root-cause, mece, 第一性原理, 问题建模, 现象与本质, 根因推导]
         signals: [为什么, 原因, 根因, 目标, 约束, why, cause, root cause, goal, constraint]

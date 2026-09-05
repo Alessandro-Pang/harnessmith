@@ -130,6 +130,19 @@ rules:
       - template/agent-harness/docs/references/reasoning-modes.md
       - packages/harness/src/lib/documentation/docs-routing.ts
 
+  - id: pre-execution-judgment
+    owner: operating-model
+    principle: A user-prescribed implementation means is not automatically the task goal.
+    rationale: Blindly executing a complex means can increase cost and risk even when a simpler sufficient solution exists.
+    action: Separate goal, proposed means, hard constraints, and unverified premises; compare a minimum-sufficient alternative and raise constructive dissent only when the mismatch is significant.
+    fallback: Respect low-impact preferences and explicitly confirmed constraints; when a material choice remains open, stop with a concrete recommendation and confirmation-needed instead of implementing silently.
+    guarantee: guided
+    enforcedBy: agent
+    boundary:
+      - template/agent-harness/docs/references/reasoning-modes.md
+      - template/agent-harness/docs/playbooks/change.md
+      - template/agent-harness/docs/playbooks/research-and-design.md
+
   - id: multilingual-routing-and-response
     owner: operating-model
     principle: Runtime resolves action intent and response-language precedence; the Agent uses that decision for the final response.

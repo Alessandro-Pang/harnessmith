@@ -14,10 +14,11 @@ owner: change
 
 `frame → inspect → implement → verify → deliver`。每个阶段只推进一个可观察增量；阶段产物不完整时停在当前阶段，不把计划写成已完成。
 
-1. `frame`：找到用户可观察结果、验收条件、非目标、授权范围和影响边界。
+1. `frame`：找到用户可观察结果、验收条件、非目标、授权范围和影响边界；把用户指定的实现方式与真正目标、硬约束和未经验证前提分开。
 2. `inspect`：搜索现有相似实现、公共边界、生成流程和测试模式；先确认 owner，再新增文件。
 3. 明确输入、输出、失败、权限、幂等、数据迁移和兼容性中哪些适用，并记录仍未知的条件。
 4. `implement`：选择最小完整方案。不要用占位实现、假成功 mock、硬编码演示值或无期限 TODO 交付生产功能。
+   如果用户指定的架构显著增加复杂度、成本或风险，先按 `pre-execution-judgment` 给出替代方案并等待选择；低影响偏好直接尊重。
 5. 修改与行为变化直接相关的测试和正式文档；用户新增验收、scope/constraints 或不可廉价恢复 source
    且会影响后续决策时，必须先按 Memory 标准判定 purpose/lifecycle，去重后交给对应 typed writer；文件
    payload 的安全边界和重试方式按 [CLI reference](../references/cli-contracts.md) 执行。一次性动作授权与阶段推进不写 Important Input。

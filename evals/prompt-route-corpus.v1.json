@@ -142,6 +142,12 @@
       "categories": ["zh", "reasoning", "false-positive-guard"],
       "query": "请修改按钮颜色为蓝色。",
       "expected": { "status": "matched", "top1": "change", "topics": [], "reasoningModes": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "zh-prescribed-complex-means",
+      "categories": ["zh", "reasoning", "constructive-dissent", "false-negative-guard"],
+      "query": "实现权限功能，必须引入复杂策略引擎和多层抽象架构。",
+      "expected": { "status": "matched", "top1": "change", "topics": ["safety-and-verification"], "reasoningModes": ["pre-execution-judgment"], "forbiddenPlaybooks": [] }
     }
   ]
 }
