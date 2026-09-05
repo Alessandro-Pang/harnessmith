@@ -7,6 +7,7 @@ rules:
     action: Inspect and report evidence without modifying the scoped user object.
     fallback: Return an evidence-bounded answer or inconclusive result.
     guarantee: guided
+    enforcedBy: agent
     boundary:
       - template/AGENTS.md
       - template/agent-harness/docs/core/operating-model.md
@@ -19,6 +20,7 @@ rules:
     action: Run the unified negative-first eligibility evaluator, then evaluate value, source evidence, typed writer, authorization, and root state independently.
     fallback: Return a proposal or blocked result without editing managed Markdown.
     guarantee: guided
+    enforcedBy: agent
     boundary:
       - template/agent-harness/docs/standards/project-agent-docs.md
       - packages/harness/src/lib/memory/memory-capture-eligibility.ts
@@ -31,6 +33,7 @@ rules:
     action: Route mutations through the owning store or transaction.
     fallback: Fail closed and preserve a recoverable path.
     guarantee: enforced
+    enforcedBy: runtime
     evidence:
       implementation:
         - scripts/preflight/preflight-architecture.ts
@@ -48,6 +51,7 @@ rules:
     action: Call the acceptance gate before persisting complete.
     fallback: Keep the task in progress or close it as blocked with an actionable next step.
     guarantee: enforced
+    enforcedBy: runtime
     evidence:
       implementation:
         - packages/harness/src/commands/task/task.ts
@@ -65,6 +69,7 @@ rules:
     action: Produce bounded promote, close, supersede, archive, or skip candidates for the current task scope.
     fallback: Return none and leave Task and Memory unchanged.
     guarantee: enforced
+    enforcedBy: runtime
     evidence:
       implementation:
         - packages/harness/src/commands/memory/memory-curation.ts
@@ -81,19 +86,61 @@ rules:
     action: Preserve the raw request and return no primary playbook when no action intent matches.
     fallback: Return explicit ambiguity instead of selecting by keyword priority.
     guarantee: enforced
+    enforcedBy: runtime
     evidence:
       implementation:
         - packages/harness/src/lib/documentation/docs-routing.ts
+        - packages/harness/src/lib/documentation/docs-routing-matching.ts
       verification:
-        - packages/harness/src/__tests__/docs-routing.test.ts
+      - packages/harness/src/__tests__/docs-routing.test.ts
+
+  - id: execution-loop-guidance
+    owner: operating-model
+    principle: Non-trivial tasks advance through explicit framing, observation, action, verification, and delivery states.
+    rationale: A checklist without intermediate outputs lets the Agent skip evidence collection, continue after changed conditions, or report an unverified result.
+    action: Keep one current claim, one next action, expected evidence, and stop condition; after each tool or verifier result, update the next action.
+    fallback: Stop at the current state and report blocked or inconclusive when the next action, evidence, or authorization is unclear.
+    guarantee: guided
+    enforcedBy: agent
+    boundary:
+      - template/agent-harness/docs/core/execution-loop.md
+      - template/agent-harness/docs/references/prompt-examples.md
+
+  - id: host-approval-continuation
+    owner: tool-routing
+    principle: Authorization blockers use an available host interaction path before the Agent stops.
+    rationale: A prompt that forbids an action without requesting a one-shot decision leaves interactive Hosts waiting for a new chat turn.
+    action: Complete non-blocked work, call an explicitly advertised host approval or question capability, and continue only the exact action permitted by its result.
+    fallback: Keep the task blocked with a concrete nextAction when the capability is absent or returns denied, cancelled, or timeout; never treat the result as future authorization.
+    guarantee: host-dependent
+    enforcedBy: host
+    boundary:
+      - template/agent-harness/docs/core/tool-routing.md
+      - apps/docs/site/zh/concepts/boundaries.md
+
+  - id: reasoning-mode-output-contract
+    owner: operating-model
+    principle: An activated reasoning mode changes observable work products, not just internal vocabulary.
+    rationale: Naming a theory does not make the Agent use it; without required artifacts and stop conditions the mode is easy to ignore.
+    action: Read the selected mode section and produce its required artifacts when the route reports an explicit or inferred activation.
+    fallback: Do not force a mode for a simple task; if activation evidence is insufficient, follow the Playbook and ordinary verification contract.
+    guarantee: guided
+    enforcedBy: agent
+    boundary:
+      - template/agent-harness/docs/references/reasoning-modes.md
+      - packages/harness/src/lib/documentation/docs-routing.ts
 
   - id: multilingual-routing-and-response
     owner: operating-model
-    principle: Action intent and response language remain correct across CJK and mixed-language requests.
+    principle: Runtime resolves action intent and response-language precedence; the Agent uses that decision for the final response.
     rationale: Translation targets, quotations, and English keyword overlap are not durable preferences or requested actions.
-    action: Match action and concept aliases separately, then resolve current explicit language before persisted evidence and detection.
+    action: Match action and concept aliases separately, then resolve current explicit language before persisted evidence and detection; follow the returned decision for the response.
     fallback: Return unmatched, ambiguous, or undetermined without guessing or mutating the user profile.
-    guarantee: enforced
+    guarantee: guided
+    enforcedBy: agent
+    boundary:
+      - template/agent-harness/docs/core/operating-model.md
+      - apps/docs/site/zh/concepts/boundaries.md
     evidence:
       implementation:
         - packages/harness/src/lib/documentation/docs-routing.ts
@@ -111,9 +158,11 @@ rules:
     action: Validate identity and content, execute once, then remove a successful one-shot payload.
     fallback: Preserve or replace the failed payload using the documented retry contract.
     guarantee: enforced
+    enforcedBy: runtime
     evidence:
       implementation:
         - packages/harness/src/cli.ts
+        - packages/harness/src/lib/filesystem/command-payload.ts
       verification:
         - packages/harness/src/__tests__/memory-payload-file.test.ts
 
@@ -124,6 +173,7 @@ rules:
     action: Verify the official Host contract and candidate-bound event evidence.
     fallback: Report unsupported, not configured, or inconclusive without inventing an event.
     guarantee: host-dependent
+    enforcedBy: host
     boundary:
       - apps/docs/site/zh/concepts/architecture.md
       - template/agent-harness/docs/core/observability.md
@@ -135,6 +185,7 @@ rules:
     action: Verify new mutation or identical replay evidence with the read-only replay state machine.
     fallback: Return inconclusive and require a new payload after failed or incomplete attempts.
     guarantee: enforced
+    enforcedBy: runtime
     evidence:
       implementation:
         - packages/harness/src/lib/replay/replay-contract.ts

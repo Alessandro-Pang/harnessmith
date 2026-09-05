@@ -1,5 +1,5 @@
 version: 1
-updated: 2026-08-28
+updated: 2026-09-04
 root: |-
   {{HARNESS_HOME}}/agent-harness/docs
 principle: progressive-disclosure
@@ -8,10 +8,15 @@ entries:
     kind: topic
     path: core/operating-model.md
     conceptAliases: [workflow, ambiguity, evidence, handoff, trust, authorization, prompt-injection, read-only, readonly, memory-policy, sidecar, response-language, language-policy, multilingual-routing, 工作流, 歧义, 证据, 交接, 信任, 授权, 提示词注入, 只读, 只读任务, 记忆策略, 回复语言, 语言策略, 多语言路由]
+  execution-loop:
+    kind: topic
+    owner: operating-model
+    path: core/execution-loop.md
+    conceptAliases: [execution-loop, task-control, task-state, observe-decide-act, verify-recover, execution contract, 执行循环, 任务控制, 任务状态, 工具循环, 验证恢复]
   tool-routing:
     kind: topic
     path: core/tool-routing.md
-    conceptAliases: [mcp, browser, figma, documentation, connector, search, provenance, 工具, 浏览器, 设计稿, 文档, 连接器, 搜索, 来源]
+    conceptAliases: [mcp, browser, figma, documentation, connector, search, provenance, approval, approvals, question, ask-user, elicitation, human-in-the-loop, 工具, 浏览器, 设计稿, 文档, 连接器, 搜索, 来源, 授权, 审批, 用户提问, 人在回路]
   safety-and-verification:
     kind: topic
     path: core/safety-and-verification.md
@@ -20,10 +25,16 @@ entries:
     kind: topic
     path: core/git-conventions.md
     conceptAliases: [git, branch, commit, commitlint, conventional-commits, 分支, 提交, 提交规范]
+  git-project-overrides:
+    kind: topic
+    load: reference
+    owner: git-conventions
+    path: references/git-project-overrides.md
+    conceptAliases: [git-project-overrides, branch-regex, commitlint-overrides, 仓库 Git 覆盖, 分支正则]
   harness-cli-architecture:
     kind: topic
     path: core/harness-cli-architecture.md
-    conceptAliases: [harness-cli, architecture-design, implementation-architecture, implementation-principle, install, init, memory-command, memory-autopilot, capture-input, close-input, payload-file, handoff, close-handoff, reconcile-profile, forget-profile, profile-autopilot, acceptance, local-harness, harness-profile, profile-autopilot-control, doctor, health, route, memory-migrate, memory-curate, curation-apply, 架构设计, 实现架构, 实现原理, 实现思想, 安装, 初始化, 记忆命令, 自动记忆, 验收, 本地-harness, harness-画像, 画像控制, 健康检查, 路由, 记忆迁移, 记忆策展, 策展执行]
+    conceptAliases: [harness-cli, packages/harness, harness-package, runtime-router, architecture-design, implementation-architecture, implementation-principle, install, init, memory-command, memory-autopilot, capture-input, close-input, payload-file, handoff, close-handoff, reconcile-profile, forget-profile, profile-autopilot, acceptance, local-harness, harness-profile, profile-autopilot-control, doctor, health, route, memory-migrate, memory-curate, curation-apply, 架构设计, 实现架构, 实现原理, 实现思想, 安装, 初始化, 记忆命令, 自动记忆, 验收, 本地-harness, harness-画像, 画像控制, 健康检查, 路由, 记忆迁移, 记忆策展, 策展执行]
   observability:
     kind: topic
     path: core/observability.md
@@ -31,12 +42,13 @@ entries:
   long-running-tasks:
     kind: topic
     path: core/long-running-tasks.md
-    conceptAliases: [long-running, multi-stage, phase, verified-phase, phase-handoff, multi-task, checkpoint, compaction, context-budget, acceptance, resume, task-ledger, 长任务, 阶段, 多阶段, 多阶段任务, 阶段交接, 阶段已验证仍有后续, 多任务, 检查点, 压缩, 上下文预算, 上下文预算信号, 验收, 恢复任务, 任务账本]
+    conceptAliases: [long-running, multi-stage, phase, verified-phase, phase-handoff, handoff, close-handoff, multi-task, checkpoint, compaction, context-budget, acceptance, resume, task-ledger, 长任务, 阶段, 多阶段, 多阶段任务, 阶段交接, 关闭交接, 阶段已验证仍有后续, 多任务, 检查点, 压缩, 上下文预算, 上下文预算信号, 验收, 恢复任务, 任务账本]
+    requiredConceptAliases: [handoff, close-handoff, phase-handoff, 阶段交接, 关闭交接, 阶段已验证仍有后续, 上下文预算信号]
   change:
     kind: playbook
     priority: 40
     path: playbooks/change.md
-    actionAliases: [change, implement, modify, refactor, build, 变更, 实现, 实施, 修改, 重构, 构建]
+    actionAliases: [change, implement, modify, refactor, build, fix, repair, 变更, 实现, 实施, 修改, 重构, 构建, 修复, 修正]
   diagnose:
     kind: playbook
     priority: 50
@@ -57,10 +69,26 @@ entries:
     priority: 60
     path: playbooks/release-and-external.md
     actionAliases: [release, migration, publish, remote-write, 发布, 迁移, 远端写入]
+  understand-and-map:
+    kind: playbook
+    priority: 35
+    path: playbooks/understand-and-map.md
+    actionAliases: [understand, explore, onboard, map, trace, 了解, 探索, 梳理, 盘点, 追踪]
+  verify-and-accept:
+    kind: playbook
+    priority: 45
+    path: playbooks/verify-and-accept.md
+    actionAliases: [verify-result, validate-result, verify-acceptance, validate-acceptance, prove-claim, run-verification, 验证, 验收, 核验, 证明, 复核]
   repository-map:
     kind: topic
     path: projects/repository-map.md
-    conceptAliases: [cross-repository, repository-map, repository-owner, release-order, contract, reconcile, repository-map-check, 跨仓, 仓库关系图, 仓库所有者, 发布顺序, 契约, 自动维护]
+    conceptAliases: [cross-repository, repository-map, repository-owner, release-order, repository-contract, reconcile, repository-map-check, 跨仓, 仓库关系图, 仓库所有者, 发布顺序, 仓库契约, 自动维护]
+  repository-map-contracts:
+    kind: topic
+    load: reference
+    owner: repository-map
+    path: references/repository-map-contracts.md
+    conceptAliases: [repository-map-schema, repository-map-commands, repository-map-budget, repository-map-migration, schema-contract, map-schema-contract, 仓库关系图契约, 仓库关系图迁移]
   project-agents:
     kind: standard
     path: standards/project-agents.md
@@ -69,11 +97,90 @@ entries:
     kind: standard
     path: standards/project-agent-docs.md
     conceptAliases: [.agent-docs, project-memory, memory-policy, memory-writeback, high-value-analysis, session, evidence, handoff, acceptance, future-tasks, multi-stage, phase, verified-phase, phase-handoff, multi-task, compaction, context-budget, close-handoff, memory-autopilot, capture-input, payload-file, memory-list, memory-check, memory-migrate, memory-repair, repair-plan, memory-curate, curation-apply, secret-hygiene, host-evals, 项目记忆, 记忆沉淀, 记忆策略, 高价值内容, 只读任务, 会话, 验收, 未来所有任务, 以后所有任务, 阶段, 多阶段, 多阶段任务, 阶段交接, 阶段已验证仍有后续, 多任务, 压缩, 上下文预算, 上下文预算信号, 自动记忆, 记忆列表, 记忆检查, 记忆迁移, 诊断修复, 修复提案, 记忆策展, 策展执行, 凭据卫生]
+  memory-contracts:
+    kind: topic
+    load: reference
+    owner: project-agent-docs
+    path: references/memory-contracts.md
+    conceptAliases: [memory-contract, memory-payload, memory-maintenance, memory-repair-contract, memory-curation-contract, memory-output-contract, memory-schema, capture-input, memory repair, memory curate, 记忆契约, 记忆载荷, 记忆维护, 记忆修复契约]
   prompt-rule-contract:
     kind: standard
     path: standards/prompt-rule-contract.md
-    conceptAliases: [prompt-rule, prompt-contract, prompt-design, prompt-optimization, prompt-设计, prompt-优化, guarantee-level, confusing-pair, rule-owner, 提示词规则, 提示词契约, 提示词设计, 提示词优化, 保证等级, 混淆规则, 规则所有者]
+    conceptAliases: [prompt, prompts, prompt-system, prompt-rule, prompt-contract, prompt-design, prompt-optimization, prompt-architecture, progressive-disclosure, prompt-设计, prompt-优化, prompt-体系, 提示词, 提示词规则, 提示词契约, 提示词设计, 提示词优化, 提示词体系, 渐进式披露, guarantee-level, confusing-pair, rule-owner, 保证等级, 混淆规则, 规则所有者]
   user-profile-memory:
     kind: standard
     path: standards/user-profile-memory.md
     conceptAliases: [user-profile, reconcile-profile, forget-profile, profile-autopilot, future-tasks, local-harness, harness-profile, profile-autopilot-control, preference, identity, coding-style, research-interest, 用户画像, 画像合并, 画像暂停, 画像遗忘, 未来所有任务, 以后所有任务, 本地-harness, harness-画像, 画像控制, 偏好, 身份, 编码风格, 研究兴趣]
+  profile-contracts:
+    kind: topic
+    load: reference
+    owner: user-profile-memory
+    path: references/profile-contracts.md
+    conceptAliases: [profile-contract, profile-payload, profile-reconcile-contract, profile-forget-contract, profile-autopilot-contract, reconcile-profile, forget-profile, profile-autopilot, 画像契约, 画像载荷, 画像合并契约, 画像遗忘契约]
+  cli-contracts:
+    kind: topic
+    load: reference
+    owner: harness-cli-architecture
+    path: references/cli-contracts.md
+    conceptAliases: [cli-contracts, payload-contract, payload-file-contract, command-contract, payload-file, --payload-file, --consume-payload-file, version --json, install-context, runtime-identity, 命令契约, payload契约]
+  search-and-benchmarks:
+    kind: topic
+    load: reference
+    owner: harness-cli-architecture
+    path: references/search-and-benchmarks.md
+    conceptAliases: [search-benchmark, search-budget, search-index-benchmark, refresh-index, max-line-length, 搜索基准, 搜索预算]
+  prompt-examples:
+    kind: topic
+    load: reference
+    owner: prompt-rule-contract
+    path: references/prompt-examples.md
+    conceptAliases: [prompt-examples, prompt-pattern, prompt-example, 提示词示例, 提示词样本]
+  reasoning-modes:
+    kind: topic
+    load: reference
+    owner: operating-model
+    path: references/reasoning-modes.md
+    conceptAliases: [first-principles, first-principle, problem-framing, surface-vs-root-cause, root-cause, mece, bayesian, bayesian-updating, falsification, scientific-method, calibration, adversarial-review, red-team, threat-model, counterexample, reverse-thinking, pre-mortem, second-order-thinking, invariant, property-based, systems-thinking, theory-of-constraints, failure-mode, expected-value, value-of-information, minimax-regret, opportunity-cost, decision-matrix, ooda, feedback-control, pdca, 第一性原理, 问题建模, 现象与本质, 根因推导, 贝叶斯推理, 证伪主义, 科学方法, 校准思维, 对抗式审查, 红队审查, 威胁建模, 反例审查, 逆向思维, 事前验尸, 二阶思维, 不变量, 属性测试, 系统思维, 约束理论, 故障模式, 期望价值, 信息价值, 最小遗憾, 机会成本, 决策矩阵, 闭环行动, 反馈控制]
+    activationRules:
+      - mode: problem-framing
+        aliases: [first-principles, problem-framing, surface-vs-root-cause, root-cause, mece, 第一性原理, 问题建模, 现象与本质, 根因推导]
+        signals: [为什么, 原因, 根因, 目标, 约束, why, cause, root cause, goal, constraint]
+        minSignals: 2
+        section: 1. 问题建模
+        requiredArtifacts: [goal, constraints, assumptions, non-goals, next-verification]
+      - mode: evidence-update
+        aliases: [bayesian, bayesian-updating, falsification, scientific-method, calibration, 贝叶斯推理, 证伪主义, 科学方法, 校准思维]
+        signals: [证据, 可能, 假设, 验证, 推断, evidence, likely, hypothesis, verify, infer]
+        minSignals: 2
+        section: 2. 证据更新
+        requiredArtifacts: [hypotheses, supporting-evidence, conflicting-evidence, next-verification, confidence]
+      - mode: failure-and-consequence
+        aliases: [adversarial-review, red-team, threat-model, counterexample, reverse-thinking, pre-mortem, second-order-thinking, 对抗式审查, 红队审查, 威胁建模, 反例审查, 逆向思维, 事前验尸, 二阶思维]
+        signals: [攻击者, 绕过, 失败, 风险, 副作用, 后果, attack, bypass, fail, risk, side effect, consequence]
+        minSignals: 2
+        section: 3. 失败与后果
+        requiredArtifacts: [failure-paths, boundary-conditions, detection, stop-condition, recovery]
+      - mode: system-structure
+        aliases: [invariant, property-based, systems-thinking, theory-of-constraints, failure-mode, 不变量, 属性测试, 系统思维, 约束理论, 故障模式]
+        signals: [架构, 模块, 依赖, 调用链, 瓶颈, 反馈, architecture, module, dependency, trace, bottleneck, feedback]
+        minSignals: 2
+        section: 4. 系统结构
+        requiredArtifacts: [components, dependencies, boundaries, bottleneck, invariants]
+      - mode: decision-under-uncertainty
+        aliases: [expected-value, value-of-information, minimax-regret, opportunity-cost, decision-matrix, 期望价值, 信息价值, 最小遗憾, 机会成本, 决策矩阵]
+        signals: [比较, 方案, 选择, 权衡, 长期, 副作用, 成本, compare, option, choice, tradeoff, long-term, cost]
+        minSignals: 2
+        section: 5. 不确定性决策
+        requiredArtifacts: [candidates, hard-constraints, trade-offs, information-value, recommendation]
+      - mode: closed-loop-action
+        aliases: [ooda, feedback-control, pdca, 闭环行动, 反馈控制]
+        signals: [多步骤, 继续, 根据结果, 重试, 监控, 工具, 外部, multi-step, continue, retry, monitor, tool, external]
+        minSignals: 2
+        section: 6. 闭环行动
+        requiredArtifacts: [current-state, next-action, expected-observation, verifier, recovery]
+  task-and-replay-contracts:
+    kind: topic
+    load: reference
+    owner: long-running-tasks
+    path: references/task-and-replay-contracts.md
+    conceptAliases: [task-verification-contract, task-evidence, task-evidence-contract, task verify, handoff, handoff-payload, handoff-replay, replay, replay-proof, identical-replay, clearOpen, clear-handoff, scope-digest, task-schema-migration, 任务证据, 交接载荷, 重放证明, 关闭交接]

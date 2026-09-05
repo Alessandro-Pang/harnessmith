@@ -2,7 +2,8 @@
 title: Git Conventions
 type: harness-core
 status: active
-updated: 2026-08-17
+updated: 2026-09-04
+owner: git-conventions
 sources:
   - https://commitlint.js.org/llms-full.txt
   - https://www.conventionalcommits.org/en/v1.0.0/
@@ -10,97 +11,48 @@ sources:
 
 # Git Conventions
 
-本文件定义个人仓库的跨语言 Git 默认契约。仓库内更具体的 `AGENTS.md`、贡献指南、受保护分支
-规则、Git hook 或 CI 配置优先；发现冲突时先报告，不通过绕过校验来制造提交。
+本文件是跨语言默认契约：使用 [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/)
+表达提交意图，并以项目现有规则为最终约束。它只规范用户已明确授权的 Git 动作；不授权 commit、push、
+merge、rebase、发布或删除分支。
 
-## 分支命名
+## 分支
 
-新建分支必须匹配：
+分支名不是跨仓默认：创建或重命名前读取目标项目规则（`AGENTS.md`、贡献指南和 CI）。历史分支、用户
+正在使用的分支和远端共享分支只报告问题，不自动重命名、切换或删除。Harnesssmith 本仓的精确覆盖只在明确处理本仓时
+加载 [project Git overrides](../references/git-project-overrides.md)，不得外推。
 
-```text
-^(feature|hotfix|refactor)/[0-9]{8}_[a-z0-9]+(?:-[a-z0-9]+)*$
-```
+## 提交
 
-结构为 `(feature|hotfix|refactor)/YYYYMMDD_<feature-name>`：
-
-- `feature`：新能力或可感知的功能扩展；
-- `hotfix`：需要快速修复的缺陷；
-- `refactor`：不改变外部行为的结构调整；正确拼写是 `refactor`，不是 `refatcor`；
-- `YYYYMMDD`：创建分支时的本地日期；
-- `feature-name`：小写 ASCII kebab-case，表达一个清晰目标，不含空格、下划线或额外 `/`。
-
-示例：
-
-```text
-feature/20260817_agent-memory-index
-hotfix/20260817_token-refresh-race
-refactor/20260817_repository-layer
-```
-
-该契约约束新建分支。遇到历史分支、用户已在工作的分支或远端共享分支，只报告不合规；除非
-用户明确授权，不自动重命名、切换、发布或删除分支。若项目需要 `release`、`docs`、工单号等
-额外模式，应在项目规则中明确扩展或覆盖。
-
-## 提交信息
-
-默认采用 Conventional Commits，并以 `@commitlint/config-conventional` 的常见规则作为兼容目标：
+最小格式：
 
 ```text
 <type>[optional scope][!]: <description>
-
-[optional body]
-
-[optional footer(s)]
 ```
 
-默认 `type`：
+Conventional Commits 规定提交结构和语义，不保证目标项目接受某个完整的 `type` 枚举；type、scope、长度和字符集必须从目标项目配置核对。模块名是可能的 `scope`，不是默认 `type`；只有项目配置明确允许时才新增类型。
 
-```text
-build chore ci apps/docs/site feat fix perf refactor revert style test
-```
+必须满足：
 
-- `type` 必填并小写；有明确模块边界时可加小写 `scope`，不要为了形式臆造 scope。
-- `description` 必填，简洁说明单一意图，不以句号结尾；语言服从项目约定，未约定时与仓库近期
-  提交保持一致。
-- 一个提交只承载一个可解释的逻辑变更。正文说明动机、取舍或非显然影响，不复述 diff。
-- 不兼容变更用 `!`，并在 footer 写 `BREAKING CHANGE: <description>`；issue、review 或协作者
-  元信息放 footer。
-- merge、revert、自动生成和平台合并提交可服从 Git/托管平台或项目已有格式。
-
-示例：
+- `type` 小写且有效，`description` 非空、表达一个逻辑意图、默认不以句号结束；
+- scope 只在确有模块边界时使用，并服从项目的大小写/字符集约束；
+- breaking change 使用 `!`，并在 footer 说明 `BREAKING CHANGE:`；普通动机、issue 和 review 信息放 body/footer；
+- merge、revert、自动生成和平台合并提交可遵循项目或托管平台的专用格式。
 
 ```text
 feat(auth): add device authorization flow
 fix(api): handle expired refresh tokens
-refactor(storage)!: replace legacy repository interface
-docs: document local memory lifecycle
+docs(site): clarify local memory lifecycle
 ```
 
-## Agent 执行顺序
+以下不是默认合规提交：`feat:`, `feature: add thing.`, `Docs(API): ...`（除非项目规则明确覆盖）。
 
-当用户明确授权创建提交时：
+## 项目覆盖与验收
 
-1. 读取项目 `AGENTS.md`、贡献指南、近期提交风格，以及 commitlint、hook、CI 等已有规则。
-2. 若仓库已有 commitlint，读取其解析后配置（如 `commitlint --print-config json`）并用项目现有
-   包管理器校验候选消息；项目配置高于本文件的默认 type、scope、大小写和长度约束。
-3. 若没有 commitlint，按本文件人工检查结构；不要仅为一次提交安装 Node、commitlint、Husky
-   或修改 manifest/lockfile。
-4. hook 拒绝时按错误中的规则名修正并重试；不得使用 `git commit --no-verify`。
-5. commit 后只在必要时检查最终消息；push、merge、rebase 和发布仍需单独明确授权。
+跨仓默认只约束提交意图的 Conventional Commits 结构；分支名、type 集合、scope 字符集和长度都由目标项目覆盖。
+提交前先读取项目 `AGENTS.md`、贡献指南、近期提交和 hook/CI；若存在 commitlint，读取并解析其配置，使用其**解析后的配置**
+校验候选消息，项目配置优先于本文件。解析配置中的 header 最大长度、scope、type 枚举等字段必须逐项服从；不要把某个仓库
+的覆盖值外推到别的仓库。
 
-## 是否引入校验工具
-
-规范是语言无关的提交文本契约，校验器是项目级实现选择：
-
-- JavaScript/TypeScript 仓库已经使用 Node 工具链时，可采用 commitlint + `commit-msg` hook，
-  并在 CI 校验 PR 的完整 commit range。
-- Go、Python 或混合语言仓库不要为了本规范默认引入 Node。优先复用现有 hook 框架、CI、
-  pre-commit、Make/Task 脚本或轻量脚本；团队确需与 commitlint 完全一致时，再评估集中式 CI
-  或固定版本的 commitlint 容器。
-- 个人全局 Git hook 不作为仓库合规的唯一保障：它不可随仓库版本化，容易与项目 hook 冲突，
-  也不能约束其他贡献者。真正需要强制执行时，应由仓库内配置和 CI 提供可复现门禁。
-- 引入任何工具前，先确认团队接受、运行时成本、版本锁定、提交范围算法与紧急修复流程；工具
-  变更应作为独立项目决策，而不是 Agent 的隐式副作用。
-
-commitlint 官方 Agent 指南强调：已安装时读取解析后的配置、提交前校验候选消息、hook 失败后
-按具体规则修正；它不意味着每个仓库都必须安装 commitlint。
+有可用的现有校验器就运行它；没有则按上面的最小格式人工检查，不为一次提交引入新工具或修改 lockfile。
+hook 失败按具体规则修正，不使用 `git commit --no-verify`。校验通过只证明提交消息合规，不代表获得任何远端
+操作授权。

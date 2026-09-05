@@ -2,32 +2,27 @@
 title: Runtime Observability
 type: harness-core
 status: active
-updated: 2026-08-28
+updated: 2026-09-04
+owner: observability
 ---
 
 # Runtime Observability
 
 Harness 提供宿主中立的轻量审计接收、存储和汇总层，不接管模型循环或工具执行。Host、CI 或明确的
-生命周期 hook 负责在动作结束后生成事件，并调用 `audit record --payload-file`；Harness 不声称能自动
+生命周期 hook 负责在动作结束后生成事件，并调用审计记录入口；Harness 不声称能自动
 观察未接入的 Host 行为。
 
 ## 事件契约
 
-每个事件只保存运行元数据：`traceId`、UTC 时间、`operation`、`action`、policy decision/version、
-耗时、结果、artifact SHA-256 digest，以及可选 token、成本和错误码。禁止提交原始 prompt、模型输出、
-tool arguments、文件正文、环境变量、凭据或用户内容。payload 只接受已知字段，数值、标识符、枚举、
-digest 数量与文件大小均有上限，并执行高置信 secret 检查。
+每个事件只保存受限运行元数据：trace、时间、operation/action、policy、耗时、结果和 artifact digest，
+必要时附带 token、成本或错误码。禁止提交原始 prompt、模型输出、tool arguments、文件正文、环境变量、
+凭据或用户内容。payload 字段、大小上限和 secret 检查由 CLI reference 与 schema 执行。
 
 `operation` 可表示 `model`、`tool`、`memory`、`task`、`policy`、`lifecycle` 或 `other`。这只是统一的
 可观测事件类型，不意味着 Harness 已获得稳定的 session-end、compaction-before 或权限决策 hook。
 
-```bash
-node <harness-path>/bin/harness.mjs audit record --payload-file /absolute/event.json --json
-node <harness-path>/bin/harness.mjs audit list --trace-id trace-123 --limit 100 --json
-node <harness-path>/bin/harness.mjs audit summary --since 2026-08-01T00:00:00.000Z --json
-```
-
-成功写入后才可用 `--consume-payload-file` 删除输入。校验或写入失败时保留 payload 供诊断。
+需要记录、查询或维护事件时加载 [CLI contracts reference](../references/cli-contracts.md)；只有领域命令成功且结果
+校验完成后才消费输入，校验或写入失败时保留 payload 供诊断。
 
 ## 存储与健康
 

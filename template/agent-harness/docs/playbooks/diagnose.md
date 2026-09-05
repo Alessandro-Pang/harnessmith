@@ -2,24 +2,31 @@
 title: Diagnosis and Bugfix Playbook
 type: harness-playbook
 status: active
-updated: 2026-08-17
+updated: 2026-09-04
+owner: diagnose
 ---
 
 # 排障与修复
 
 触发：bug、异常、CI 失败、性能退化、网络问题、行为与预期不符。
 
+## 执行状态
+
+`observe → hypothesize → discriminate → verify → explain`；获准修复时再转入 `change`。每个假设必须有支持证据、冲突证据和能区分它的最小验证。
+
 ## 诊断
 
 1. 固定实际现象、期望、时间、环境、版本、输入和最小复现。
 2. 从症状沿调用链向边界收缩：UI → API → service → storage/external；不要一开始大范围改动。
 3. 区分根因、触发条件和放大因素。日志时间相关不等于因果关系。
-4. 用单变量实验或最小测试证伪假设；浏览器问题检查 DOM、Console、Network、路由和状态。
-5. 受限环境中的“看不到/连不上”标 `inconclusive`，必要时在获批后用相同只读探测复核。
+4. 列出至少两个仍然可能的解释，优先寻找能推翻当前首选解释的证据；用单变量实验或最小测试证伪假设。
+5. 浏览器问题检查 DOM、Console、Network、路由和状态；受限环境中的“看不到/连不上”标 `inconclusive`，必要时在获批后用相同只读探测复核。
 
 ## 修复
 
 - 用户只要求诊断时停在证据充分的原因说明，不自动修改。
 - 获准修复时，先加能失败的最小回归测试，再改根因。
 - 不吞错、不无限重试、不把所有错误改成默认值，也不删除失败测试。
-- 交付说明复现、根因、修复机制、回归证据和仍可能存在的边界。
+- 交付说明复现、根因、修复机制、回归证据和仍可能存在的边界；没有排除关键假设时使用 `inconclusive` 或 `plausible`。
+
+最小交付记录：`symptom`、`hypotheses`、`evidence`、`discriminating-test`、`root-cause-confidence`。

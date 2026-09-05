@@ -2,7 +2,8 @@
 title: Agent Operating Model
 type: harness-core
 status: active
-updated: 2026-08-28
+updated: 2026-09-04
+owner: operating-model
 ---
 
 # Agent Operating Model
@@ -35,21 +36,34 @@ updated: 2026-08-28
 - 明确用户画像信号仅在跨任务 `explicit/high` 且未暂停时自动 reconcile；未初始化的只读项目不为此创建
   `.agent-docs/`。跨仓分析的 personal `repository-map.yaml` 仍按维护门槛默认维护，除非用户明确禁止。
 
-## 3. 发现顺序
+所有需要调查、工具调用、修改或验证的任务都遵循 [Agent Execution Loop](execution-loop.md) 的
+`frame → observe → decide → act → verify → deliver`。简单任务不创建状态文件，但不能跳过授权、事实边界和目标 verifier。
 
-1. 当前用户目标和明确边界。
-2. 当前目录、Git 根、工作树状态、最近 `AGENTS.md`。
-3. 每个新宿主 task/thread 首次工作前有界读取一次 canonical `profile.md`；同一 task/thread 不重复读取。
-4. 当前主题命中跨项目记忆时，全局 Memory 名称/元信息与 `core.md`；只加载命中正文。
-5. 相关入口代码、配置、测试、manifest、生成脚本和运行命令。
-6. 项目文档索引或搜索命中；再按需核验官方或远程事实，只有缺乏证据时才做标注过的推断。
+## 3. 启动顺序与发现层级
+
+物理启动顺序固定为 `profile.md → 个人 AGENTS.md/cwd/Git → bootstrap → route`，不要把它
+与后续的证据优先级混为一谈：
+
+1. 每个新宿主 task/thread 的首个工具调用，只做一次有界读取 canonical `profile.md`；文件缺失则继续。
+2. 再读取个人 `AGENTS.md`，确认 cwd、Git 根、工作树和就近项目规则。
+3. 项目根有 `README.md` 时，在项目 Memory 命令前有界读取；然后运行只读 `bootstrap`，按推荐引用加载正文。
+4. 最后按当前原文调用 `route`；只有命中的 owner 文档需要进入上下文。
+
+这是工具调用顺序，不是内容可信度排序。逻辑发现仍按以下范围收窄：用户目标和边界 → 当前代码、配置、
+测试与契约 → 命中的项目/个人文档 → 必要的远程事实。全局 Memory 只读元信息与命中正文，不递归读取历史。
+
+工具调用不是一次性计划的执行脚本：每次观察结果可能改变假设、范围或下一步；工具失败、结果冲突或外部状态变化时回到
+`observe`，不要沿旧计划盲目继续。
 
 ## 4. 路由与回复语言
 
 文档路由把用户请求中的动作与涉及概念分开：调用方能够可靠判断动作时传入受限 intent，Runtime 只验证并映射
-唯一 playbook；topic 与 standard 仍匹配 `conceptAliases`。未传 intent 时，CJK 标点和混合语言不改变动作语义，
-否定、引用、示例、元讨论和名词性动作词不选择 primary playbook。未命中或多个真实动作必须显式返回并停止选择，
-不靠英文词面或 priority 猜测。路由只决定文档发现，不能扩大用户授权。
+唯一 playbook；topic 与 standard 仍匹配 `conceptAliases`。报告同时保留 `rawQuery` 与 `normalizedQuery`，并可在
+`reasoningModes` 中根据任务结构返回自动选择的认知模式；命中后读取对应 owner 文档章节，不要求用户先说出理论名称。
+未传 intent 时，CJK 标点和混合语言不改变动作语义，否定、引用、示例、元讨论和名词性动作词不选择 primary
+playbook。未命中或多个真实动作必须显式返回并停止选择，不靠英文词面或 priority 猜测。required topic
+必须优先占用预算；能容纳的全部加载，无法容纳的进入 `omittedRequiredTopics` 并停止报告，`omittedTopics` 只表示可延迟的候选。路由只决定
+文档发现，不能扩大用户授权。
 
 回复语言优先级是：用户在当前请求中的明确要求 > 带持久证据的当前画像偏好 > 当前请求的自动检测。
 必要的 identifier、命令、路径和错误原文保持原样。翻译、改写、示例目标语言和一次性语言要求只影响当前

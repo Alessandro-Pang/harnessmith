@@ -2,7 +2,8 @@
 title: Project AGENTS.md Standard
 type: harness-standard
 status: active
-updated: 2026-08-22
+updated: 2026-09-04
+owner: project-agents
 ---
 
 # 项目 `AGENTS.md` 设计

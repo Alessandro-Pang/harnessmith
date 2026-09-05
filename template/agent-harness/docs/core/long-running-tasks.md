@@ -2,157 +2,45 @@
 title: Long-running Task Protocol
 type: harness-core
 status: active
-updated: 2026-08-29
+updated: 2026-09-04
+owner: long-running-tasks
 ---
 
 # Long-running Task Protocol
 
-任务预计跨上下文、多阶段或需要交接时，使用 `.agent-docs/working/<task-id>/task.json` 保存机器
-可读的目标、验收条件、基线、检查点和下一步；`progress.md` 保存简短的人类叙述。它们属于非
-权威工作记忆，不替代代码、测试、ADR、正式计划或产品规格。
+本文件是 Task/Handoff 状态机的唯一 Prompt owner。Task ledger 是任务验收状态与当前 `nextAction` 的唯一事实源，Handoff 只保存跨上下文恢复快照；二者都是非权威工作记忆，不能替代代码、测试、ADR 或正式计划。详细 task verification、replay 和 evidence 机械契约见 [reference](../references/task-and-replay-contracts.md)。
 
 ## 何时创建
 
-- 创建：跨上下文、跨仓、多阶段、高风险、昂贵调查，或存在多个必须逐项验证的验收条件。
+- 创建：跨上下文、跨仓、多阶段、高风险、昂贵调查，或有多个必须逐项验证的验收条件。
 - 不创建：简单问答、一次性小改动、无需交接且能从 Git/代码快速恢复的工作。
-- 不确定时询问用户，不因工具存在就给每个任务增加状态文件。
-- 初始化至少提供一个可判定的 `--accept`；没有成功条件的任务不能进入账本。
+- 不确定时询问用户；不要因为工具存在就给每个任务增加状态文件。
+- `task init` 至少要有一个可判定的 `--accept`；没有成功条件的任务不能进入账本。
 
-## 生命周期
+## 最小生命周期
 
-```bash
-node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs task init \
-  --project /absolute/project/path \
-  --objective "建立可重复的文档验证" \
-  --accept "断链会导致 validate 失败" \
-  --accept "正常文档检查通过"
+使用 Harness 的 `task init`、`checkpoint`、`status` 和 `close` 管理账本；`init` 必须有可判定的 acceptance，
+检查点必须留下当前 next，关闭必须经过 acceptance gate。精确参数、evidence 类型和退出码只在
+[Task/Handoff reference](../references/task-and-replay-contracts.md) 中加载。
 
-node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs task checkpoint \
-  --project /absolute/project/path --id <task-id> \
-  --summary "完成路由覆盖检查" --next "实现相对链接检查"
+## Checkpoint 与 Handoff
 
-node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs task verify \
-  --project /absolute/project/path --id <task-id> \
-  --criterion criterion-1 --type test --command "<test-runner>" \
-  --arg "<runner-argument>" --scope "<source-path>" --scope "<test-path>"
+每个阶段完成、已验证且仍有具体后续时，更新已有 Task checkpoint；没有 ledger 时才创建可恢复 Handoff，不为它临时制造 Task。收到上下文压缩信号时，在该 signal turn 内执行并校验一次；同一 session 的第二个独立已验证任务使用 multi-task，并在 `reason` 标明 multi-task；优先级为 `compaction > multi-task > phase`，手动交接使用 manual。陈旧 backlog、相同快照和普通请求完成都不触发关闭。
 
-node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs task status --project /absolute/project/path --id <task-id>
-node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs task close --project /absolute/project/path \
-  --id <task-id> --summary "全部验收通过"
-```
+同一 session/workstream 使用稳定 base；active/blocked generation 原位更新，旧 generation 已结束后才创建下一代。写前读取旧 Handoff 和 Task，保留未变化字段；`next` 必须点名当前仍有效的文件、命令或动作，不能写“处理下一请求”。精确字段、冻结路径和安全 payload 由 reference 独占。
 
-## 阶段与压缩检查点
+Handoff 必须能让新上下文恢复目标、已完成证据和单一下一步；旧 open 全部解决时才清空，部分完成必须保留剩余项。缺少恢复信息时先加载 reference 修正 payload，不猜测或直接关闭。
 
-Task ledger 是任务验收状态与当前 `nextAction` 的唯一事实源；handoff 只保存跨上下文恢复快照。
-Handoff 的 `reason` 取值为 `phase`、`compaction`、`multi-task`、`manual`，触发与优先级均由本节定义。
-已有 Handoff 从一个 `task-id` 切换到另一个 `task-id` 时，Runtime 机械要求 `multi-task`；`phase`、
-`compaction` 或 `manual` 不能掩盖独立任务切换。
+## 关闭与验收
 
-长任务不等待宿主会话结束事件。当前 workstream 的 plan/backlog 已核验有具体后续阶段即属“仍有后续”；
-陈旧或不相关 backlog 不触发 phase checkpoint。即使该阶段尚未获本轮执行授权，也只是不执行后续，不得
-跳过当前阶段 checkpoint。每个阶段完成、已验证且仍有后续时，最终答复前若已有 active task ledger，
-先写 task checkpoint；没有 ledger 时不得仅为 handoff 临时初始化 task，直接以 `reason: phase` 用
-`memory handoff` 更新并校验可恢复快照，不得留到下一条用户消息。同一 open thread
-完成第二个独立已验证任务后，最终答复前以 `reason: multi-task` 累计写入，后续任务原位更新；发现上下文接近
-宿主限制或收到压缩信号时，压缩前必须以 `reason: compaction` 完成 handoff。reason 优先级为
-`compaction > multi-task > phase`；仅预判压缩时，快照相同或只有措辞变化不写。
+只有当前 user/host turn 明示整个 workstream `completed` 或 `cancelled`，并核对 Task、plan/backlog、Handoff 没有仍有效事项，才执行 `memory close-handoff`。阶段、单个请求、verifier 或普通 task 完成不等于 workstream 结束；存疑不关闭。
 
-同一 session/workstream 使用稳定 base；最新 generation 为 active/blocked 时原位更新该 episode，
-latest generation 已 complete 或 archived 且同一 base 出现新任务时，确定性创建下一 generation 并保留旧 episode。
-写前读取旧 handoff 与 active task；`facts`、`decisions`、`verification`、`open`、scope 和 source refs
-省略时保留；生成新 reconcile payload 时，未变化的可选字段必须省略、不得顺手改写，显式原样重放除外；
-只有已证实 resolved/superseded 才用 clear 删除。
-handoff payload 每次必填 session、title、objective、completed、next、reason，且均为非空 string，不能
-用 array/object 代替；title/objective 未变也必须从当前 handoff 原样带入。`completed` 与 `next` 每次都提交完整 reconcile 后的当前状态，`next` 优先从当前
-`open`、active task、plan/backlog 取首个仍有效的未完成项，点名具体文件、命令或动作；已知 verifier 时
-一并写明。旧 `next` 空泛或与更具体的已知项冲突时视为无效并替换，不能写“处理下一请求”等泛化占位。
-只有确无仍有效待办、且缺少结束信号而不能 close 时，`next` 才可使用固定 sentinel“等待用户给出范围”；
-它表示静默等待后续 scope，不要求主动询问用户，也不得覆盖任何已知 `open`、plan/backlog 或 `next`。
-handoff 执行前必须自检所选首个仍有效项：该项点名文件时，`next` 必须点名同一文件；仅当 verifier 已知
-且适用于该项时还必须包含该命令。缺一须在当前 turn 修正 payload 后执行，不得跳过显式 signal checkpoint。自动 handoff
-的自由文本必须写入安全 JSON payload 并通过 `--payload-file` 传递，禁止 shell 插值。task ledger 保留完整验收状态，session 只保存恢复所需摘要，
-两者不互相复制。只有当前 user turn 明示整个 workstream 结束/取消，或宿主在当前 host turn 将其标记 completed/cancelled，并核验
-active task、plan/backlog 与 handoff `open`/`next` 后确认无仍有效事项，才运行
-`memory close-handoff --outcome completed|cancelled`，
-只关闭并移出最新 active generation。`next` 是 active/blocked checkpoint 的必填恢复动作，关闭不要求其
-为空；满足条件时直接 close-handoff，不写“无下一步”占位 checkpoint，存疑不关。当前或最后一个已知阶段、
-单个请求、verifier 或普通 task/thread 完成均不是 workstream 结束。收到压缩或上下文预算信号时，必须在该
-signal turn 内、下一条用户消息前，以 `reason: compaction` 单独执行并校验一次 checkpoint；已有、相同
-或刚更新快照均不豁免。该 signal turn 必须静默执行。仅预判压缩而尚未收到明确信号时，
-才按“旧快照不足恢复且有实质变化”去重。
-已运行适用 verifier 时，`verification` 必须写入当前 verifier 的精确命令与 `exit 0`；只在 `completed`
-中声称验证通过不能代替 `verification`。旧 `open` 全部 resolved 时必须用
-`clearOpen: true`，仅部分 resolved 时必须用 replacement `open` 明列剩余项；省略都会保留旧值，close 不能代替。结束信号必须
-来自当前 user/host turn；`open` 空、sentinel、变更或验收全完成都不能据此提前 close。
-handoff JSON payload 中旧 `open` 全部 resolved 时只接受布尔字段 `clearOpen: true`，不得使用 `clear` 数组、
-空字符串或“No known remaining”等 `open` 占位；首次 mutation 前按此精确字段生成，禁止试错后重试。
-每次 handoff mutation attempt 必须先写入全新 payload 路径；命令开始执行后，该路径与内容即冻结，即使失败也
-不得覆盖或复用，重试必须创建新路径。只有宿主明确要求的跨 turn identical replay 例外：原样复用上一回合
-已成功 checkpoint 的相同路径和内容，且不得重写文件。
+`passed` 只能来自当前 Task 的 acceptance gate；完成文字不能替代机械证据。高风险 predicate 由用户或 CI/Host-owned verifier 持有，外部观察不足时保持 `inconclusive`。精确新鲜度和 evidence 规则见 reference。
 
-Host 或评测器要求 replay 时，先用 `replay verify --payload-file <evidence> --json` 核验状态机。`new-mutation`
-只允许没有 previous payload 的新 identity；started/failed attempt 固定返回 `new-payload-required`。
-`identical-replay` 必须同时满足 payload path 与 digest 相同、命令相同、目标 artifact 和 workspace 未变化、
-verifier exit 0 且 candidate/workspace digest 与当前状态绑定。重复 signal 的 signal id 相同只改变 reason code，
-不授权再次执行 mutation。stdout 缺失时仅可依赖上述 persisted-state proof；任一字段缺失或漂移均为
-`inconclusive`，不得从 `completed` 文本或预期结果推断成功。
+每次只推进一个边界清晰的增量，先读取状态和基线；失败时保留恢复路径，不用降低 verifier 门槛、删除失败测试或未经授权的 commit 制造恢复点。任务完成后再把稳定结论提升到正式事实源，不让 ledger 成为第二套项目事实。
 
-自动命令必须单独执行且不得通过 shell 插值传递自由文本。自动 sidecar 与用户明确请求的 Memory 操作
-采用不同的可见性策略，统一遵循 [project Memory standard](../standards/project-agent-docs.md)；
-host-signal/replay 的执行时机和状态语义仍由本协议定义。
+## Host signal 与可见性
 
-纯 host-signal/replay turn 中，宿主允许空响应时不得发送 `agent_message`；宿主强制响应时只陈述上一用户任务的
-验证结果，不提 sidecar、checkpoint 或 replay 动作。
+宿主没有 session-end/compaction hook 时，Prompt 只能提供显式 fallback，不能声称自动保证。纯 host-signal/replay turn 中，宿主允许空响应时不得发送 `agent_message`；宿主强制响应时只陈述上一用户任务的验证结果，不提 sidecar、checkpoint 或 replay 动作。自动 sidecar 的写入与维护遵循 [project Memory standard](../standards/project-agent-docs.md) 的静默规则；显式 Memory/Handoff 请求才返回可核验结果。
 
-## 行为约束
-
-- `task init` 自动把 `working/<task-id>/progress.md` 挂入 `.agent-docs/core.md`；checkpoint 保持入口
-  与状态同步，complete/superseded 关闭后自动移除，blocked 保留以便下次启动发现。
-- 恢复任务时先运行 `task status` 并读取 `core.md` 中对应 progress 引用，再加载必要证据；不递归读取
-  整个 `.agent-docs/working`。
-- 每次只推进一个边界清晰的增量；开始前读取任务状态并验证必要基线。
-- `passed` 只能由 `task verify` 机械产生。`task accept --evidence` 仍可保存结构化外部证据，但只能
-  标记为 `failed` 或 `inconclusive`；裸字符串、调用方自报的 exit code 或 digest 都不能通过门禁。
-- `task verify` 证明的是调用方选择的 command/test 已执行成功，或 file/diff 已被机械读取并摘要，
-  同时证明记录时的 HEAD、workspace 和 scope 新鲜度；它不理解自由文本 criterion，也不证明所选
-  命令、文件或 scope 与该 criterion 在语义上相关。无关但返回 0 的命令仍可能得到机械 `passed`。
-- task ledger 是非权威工作记忆，不是签名或防篡改日志。schema、原子写和锁用于拒绝坏格式及并发
-  覆盖；evidence 绑定 task/criterion，可拒绝原样跨任务复制，但不对抗直接修改 `task.json` 或绑定
-  字段，也不对抗同一执行者替换 verifier。close 只表示当时重算结果匹配；之后的工作区变化不会追溯
-  修改已关闭账本。
-- 高风险验收应由用户审阅，或由 CI/Host-owned verifier 持有当前任务无权替换的 predicate、命令和
-  scope，再通过 `task verify` 调用。权威结论仍来自该 verifier；外部观察只作为 `inconclusive` 线索，
-  不能借 `task accept` 直接变成 `passed`。
-- `command`/`test` 使用 `execFile` 语义直接执行 `--command` 与重复 `--arg`，不经过 shell；执行受
-  timeout 和输出上限约束，并记录实际 exit code、signal、timeout 与输出摘要。二者必须提供至少一个
-  `--scope`，CLI 在执行后自动计算 scope digest。
-- `file` 从受项目根约束的 `--file` 自动读取 regular file 并计算 digest；`diff` 只支持可读 Git
-  workspace，并要求显式 `--scope`。scope/file 路径同时做 lexical 与 realpath containment，拒绝
-  symlink、特殊文件、目录型 file evidence 和 `.git`/`.agent-docs` 元数据边界。
-- 一次机械验证最多接受 16 个互不重叠的 scope；路径校验、regular-file/元数据判定和 digest 共用
-  一次聚合预算：最多 25,000 个条目、128 MiB 总读取、32 MiB 单文件、从项目根起 32 层和 15 秒。
-  close 的新鲜度重算使用同样边界；任一预算耗尽都 fail closed，不能产生或维持 `passed`。
-- 项目快照的全部 Git 子进程共用默认 5 秒的有限 deadline，并显式禁用仓库配置的 fsmonitor 和
-  untracked cache。超时或无法读取 workspace digest 时返回不可用证据，`verify`/`complete` 不放行。
-- `browser`/`observation` 当前无法由 CLI 机械复核，只能作为 external `inconclusive` 证据，不能
-  支持 `passed`。CLI 生成的证据自动绑定 `recordedAt`、规范化项目 `cwd`、当前 `HEAD`、workspace
-  digest 和 scope digest。
-- `task status` 每次读取都会校验完整 schema，并报告 branch、HEAD、dirty 相对初始化基线的漂移；
-  已存储为 `passed` 但机械证据不再新鲜的 criterion 会派生只读 `stale: true`，不静默改写账本。
-  task 列表遇到坏账本也明确失败，不静默跳过。
-- `task close --status complete` 会重新读取当前项目状态并重算 artifact/scope digest；每个 passed
-  criterion 至少需要一条 Harness 机械生成、仍绑定当前项目、当前 HEAD 和 workspace digest 的证据。
-  HEAD、未提交工作区或显式 scope（包括 ignored file 与 nested repository）变化都会让旧证据失效。
-  非 Git 目录使用确定性的本地 workspace digest，不再以 `null == null` 放行。
-- v1/v2 task 可读取并在下一次写入时迁移为 v3；旧字符串保留为 `legacy`，v2 typed evidence 标记为
-  `external`。仍活跃 task 的旧 `passed` 会降为 `inconclusive`，必须重新运行 `task verify`；已关闭
-  历史账本保留状态，但旧证据不能用于新的 close。
-- 只有所有验收项均为 `passed` 时才能以 `complete` 关闭；阻塞或被替代应使用对应状态。以
-  `blocked` 关闭时必须同时提供非空 `--next`，明确恢复任务所需的下一步。
-- checkpoint 不能写入 `complete` 或 `superseded`，关闭任务必须走 `task close` 的验收门禁。
-- task、acceptance 和 checkpoint 更新按任务目录加锁；并发写入冲突必须失败并重试，不能静默
-  覆盖另一进程的进度。
-- checkpoint 只记录已确认事实、实际变更、验证、风险和下一步，不复制大段日志或源码。
-- 未经授权不通过 commit 制造恢复点；默认记录 branch、HEAD、dirty 状态、diff/测试证据。
-- 任务完成后将稳定结论提升到正式事实源，再将任务标为 `complete`；不要让 task ledger 成为
-  第二套项目事实。
+需要精确 payload、Replay、Task evidence、scope budget 或迁移规则时，先加载[机械契约参考](../references/task-and-replay-contracts.md)，再执行 CLI；参考文档不改变本文件的关闭和授权边界。

@@ -2,7 +2,8 @@
 title: Safety and Verification
 type: harness-core
 status: active
-updated: 2026-08-17
+updated: 2026-09-04
+owner: safety-and-verification
 ---
 
 # Safety and Verification
@@ -40,6 +41,8 @@ updated: 2026-08-17
 - `failed`：可归因的真实失败；
 - `not-run`：未执行；
 - `inconclusive`：沙箱、网络、凭据、平台或环境使结果不足以下结论。
+
+验证失败先分类原因，再决定修复、重试、阻塞或停止；不重复执行同一失败动作，不通过降低 verifier 门槛制造通过结果。
 
 ## 交付证据
 

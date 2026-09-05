@@ -34,6 +34,8 @@ owner: maintainers
 
 举个具体例子：Harnessmith 可以在规则里写明「远端写入需要明确授权」，但真正拦下一次未经批准的网络调用，靠的是宿主权限系统和你的审批。Markdown 本身不是 sandbox。把这句话写进文档和把它变成机制，是两件完全不同的事。
 
+当宿主明确提供 permission、approval、question 或 elicitation 能力时，Agent 可以先调用该能力取得本次精确动作的决定，再继续或保持阻塞；Harnessmith 不假定这些工具存在，也不把一次批准扩展成未来授权。宿主没有该能力，或返回 denied、cancelled、timeout 时，Agent 应给出具体的 `nextAction`，而不是静默结束并等待新的普通消息。
+
 ## 用户与外部系统仍要决定什么
 
 用户选择安装范围、是否接管冲突文件，以及是否授权 commit、push、merge、发布、生产变更和消息发送。项目业务事实、风险接受和最终验收，也不能由 Memory 或本地记录自动替代——它们只是输入，不是裁决。
