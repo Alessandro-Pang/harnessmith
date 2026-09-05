@@ -42,7 +42,7 @@ export function createDiagnosticsReport(
           : ('inconclusive' as const),
     privacy: { uploaded: false, persisted: false, previewOnly: true },
     budget: {
-      maxAdapters: 5,
+      maxAdapters: 6,
       maxCommandBytes: diagnosticsMaxCommandBytes,
       timeoutMs: diagnosticsCommandTimeoutMs,
       truncated,

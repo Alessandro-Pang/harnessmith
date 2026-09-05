@@ -2,6 +2,9 @@
 title: 架构设计
 description: Harnessmith 的分层、数据流、组件边界与关键取舍
 owner: maintainers
+audience: users-and-maintainers
+status: active
+updated: 2026-09-05
 ---
 
 # 架构设计

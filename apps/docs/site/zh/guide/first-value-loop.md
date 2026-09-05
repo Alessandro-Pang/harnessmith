@@ -2,11 +2,14 @@
 title: 首次价值循环
 description: 从理解定位到真实宿主验证的首次价值路径与证据边界
 owner: maintainers
+audience: users
+status: active
+updated: 2026-09-05
 ---
 
 # 首次价值循环
 
-这一页回答一个问题：装完之后，什么时候才算真正「用上了」。Harnessmith 对 First Value 的定义不是安装量、下载量或一片绿色测试，而是：你选定的真实宿主加载了受管理规则，完成了文档里的首次只读受控任务，留下了可复核的证据，而且你已经亲眼确认过检查与恢复的路径。这四件事都发生，才算闭环。
+安装命令成功，只能说明本地文件写入完成。Harnessmith 把“真正用上”定义为一个更完整的闭环：真实宿主加载受管理规则，完成首次只读受控任务，留下可复核证据，并且使用者已经确认检查与恢复路径。四件事都完成，才进入 `host-verified`。
 
 这条路径的起点是 `positioning`：理解 Harnessmith 是跨宿主分发 Personal Harness 的 initializer，它不拥有模型循环、权限或宿主执行。终点是 `host-verified`。在抵达终点之前，还必须完成 `recovery-aware` 检查点。知道坏了怎么修，才有资格谈「在工作」。
 

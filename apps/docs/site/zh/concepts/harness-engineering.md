@@ -2,6 +2,9 @@
 title: 工程视角
 description: 一个后来进入项目的领域视角，以及 Harnessmith 在其中的位置
 owner: maintainers
+audience: users-and-maintainers
+status: active
+updated: 2026-09-05
 ---
 
 # 工程视角

@@ -2,6 +2,9 @@
 title: 历史与渊源
 description: 从个人实践、文档治理到 Personal Harness 的真实演进路径
 owner: maintainers
+audience: users-and-maintainers
+status: active
+updated: 2026-09-05
 ---
 
 # 历史与渊源

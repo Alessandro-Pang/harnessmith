@@ -6,6 +6,7 @@ import { PassThrough } from 'node:stream';
 import { fileURLToPath } from 'node:url';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import { onTestFinished, test } from 'vitest';
+import { supportedAgentNames } from '../adapters/adapter-registry.js';
 import { createAdapter } from '../adapters/adapters.js';
 import { executeCommand } from '../application/command-executor.js';
 import { createDiagnosticsReport } from '../diagnostics/diagnostics.js';
@@ -140,4 +141,14 @@ test('diagnostics schema rejects unknown fields and documents owner, purpose, an
   }
   assertMetadata(schema);
   assert.equal(existsSync(join(root, 'diagnostics.json')), false);
+});
+
+test('diagnostics schema accepts the complete registered adapter set', () => {
+  const { root, env } = fixture('harnessmith-diagnostics-all-adapters-');
+  const adapters = supportedAgentNames.map((agent) => createAdapter(agent, { env, project: root }));
+  const report = createDiagnosticsReport(adapters, { env, project: root });
+  const ajv = new Ajv2020({ allErrors: true, strict: false });
+  assert.equal(report.adapters.length, 6);
+  assert.equal(report.budget.maxAdapters, 6);
+  assert.equal(ajv.validate(schema, report), true, JSON.stringify(ajv.errors));
 });

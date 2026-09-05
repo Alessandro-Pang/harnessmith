@@ -2,6 +2,9 @@
 title: 参考资料
 description: 按证据等级整理项目契约、协议、工程实践与研究资料
 owner: maintainers
+audience: users-and-maintainers
+status: active
+updated: 2026-09-05
 ---
 
 # 参考资料

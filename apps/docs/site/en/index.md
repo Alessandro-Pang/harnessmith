@@ -2,20 +2,24 @@
 title: Harnessmith documentation
 description: Distribute and safely manage a personal Agent Harness across coding-agent hosts
 owner: maintainers
+audience: users
+status: active
+updated: 2026-09-05
 lang: en
 ---
 
 # Harnessmith documentation
 
 Harnessmith is an npm initializer that distributes one personal Agent Harness across Codex, Cursor, Claude Code,
-OpenCode, Kimi Code CLI, and Zed Agent. It handles installation, ownership checks, backups, restore, and uninstall
-with full transaction safety — while leaving model execution, tools, sandboxing, and approvals to the host.
+OpenCode, Kimi Code CLI, and Zed Agent. It provides an ownership-checked, recoverable installation flow with backups,
+restore, and uninstall — while leaving model execution, tools, sandboxing, and approvals to the host.
 
 Think of it this way: if you use multiple coding agents and have spent weeks curating rules, debugging workflows,
 and documenting hard-won lessons, those accumulated insights live in your `AGENTS.md` files, chat histories, and
 personal notes. Harnessmith turns that scattered experience into a structured, installable, and verifiable local
 work layer. You install it once, and it works across all your hosts — no cloud sync, no API keys, no new runtime
-to maintain.
+to maintain. Historical documents remain available for traceability, but routing keeps unrelated history out of the
+model context by default.
 
 "Local work layer" is worth unpacking. It's not a cloud service: no network dependency, no account system, no
 server-side data to leak or lose. It's not an IDE plugin either, so it doesn't lock you into a specific editor. And

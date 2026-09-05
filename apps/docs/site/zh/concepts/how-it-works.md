@@ -2,11 +2,14 @@
 title: 工作原理
 description: 从安装事务到 Agent 实际工作的完整数据流
 owner: maintainers
+audience: users-and-maintainers
+status: active
+updated: 2026-09-05
 ---
 
 # 工作原理
 
-要理解 Harnessmith，只需要记住一个组合：**安装器 + 本地工作层**。安装器负责把同一份 Harness 安全地接进不同宿主；工作层在 Agent 执行任务时提供规则入口、按需文档、Memory、Task 和验证命令。两者都不接管宿主的模型循环——那是宿主自己的领域。
+理解 Harnessmith 可以先抓住两个部分：**安装器**负责把同一份 Harness 安全地接进不同宿主；**本地工作层**在 Agent 执行任务时提供规则入口、按需文档、Memory、Task 和验证命令。两者都不接管宿主的模型循环，模型如何运行仍由宿主决定。
 
 这一页按时间顺序讲完整条链路：装进机器时发生了什么、Agent 日常工作时它做什么、跨会话时它记什么、验证时它认什么。读完你应该能回答「我的规则到底存在哪、什么时候被读取、谁在执行」。
 

@@ -2,6 +2,9 @@
 title: 临时资源生命周期
 description: 临时目录、payload、锁与诊断残留的所有权和清理边界
 owner: maintainers
+audience: users-and-maintainers
+status: active
+updated: 2026-09-05
 ---
 
 # 临时资源生命周期

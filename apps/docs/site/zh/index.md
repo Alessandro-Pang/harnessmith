@@ -3,6 +3,10 @@ layout: home
 title: Harnessmith 文档
 description: 跨宿主分发和安全管理个人 Agent Harness
 owner: maintainers
+audience: users
+status: active
+updated: 2026-09-05
+
 hero:
   name: Harnessmith
   text: 让一套 Agent 工作方式，跨宿主可靠运行
@@ -22,9 +26,9 @@ hero:
 <section class="home-signal" aria-label="Harnessmith 概览">
   <p class="home-eyebrow">Personal Agent Harness · Local first</p>
   <div class="home-signal-grid">
-    <div><strong>6</strong><span>个宿主共用一套规则</span></div>
-    <div><strong>0</strong><span>次静默覆盖用户文件</span></div>
-    <div><strong>1</strong><span>份可迁移的工作方式</span></div>
+    <div><strong>6</strong><span>个内置 Adapter</span></div>
+    <div><strong>0</strong><span>默认静默覆盖用户文件</span></div>
+    <div><strong>1</strong><span>份宿主中立的工作方式</span></div>
   </div>
 </section>
 

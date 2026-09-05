@@ -2,11 +2,14 @@
 title: 贡献文档
 description: 文档站点的本地开发、质量门禁与发布流程
 owner: maintainers
+audience: maintainers
+status: active
+updated: 2026-09-05
 ---
 
 # 贡献文档
 
-项目通用贡献规则见仓库 [CONTRIBUTING.md](https://github.com/Alessandro-Pang/harnessmith/blob/main/CONTRIBUTING.md)。本文补充文档站点自己的维护契约：怎么在本地跑起来、提交前过哪些门禁、以及文档事实和契约测试如何保持同步。
+项目通用贡献规则见仓库 [CONTRIBUTING.md](https://github.com/Alessandro-Pang/harnessmith/blob/main/CONTRIBUTING.md)。本文只补充文档站点的工作流：如何本地预览、提交前运行哪些门禁，以及如何让页面内容和代码契约保持同步。
 
 为什么要单独有一页讲「贡献文档」？因为文档贡献和代码贡献的失败模式不一样。代码改错了，测试会红；文档改错了（比如删了一句别人依赖的说明、改了一个措辞导致读者误解），可能几个月后才有人发现，而那时已经有人照着错误描述操作了。这页契约的目的，是让文档改动也能像代码改动一样，在提交前就被拦住大部分问题。
 

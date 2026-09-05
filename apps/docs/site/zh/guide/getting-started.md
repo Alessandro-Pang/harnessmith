@@ -2,11 +2,14 @@
 title: 快速开始
 description: 从一条 dry-run 命令到第一次真实对话的完整路径
 owner: maintainers
+audience: users
+status: active
+updated: 2026-09-05
 ---
 
 # 快速开始
 
-这一页回答一个问题：怎么把 Harnessmith 装进你正在用的 Coding Agent，并确认它真的在工作。整条路只有三个动作：先预览、再写入、最后核对。读完这一页，你可以独立完成第一次安装，也知道每一步被拒绝或失败时该怎么办。
+按「预览 → 写入 → 核对」三步完成第一次安装。本文以 Codex 为例，说明每一步会改变什么、如何处理拒绝，以及本地安装成功后还需要怎样验证真实宿主。
 
 Harnessmith 是 npm initializer，用 `npx` 直接运行，不需要提前全局安装任何东西。唯一的环境要求是 Node.js 24.12.0 或更高版本。
 

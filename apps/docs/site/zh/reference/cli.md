@@ -2,6 +2,9 @@
 title: 安装器 CLI
 description: Harnessmith 外层 CLI 的命令、选项与示例
 owner: maintainers
+audience: users-and-maintainers
+status: active
+updated: 2026-09-05
 ---
 
 # 安装器 CLI

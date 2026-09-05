@@ -2,6 +2,9 @@
 title: 运行时 CLI
 description: 安装后的 Harness CLI：文档路由、Memory、Task、仓库关系与审计
 owner: maintainers
+audience: users-and-maintainers
+status: active
+updated: 2026-09-05
 ---
 
 # 运行时 CLI

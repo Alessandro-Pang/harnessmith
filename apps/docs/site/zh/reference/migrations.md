@@ -2,6 +2,9 @@
 title: 迁移指南
 description: npm 版本、Runtime schema、升级和发布记录边界
 owner: maintainers
+audience: users-and-maintainers
+status: active
+updated: 2026-09-05
 ---
 
 # 迁移指南

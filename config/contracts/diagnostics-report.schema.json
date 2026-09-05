@@ -54,7 +54,7 @@
     },
     "adapters": {
       "type": "array",
-      "maxItems": 5,
+      "maxItems": 6,
       "items": { "$ref": "#/$defs/adapter" },
       "x-owner": "outer installer adapters",
       "x-purpose": "summarize bounded Host-specific evidence",
@@ -112,7 +112,7 @@
         "maxAdapters": {
           "type": "integer",
           "minimum": 1,
-          "maximum": 5,
+          "maximum": 6,
           "x-owner": "harnessmith diagnostics collector",
           "x-purpose": "bound Adapter fanout",
           "x-retention": "user-controlled ephemeral output"
@@ -301,7 +301,7 @@
       "required": ["adapter", "capability", "installation", "runtimeChecks", "subsystems"],
       "properties": {
         "adapter": {
-          "enum": ["codex", "cursor", "claude", "opencode", "kimi"],
+          "enum": ["codex", "cursor", "claude", "opencode", "kimi", "zed"],
           "x-owner": "outer installer Adapter",
           "x-purpose": "identify the Host contract without user identifiers",
           "x-retention": "user-controlled ephemeral output"
@@ -343,7 +343,7 @@
       "required": ["adapter", "source", "errorCode", "result"],
       "properties": {
         "adapter": {
-          "enum": ["codex", "cursor", "claude", "opencode", "kimi"],
+          "enum": ["codex", "cursor", "claude", "opencode", "kimi", "zed"],
           "x-owner": "outer installer Adapter",
           "x-purpose": "attribute collection failure without a path",
           "x-retention": "user-controlled ephemeral output"

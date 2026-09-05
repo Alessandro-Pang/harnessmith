@@ -20,12 +20,12 @@ project relationships, progress, and past decisions must be explained from scrat
 growing history of documents cannot all fit into model context, but deleting it means losing the record of how
 decisions were made.
 
-Harnessmith packages the fixes into one installable unit: personal rules that already work in practice, on-demand
-document retrieval, Memory that never pretends to be fact, and long-running task tools with an acceptance gate.
-Install it once across coding-agent hosts, and upgrading, backing up, restoring, and uninstalling all follow explicit
-paths — you preview before anything is written, and you can always go back. In one line: Harnessmith is a cross-host Personal Harness distribution and work-state control plane. Everything
-runs locally with no cloud service, and Harnessmith does not replace your coding agent: how models reason, how tools
-are authorized, and how sandboxes isolate — that stays with the host.
+Harnessmith packages the fixes into one installable unit: personal rules that already work in practice, on-demand document
+retrieval, Memory that never pretends to be fact, and long-running task tools with an acceptance gate. Install it once
+across coding-agent hosts; upgrading, backing up, restoring, and uninstalling all follow explicit paths. You preview
+before anything is written, and a rollback failure is reported with the paths that need attention. Everything runs locally
+with no cloud service, while model reasoning, tool authorization, and sandbox isolation stay with the host. Harnessmith
+is a cross-host Personal Harness distribution and work-state control plane.
 
 ## Who it is for
 
@@ -71,7 +71,8 @@ You can also delegate the install to a coding agent, asking it to read the proto
 | Zed Agent | global | `zed` |
 
 Global hosts install into the agent's personal config directory and apply to every project; project hosts install
-into one project only. Cursor requires `--project /path/to/project`. See the
+into one project only. Cursor accepts `--project /path/to/project` to select a project explicitly; when omitted, the
+current working directory is used. See the
 [host guide](https://alexpang.cn/harnessmith/guide/hosts) for destinations, aliases, and support evidence.
 
 ## Common operations
@@ -135,8 +136,7 @@ These three words appear throughout the docs with fixed meanings:
 | `healthy` | Deterministic health checks of the embedded Runtime passed |
 | `host-verified` | A controlled read-only task completed in a real host, with verifier evidence kept |
 
-The first two come with the install. `host-verified` requires you to confirm the result in a real task — the
-installer cannot do it for you; see the [First Value Loop](https://alexpang.cn/harnessmith/guide/first-value-loop).
+The first two come with the install. `host-verified` requires you to confirm the result in a real task — the installer cannot do it for you; see the [First Value Loop](https://alexpang.cn/harnessmith/guide/first-value-loop).
 
 ## After installation
 

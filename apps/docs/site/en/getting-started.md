@@ -2,6 +2,9 @@
 title: Getting started
 description: Install Harnessmith, select a host, and verify the result
 owner: maintainers
+audience: users
+status: active
+updated: 2026-09-05
 lang: en
 ---
 
@@ -24,8 +27,8 @@ Two things to confirm:
   once, works everywhere"; project means "tied to this specific repository". Most people want global unless they're
   using Cursor.
 
-Harnessmith doesn't need your model API key and won't log you into any third-party service. It operates purely on
-local files: no network calls, no telemetry, no account creation.
+Harnessmith doesn't need your model API key and won't log you into any third-party service. After the package is
+available, its installation and runtime operations use local files: no telemetry and no account creation.
 
 ## Three steps to install
 

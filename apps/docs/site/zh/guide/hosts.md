@@ -2,11 +2,14 @@
 title: 宿主支持
 description: 六类 Coding Agent 的安装范围、路径规则与「支持」的准确含义
 owner: maintainers
+audience: users
+status: active
+updated: 2026-09-05
 ---
 
 # 宿主支持
 
-这一页回答两个问题：Harnessmith 能装进哪些 Coding Agent，以及「支持」这两个字到底承诺了什么。读完你可以确定自己机器上的准确目标路径，也知道每个宿主各自的细节和限制。
+本文列出当前可用的六类 Adapter，说明它们的目标路径、安装范围和激活方式，并解释“支持”在本项目里具体承诺到哪一层。实际路径始终以当前版本的 `capabilities --json` 和 `setup --dry-run --json` 为准。
 
 Harnessmith 当前为六类宿主提供 Adapter。可以把 Adapter 理解成「翻译层」：它负责路径解析和文件格式适配，让同一套个人规则落进不同宿主约定的位置。它不替代宿主自身的模型循环、工具调度、sandbox 或权限批准——那些仍然是宿主的地盘。
 
