@@ -252,8 +252,6 @@ test('dry-run reports destinations without creating agent homes', () => {
   for (const adapter of supportedAgentNames) {
     assert.match(output, new RegExp(`"adapter":"${adapter}"`));
   }
-    assert.match(output, new RegExp(`"adapter":"${adapter}"`));
-  }
   assert.match(output, /"action":"create"/);
   assert.equal(existsSync(join(root, 'codex-home')), false);
   assert.equal(existsSync(join(root, 'claude-home')), false);
