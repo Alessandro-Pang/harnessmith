@@ -1,6 +1,9 @@
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 import {
   evaluationFingerprint,
   releaseArtifactPath,
+  repositoryRoot,
   requiredEvaluationAdapters,
 } from '../records/eval-fingerprint.js';
 import { EvaluationGateError, rejectionSummary } from '../records/eval-gate-failure.js';
@@ -10,6 +13,8 @@ import {
   type VerifiedRun,
   validateEvaluationRecords,
 } from '../records/eval-records.js';
+import { verifySuiteEvidence } from './eval-suite-gate.js';
+import { suiteGateResult } from './eval-suite-result.js';
 
 export { validateEvaluationRecords } from '../records/eval-records.js';
 
@@ -17,12 +22,10 @@ interface EvaluationGateOptions extends EvaluationRecordOptions {
   maxAgeDays?: number;
   packageArtifact?: string;
 }
-
 export interface InheritedEvaluationSource {
   packageVersion: string;
   packageArtifactSha256: string;
 }
-
 interface InheritedEvaluationCell extends InheritedEvaluationSource {
   cell: string;
 }
@@ -169,8 +172,29 @@ export function gateEvaluationRecords(options: EvaluationGateOptions = {}): Eval
     throw new Error('--max-age-days must be a positive number');
   }
   const current = evaluationFingerprint(releaseArtifactPath(options.packageArtifact));
+  const directory = resolve(
+    repositoryRoot,
+    options.runsDirectory ?? process.env.HARNESS_EVAL_RUNS_DIR ?? 'evals/runs',
+  );
+  // Legacy records below provide diagnostics only; they cannot produce a passing gate.
+  if (existsSync(resolve(directory, 'suite-summary.json')))
+    return suiteGateResult(
+      verifySuiteEvidence({
+        directory,
+        candidateSha256: current.packageArtifactSha256,
+        maxAgeDays,
+      }),
+      current,
+      maxAgeDays,
+      [...requiredEvaluationAdapters],
+    );
+
   const { compatible, rejected } = behaviorCompatibleRecords(
-    validateEvaluationRecords(options),
+    validateEvaluationRecords({
+      runsDirectory: existsSync(resolve(directory, 'behavior'))
+        ? resolve(directory, 'behavior')
+        : directory,
+    }),
     current,
   );
   const records = latestEvaluationRecords(compatible);
@@ -182,10 +206,7 @@ export function gateEvaluationRecords(options: EvaluationGateOptions = {}): Eval
       .map((scenarioId) => `${adapter}/${scenarioId}`)
       .filter((key) => !coverage.covered.has(key)),
   );
-  const matrix = requiredEvaluationAdapters.flatMap((adapter) =>
-    scenarioIds.map((scenarioId) => `${adapter}/${scenarioId}`),
-  );
-  if (missing.length > 0) {
+  if (missing.length > 0 || coverage.rejected.length > 0) {
     throw new EvaluationGateError({
       version: 1,
       valid: false,
@@ -205,25 +226,7 @@ export function gateEvaluationRecords(options: EvaluationGateOptions = {}): Eval
       },
     });
   }
-  return {
-    valid: true,
-    assurance: 'maintainer-attested-structure',
-    packageArtifactSha256: current.packageArtifactSha256,
-    behaviorSha256: current.behaviorSha256,
-    coverageCount: coverage.covered.size,
-    exactArtifactCoverageCount: coverage.exactArtifactCoverageCount,
-    inheritedBehaviorCoverageCount: coverage.inheritedBehaviorCoverageCount,
-    inheritedFrom: coverage.inheritedFrom,
-    evidence: {
-      exact: matrix.filter((cell) => coverage.exact.has(cell)),
-      inherited: matrix.flatMap((cell) => {
-        const inherited = coverage.inheritedCells.get(cell);
-        return inherited ? [inherited] : [];
-      }),
-      infraBlocked: [],
-    },
-    hosts: [...requiredEvaluationAdapters],
-    scenarios: scenarioIds,
-    maxAgeDays,
-  };
+  throw new Error(
+    'A complete unified evaluation suite record is required; standalone behavior records cannot satisfy the release gate',
+  );
 }

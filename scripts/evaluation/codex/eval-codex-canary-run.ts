@@ -10,12 +10,13 @@ import type { MachineErrorCanaryFixture } from './eval-codex-canary-fixture.js';
 import { createCodexHostEvalExecutor, type RunHostProcess } from './eval-codex-transport.js';
 
 export type MachineErrorCanaryResult = {
-  outcome: 'passed' | 'behavior-failed' | 'infra-inconclusive' | 'evaluator-failed';
+  outcome: HostEvalAttemptResult['outcome'];
   termination:
     | 'completed'
     | 'transport-failure'
     | 'scenario-budget-exhausted'
-    | 'evaluator-failure';
+    | 'evaluator-failure'
+    | 'semantic-review-required';
   attempts: 1;
   transportFailures: number;
   elapsedMs: number;

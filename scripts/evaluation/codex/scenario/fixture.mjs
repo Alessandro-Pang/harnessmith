@@ -43,7 +43,7 @@ const commonEnv = {
 };
 let configHome;
 function installHarness() {
-  const sourceCodexHome = process.env.CODEX_HOME;
+  const sourceCodexHome = process.env.CODEX_HOME ?? join(process.env.HOME ?? '', '.codex');
   const authPath = sourceCodexHome ? join(sourceCodexHome, 'auth.json') : '';
   if (!authPath || !existsSync(authPath)) {
     throw new Error('Current Codex authentication is unavailable');
@@ -156,7 +156,7 @@ function setupScenario() {
     initGlobalMemory();
   }
   if (scenarioId === 'memory-autopilot-unprompted') {
-    setupVerifier('verify-autopilot.mjs', ['docs/status.txt', 'docs/follow-up.txt']);
+    setupVerifier('verify-autopilot.mjs', ['apps/docs/site/status.txt', 'apps/docs/site/follow-up.txt']);
     initProjectMemory();
     initGlobalMemory();
     harnessPayload('handoff', {
@@ -166,16 +166,16 @@ function setupScenario() {
       completed: 'The disposable fixture baseline is initialized.',
       decisions: 'Use verify-autopilot.mjs with the requested path.',
       verification: 'Fixture baseline confirmed before edits.',
-      open: 'docs/follow-up.txt still says pending.',
+      open: 'apps/docs/site/follow-up.txt still says pending.',
       next: 'Handle the next user-requested status-file change.',
       reason: 'manual',
       status: 'active',
-      scope: ['docs/status.txt', 'docs/follow-up.txt'],
+      scope: ['apps/docs/site/status.txt', 'apps/docs/site/follow-up.txt'],
     });
     context.push('', 'Logical host thread id: host-thread-42.');
   }
   if (scenarioId === 'memory-autopilot-phase-only') {
-    setupVerifier('verify-phase.mjs', ['docs/phase-a.txt', 'docs/phase-b.txt']);
+    setupVerifier('verify-phase.mjs', ['apps/docs/site/phase-a.txt', 'apps/docs/site/phase-b.txt']);
     initProjectMemory();
     context.push(
       '',
@@ -185,9 +185,9 @@ function setupScenario() {
   }
   if (scenarioId === 'memory-autopilot-multi-task') {
     setupVerifier('verify-item.mjs', [
-      'docs/item-a.txt',
-      'docs/item-b.txt',
-      'docs/item-c.txt',
+      'apps/docs/site/item-a.txt',
+      'apps/docs/site/item-b.txt',
+      'apps/docs/site/item-c.txt',
     ]);
     initProjectMemory();
     context.push(
@@ -197,7 +197,7 @@ function setupScenario() {
     );
   }
   if (scenarioId === 'memory-profile-cross-task-recall') {
-    setupVerifier('verify-recall.mjs', ['docs/status.txt']);
+    setupVerifier('verify-recall.mjs', ['apps/docs/site/status.txt']);
     initGlobalMemory();
     harnessPayload('reconcile-profile', {
       key: 'communication.status-summary',

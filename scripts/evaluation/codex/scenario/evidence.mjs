@@ -8,7 +8,7 @@ import {
   memoryPayloadCommandHasExpectedPrefix,
   sameCanonicalPath,
   evaluateCodexTurnCompletion,
-} from '../eval-codex-matrix-support.mjs';
+} from '../eval-codex-support.mjs';
 import { exactJsonObject } from './runtime.mjs';
 import { jsonEvents } from './observation.mjs';
 
@@ -28,14 +28,14 @@ export function createScenarioEvidence({
 }) {
   function turnVerifier(label) {
     const targets = {
-      'memory-autopilot-unprompted:initial': ['verify-autopilot.mjs', 'docs/status.txt'],
-      'memory-autopilot-unprompted:follow-up-edit': ['verify-autopilot.mjs', 'docs/follow-up.txt'],
-      'memory-autopilot-phase-only:initial': ['verify-phase.mjs', 'docs/phase-a.txt'],
-      'memory-autopilot-phase-only:phase-b': ['verify-phase.mjs', 'docs/phase-b.txt'],
-      'memory-autopilot-multi-task:initial': ['verify-item.mjs', 'docs/item-a.txt'],
-      'memory-autopilot-multi-task:item-b': ['verify-item.mjs', 'docs/item-b.txt'],
-      'memory-autopilot-multi-task:item-c': ['verify-item.mjs', 'docs/item-c.txt'],
-      'memory-profile-cross-task-recall:initial': ['verify-recall.mjs', 'docs/status.txt'],
+      'memory-autopilot-unprompted:initial': ['verify-autopilot.mjs', 'apps/docs/site/status.txt'],
+      'memory-autopilot-unprompted:follow-up-edit': ['verify-autopilot.mjs', 'apps/docs/site/follow-up.txt'],
+      'memory-autopilot-phase-only:initial': ['verify-phase.mjs', 'apps/docs/site/phase-a.txt'],
+      'memory-autopilot-phase-only:phase-b': ['verify-phase.mjs', 'apps/docs/site/phase-b.txt'],
+      'memory-autopilot-multi-task:initial': ['verify-item.mjs', 'apps/docs/site/item-a.txt'],
+      'memory-autopilot-multi-task:item-b': ['verify-item.mjs', 'apps/docs/site/item-b.txt'],
+      'memory-autopilot-multi-task:item-c': ['verify-item.mjs', 'apps/docs/site/item-c.txt'],
+      'memory-profile-cross-task-recall:initial': ['verify-recall.mjs', 'apps/docs/site/status.txt'],
     };
     const target = targets[`${scenarioId}:${label}`];
     if (!target) return null;

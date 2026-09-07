@@ -113,16 +113,6 @@ export function parseCodexThreadId(stdout) {
   throw new Error('Codex initial turn did not emit a thread.started event');
 }
 
-export function responseSeparatesAssessmentFromAction(message) {
-  const text = String(message);
-  const reportsNoAction = /全程未|只读|read.only|未(?:运行|修改|执行)|没有执行/i.test(text);
-  const describesProspectiveAction =
-    /建议|后续|future|before|先|未来|若|如果|再调整|再执行|再进行|(?:发布|清理|提交|推送|删除)前|(?:应|需)(?:先|在[^。；\n]{0,40}前)/i.test(
-      text,
-    );
-  return reportsNoAction && describesProspectiveAction;
-}
-
 export function multiTaskCheckpointReplacementIsProven({
   afterSecond,
   afterThird,

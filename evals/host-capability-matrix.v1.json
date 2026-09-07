@@ -5,7 +5,7 @@
       "id": "codex",
       "state": "executable",
       "reason": "A bounded real-Host transport, disposable fixture, and independent evaluator are implemented.",
-      "evidence": ["scripts/evaluation/codex/eval-codex-matrix.ts", "scripts/evaluation/codex/eval-codex-scenario.mjs", "evals/__tests__/eval-codex-matrix.test.ts"]
+      "evidence": ["scripts/evaluation/codex/eval-codex-suite.ts", "scripts/evaluation/codex/eval-codex-scenario.mjs", "evals/__tests__/eval-codex-suite.test.ts"]
     },
     {
       "id": "cursor",

@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "requiredPlaybooks": [
+    "change",
+    "diagnose",
+    "review",
+    "research-and-design",
+    "release-and-external",
+    "understand-and-map",
+    "verify-and-accept"
+  ],
+  "requiredReasoningModes": [
+    "pre-execution-judgment",
+    "problem-framing",
+    "evidence-update",
+    "failure-and-consequence",
+    "system-structure",
+    "decision-under-uncertainty",
+    "closed-loop-action"
+  ],
+  "requiredReasoningActivations": ["explicit", "inferred"],
+  "requiredMemoryOperations": [
+    "capture-input",
+    "close-input",
+    "capture-finding",
+    "capture-experience",
+    "reconcile-profile",
+    "forget-profile",
+    "profile-autopilot",
+    "handoff",
+    "close-handoff",
+    "supersede",
+    "archive",
+    "maintain",
+    "repair",
+    "migrate",
+    "curate",
+    "curation-apply"
+  ],
+  "requiredProfileScenarios": [
+    "explicit-profile",
+    "explicit-coding-style",
+    "explicit-research-interest",
+    "one-shot-request",
+    "repeated-observation",
+    "profile-update",
+    "profile-conflicting-source",
+    "profile-forget-ambiguous",
+    "profile-pause-resume",
+    "profile-language-precedence",
+    "cross-session-recall"
+  ],
+  "requiredHostEvidence": [
+    "route-json",
+    "reasoning-section-read",
+    "required-artifacts",
+    "memory-state-before-after",
+    "independent-verifier",
+    "task-or-handoff-state",
+    "tool-or-command-trace"
+  ]
+}

@@ -40,7 +40,8 @@ export type RunRecord = {
       | 'transport-failure'
       | 'scenario-budget-exhausted'
       | 'circuit-open'
-      | 'evaluator-failure';
+      | 'evaluator-failure'
+      | 'semantic-review-required';
   };
   transcript: Artifact;
   toolActions: Array<{ sequence: number }>;
@@ -59,7 +60,12 @@ export type RunRecord = {
     evidenceRefs: string[];
   }>;
   verdict: {
-    outcome: 'passed' | 'behavior-failed' | 'infra-inconclusive' | 'evaluator-failed';
+    outcome:
+      | 'passed'
+      | 'behavior-failed'
+      | 'infra-inconclusive'
+      | 'evaluator-failed'
+      | 'evaluator-inconclusive';
     evidenceRefs: string[];
   };
 };

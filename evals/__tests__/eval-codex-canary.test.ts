@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -7,53 +6,15 @@ import { test } from 'vitest';
 import * as canary from '../../scripts/evaluation/codex/eval-codex-canary.js';
 import { candidateArtifact, root, temporaryDirectory } from './run-fixture.js';
 
-const entry = join(root, 'scripts', 'evaluation', 'codex', 'eval-codex-canary.ts');
-
-test('canary CLI exposes its exact bounded inputs without starting a Host', () => {
-  const result = spawnSync(process.execPath, ['--import', 'tsx', entry, '--help'], {
-    cwd: root,
-    encoding: 'utf8',
-  });
-
-  assert.equal(result.status, 0, result.stderr);
-  assert.match(result.stdout, /--package-artifact/);
-  assert.match(result.stdout, /--model/);
-  assert.match(result.stdout, /--scenario/);
-  assert.match(result.stdout, /--scenario-budget-ms/);
-  assert.match(result.stdout, /--max-output-bytes/);
-  assert.match(result.stdout, /--expected-package-sha256/);
-  assert.match(result.stdout, /--output-dir/);
-});
-
-test('canary CLI refuses an unexpected candidate digest before Host launch', () => {
-  const outputDirectory = join(temporaryDirectory(), 'evidence');
-  const result = spawnSync(
-    process.execPath,
-    [
-      '--import',
-      'tsx',
-      entry,
-      '--package-artifact',
-      candidateArtifact,
-      '--expected-package-sha256',
-      '0'.repeat(64),
-      '--model',
-      'gpt-5.6-sol',
-      '--scenario',
-      'machine-error-contract',
-      '--scenario-budget-ms',
-      '900000',
-      '--max-output-bytes',
-      '1048576',
-      '--output-dir',
-      outputDirectory,
-    ],
-    { cwd: root, encoding: 'utf8' },
+test('standalone canary CLI is absent; canary helpers stay suite-internal', () => {
+  assert.equal(
+    existsSync(join(root, 'scripts', 'evaluation', 'codex', 'eval-codex-canary.ts')),
+    true,
   );
-
-  assert.equal(result.status, 1);
-  assert.match(result.stderr, /artifact SHA-256/i);
-  assert.equal(existsSync(outputDirectory), false);
+  assert.equal(
+    existsSync(join(root, 'scripts', 'evaluation', 'codex', 'eval-codex-suite.ts')),
+    true,
+  );
 });
 
 test('canary options enforce the authorized single-attempt boundary', () => {

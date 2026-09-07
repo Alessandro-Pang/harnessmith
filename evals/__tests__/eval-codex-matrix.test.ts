@@ -17,7 +17,7 @@ import { repositoryRoot } from '../../scripts/evaluation/records/eval-fingerprin
 import { temporaryDirectory } from './run-fixture.js';
 import { writeCandidateTarball } from './tarball-fixture.js';
 
-const entry = join(repositoryRoot, 'scripts', 'evaluation', 'codex', 'eval-codex-matrix.ts');
+const entry = join(repositoryRoot, 'scripts', 'evaluation', 'codex', 'eval-codex-suite.ts');
 const scenarioEntry = join(
   repositoryRoot,
   'scripts',
@@ -112,30 +112,6 @@ test('matrix CLI rejects a candidate whose exact digest was not authorized', () 
 
   assert.equal(result.status, 1, result.stderr);
   assert.match(result.stderr, /candidate artifact SHA-256 mismatch/i);
-});
-
-test('matrix run schedules the complete catalog through the bounded runner', async () => {
-  const matrix = await import('../../scripts/evaluation/codex/eval-codex-matrix.js');
-  assert.equal(typeof matrix.runCodexMatrix, 'function');
-  const scenarioIds = worktreeScenarioCatalog(repositoryRoot).scenarios.map(({ id }) => id);
-  const attempts: Array<{ scenarioId: string; attempt: number; maxAttempts: number }> = [];
-
-  const result = await matrix.runCodexMatrix({
-    scenarioIds,
-    concurrency: 2,
-    scenarioBudgetMs: 900_000,
-    matrixBudgetMs: 3_600_000,
-    execute: async (attempt: { scenarioId: string; attempt: number; maxAttempts: number }) => {
-      attempts.push(attempt);
-      return { outcome: 'passed', termination: 'completed' } as const;
-    },
-  });
-
-  assert.equal(scenarioIds.length, 15);
-  assert.deepEqual(attempts.map(({ scenarioId }) => scenarioId).sort(), [...scenarioIds].sort());
-  assert.ok(attempts.every(({ attempt, maxAttempts }) => attempt === 1 && maxAttempts === 2));
-  assert.equal(result.circuitOpen, false);
-  assert.ok(result.results.every(({ outcome }) => outcome === 'passed'));
 });
 
 test('repository-map scenario grants the exact personal-map write without source-write authority', () => {
@@ -238,7 +214,7 @@ test.skipIf(process.platform === 'win32')(
     symlinkSync(target, alias, 'dir');
     const support = await import(
       // @ts-expect-error The tracked evaluator support module is intentionally plain ESM.
-      '../../scripts/evaluation/codex/eval-codex-matrix-support.mjs'
+      '../../scripts/evaluation/codex/eval-codex-support.mjs'
     );
 
     assert.equal(typeof support.sameCanonicalPath, 'function');
@@ -264,7 +240,7 @@ test.skipIf(process.platform === 'win32')(
     writeFileSync(payload, '{}\n');
     const support = await import(
       // @ts-expect-error The tracked evaluator support module is intentionally plain ESM.
-      '../../scripts/evaluation/codex/eval-codex-matrix-support.mjs'
+      '../../scripts/evaluation/codex/eval-codex-support.mjs'
     );
     const canonicalPayload = join(realpathSync.native(directory), 'payload.json');
 
@@ -393,7 +369,7 @@ process.stdout.write('{"type":"turn.completed","usage":{"input_tokens":12}}\\n')
 });
 
 test('scenario executor passes the exact matrix contract to one isolated scenario process', async () => {
-  const matrix = await import('../../scripts/evaluation/codex/eval-codex-matrix.js');
+  const matrix = await import('../../scripts/evaluation/codex/eval-codex-scenario-process.js');
   assert.equal(typeof matrix.createScenarioExecutor, 'function');
   const directory = temporaryDirectory();
   const scenarioProcess = join(directory, 'scenario.mjs');
@@ -427,7 +403,7 @@ process.stdout.write(JSON.stringify({ scenarioId: process.argv[2], outcome: comp
 test('profile-control skill routing remains bounded for deeply segmented commands', async () => {
   const { isExplicitProfileControlRoutingViolation } = await import(
     // @ts-expect-error The tracked evaluator support module is intentionally plain ESM.
-    '../../scripts/evaluation/codex/eval-codex-matrix-support.mjs'
+    '../../scripts/evaluation/codex/eval-codex-support.mjs'
   );
   const item = {
     type: 'command_execution',

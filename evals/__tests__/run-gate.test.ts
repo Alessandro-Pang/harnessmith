@@ -305,7 +305,7 @@ test('release gate identifies stale records instead of counting them as coverage
   assert.match(result.stderr, /stale.*codex\/progressive-disclosure/i);
 });
 
-test('release gate emits machine-readable success only for the complete fresh host matrix', () => {
+test('release gate rejects a complete fresh behavior matrix that lacks the unified suite', () => {
   const runsDirectory = temporaryDirectory();
   const scenarioIds = Object.keys(currentFingerprint().scenarios);
   const adapters = ['codex'] as const;
@@ -314,23 +314,9 @@ test('release gate emits machine-readable success only for the complete fresh ho
   }
 
   const result = run(['gate', '--runs-dir', runsDirectory, '--max-age-days', '30', '--json']);
-  const exact = scenarioIds.map((scenarioId) => `codex/${scenarioId}`);
-
-  assert.equal(result.status, 0, result.stderr);
-  assert.deepEqual(JSON.parse(result.stdout), {
-    valid: true,
-    assurance: 'maintainer-attested-structure',
-    packageArtifactSha256: currentFingerprint().packageArtifactSha256,
-    behaviorSha256: currentFingerprint().behaviorSha256,
-    coverageCount: adapters.length * scenarioIds.length,
-    exactArtifactCoverageCount: adapters.length * scenarioIds.length,
-    inheritedBehaviorCoverageCount: 0,
-    inheritedFrom: [],
-    evidence: { exact, inherited: [], infraBlocked: [] },
-    hosts: adapters,
-    scenarios: scenarioIds,
-    maxAgeDays: 30,
-  });
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /complete unified evaluation suite record is required/);
+  assert.equal(result.stdout.trim(), '');
 });
 
 test('validator rejects records for scenarios outside the versioned catalog', () => {

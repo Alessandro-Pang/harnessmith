@@ -49,7 +49,12 @@ function hostCommand(threadId, persistent, configOverrides = []) {
           ? [dirname(memory)]
           : []),
       ],
-      configOverrides,
+      configOverrides: [
+        ...(configOverrides.some((value) => value.startsWith('model_reasoning_effort='))
+          ? []
+          : ['model_reasoning_effort="medium"']),
+        ...configOverrides,
+      ],
       ephemeral: !persistent,
     }),
     env: { ...commonEnv, HOME: home, CODEX_HOME: configHomePath() },

@@ -26,6 +26,10 @@ export function verifyExecutionClassification(path: string, record: RunRecord): 
     if (verdict.outcome !== 'infra-inconclusive') {
       throw new Error(`${label} ${execution.termination} must be infra-inconclusive`);
     }
+  } else if (execution.termination === 'semantic-review-required') {
+    if (verdict.outcome !== 'evaluator-inconclusive') {
+      throw new Error(`${label} semantic-review-required must be evaluator-inconclusive`);
+    }
   } else if (execution.termination === 'evaluator-failure') {
     if (verdict.outcome !== 'evaluator-failed') {
       throw new Error(`${label} evaluator-failure must be evaluator-failed`);

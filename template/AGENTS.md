@@ -22,7 +22,7 @@
    recommended 引用只加载命中正文，再核对代码、配置、测试、manifest、lockfile 和脚本等事实源。
    `truncated` 或 `inconclusive` 不能解释为不存在；bootstrap 只读且不能代替事实核对。
 4. 对修改、诊断、评审、设计、发布、工具、安全、Git、长任务或 CLI 请求，先读取
-   `{{HARNESS_HOME}}/agent-harness/docs/README.md`；判断后运行 `route --intent <intent>`；
+   `{{HARNESS_HOME}}/agent-harness/docs/README.md`；判断后运行 `route --intent <intent> --json`；
    路由查询保留用户当前原文，不得改写；遗漏验收、未来默认、仍有后续或 host-signal 等信号。
    再读取 `core/execution-loop.md`；加载 primaryPlaybook 和全部由路由返回的 topics；
    若 JSON 含 `reasoningModes`，先读对应章节并按步骤执行，用户无需先说理论名称。

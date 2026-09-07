@@ -7,7 +7,7 @@ import { temporaryDirectory } from './run-fixture.js';
 async function support() {
   return import(
     // @ts-expect-error The tracked evaluator support module is intentionally plain ESM.
-    '../../scripts/evaluation/codex/eval-codex-matrix-support.mjs'
+    '../../scripts/evaluation/codex/eval-codex-support.mjs'
   );
 }
 
@@ -60,26 +60,6 @@ test('scenario aggregation preserves genuine evaluator failures', async () => {
     transportFailed: false,
     hostEvaluatorFailed: true,
   });
-});
-
-test('explicit profile controls accept equivalent Markdown audit tables', async () => {
-  const { isRoutineMemoryAnnouncement } = await support();
-  const message = [
-    '| action | path | validation |',
-    '|---|---|---|',
-    '| forgotten | `global-memory/memory/profile.md` | Harness returned `updated` |',
-  ].join('\n');
-
-  assert.equal(
-    isRoutineMemoryAnnouncement({
-      turnLabel: 'forget-profile',
-      turnKind: 'user',
-      message,
-      beforeMemoryMutation: false,
-      hasRoutineMemoryMutation: true,
-    }),
-    false,
-  );
 });
 
 test('code-review profile keys accept stable review dimensions only', async () => {
@@ -151,24 +131,6 @@ test('resumed Codex turns retain their additional writable roots through config'
   );
 });
 
-test('verified API Worker boundary accepts equivalent assertions but rejects stale claims', async () => {
-  const { containsApiWorkerBoundary } = await support();
-
-  assert.equal(
-    containsApiWorkerBoundary(
-      '当前架构边界已核实为 `API -> Worker`；`LegacyWorker` 已不再使用。依据是当前事实源。',
-    ),
-    true,
-  );
-  assert.equal(
-    containsApiWorkerBoundary('当前架构边界为 **API → Worker**，`LegacyWorker` 已不再使用。'),
-    true,
-  );
-  assert.equal(containsApiWorkerBoundary('当前架构边界已核实为 API -> LegacyWorker。'), false);
-  assert.equal(containsApiWorkerBoundary('历史结论：当前架构边界已核实为 API -> Worker。'), false);
-  assert.equal(containsApiWorkerBoundary('API -> Worker 已不再是当前边界。'), false);
-});
-
 test.skipIf(process.platform === 'win32')(
   'checkpoint output identity accepts canonical aliases of the same persisted file',
   async () => {
@@ -238,4 +200,80 @@ test('checkpoint idempotency accepts only state-proven unobserved replay', async
     checkpointIdempotencyIsProven({ ...baseline, followToRepeatUnchanged: false }),
     false,
   );
+});
+
+test('ungraded semantics stay inconclusive after mechanical evidence passes', async () => {
+  const { evaluateScenarioAssertions } = await support();
+  const result = evaluateScenarioAssertions({
+    scenario: {
+      pass: ['Persists a profile with the correct meaning'],
+      forbidden: ['Does not change unrelated files'],
+      semanticReviewAssertions: ['pass-1'],
+    },
+    passes: [true],
+    forbiddens: [true],
+  });
+  assert.deepEqual(result.passValues, [null]);
+  assert.deepEqual(result.forbiddenValues, [true]);
+  assert.equal(result.semanticReviewRequests[0].assertionId, 'pass-1');
+  assert.equal(
+    result.semanticReviewRequests[0].criterion,
+    'Persists a profile with the correct meaning',
+  );
+  assert.equal(result.mechanicalFailure, false);
+});
+
+test('missing mechanical evidence remains a failure while semantics await review', async () => {
+  const { evaluateScenarioAssertions } = await support();
+  const result = evaluateScenarioAssertions({
+    scenario: {
+      pass: ['Persists a profile with the correct meaning'],
+      forbidden: ['Does not announce internal memory work'],
+      semanticReviewAssertions: ['pass-1', 'forbidden-1'],
+    },
+    passes: [false],
+    forbiddens: [null],
+  });
+  assert.deepEqual(result.passValues, [false]);
+  assert.deepEqual(result.forbiddenValues, [null]);
+  assert.equal(result.mechanicalFailure, true);
+  assert.equal(result.semanticReviewRequests.length, 2);
+});
+
+test('unregistered semantic requirements cannot be silently dropped', async () => {
+  const { evaluateScenarioAssertions } = await support();
+  assert.throws(
+    () =>
+      evaluateScenarioAssertions({
+        scenario: { pass: ['A requirement'], forbidden: ['A boundary'] },
+        passes: [null],
+        forbiddens: [true],
+      }),
+    /unregistered semantic requirement/,
+  );
+  assert.throws(
+    () =>
+      evaluateScenarioAssertions({
+        scenario: {
+          pass: ['A requirement'],
+          forbidden: ['A boundary'],
+          semanticReviewAssertions: ['pass-2'],
+        },
+        passes: [true],
+        forbiddens: [true],
+      }),
+    /unknown semantic assertion/,
+  );
+});
+
+test('natural-language phrase graders are no longer exported', async () => {
+  const module = await support();
+  for (const name of [
+    'pureSignalResponseComplies',
+    'ordinaryPreferenceResponseIsOpaque',
+    'responseSeparatesAssessmentFromAction',
+    'isRoutineMemoryAnnouncement',
+    'isRoutineMemoryMaintenanceDisclosure',
+  ])
+    assert.equal(module[name], undefined, name);
 });

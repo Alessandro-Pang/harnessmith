@@ -1,7 +1,7 @@
 import {
   exactCommandTokens,
   parseInstallCaptureEnvelope,
-} from '../eval-codex-matrix-support.mjs';
+} from '../eval-codex-support.mjs';
 import { exactJsonObject } from './runtime.mjs';
 
 export function captureInstallEvidence({

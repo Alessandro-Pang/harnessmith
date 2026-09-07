@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { execa } from 'execa';
 import type { HostEvalAttempt, HostEvalAttemptResult } from '../planning/eval-runner.js';
@@ -49,6 +51,11 @@ export function createScenarioExecutor(
         return { outcome: 'infra-inconclusive', termination: 'transport-failure' };
       }
       if (result.exitCode !== 0) {
+        writeFileSync(
+          `${options.outputDir}/process-error.json`,
+          `${JSON.stringify({ exitCode: result.exitCode, canceled: result.isCanceled, stdoutBytes: Buffer.byteLength(result.stdout), stderrBytes: Buffer.byteLength(result.stderr), stdoutSha256: createHash('sha256').update(result.stdout).digest('hex'), stderrSha256: createHash('sha256').update(result.stderr).digest('hex') }, null, 2)}\n`,
+          { flag: 'wx' },
+        );
         return { outcome: 'evaluator-failed', termination: 'evaluator-failure' };
       }
       const summary = JSON.parse(result.stdout.trim().split(/\r?\n/u).at(-1) ?? '{}') as {
@@ -67,6 +74,12 @@ export function createScenarioExecutor(
       }
       if (summary.outcome === 'infra-inconclusive' && summary.termination === 'transport-failure') {
         return { outcome: 'infra-inconclusive', termination: 'transport-failure' };
+      }
+      if (
+        summary.outcome === 'evaluator-inconclusive' &&
+        summary.termination === 'semantic-review-required'
+      ) {
+        return { outcome: 'evaluator-inconclusive', termination: 'semantic-review-required' };
       }
       return { outcome: 'evaluator-failed', termination: 'evaluator-failure' };
     } catch {

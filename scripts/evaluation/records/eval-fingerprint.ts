@@ -129,6 +129,12 @@ function assertCurrentReleaseContract(tarball: NpmPackageTarball): RuleFingerpri
   for (const path of [
     'evals/host-capability-matrix.v1.json',
     'evals/host-capability-matrix.schema.json',
+    'evals/memory/scenarios.v1.json',
+    'evals/memory/scenarios.schema.json',
+    'evals/memory/run.schema.json',
+    'evals/coverage.v1.json',
+    'evals/coverage.schema.json',
+    'evals/prompt-route-corpus.v1.json',
   ]) {
     if (!requiredFile(tarball, path).equals(readFileSync(join(repositoryRoot, path)))) {
       throw new Error(`Candidate ${path} does not match the release worktree`);

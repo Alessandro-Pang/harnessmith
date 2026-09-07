@@ -17,7 +17,7 @@ test('validator retains historical scenario records without applying current ass
   assert.match(result.stdout, /Validated 1 maintainer-attested host evaluation record structure/);
 });
 
-test('release gate inherits a complete matrix from another artifact with identical behavior', () => {
+test('release gate refuses to inherit a behavior-only matrix without unified suite evidence', () => {
   const runsDirectory = temporaryDirectory();
   const scenarioIds = Object.keys(currentFingerprint().scenarios);
   for (const scenarioId of scenarioIds) {
@@ -33,25 +33,9 @@ test('release gate inherits a complete matrix from another artifact with identic
 
   const result = run(['gate', '--runs-dir', runsDirectory, '--json']);
 
-  assert.equal(result.status, 0, result.stderr);
-  const output = JSON.parse(result.stdout);
-  assert.equal(output.packageArtifactSha256, currentFingerprint().packageArtifactSha256);
-  assert.equal(output.behaviorSha256, currentFingerprint().behaviorSha256);
-  assert.equal(output.exactArtifactCoverageCount, 0);
-  assert.equal(output.inheritedBehaviorCoverageCount, scenarioIds.length);
-  assert.deepEqual(output.inheritedFrom, [
-    { packageVersion: '0.5.0', packageArtifactSha256: 'f'.repeat(64) },
-  ]);
-  assert.deepEqual(output.evidence.exact, []);
-  assert.deepEqual(
-    output.evidence.inherited,
-    scenarioIds.map((scenarioId) => ({
-      cell: `codex/${scenarioId}`,
-      packageVersion: '0.5.0',
-      packageArtifactSha256: 'f'.repeat(64),
-    })),
-  );
-  assert.deepEqual(output.evidence.infraBlocked, []);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /complete unified evaluation suite record is required/);
+  assert.equal(result.stdout.trim(), '');
 });
 
 test('release gate invalidates only the scenario whose dependency fingerprint changed', () => {

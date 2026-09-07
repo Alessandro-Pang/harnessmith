@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Ajv2020 } from 'ajv/dist/2020.js';
@@ -211,25 +210,9 @@ test('matrix report keeps behavior, evaluator, and rejected-candidate records di
   );
 });
 
-test('matrix CLI reports missing execution without manufacturing Host proof', () => {
+test('legacy matrix CLI is absent; unified suite owns Host evaluation', () => {
   const entry = join(root, 'scripts', 'evaluation', 'eval-host-capability-matrix-cli.ts');
-  const run = (extra: string[] = []) =>
-    spawnSync(
-      process.execPath,
-      ['--import', 'tsx', entry, '--package-artifact', candidateArtifact, ...extra],
-      { cwd: root, encoding: 'utf8' },
-    );
-
-  const reportResult = run();
-  assert.equal(reportResult.status, 0, reportResult.stderr);
-  const report = JSON.parse(reportResult.stdout);
-  assert.equal(report.hostProof, false);
-  assert.equal(report.summary['not-executed'], 7);
-  assert.equal(report.summary.inconclusive, 53);
-
-  const required = run(['--require-complete']);
-  assert.equal(required.status, 1);
-  assert.equal(JSON.parse(required.stdout).hostProof, false);
+  assert.equal(existsSync(entry), false);
 });
 
 test('matrix report rejects a candidate whose matrix contract differs from the worktree', () => {

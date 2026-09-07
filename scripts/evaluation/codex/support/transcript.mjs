@@ -39,52 +39,56 @@ export function visibleAgentMessages(stdout) {
   });
 }
 
-function isOnePlainSentence(text) {
-  const clean = String(text ?? '')
-    .trim()
-    .replace(/`[^`]*`/gu, 'value')
-    .replace(/\[[^\]]+\]\([^)]+\)/gu, 'link');
-  if (!clean || clean.split(/\r?\n/u).filter(Boolean).length !== 1 || /^[-*#]/u.test(clean)) {
-    return false;
+/**
+ * Applies the explicit semantic-review ledger to assertion values.
+ * `null` means that no response prose is authoritative evidence.
+ */
+export function evaluateScenarioAssertions({ scenario, passes, forbiddens }) {
+  const passList = Array.isArray(passes) ? passes : [];
+  const forbiddenList = Array.isArray(forbiddens) ? forbiddens : [];
+  if (
+    !scenario ||
+    !Array.isArray(scenario.pass) ||
+    !Array.isArray(scenario.forbidden) ||
+    passList.length !== scenario.pass.length ||
+    forbiddenList.length !== scenario.forbidden.length
+  ) throw new Error('semantic assertion mapping mismatch');
+  const semanticIds = new Set(
+    Array.isArray(scenario.semanticReviewAssertions)
+      ? scenario.semanticReviewAssertions.map(String)
+      : [],
+  );
+  const knownIds = new Set([
+    ...scenario.pass.map((_, index) => `pass-${index + 1}`),
+    ...scenario.forbidden.map((_, index) => `forbidden-${index + 1}`),
+  ]);
+  for (const id of semanticIds) {
+    if (!knownIds.has(id)) throw new Error(`unknown semantic assertion: ${id}`);
   }
-  return clean.split(/[.!?。！？]+(?:\s|$)/u).filter((part) => part.trim()).length === 1;
-}
-
-export function pureSignalResponseComplies({ label, messages }) {
-  const visible = Array.isArray(messages)
-    ? messages.map((message) => String(message ?? '').trim()).filter(Boolean)
-    : [];
-  if (visible.length === 0) return true;
-  if (visible.length !== 1 || !isOnePlainSentence(visible[0])) return false;
-  const expectedTarget = {
-    'pre-compaction-signal': 'docs/status.txt',
-    'repeat-identical-checkpoint': 'docs/follow-up.txt',
-  }[label];
-  if (!expectedTarget) return false;
-  const referencedFiles = visible[0].match(/docs\/[a-z0-9./_-]+\.txt/giu) ?? [];
-  if (referencedFiles.some((path) => path !== expectedTarget)) return false;
-  const namesPriorResult =
-    visible[0] === '上一项已验证通过' ||
-    visible[0].includes(expectedTarget) ||
-    /(?:\b(?:previous|prior)\s+(?:task|change|edit|result)\b|上一(?:项|个)?(?:任务|修改|变更|结果)|前一(?:项|个)?(?:任务|修改|变更|结果)|刚才(?:的)?(?:任务|修改|变更))/iu.test(
-      visible[0],
-    );
-  if (!namesPriorResult) return false;
-  const semantics = visible[0].replaceAll(expectedTarget, '');
-  return Boolean(
-    /(?:\b(?:complete|done|verified|passed|ready)\b|完成|已验|验证|通过|就绪)/iu.test(
-      semantics,
-    ) &&
-      !/(?:sidecar|memory|profile|handoff|checkpoint|persist|record|replay|save|compaction|continue|context|state|status|snapshot|画像|记忆|交接|持久|记录|重放|保存|压缩|衔接|继续|上下文|状态|快照)/iu.test(
-        semantics,
-      ),
-  );
-}
-
-export function ordinaryPreferenceResponseIsOpaque(message) {
-  return !/(?:profile|autopilot|画像|记忆|持久|生效范围|\bscope\b|(?:本次|本轮|当前|临时|这个|该)\s*(?:任务|会话|偏好|指令)|this\s+(?:task|thread|session)|以后|未来|今后|后续|all\s+future\s+tasks|going\s+forward|from\s+now\s+on|\b(?:save|store|record|persist|write)\b|保存|记录|写入)/iu.test(
-    String(message ?? ''),
-  );
+  const values = (list, prefix) => list.map((value, index) => {
+    const id = `${prefix}-${index + 1}`;
+    if (value === null && !semanticIds.has(id)) {
+      throw new Error(`unregistered semantic requirement: ${id}`);
+    }
+    return semanticIds.has(id) && value === true ? null : value;
+  });
+  const passValues = values(passList, 'pass');
+  const forbiddenValues = values(forbiddenList, 'forbidden');
+  const semanticReviewRequests = [...semanticIds].map((assertionId) => {
+    const pass = assertionId.startsWith('pass-');
+    const index = Number(assertionId.slice(pass ? 5 : 10)) - 1;
+    return {
+      assertionId,
+      criterion: pass ? scenario.pass[index] : scenario.forbidden[index],
+      reason: 'natural-language criterion requires semantic review; no response regex is authoritative',
+    };
+  });
+  return {
+    passValues,
+    forbiddenValues,
+    semanticReviewRequests,
+    mechanicalFailure: [...passValues, ...forbiddenValues].some((value) => value === false),
+  };
 }
 
 export function evaluateCodexTurnCompletion(result, { requireAgentCompletion = true } = {}) {

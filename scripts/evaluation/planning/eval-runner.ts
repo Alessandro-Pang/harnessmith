@@ -1,7 +1,8 @@
 export type HostEvalAttemptResult =
   | { outcome: 'passed' | 'behavior-failed'; termination: 'completed' }
   | { outcome: 'infra-inconclusive'; termination: 'transport-failure' }
-  | { outcome: 'evaluator-failed'; termination: 'evaluator-failure' };
+  | { outcome: 'evaluator-failed'; termination: 'evaluator-failure' }
+  | { outcome: 'evaluator-inconclusive'; termination: 'semantic-review-required' };
 
 export type HostEvalAttempt = {
   scenarioId: string;
@@ -67,6 +68,7 @@ function validateOptions(options: HostEvalRunnerOptions): {
     throw new Error('Host Eval matrix budget must be positive and cover the scenario budget');
   }
   if (
+    options.scenarioIds.length === 0 ||
     options.scenarioIds.some((scenarioId) => scenarioId.length === 0) ||
     new Set(options.scenarioIds).size !== options.scenarioIds.length
   ) {

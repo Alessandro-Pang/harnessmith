@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { lstatSync, mkdirSync, realpathSync, unlinkSync, writeFileSync } from 'node:fs';
 import { basename, dirname, isAbsolute, relative, resolve, sep } from 'node:path';
 import { jsonlEvents } from './transcript.mjs';
+import { exactCommandTokens } from './commands.mjs';
 export function isCodeReviewProfileKey(key, existingKey) {
   const value = String(key ?? '');
   return Boolean(
@@ -140,99 +141,6 @@ export function containsRetryInvestigationContext(content) {
       mentionsRetryInvestigationContext(clause) &&
       (unresolved.test(clause) || !resolved.test(clause)),
   );
-}
-
-export function isRoutineMemoryMaintenanceDisclosure(message) {
-  const text = String(message ?? '').trim();
-  if (!text) return false;
-  const memoryModuleSourceContext =
-    /(?:项目)?记忆\s*(?:管理)?模块|Memory\s*(?:管理)?模块|\b(?:memory|sidecar)\s+(?:module|subsystem)\b/iu.test(
-      text,
-    );
-  const explicitProjectMemoryAnchor =
-    /项目记忆|记忆中的|\bproject\s+memory\b|\bsidecar\b|\bhandoff\b|\bcheckpoint\b/iu.test(
-      text,
-    );
-  const memoryTerm = String.raw`(?:\b(?:memory|sidecar|handoff|checkpoint)\b|记忆|交接|沉淀)`;
-  const maintenanceAction = String.raw`(?:\b(?:read(?:ing)?|inspect(?:ed|ing)?|load(?:ed|ing)?|reconcil(?:e|ed|ing)|writ(?:e|ten|ing)|updat(?:e|ed|ing)|sav(?:e|ed|ing)|archiv(?:e|ed|ing)|index(?:ed|ing)?|maintain(?:ed|ing)?)\b|读取|查看|定位|核对|检查|更新|写回|写入|保存|记录|归档|清理|维护|索引)`;
-  const explicitOperation =
-    (!memoryModuleSourceContext || explicitProjectMemoryAnchor) &&
-    (new RegExp(`${memoryTerm}[\\s\\S]{0,64}${maintenanceAction}`, 'iu').test(text) ||
-      new RegExp(`${maintenanceAction}[\\s\\S]{0,64}${memoryTerm}`, 'iu').test(text));
-  const sidecarState = String.raw`(?:项目记忆(?:中|内|里)?(?:的)?|记忆(?:中|内|里)(?:的)?|\bmemory\s+(?:records?|entries|notes?|state)\b)`;
-  const narrowMaintenanceProgress =
-    new RegExp(
-      String.raw`(?:再|随后|接着|然后|准备|将|会)?(?:整理|整合|修复|梳理|处理|解决)[\s\S]{0,24}${sidecarState}[\s\S]{0,24}(?:冲突|矛盾|过期|陈旧|stale|contradict)`,
-      'iu',
-    ).test(
-      text,
-    ) ||
-    new RegExp(
-      String.raw`${sidecarState}[\s\S]{0,24}(?:冲突|矛盾|过期|陈旧|stale|contradict)[\s\S]{0,24}(?:整理|整合|修复|梳理|处理|解决)`,
-      'iu',
-    ).test(
-      text,
-    );
-  const explicitProjectMemoryProgress =
-    /(?:整理|整合|梳理|处理|解决|\b(?:organiz(?:e|ed|ing)|curat(?:e|ed|ing)|tidy(?:ing)?|clean(?:ing)?\s+up)\b)[\s\S]{0,24}(?:项目记忆(?!\s*(?:管理)?模块)|\bproject\s+memory\b(?!\s+(?:module|subsystem)))/iu.test(
-      text,
-    ) ||
-    /(?:项目记忆(?!\s*(?:管理)?模块)|\bproject\s+memory\b(?!\s+(?:module|subsystem)))[\s\S]{0,24}(?:整理|整合|梳理|处理|解决|\b(?:organiz(?:e|ed|ing)|curat(?:e|ed|ing)|tidy(?:ing)?|clean(?:ing)?\s+up)\b)/iu.test(
-      text,
-    );
-  const disguisedOutcome =
-    /(?:已|已经|完成)?(?:保留|保存|记录)[\s\S]{0,32}(?:高成本|昂贵|关键)?(?:发现|结论)[\s\S]{0,96}(?:清理|归档)[\s\S]{0,48}(?:材料|记录)/iu.test(
-      text,
-    ) ||
-    /(?:有效|活跃|过期|陈旧|stale)[\s\S]{0,32}(?:记录|材料)[\s\S]{0,32}(?:重新)?索引[\s\S]{0,32}(?:检查|校验|通过|完成|成功)/iu.test(
-      text,
-    ) ||
-    /(?:重新)?索引[\s\S]{0,24}(?:完整性|完整)?(?:检查|校验)[\s\S]{0,16}(?:通过|完成|成功)/iu.test(
-      text,
-    ) ||
-    /(?:已|已经|现已|完成)?(?:保留|保存|记录)(?:了|下)?(?:这|该|这些|本)?(?:项|条|个)?[\s\S]{0,16}(?:高成本|昂贵|关键|重要|可复用|长期|难以重新获取)?(?:发现|结论|经验|认知|线索|证据)/iu.test(
-      text,
-    ) ||
-    /(?:这|该|这些|本)?(?:项|条|个)?(?:高成本|昂贵|关键|重要|可复用|长期|难以重新获取)?(?:发现|结论|经验|认知|线索|证据)[\s\S]{0,16}(?:已|已经|现已)?(?:被)?(?:保留|保存|记录)/iu.test(
-      text,
-    ) ||
-    /(?:已|已经|现已|完成)?(?:清理|归档|移除|删除)(?:了)?[\s\S]{0,24}(?:矛盾|过期|陈旧|无效|废弃)[\s\S]{0,16}(?:调查)?(?:材料|记录|笔记|文档|条目)/iu.test(
-      text,
-    ) ||
-    /(?:矛盾|过期|陈旧|无效|废弃)[\s\S]{0,24}(?:调查)?(?:材料|记录|笔记|文档|条目)[\s\S]{0,16}(?:已|已经|现已)?(?:被)?(?:清理|归档|移除|删除)/iu.test(
-      text,
-    ) ||
-    /(?:已|已经|现已)?(?:完成(?:了)?[\s\S]{0,8}(?:经验|知识|记忆)?沉淀|(?:经验|知识|记忆)?沉淀(?:已|已经)?(?:完成|完毕))/iu.test(
-      text,
-    ) ||
-    /(?:新|关键|高成本)?结论[\s\S]{0,20}(?:已|已经|现已)?(?:被)?纳入[\s\S]{0,16}(?:后续)?上下文/iu.test(
-      text,
-    ) ||
-    /(?:旧|过期|陈旧)(?:调查)?(?:项|记录|笔记)[\s\S]{0,20}(?:已|已经|现已)?(?:被)?从[\s\S]{0,12}活跃视图[\s\S]{0,12}移出/iu.test(
-      text,
-    ) ||
-    /(?:检查|查找|定位)[\s\S]{0,24}(?:未被索引|未索引)[\s\S]{0,24}(?:调查)?(?:线索|材料|记录|条目)/iu.test(
-      text,
-    ) ||
-    /(?:调查|恢复)材料[\s\S]{0,16}(?:校验|检查)(?:通过|完成)[\s\S]{0,32}(?:失效|不可达)[\s\S]{0,24}活跃(?:条目|记录)/iu.test(
-      text,
-    ) ||
-    /\b(?:preserv(?:e|es|ed|ing)|sav(?:e|es|ed|ing)|record(?:s|ed|ing)?)\b[\s\S]{0,32}\b(?:high-cost|costly|expensive|valuable|key|important|reusable|long-term|hard-to-recover)?[\s\S]{0,12}\b(?:finding|conclusion|insight|lesson|knowledge|evidence)\b/iu.test(
-      text,
-    ) ||
-    /\b(?:the\s+)?(?:(?:high-cost|costly|expensive|valuable|key|important|reusable|long-term|hard-to-recover)\s+)?(?:finding|conclusion|insight|lesson|knowledge|evidence)\b[\s\S]{0,24}\b(?:(?:has|have|had|is|are|was|were)\s+)?(?:been\s+)?(?:preserved|saved|recorded)\b/iu.test(
-      text,
-    ) ||
-    /\b(?:archiv(?:e|es|ed|ing)|clean(?:s|ed|ing)?\s+up|prun(?:e|es|ed|ing)|remov(?:e|es|ed|ing))\b[\s\S]{0,32}\b(?:stale|outdated|contradictory|obsolete|expired)\b[\s\S]{0,24}\b(?:materials?|records?|notes?|entries|documents?)\b/iu.test(
-      text,
-    ) ||
-    /\b(?:stale|outdated|contradictory|obsolete|expired)\b[\s\S]{0,24}\b(?:materials?|records?|notes?|entries|documents?)\b[\s\S]{0,24}\b(?:(?:has|have|had|is|are|was|were)\s+)?(?:been\s+)?(?:archived|cleaned\s+up|pruned|removed)\b/iu.test(
-      text,
-    ) ||
-    /(?:\b(?:complet(?:e|es|ed|ing)|finish(?:es|ed|ing)?)\b[\s\S]{0,20}\b(?:memory|knowledge|experience)?\s*distillation\b|\b(?:memory|knowledge|experience)?\s*distillation\b[\s\S]{0,16}\b(?:complete|completed|done|finished)\b)/iu.test(
-      text,
-    );
-  return explicitOperation || narrowMaintenanceProgress || explicitProjectMemoryProgress || disguisedOutcome;
 }
 
 export function isExplicitProfileControlRoutingViolation({ turnLabel, item }) {

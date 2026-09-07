@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:harnessmith:eval-coverage:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "requiredPlaybooks", "requiredReasoningModes", "requiredReasoningActivations", "requiredMemoryOperations", "requiredProfileScenarios", "requiredHostEvidence"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "requiredPlaybooks": { "$ref": "#/$defs/idList" },
+    "requiredReasoningModes": { "$ref": "#/$defs/idList" },
+    "requiredReasoningActivations": { "$ref": "#/$defs/idList" },
+    "requiredMemoryOperations": { "$ref": "#/$defs/idList" },
+    "requiredProfileScenarios": { "$ref": "#/$defs/idList" },
+    "requiredHostEvidence": { "$ref": "#/$defs/idList" }
+  },
+  "$defs": {
+    "idList": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1, "maxLength": 128 } }
+  }
+}

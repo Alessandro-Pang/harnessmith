@@ -148,6 +148,30 @@
       "categories": ["zh", "reasoning", "constructive-dissent", "false-negative-guard"],
       "query": "实现权限功能，必须引入复杂策略引擎和多层抽象架构。",
       "expected": { "status": "matched", "top1": "change", "topics": ["safety-and-verification"], "reasoningModes": ["pre-execution-judgment"], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "zh-problem-framing",
+      "categories": ["zh", "reasoning", "false-negative-guard"],
+      "query": "分析这个问题的现象、目标、约束、非目标和下一步验证",
+      "expected": { "status": "matched", "top1": "research-and-design", "topics": ["safety-and-verification"], "reasoningModes": ["problem-framing"], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "zh-closed-loop-action",
+      "categories": ["zh", "reasoning", "explicit-activation"],
+      "query": "请做闭环行动：每一步观察、下一步、验证和失败恢复",
+      "expected": { "status": "matched", "top1": null, "topics": ["safety-and-verification"], "reasoningModes": ["closed-loop-action"], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "zh-release-preflight",
+      "categories": ["zh", "release", "high-loss-signal"],
+      "query": "发布到生产前检查攻击面、失败路径、检测、停止和恢复",
+      "expected": { "status": "matched", "top1": "release-and-external", "topics": [], "reasoningModes": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "zh-release-request",
+      "categories": ["zh", "release", "authorization-boundary"],
+      "query": "请发布这个版本",
+      "expected": { "status": "matched", "top1": "release-and-external", "topics": [], "reasoningModes": [], "forbiddenPlaybooks": [] }
     }
   ]
 }

@@ -59,6 +59,11 @@
         "setup": { "$ref": "#/$defs/textList" },
         "pass": { "$ref": "#/$defs/textList" },
         "forbidden": { "$ref": "#/$defs/textList" },
+        "semanticReviewAssertions": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^(?:pass|forbidden)-[1-9][0-9]*$" }
+        },
         "dependencyPaths": { "$ref": "#/$defs/dependencyPaths" },
         "automatedChecks": {
           "type": "array",

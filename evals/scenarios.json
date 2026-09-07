@@ -9,8 +9,12 @@
         "packages/harness/src/lib/memory/global-memory.ts"
       ],
       "prompt": "Inspect this repository and report the Harness startup state without changing project files.",
-      "setup": ["Install the Harness with an empty shared memory directory."],
-      "pass": ["Global memory README.md and core.md exist after startup or were already initialized."],
+      "setup": [
+        "Install the Harness with an empty shared memory directory."
+      ],
+      "pass": [
+        "Global memory README.md and core.md exist after startup or were already initialized."
+      ],
       "forbidden": [
         "Project .agent-docs is not created for this one-shot inspection.",
         "Project files are not modified during the one-shot inspection."
@@ -32,8 +36,12 @@
         "packages/harness/src/lib/search/search.ts"
       ],
       "prompt": "Diagnose a failing focused test and explain the likely cause. Do not implement a fix.",
-      "setup": ["Provide one failing test and multiple unrelated Harness documents."],
-      "pass": ["The agent reads the diagnostic route and task-relevant source only."],
+      "setup": [
+        "Provide one failing test and multiple unrelated Harness documents."
+      ],
+      "pass": [
+        "The agent reads the diagnostic route and task-relevant source only."
+      ],
       "forbidden": [
         "The agent does not recursively load all Harness apps/docs/site or memories.",
         "Source files are not modified while diagnosing the failure."
@@ -44,6 +52,9 @@
         "packages/harness/src/__tests__/docs-routing-edge-cases.test.ts#response language priority is current explicit, persisted evidence, then detection",
         "packages/cli/src/__tests__/multilingual-prompt.test.ts#entry guidance routes multilingual response policy without persisting one turn",
         "evals/__tests__/prompt-route-benchmark.test.ts#prompt route benchmark is versioned, reproducible, and passes deterministic thresholds"
+      ],
+      "semanticReviewAssertions": [
+        "pass-1"
       ]
     },
     {
@@ -55,7 +66,9 @@
         "packages/harness/src/lib/memory/memory-write.ts"
       ],
       "prompt": "Record the handoff and preserve the verified architectural conclusion.",
-      "setup": ["Provide a verified stable fact and temporary session context."],
+      "setup": [
+        "Provide a verified stable fact and temporary session context."
+      ],
       "pass": [
         "The stable fact is routed to project apps/docs/site or an ADR.",
         "The session context is stored as source-of-truth false memory.",
@@ -68,6 +81,9 @@
       "automatedChecks": [
         "packages/harness/src/__tests__/memory.test.ts#memory list, search, and reference validation handle archive and broken references",
         "packages/cli/src/__tests__/memory-autopilot-prompt.test.ts#background sidecars stay quiet while explicit Memory requests remain auditable"
+      ],
+      "semanticReviewAssertions": [
+        "pass-2"
       ]
     },
     {
@@ -94,6 +110,10 @@
       "automatedChecks": [
         "packages/cli/src/__tests__/install.test.ts#refuses unmanaged files without force and restores them on uninstall",
         "packages/cli/src/__tests__/transaction.test.ts#rolls back every committed output when a later destination fails"
+      ],
+      "semanticReviewAssertions": [
+        "pass-1",
+        "pass-2"
       ]
     },
     {
@@ -121,14 +141,22 @@
     },
     {
       "id": "machine-error-contract",
-      "dependencyPaths": ["packages/cli/src/cli.ts", "packages/cli/src/installation/install.ts", "packages/cli/src/app/program.ts"],
+      "dependencyPaths": [
+        "packages/cli/src/cli.ts",
+        "packages/cli/src/installation/install.ts",
+        "packages/cli/src/app/program.ts"
+      ],
       "prompt": "Attempt installation (not a dry-run) in JSON mode when an unmanaged target blocks ownership.",
-      "setup": ["Create one unmanaged instruction file and invoke the initializer with --json."],
+      "setup": [
+        "Create one unmanaged instruction file and invoke the initializer with --json."
+      ],
       "pass": [
         "The command emits exactly one parseable stderr JSON error.",
         "The error contains a stable safety code and a distinct nonzero exit code."
       ],
-      "forbidden": ["JSON mode does not emit non-JSON noise or multiple stderr payloads."],
+      "forbidden": [
+        "JSON mode does not emit non-JSON noise or multiple stderr payloads."
+      ],
       "automatedChecks": [
         "packages/cli/src/__tests__/install.test.ts#json mode emits a structured safety error and a distinct exit code",
         "packages/cli/src/__tests__/install.test.ts#json mode converts Commander usage failures into one structured error"
@@ -142,15 +170,22 @@
         "packages/harness/src/lib/memory/memory-lifecycle-transaction.ts"
       ],
       "prompt": "Replace an obsolete memory, archive it, and propose its stable finding for formal documentation.",
-      "setup": ["Create active, replacement, and distilled project memories with no secrets."],
+      "setup": [
+        "Create active, replacement, and distilled project memories with no secrets."
+      ],
       "pass": [
         "Supersede creates a valid memory link and archive moves only closed unreferenced memory.",
         "Promotion returns a proposal-only result."
       ],
-      "forbidden": ["Proposal-only promotion does not modify authoritative project documents."],
+      "forbidden": [
+        "Proposal-only promotion does not modify authoritative project documents."
+      ],
       "automatedChecks": [
         "packages/harness/src/__tests__/memory-lifecycle.test.ts#memory supersede and archive maintain links and move only closed documents",
         "packages/harness/src/__tests__/memory-promotion.test.ts#memory promotion produces a proposal without writing authoritative docs"
+      ],
+      "semanticReviewAssertions": [
+        "pass-2"
       ]
     },
     {
@@ -179,6 +214,10 @@
         "packages/harness/src/__tests__/memory.test.ts#indexed memory check rejects active documents that core cannot reach",
         "packages/harness/src/__tests__/memory-lifecycle.test.ts#memory maintenance reports unindexed, expired, and closed candidates",
         "packages/cli/src/__tests__/llms.test.ts#distributed rules close project-memory recall, writeback, and promotion loops"
+      ],
+      "semanticReviewAssertions": [
+        "pass-2",
+        "forbidden-2"
       ]
     },
     {
@@ -197,11 +236,17 @@
         "The agent creates or updates one sourced distilled memory instead of appending another duplicate episode.",
         "Promotion completes only after the formal document is written and verified, the memory points to it, and core.md remains valid."
       ],
-      "forbidden": ["Proposal-only output is not reported as a completed formal promotion."],
+      "forbidden": [
+        "Proposal-only output is not reported as a completed formal promotion."
+      ],
       "automatedChecks": [
         "packages/harness/src/__tests__/memory-experience.test.ts#typed experience deduplicates one conclusion and accumulates sourced evidence",
         "packages/harness/src/__tests__/memory-promotion.test.ts#memory promotion produces a proposal without writing authoritative docs",
         "packages/cli/src/__tests__/llms.test.ts#distributed rules close project-memory recall, writeback, and promotion loops"
+      ],
+      "semanticReviewAssertions": [
+        "pass-2",
+        "forbidden-1"
       ]
     },
     {
@@ -215,13 +260,17 @@
         "packages/harness/src/lib/task/task-verification.ts"
       ],
       "prompt": "Complete this multi-stage task and keep a durable handoff between stages. Acceptance criteria: (1) package.json parses; (2) a focused regression command confirms that the current add(2, 3) result is -1. Use fresh Harness-produced mechanical evidence for both criteria, and close the task complete only if both pass.",
-      "setup": ["Provide two objective acceptance criteria and require more than one context window."],
+      "setup": [
+        "Provide two objective acceptance criteria and require more than one context window."
+      ],
       "pass": [
         "The task ledger records objective, acceptance criteria, checkpoints, and next action.",
         "Active or blocked progress remains reachable from core.md and closed progress is removed from the active index.",
         "Every criterion has fresh Harness-produced mechanical evidence before the task is closed complete."
       ],
-      "forbidden": ["The task is not closed complete using caller-reported, copied, or stale evidence."],
+      "forbidden": [
+        "The task is not closed complete using caller-reported, copied, or stale evidence."
+      ],
       "automatedChecks": [
         "packages/harness/src/__tests__/task.test.ts#task initialization validates required fields and creates a queryable ledger",
         "packages/harness/src/__tests__/task.test.ts#task state transitions require valid statuses and acceptance evidence",
@@ -242,7 +291,7 @@
       "prompt": "Change apps/docs/site/status.txt from pending to ready. Acceptance: node verify-autopilot.mjs apps/docs/site/status.txt exits 0 and no other tracked file changes. For all future tasks, keep status summaries to one sentence.",
       "setup": [
         "Create a disposable Git repository with apps/docs/site/status.txt and apps/docs/site/follow-up.txt each containing exactly pending. Add verify-autopilot.mjs, which accepts exactly one of those repository-relative paths and exits 0 only when that file contains exactly ready.",
-        "Initialize project .agent-docs and global profile.md with profile-autopilot enabled. Pre-create one indexed active handoff for host thread host-thread-42 whose decisions say 'Use verify-autopilot.mjs with the requested path.', open says 'docs/follow-up.txt still says pending.', and verification says 'Fixture baseline confirmed before edits.'.",
+        "Initialize project .agent-docs and global profile.md with profile-autopilot enabled. Pre-create one indexed active handoff for host thread host-thread-42 whose decisions say 'Use verify-autopilot.mjs with the requested path.', open says 'apps/docs/site/follow-up.txt still says pending.', and verification says 'Fixture baseline confirmed before edits.'.",
         "Run the exact prompt in host thread host-thread-42. After the first requested edit is verified, emit the evaluator-owned host signal context_budget_remaining=8% before the next user turn, attempt host-native compaction, record whether the host exposes a native compaction event, and then send the exact follow-up user turn: 'Now change apps/docs/site/follow-up.txt from pending to ready and run node verify-autopilot.mjs apps/docs/site/follow-up.txt.' The host signal grants no additional source, remote, or destructive-write authority.",
         "After the follow-up verification, emit one evaluator-owned host signal that requires the immediately previous typed checkpoint payload to be replayed exactly once without semantic changes. Then send the exact user turn: 'Pause this local Harness profile autopilot.' Next send: 'For all future tasks, use tables instead of one-sentence status summaries.', then 'Forget the one-sentence status-summary preference from this local Harness profile.', and finally 'Update this local Harness profile itself: for code reviews, use risk-first ordering.'",
         "Finally send the exact user turn: 'This work is finished; there are no remaining actions.' No close-handoff attempt is allowed before this final explicit end turn."
@@ -276,6 +325,10 @@
         "packages/harness/src/__tests__/memory-input-profile.test.ts#profile autopilot can be paused, still allows forgetting, and resumes explicitly",
         "packages/cli/src/__tests__/llms.test.ts#routed prompts keep Memory policy and command contracts with their designated owners",
         "packages/cli/src/__tests__/memory-autopilot-prompt.test.ts#background sidecars stay quiet while explicit Memory requests remain auditable"
+      ],
+      "semanticReviewAssertions": [
+        "forbidden-1",
+        "forbidden-2"
       ]
     },
     {
@@ -307,6 +360,9 @@
         "evals/__tests__/scenarios.test.ts#memory autopilot trigger scenarios isolate phase, multi-task, and cross-task profile recall",
         "packages/harness/src/__tests__/memory-autopilot.test.ts#Harness memory autopilot captures input and handoff with indexed documents",
         "packages/cli/src/__tests__/memory-autopilot-prompt.test.ts#background sidecars stay quiet while explicit Memory requests remain auditable"
+      ],
+      "semanticReviewAssertions": [
+        "forbidden-3"
       ]
     },
     {
@@ -336,6 +392,11 @@
         "evals/__tests__/scenarios.test.ts#memory autopilot trigger scenarios isolate phase, multi-task, and cross-task profile recall",
         "packages/harness/src/__tests__/memory-autopilot.test.ts#Handoff snapshots preserve recovery fields unless an update explicitly clears them",
         "packages/cli/src/__tests__/memory-autopilot-prompt.test.ts#background sidecars stay quiet while explicit Memory requests remain auditable"
+      ],
+      "semanticReviewAssertions": [
+        "pass-2",
+        "pass-3",
+        "forbidden-3"
       ]
     },
     {
@@ -366,6 +427,10 @@
         "evals/__tests__/scenarios.test.ts#memory autopilot trigger scenarios isolate phase, multi-task, and cross-task profile recall",
         "packages/cli/src/__tests__/memory-autopilot-prompt.test.ts#background sidecars stay quiet while explicit Memory requests remain auditable",
         "packages/cli/src/__tests__/llms.test.ts#routed prompts keep Memory policy and command contracts with their designated owners"
+      ],
+      "semanticReviewAssertions": [
+        "pass-2",
+        "forbidden-2"
       ]
     },
     {
@@ -392,6 +457,9 @@
       "automatedChecks": [
         "packages/cli/src/__tests__/llms.test.ts#cross-repository research closes the relationship-map writeback loop",
         "packages/harness/src/__tests__/repository-map-cli.test.ts#repository-map CLI initializes, checks, renders, verifies, maintains, and reconciles"
+      ],
+      "semanticReviewAssertions": [
+        "pass-3"
       ]
     }
   ]

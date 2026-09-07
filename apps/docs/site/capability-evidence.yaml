@@ -271,15 +271,15 @@ claims:
   - id: codex-l3-matrix-driver
     status: implemented
     owner: Codex Host Eval execution and evidence
-    claim: Run the complete Codex L3 scenario catalog against one authorized candidate and explicit model through shell-free bounded processes, disposable fixtures, independent verifiers, and schema-v6 evidence.
+    claim: Run the complete unified Codex registry against one authorized candidate and explicit model through shell-free bounded processes, disposable fixtures, independent verifiers, and suite evidence schema v2.
     implementation:
-      - scripts/evaluation/codex/eval-codex-matrix.ts
+      - scripts/evaluation/codex/eval-codex-suite.ts
       - scripts/evaluation/codex/eval-codex-scenario-process.ts
       - scripts/evaluation/codex/eval-codex-scenario.mjs
-      - scripts/evaluation/codex/eval-codex-matrix-support.mjs
+      - scripts/evaluation/codex/eval-suite-evidence.ts
     verification:
-      - evals/__tests__/eval-codex-matrix.test.ts
-      - evals/__tests__/eval-codex-matrix-coverage.ts
+      - evals/__tests__/eval-codex-suite.test.ts
+      - evals/__tests__/eval-suite-scheduler.test.ts
 
   - id: release-host-eval-evidence-state
     status: implemented
@@ -295,16 +295,18 @@ claims:
       - evals/__tests__/release-publish.test.ts
       - evals/__tests__/release-risk-integrity.test.ts
 
-  - id: multi-host-capability-matrix-audit
+  - id: unified-codex-suite-coverage
     status: implemented
-    owner: Host Eval evidence reporting
-    claim: Bind the current Prompt and Memory capability matrix to one candidate while preserving unsupported, inconclusive, unexecuted, infrastructure, evaluator, behavior, and passing outcomes as distinct evidence states.
+    owner: unified Host evaluation and release verification
+    claim: Bind behavior, Memory, reasoning-mode, playbook, and evidence-kind coverage to one candidate-bound Codex suite summary; incomplete or unsupported cells remain inconclusive.
     implementation:
-      - evals/host-capability-matrix.v1.json
-      - evals/host-capability-matrix.schema.json
-      - scripts/evaluation/eval-host-capability-matrix.ts
+      - scripts/evaluation/codex/eval-codex-suite.ts
+      - scripts/evaluation/codex/eval-suite-registry.ts
+      - scripts/evaluation/contracts/eval-coverage.ts
+      - scripts/evaluation/contracts/eval-suite-gate.ts
     verification:
-      - evals/__tests__/host-capability-matrix.test.ts
+      - evals/__tests__/eval-codex-suite.test.ts
+      - evals/__tests__/eval-coverage-contract.test.ts
 
   - id: post-publish-registry-verification
     status: implemented
