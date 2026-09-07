@@ -1,5 +1,59 @@
 # Harness behavior evaluations
 
+## Codex evaluation suite
+
+The Codex suite is the single public evaluation entrypoint. It runs the deterministic route
+benchmark, the behavior, state-based Memory, and reasoning-mode cases against the same
+candidate tarball and writes one `suite-summary.json`; each family is only a fixture/verifier adapter inside that scheduler. Memory evaluation verifies durable state separately
+from response quality inside that suite. The versioned catalog in
+[`evals/memory/scenarios.v1.json`](memory/scenarios.v1.json) covers explicit writes, no-write and proposal
+cases, project/user scope separation, idempotency, updates, forgetting, sensitive-data rejection, and
+cross-session recall. Each trial captures independent before/after Memory file digests, the typed writer
+result, and a fresh `memory check` result. A final response or a regular expression can never prove a
+durable write.
+
+Scenarios whose fixture or oracle cannot establish the promised behavior are marked
+`evaluationStatus: inconclusive` in the catalog with a machine-readable repair reason. The Codex runner
+writes an `evaluator-inconclusive` record without invoking the model; these trials stay out of metric
+denominators and keep the gate `inconclusive` until the fixture is repaired. They must not be “fixed” by
+retuning prompts or response matching.
+
+Run the real unified Codex evaluation suite against one immutable candidate tarball:
+
+```bash
+pnpm run eval:codex -- \
+  --package-artifact /absolute/path/harnessmith-x.y.z.tgz \
+  --expected-package-sha256 <sha256> \
+  --model <model> \
+  --output-dir /absolute/new/codex-eval-suite
+```
+
+The suite writes family-scoped evidence directories and a schema v2 `suite-summary.json` below the requested
+directory. A stage with non-passing scenario results fails the suite; it cannot be hidden by a
+successful process exit. A missing fixture or independent oracle is `evaluator-inconclusive`; an executed
+scenario that fails its observable contract is `behavior-failed`; a transport circuit stop can produce
+`infra-blocked`. None of these outcomes is a release pass, and none is repaired by changing response
+matching or rerunning the same unresolved evaluation. There is no standalone memory or matrix evaluation command; subprocess files are private adapters and cannot satisfy the release gate.
+
+Before judging the stage scores, the suite records a coverage contract for all seven playbooks, all
+seven reasoning modes and both activation types, the complete typed Memory operation surface, and
+explicit profile/habit cases such as one-shot language, repeated observations, updates, ambiguous
+forget requests, pause/resume, language precedence, and cross-session recall. Each cell is classified
+as executable, evaluator-inconclusive, or missing. Current legacy Host evidence covers Memory state,
+independent verifiers, command traces, and task/handoff state; the dedicated reasoning Host stage adds
+route JSON capture, reasoning-section reads, and required artifacts. The suite still returns
+`inconclusive` while any catalog cell lacks an executable fixture or independent oracle, rather than
+allowing a deterministic route pass to masquerade as complete system coverage.
+
+The report excludes inconclusive trials from precision/recall denominators and applies a release gate to
+state violations, forbidden writes, and independent-verifier failures. Every failed trial is classified as
+`policy-mismatch`, `state-mismatch`, `evidence-missing`, `verifier-failed`, `infra-inconclusive`,
+`evaluator-inconclusive`, or `qualitative-only`. Only `policy-mismatch` is a model-behavior diagnosis; state,
+verifier, evaluator-fixture, and infrastructure
+failures route to their respective fixture/writer/transport repairs. The evaluator does not recommend
+changing a prompt or regex and rerunning for those categories, so a failed run must first acquire a new
+root-cause hypothesis and an independent verifier result.
+
 Unit tests cover deterministic file and CLI behavior. This directory describes how maintainers record an observed run of the installed Harness in Codex, Cursor, Claude Code, OpenCode, Kimi Code CLI, or Zed Agent. Codex is required by the current release policy; records from the other five hosts are optional evidence. A schema fixture, scenario catalog, mock transcript, or passing unit test does not count as Host evidence.
 
 ## Before you start
@@ -9,37 +63,21 @@ This is a maintainer workflow, not an end-user installation guide. Prepare the f
 - Node.js 24.12.0 or newer and the repository's pinned pnpm version; run `pnpm install --frozen-lockfile`.
 - A clean, disposable workspace with an absolute path. Do not use a production checkout or a directory containing credentials.
 - A built candidate tarball produced from the exact commit under review. Keep that file unchanged throughout installation, evaluation, and gating.
-- For `eval:codex-matrix`, an authenticated local Codex CLI, an explicitly selected model, and permission to run the opt-in Host process. The workflow does not log in, approve access, or create credentials for you.
+- For `eval:codex`, an authenticated local Codex CLI, an explicitly selected model, and permission to run the opt-in Host process. The workflow does not log in, approve access, or create credentials for you.
 - A new evidence directory outside the candidate workspace, or an ignored `.agent-docs/host-evals/runs` directory. Never place raw credentials, cookies, private source, or unredacted transcripts in it.
 
 If a Host transport, login, network, model, or disposable workspace is unavailable, record the result as `infra-inconclusive` or `inconclusive`; do not turn missing Host evidence into a passing record.
 
-## Multi-Host capability matrix
+## Host capability evidence
 
-`host-capability-matrix.v1.json` maps the current first-startup, read-only analysis, typed-writer,
-uninitialized-project, compaction, second-task, sidecar-failure, dirty-worktree, local-write prohibition,
-and replay capabilities across all six distribution adapters. `pnpm run eval:host-matrix` binds that
-contract and every accepted record to one exact candidate tarball:
-
-```bash
-pnpm run eval:host-matrix -- \
-  --package-artifact /absolute/path/harnessmith-x.y.z.tgz \
-  --runs-dir /absolute/path/to/host-eval-runs
-```
-
-The report distinguishes `not-executed`, `unsupported`, `inconclusive`, `infra-inconclusive`,
-`evaluator-failed`, and `behavior-failed`. A `passed` cell requires a schema-valid exact-candidate
-record, tool actions, filesystem evidence, passing positive and forbidden assertions, and an independent
-test/file/log/observation artifact. Missing concrete Host transports or dedicated verifier scenarios remain
-explicitly `inconclusive`; installed CLIs, mock evaluators, catalog validation, preflight, and successful
-Harness installation never upgrade those cells. The report is bound to one candidate and records a maintainer's observations. It does not prove that a third-party Host performed the run.
+Host capability metadata is an input to the unified `eval:codex` registry. It is not a second runner or a release gate. A capability without a Codex fixture remains `inconclusive`; adapter installation, a catalog entry, or a mock event cannot upgrade it. The suite records unsupported and unavailable Host capabilities explicitly beside the real Codex case evidence.
 
 ## Deterministic Prompt and route benchmark
 
-`pnpm run bench:prompt-route` runs the versioned bilingual corpus in
-`prompt-route-corpus.v1.json`. The JSON report includes corpus/input digests, rule and candidate fingerprints,
-threshold metrics, per-case false-positive/false-negative audit data, and provenance. A prior JSON report can be
-passed with `--baseline-report`; comparison fails unless both reports use the exact same corpus inputs.
+The `eval:codex` suite runs the versioned bilingual corpus in `prompt-route-corpus.v1.json` as its deterministic
+route stage. Its JSON report includes corpus/input digests, rule and candidate fingerprints, threshold metrics,
+per-case false-positive/false-negative audit data, and provenance. A prior JSON report can be compared only when
+both reports use the exact same corpus inputs.
 
 This deterministic layer does not manufacture evaluator or Host telemetry. Fact verification, model tokens, and
 Host tool calls stay `not-measured` until exact evidence exists, and a passing benchmark is not real Host proof.
@@ -48,8 +86,10 @@ Host tool calls stay `not-measured` until exact evidence exists, and a passing b
 
 `scenarios.schema.json` validates the versioned `scenarios.json` catalog, which contains the exact prompt,
 setup, observable pass conditions, forbidden conditions, and local regression checks.
-`run.schema.json` is the versioned record contract. Every real run uses
-`recordType: host-evaluation` and records:
+`run.schema.json` is the per-scenario behavior record contract used by the suite and historical diagnostics. The release gate does not accept
+standalone `run.json` records, inherited cells, or an old validation result as a current release pass; it
+requires the complete schema v2 `suite-summary.json` with the current candidate and evaluator-contract
+digests. Each behavior run uses `recordType: host-evaluation` and records:
 
 - host product/version and model/model version;
 - package version, exact candidate tarball, embedded Harness, complete scenario contract
@@ -57,7 +97,7 @@ setup, observable pass conditions, forbidden conditions, and local regression ch
   fingerprints, and the derived
   `behaviorSha256` used for bounded evidence inheritance;
 - start and finish timestamps plus `evaluatedAt`, when the maintainer completed evidence review;
-- the Host Eval tier, attempt count, elapsed time, termination reason, and enforced scenario/matrix budgets;
+- the Host Eval tier, attempt count, elapsed time, termination reason, and enforced scenario/suite budgets;
 - a redacted transcript artifact and SHA-256 digest;
 - ordered tool actions, including approval and outcome;
 - a filesystem-diff artifact, digest, and changed-path summary;
@@ -66,16 +106,16 @@ setup, observable pass conditions, forbidden conditions, and local regression ch
   (`forbidden-1`, `forbidden-2`, …);
 - a verdict whose references resolve to independently stored evidence artifacts.
 
-Schema v6 makes infrastructure and evaluator failures explicit. `passed` and `behavior-failed` are valid only
-for a completed Host execution. Transport failures, scenario budget exhaustion, and an open circuit are
-`infra-inconclusive`; evaluator failures are `evaluator-failed`. Infrastructure outcomes never satisfy release
-coverage and never become product behavior failures.
+Schema v6 is the per-scenario behavior record contract. It makes infrastructure and evaluator failures explicit
+for individual `run.json` records, but it is not the release verdict. The unified schema v2 suite additionally
+records `evaluator-inconclusive` for missing fixtures/oracles and `infra-blocked` for scenarios stopped by the
+transport circuit or suite budget. No infrastructure or evaluator outcome satisfies current release coverage.
 
-Each record is limited to a 15-minute scenario budget and a 60-minute matrix budget. A run may retry once
+Each record is limited to a 15-minute scenario budget and a 60-minute suite budget. A run may retry once
 (`maxAttempts: 2`); the record preserves the attempt count, transport-failure count, and whether execution
 completed, exhausted its budget, failed in transport/evaluation, or stopped at an open circuit. This repository
 validates those limits and classifications, plans incremental coverage, and provides an opt-in Codex process
-transport plus a first-class full-matrix driver. Nothing runs on import or during unit tests; real Host work
+transport plus a first-class unified suite driver. Nothing runs on import or during unit tests; real Host work
 starts only when a maintainer explicitly invokes the driver with an exact candidate digest and model.
 
 All `local:` artifact references are relative to the record file. The validator rejects missing, tampered,
@@ -108,30 +148,34 @@ deliberate: copying or renaming it cannot satisfy the validator or release gate.
    from the current release worktree. Gating fails closed when `HARNESS_RELEASE_ARTIFACT` (or the equivalent
    `--package-artifact PATH`) is absent, invalid, or changed. The exact artifact digest remains the publication
    subject; Host behavior evidence has a separate fingerprint lifecycle described below.
-3. Install that exact tarball in the disposable host, then run the unmodified scenario prompt. Capture the
-   actual host/model versions, sanitized transcript, ordered tool actions, filesystem diff, forbidden-action
-   observations, and verdict.
-4. Store each `run.json` beside its redacted artifacts in a local or CI-injected evidence directory. A useful
-   ignored local location is `.agent-docs/host-evals/runs`; point the tools at it with
-   `HARNESS_EVAL_RUNS_DIR` or `--runs-dir`.
-5. Validate the records and then run the release gate:
+3. Prepare the authenticated Codex CLI and select the model. The suite installs the candidate into
+   disposable fixtures and captures the actual Host, state, and verifier evidence.
+4. Choose a new suite evidence directory outside the candidate workspace. Keep the generated summary
+   and family records together; point `HARNESS_EVAL_RUNS_DIR` or `--runs-dir` at this suite root.
+5. Run the unified suite explicitly; it writes the release evidence and schema v2 summary:
 
    ```bash
-   export HARNESS_EVAL_RUNS_DIR="$PWD/.agent-docs/host-evals/runs"
-   pnpm run eval:validate
+   pnpm run eval:codex -- \
+     --package-artifact /absolute/path/to/release-candidate/harnessmith-x.y.z.tgz \
+     --expected-package-sha256 <sha256> \
+     --model gpt-5.6-sol \
+     --output-dir /absolute/new/codex-eval-suite
+   export HARNESS_EVAL_RUNS_DIR=/absolute/new/codex-eval-suite
    pnpm run eval:gate
    ```
 
-`eval:validate` reads only files named `run.json`; adjacent JSON may be an evidence artifact. It checks schema,
-scenario identity, evidence references, containment, artifact digests, and high-confidence secret patterns.
-`eval:gate` additionally verifies the exact candidate tarball, then requires compatible
-Harness/rule/scenario fingerprints, a passing verdict, every required scenario assertion and forbidden-action
-assertion to pass, and a fresh complete required-host × scenario matrix. The default freshness window is 30
-days; use `--max-age-days` only when the release policy explicitly chooses another bounded window.
+`eval:validate` reads only behavior files named `run.json`; adjacent JSON may be an evidence artifact. It
+checks schema, scenario identity, evidence references, containment, artifact digests, and high-confidence
+secret patterns for diagnostics. `eval:plan` and `eval:compare` likewise help select or explain work but do
+not create release coverage. `eval:gate` accepts only a complete, fresh schema v2 `suite-summary.json`
+whose candidate SHA-256 and evaluator-contract digest match the current release; it rejects missing, stale,
+behavior-failed, evaluator-inconclusive, evaluator-failed, infra-inconclusive, and infra-blocked suite
+outcomes. The default freshness window is 30 days; use `--max-age-days` only when the release policy
+explicitly chooses another bounded window.
 
 On failure, human-readable output prints a `Rejected record summary` grouped by root cause and caps inline
 audit details; use `eval:gate -- --json` for the complete machine-readable failure. JSON failures use the stable
-`EVAL_COVERAGE_INCOMPLETE` code and include the missing matrix cells, rejection counts, grouped reasons, and
+`EVAL_COVERAGE_INCOMPLETE` code and include the missing suite cases, rejection counts, grouped reasons, and
 all rejected record descriptions.
 
 When a host/scenario cell contains multiple valid records, only the record with the latest `evaluatedAt` is
@@ -144,7 +188,12 @@ personal/project rule templates. The fingerprint output lists package-relative p
 changing packaged executable behavior invalidates prior host records even if a maintainer forgets to bump a
 version string.
 
-## Risk-based inheritance
+Release state and attestation retain `exact`, `inherited`, and `infra-blocked` fields for schema
+compatibility. The current suite gate puts passing cells in `exact`, sets
+`inheritedBehaviorCoverageCount` to zero, and leaves inherited lists empty. `infra-blocked` never counts
+toward passing coverage; a risk exception does not convert a blocked result into a passed suite.
+
+## Historical fingerprints and planning
 
 Artifact and behavior identities answer different questions:
 
@@ -154,14 +203,16 @@ Artifact and behavior identities answer different questions:
 - `scenarioSha256` independently identifies each Host scenario contract.
 - `dependencySha256` identifies the declared behavior sources that can affect one scenario.
 
-A metadata-only release may inherit fresh passing Host records when the embedded Harness version and that
-cell's scenario and dependency fingerprints are unchanged. The global `rulesSha256` remains audit evidence,
-but does not invalidate unrelated cells. A changed scenario contract or declared dependency invalidates only that scenario;
-unaffected cells remain reusable. SemVer alone never determines reuse.
+The fingerprint fields remain useful for diagnosing drift and for planning which scenarios need attention.
+The current release gate does not consume inherited Host records: metadata-only similarity, an `eval:plan`
+selection, or an older passing `run.json` cannot satisfy the current candidate's suite gate. A fresh schema v2
+suite summary must bind every passing cell to the current candidate and evaluator-contract digest. A changed
+scenario contract or declared dependency therefore requires the corresponding suite evidence; SemVer alone
+never determines reuse.
 
 `pnpm run eval:plan --changed-file PATH` classifies repository changes before real Host execution. L1 keeps
 non-behavior changes in deterministic checks only. L2 selects at most three scenarios whose `dependencyPaths`
-cover all changed behavior sources. L3 runs the full matrix when a behavior source is unmapped
+cover all changed behavior sources. L3 runs the full suite when a behavior source is unmapped
 (`unmapped-behavior-source`) or the L2 selection would exceed that bound. This planner is fail closed: an
 unknown behavior file never silently inherits Host evidence.
 
@@ -173,7 +224,7 @@ transport failure may retry once. Two consecutive transport failures open the ci
 and classify scenarios that never started as `infra-blocked`; they are never converted into behavior failures.
 
 The runner gives every attempt an `AbortSignal` and a hard deadline, enforces both the 15-minute scenario and
-60-minute matrix budgets, and preserves `behavior-failed`, `infra-inconclusive`, and `evaluator-failed` as
+60-minute suite budgets, and preserves `behavior-failed`, `infra-inconclusive`, and `evaluator-failed` as
 separate outcomes. An injected executor and clock keep the scheduler deterministic in tests.
 
 `scripts/evaluation/codex/eval-codex-transport.ts` supplies the concrete transport for the current required Host. It invokes
@@ -188,14 +239,14 @@ produces a bounded capture: an injected behavior evaluator must still return `pa
 This transport does not persist raw output, construct a `run.json`, authenticate, or start on import. A real RC
 drill, sanitized evidence capture, and maintainer review remain explicit later work.
 
-`pnpm run eval:codex-matrix` is the opt-in L3 driver around that transport. It requires the complete 15-scenario
-catalog, an absolute candidate tarball and its pre-authorized SHA-256, an explicit Codex model, and a new
+`pnpm run eval:codex` is the opt-in suite driver around that transport. It requires the complete unified
+registry, an absolute candidate tarball and its pre-authorized SHA-256, an explicit Codex model, and a new
 evidence directory. Defaults remain policy choices supplied by the caller; the release contract permits 1–3
-workers, at most 15 minutes per scenario, at most 60 minutes for the matrix, one transport retry, and at most
+workers, at most 15 minutes per scenario, at most 60 minutes for the suite, one transport retry, and at most
 1 MiB each for Host stdout and stderr. For example:
 
 ```bash
-pnpm run eval:codex-matrix -- \
+pnpm run eval:codex -- \
   --package-artifact /absolute/path/harnessmith-x.y.z.tgz \
   --expected-package-sha256 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef \
   --model gpt-5.6-sol \
@@ -208,27 +259,26 @@ pnpm run eval:codex-matrix -- \
 
 Each attempt installs only the supplied tarball into a disposable fixture, invokes `codex exec` without a
 shell, and sends prompts on stdin. The fixture exposes the current `CODEX_HOME/auth.json` by symlink instead
-of copying credentials into evidence. Each completed attempt writes schema-v6 sanitized artifacts and an
-independently verified verdict; the driver validates all records, runs the exact-candidate gate after a fully
-passing matrix, and writes a bounded `matrix-summary.json`. Behavior, infrastructure, evaluator, circuit, and
-budget outcomes stay distinct. An incomplete matrix exits non-zero and never becomes release coverage.
+of copying credentials into evidence. Each completed attempt writes family-specific records and sanitized
+artifacts. The driver binds those records to a schema v2 `suite-summary.json`; run `eval:gate` separately
+to verify release eligibility. Behavior, infrastructure, evaluator, circuit, and budget outcomes stay distinct.
+An incomplete suite exits non-zero and never becomes release coverage.
 
-Gate output separates `exactArtifactCoverageCount` from `inheritedBehaviorCoverageCount` and lists every
-source package version and artifact digest under `inheritedFrom`. Release state and the signed release
-attestation also preserve a matrix-cell evidence ledger with `exact`, `inherited`, and `infra-blocked`
-entries. Inherited cells bind their source package version and artifact digest. `infra-blocked` never counts
-toward passing coverage and is only permitted in an exact, user-authorized risk exception whose uncovered
-matrix contains those cells. Historical records whose scenario fingerprint no longer matches may remain in
-the evidence directory, but they are not eligible for current coverage. Legacy release state and attestation
-schemas remain readable; newly prepared releases write the explicit evidence schema.
+The current suite gate binds every passing cell to the current candidate and evaluator-contract digests.
+Legacy `run.json` records, inherited behavior cells, `eval:plan` selections, and `eval:compare` reports may
+remain in the evidence directory for diagnosis, but none can satisfy current release coverage. Historical
+records whose scenario fingerprint no longer matches are not eligible. `infra-blocked` and all other
+non-passing suite outcomes remain visible and fail the current gate; they cannot be converted into exact
+evidence by copying or reclassifying a legacy record.
 
-The gate fails when records are absent, stale, `behavior-failed`, `infra-inconclusive`,
-`evaluator-failed`, tied to another behavior
-contract, or missing any scenario cell for a host required by the checked-in release policy. The
+The gate fails when schema v2 `suite-summary.json` is absent, stale, bound to another candidate or
+evaluator contract, has `behavior-failed`, `evaluator-inconclusive`, `evaluator-failed`,
+`infra-inconclusive`, or `infra-blocked` outcomes, or is missing any required scenario cell. The
 current required host is Codex; Cursor, Claude Code, OpenCode, Kimi Code CLI, and Zed Agent can still be validated and retained as optional evidence.
-The gate never launches, authenticates to, or spends money on a third-party host. Host execution and evidence
-capture remain explicit maintainer/CI responsibilities through the separate matrix driver; merely importing or
-testing either module does not create real Host evidence.
+The gate itself never launches, authenticates to, or spends money on a third-party host. Required Codex Host
+execution is started only by an explicit unified-suite invocation such as `pnpm run eval:codex`; importing or
+testing either module does not create evidence. Maintainers/CI still provide credentials and any non-Codex
+Host setup.
 
 A passing gate means only that the complete, fresh **maintainer-attested structure** is internally consistent
 and bound to the selected candidate. Local JSON, hashes, and artifacts are forgeable by a repository writer;

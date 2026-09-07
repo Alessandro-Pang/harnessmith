@@ -426,7 +426,9 @@ test('core documentation follows a human question path and separates current fac
   const evaluation = read('apps/docs/site/zh/concepts/evidence-and-evaluation.md');
   assert.match(evaluation, /确定性仓库验证/);
   assert.match(evaluation, /真实宿主评测/);
-  assert.match(evaluation, /不负责启动、登录或认证第三方宿主/);
+  assert.match(evaluation, /只有在维护者显式调用.*pnpm run eval:codex.*才会启动/);
+  assert.match(evaluation, /不会在 import 时隐式启动/);
+  assert.match(evaluation, /仍需提供凭据/);
   assert.match(evaluation, /不能证明/);
 
   const history = read('apps/docs/site/zh/concepts/history-and-influences.md');

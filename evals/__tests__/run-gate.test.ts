@@ -409,17 +409,19 @@ test('evaluation and release docs distinguish contracts from real fresh host evi
 
   for (const required of [
     'pnpm run eval:fingerprint',
-    'pnpm run eval:validate',
+    'eval:validate',
+    'pnpm run eval:codex',
     'pnpm run eval:gate',
     'HARNESS_EVAL_RUNS_DIR',
     'recordType: host-evaluation',
-    'complete required-host × scenario matrix',
+    'schema v2 `suite-summary.json`',
+    'candidate SHA-256 and evaluator-contract digest',
     'current required host is Codex',
     'maintainer-attested structure',
     'cannot prove that a real Host produced the submitted artifacts',
     'behaviorSha256',
-    'metadata-only release',
-    'invalidates only that scenario',
+    'does not consume inherited Host records',
+    'every passing cell to the current candidate and evaluator-contract digest',
     'EVAL_COVERAGE_INCOMPLETE',
     'Rejected record summary',
   ]) {

@@ -19,7 +19,7 @@ updated: 2026-09-05
 
 ### Prompt 与 route 的确定性基准
 
-`pnpm run bench:prompt-route` 使用 `evals/prompt-route-corpus.v1.json` 的同一批输入运行 version 1 benchmark。报告绑定 corpus digest、仅含 id/query 的 input digest、规则 fingerprint 和当前 router candidate digest；使用 `--baseline-report <path>` 比较时，要求 corpus 与 input digest 完全相同，否则拒绝生成 delta。语料变了，比较就失去意义。
+`pnpm run eval:codex` 的 deterministic route 阶段使用 `evals/prompt-route-corpus.v1.json` 的同一批输入运行 version 1 benchmark。报告绑定 corpus digest、仅含 id/query 的 input digest、规则 fingerprint 和当前 router candidate digest；比较时要求 corpus 与 input digest 完全相同，否则拒绝生成 delta。语料变了，比较就失去意义。
 
 确定性指标包括 action routing Top-1 accuracy、topic recall、ambiguity precision/recall/rate、forbidden action count 与整例 rule-adherence rate。阈值保存在 versioned corpus 中；每个案例保留 expected/actual、failure code 和 `false-positive-guard` / `false-negative-guard` 分类。只保留聚合分数会掩盖单例失败，因此不满足证据要求。
 
@@ -39,25 +39,27 @@ updated: 2026-09-05
 
 ### 真实宿主评测
 
-一条完整的 Host Eval 使用精确候选 tarball，在真实宿主中执行场景，并采集脱敏 JSONL、工具行为、文件差异和 verifier 结果。场景断言同时检查期望行为与禁止行为，不靠最终文本关键词判定成功。仓库提供场景、记录 schema 和门禁脚本，但不负责启动、登录或认证第三方宿主；真实执行需要维护者准备环境。
+一条完整的 Host Eval 使用精确候选 tarball，在真实宿主中执行场景，并采集脱敏 JSONL、工具行为、文件差异和 verifier 结果。场景断言同时检查期望行为与禁止行为，不靠最终文本关键词判定成功。仓库的统一 suite 只有在维护者显式调用 `pnpm run eval:codex` 时才会启动当前 required Host Codex 进程，不会在 import 时隐式启动。维护者或 CI 仍需提供凭据以及其它第三方 Host 的环境准备。
 
 这条链成本更高，也更容易受到认证、网络、宿主版本、超时和评测基础设施故障影响。因此环境准备、候选绑定、失败归因和证据保留本身也是评测设计的一部分，而不只是「跑完收工」。
 
-**结果的四类固定分类。** Host Eval v6 记录把结果固定为四类：`passed` 表示行为与断言通过；`behavior-failed` 表示真实产品行为未满足场景；transport、TLS、WebSocket、runner 超时或 circuit breaker 终止只能记为 `infra-inconclusive`；evaluator 本身无法完成判定时记为 `evaluator-failed`。后三类都不能满足发布覆盖，尤其不能把 `infra-inconclusive` 降格解释成产品行为失败或通过——基础设施坏了，说明不了产品对错。
+**结果的固定分类。** 统一 suite 记录 `passed`、`behavior-failed`、`evaluator-inconclusive`、`evaluator-failed`、`infra-inconclusive` 和 `infra-blocked`。`evaluator-inconclusive` 表示 fixture 或独立 oracle 缺失；`behavior-failed` 表示真实执行未满足场景；transport、TLS、WebSocket、runner 超时或 circuit breaker 终止属于基础设施证据。所有非 `passed` 结果都会使当前发布覆盖失败。fixture 缺失必须补齐独立 oracle，不能改名为模型失败或通过。
 
 **预算与重试。** 执行证据同时记录 tier、attempt、elapsed time 和 termination。单场景预算上限为 15 分钟，整套矩阵预算上限为 60 分钟；transport failure 最多自动重试一次，即总尝试次数不超过两次。`eval:validate` 会拒绝超预算、重试次数超限以及 termination 与结果分类冲突的记录。当前实现还提供依赖范围内的增量选择、宿主中立 runner，以及当前 required Host Codex 的显式进程 transport；CI 认证与其它第三方 Host transport 仍由后续集成实现。
 
 **增量选择与依赖绑定。** 每个场景声明可影响其行为的 `dependencyPaths`，fingerprint 将这些文件绑定为独立的 `dependencySha256`；全局 `rulesSha256` 继续用于审计，但不再让一个无关规则变更淘汰全部场景记录。`eval:plan` 把变更分为 L1、L2、L3：L1 仅需确定性验证；L2 最多选择三个被依赖映射覆盖的 Host 场景；L3 对未知行为源或过宽选择执行完整矩阵。出现 `unmapped-behavior-source` 时必须 fail closed 到 L3，不能静默继承旧证据。
 
-**调度与 transport 的细节。** 调度层提供宿主中立的 runner contract：独立场景默认 2 路、最多 3 路有界并行；单次 transport failure 最多重试一次，连续两次后打开 circuit-breaker，并把尚未启动的场景明确记为 `infra-blocked`。runner 为每次执行传入带硬 deadline 的 `AbortSignal`，同时限制单场景与整套矩阵预算。`behavior-failed` 和 `evaluator-failed` 不会触发 transport 熔断，也不会与 `infra-inconclusive` 混淆。Codex transport 使用无 shell 的 argv、stdin prompt、ephemeral JSONL session、`workspace-write` sandbox 和 automatic approval review；只接受绝对 disposable workspace，并分别限制 stdout/stderr 为 1 MiB。runner 取消会终止进程树；启动、连接、TLS 与 WebSocket 故障归为 transport failure，输出超限、未知非零退出或 evaluator 崩溃归为 evaluator failure。退出码为 0 仍必须交给独立 evaluator，不能自动升级成行为通过。该能力不会自动登录、启动或持久化第三方 Host 证据，真实 RC 演练仍需维护者显式执行与复核。
+**调度与 transport 的细节。** 调度层提供宿主中立的 runner contract：独立场景默认 2 路、最多 3 路有界并行；单次 transport failure 最多重试一次，连续两次后打开 circuit-breaker，并把尚未启动的场景明确记为 `infra-blocked`。runner 为每次执行传入带硬 deadline 的 `AbortSignal`，同时限制单场景与整套矩阵预算。`behavior-failed` 和 `evaluator-failed` 不会触发 transport 熔断，也不会与 `infra-inconclusive` 混淆。Codex transport 使用无 shell 的 argv、stdin prompt、ephemeral JSONL session、`workspace-write` sandbox 和 automatic approval review；只接受绝对 disposable workspace，并分别限制 stdout/stderr 为 1 MiB。runner 取消会终止进程树；启动、连接、TLS 与 WebSocket 故障归为 transport failure，输出超限、未知非零退出或 evaluator 崩溃归为 evaluator failure。退出码为 0 仍必须交给独立 evaluator，不能自动升级成行为通过。该 transport 不会自动登录或持久化第三方 Host 证据；required Host Codex 只有通过显式的 `pnpm run eval:codex` suite 调用才会启动，import 或单元测试不会启动 Host。真实 RC 演练仍需维护者执行与复核。
 
 #### 候选—基线 Host A/B 比较
 
 `pnpm run eval:compare -- --baseline-runs-dir <dir> --baseline-artifact <tgz> --candidate-runs-dir <dir> --candidate-artifact <tgz>` 会先复用现有 schema、artifact 与 secret 检查，再按 Adapter、Host 产品与版本、模型与模型版本、场景 ID 和场景 fingerprint 一一配对。两侧 tarball SHA-256 必须分别匹配记录；dependency、rules 与 artifact fingerprint 作为被测实现分别保留，允许不同，不能被误当成环境漂移。
 
-每个单元固定分类为 `improved`、`unchanged-passed`、`regressed`、`unchanged-failed` 或 `inconclusive`。任一侧出现 transport/evaluator 不可判定时只能得到 `inconclusive`；总体通过要求所有候选单元都通过且没有回归。报告给出断言、禁止行为、工具动作数和耗时 delta；当前记录没有稳定 token 字段，因此明确写 `not-measured`。该比较减少人工对照错误，但不启动 Host、不生成证据，也不替代 release gate 或人工语义复核。
+`eval:compare` 属于旧的诊断报告，不产生发布覆盖。每个单元固定分类为 `improved`、`unchanged-passed`、`regressed`、`unchanged-failed` 或 `inconclusive`。任一侧出现 transport/evaluator 不可判定时只能得到 `inconclusive`；总体通过要求所有候选单元都通过且没有回归。报告给出断言、禁止行为、工具动作数和耗时 delta；当前记录没有稳定 token 字段，因此明确写 `not-measured`。该比较减少人工对照错误，但不启动 Host、不生成证据，也不替代 release gate 或人工语义复核。
 
-**发布证据的分级。** 发布证据按矩阵单元区分 `exact`、`inherited`、`infra-blocked`：`exact` 绑定当前候选 artifact；`inherited` 额外绑定来源版本与 artifact digest；`infra-blocked` 不计入 passing coverage。release state 和 release attestation 会保留这三类清单，并校验它们与聚合计数、`inheritedFrom` 和完整 release matrix 一致。正常发布不得含 `infra-blocked`；风险例外只能记录已包含在精确 `uncoveredScenarios` 中的 blocked 单元，不能把基础设施阻塞转换成通过证据。旧 schema 仍可读取，新准备的发布会写入显式证据 schema。
+**发布证据的门槛。** 当前 release gate 只接受完整、未过期的 schema v2 `suite-summary.json`，并核对当前候选包 SHA-256 与 evaluator-contract digest。旧 `run.json` validate、`eval:plan` 选择、`eval:compare` 报告和 inherited 单元仍可用于诊断，但都不能成为当前发布通过。`infra-blocked`、`infra-inconclusive`、`evaluator-inconclusive`、`evaluator-failed` 和 `behavior-failed` 都是非通过结果；fixture 缺失或真实执行失败必须保持原分类。旧 schema 仍可读取，但不能满足当前 suite gate。
+
+release state 和 attestation 仍保留 `exact`、`inherited`、`infra-blocked` 字段以兼容记录结构。当前 suite gate 将通过单元写入 `exact`，`inheritedBehaviorCoverageCount` 固定为 0，继承清单为空。`infra-blocked` 不计入 passing coverage；风险例外也不能将阻塞结果改成 suite 通过。
 
 ## 从任务到结论的五个阶段
 
@@ -69,7 +71,7 @@ updated: 2026-09-05
 
 ## `eval:validate`、`eval:gate` 能证明什么
 
-它们会核对记录 schema、候选包版本与 SHA-256、behavior fingerprint、freshness、场景覆盖、artifact digest、断言和 verdict 的内部一致性。release gate 还会检查当前 policy 要求的宿主和场景是否齐全。
+`eval:validate` 核对行为场景 `run.json` 的诊断完整性。release gate 要求完整的 schema v2 `suite-summary.json`，核对候选包 SHA-256、evaluator-contract digest、freshness、artifact digest、全部必需场景、prompt-route 结果和独立 suite 证据。旧 validate 通过、inherited 记录、plan 或 compare 报告都不能满足当前 gate。
 
 同样要写清楚它们不能证明什么：记录一定来自真实 Host、脱敏前证据完整、维护者结论正确或第三方服务没有异常。仓库写入者可以伪造一份结构正确的本地记录；更强信任需要外部 CI、签名 attestation 和人工证据复核。门禁挡的是无心之失，不是蓄意伪造。
 
@@ -87,4 +89,4 @@ updated: 2026-09-05
 
 首先区分产品行为失败与评测基础设施失败。无法访问宿主、认证过期或 runner 超时只能得到 `infra-inconclusive`，不能直接证明 Harnessmith 不支持该宿主；evaluator 自身故障必须记为 `evaluator-failed`，不能伪装成 `behavior-failed`。同样，本地 `eval:validate` 通过也不能升级成「真实 Host 已验证」。
 
-具体命令见项目 `package.json` 中的 `eval:check`、`eval:validate`、`eval:gate`、`release:check` 和 `release:verify-registry`；当前公开能力与证据路径以[能力声明—证据矩阵](https://github.com/Alessandro-Pang/harnessmith/blob/main/apps/docs/site/capability-evidence.yaml)为准。
+真实评测需显式调用 `pnpm run eval:codex`；`eval:validate`、`eval:plan` 和 `eval:compare` 仅用于旧记录诊断。当前发布 gate 是 `eval:gate`，它只认可 schema v2 suite 证据。具体命令见项目 `package.json` 中的 `eval:check`、`eval:validate`、`eval:gate`、`release:check` 和 `release:verify-registry`；当前公开能力与证据路径以[能力声明—证据矩阵](https://github.com/Alessandro-Pang/harnessmith/blob/main/apps/docs/site/capability-evidence.yaml)为准。
