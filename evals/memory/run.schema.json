@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:harnessmith:memory-eval-run:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "recordType", "runId", "scenarioId", "trial", "host", "subject", "startedAt", "finishedAt", "expectedDecision", "actualDecision", "transition", "initialState", "finalState", "verifier", "outcome", "failureCategory"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "recordType": { "const": "memory-evaluation" },
+    "runId": { "$ref": "#/$defs/id" },
+    "scenarioId": { "$ref": "#/$defs/id" },
+    "trial": { "type": "integer", "minimum": 1, "maximum": 1000 },
+    "host": { "type": "object", "additionalProperties": false, "required": ["adapter", "product", "version", "model", "modelVersion"], "properties": { "adapter": { "type": "string", "minLength": 1 }, "product": { "type": "string", "minLength": 1 }, "version": { "type": "string", "minLength": 1 }, "model": { "type": "string", "minLength": 1 }, "modelVersion": { "type": "string", "minLength": 1 } } },
+    "subject": { "type": "object", "additionalProperties": false, "required": ["packageVersion", "packageArtifactSha256"], "properties": { "packageVersion": { "type": "string", "minLength": 1 }, "packageArtifactSha256": { "$ref": "#/$defs/sha256" } } },
+    "startedAt": { "$ref": "#/$defs/timestamp" },
+    "finishedAt": { "$ref": "#/$defs/timestamp" },
+    "expectedDecision": { "enum": ["write", "no-write", "proposed", "blocked"] },
+    "actualDecision": { "type": "object", "additionalProperties": false, "required": ["decision", "action", "writer", "reasonCode"], "properties": { "decision": { "enum": ["write", "no-write", "proposed", "blocked"] }, "action": { "enum": ["created", "updated", "unchanged", "no-change", "proposed", "blocked", "none"] }, "writer": { "type": "string", "minLength": 1 }, "reasonCode": { "type": "string", "minLength": 1 } } },
+    "transition": { "enum": ["created", "updated", "unchanged", "no-change", "blocked"] },
+    "initialState": { "$ref": "#/$defs/state" },
+    "finalState": { "$ref": "#/$defs/state" },
+    "verifier": { "type": "object", "additionalProperties": false, "required": ["command", "exitCode", "passed", "artifactRef", "sha256"], "properties": { "command": { "type": "string", "minLength": 1 }, "exitCode": { "type": "integer" }, "passed": { "type": "boolean" }, "artifactRef": { "pattern": "^local:.+$", "type": "string" }, "sha256": { "$ref": "#/$defs/sha256" } } },
+    "outcome": { "enum": ["passed", "behavior-failed", "evaluator-failed", "evaluator-inconclusive", "infra-inconclusive"] },
+    "failureCategory": { "type": ["string", "null"], "enum": ["policy-mismatch", "state-mismatch", "evidence-missing", "verifier-failed", "infra-inconclusive", "qualitative-only", "evaluator-inconclusive", null] },
+    "criticalForbidden": { "type": "boolean" },
+    "stateEvidence": { "type": "object", "additionalProperties": false, "required": ["outcome", "reasons", "independentScopes", "beforeDigest", "afterDigest", "artifactRef"], "properties": { "contract": { "type": ["object", "null"], "additionalProperties": true }, "outcome": { "enum": ["passed", "failed", "inconclusive"] }, "reasons": { "type": "array", "items": { "type": "string" } }, "independentScopes": { "type": "array", "minItems": 2, "uniqueItems": true, "items": { "enum": ["global", "project"] } }, "beforeDigest": { "$ref": "#/$defs/sha256" }, "afterDigest": { "$ref": "#/$defs/sha256" }, "artifactRef": { "pattern": "^local:.+$", "type": "string" }, "semanticReviewRequest": { "type": "object", "additionalProperties": true }, "semanticReview": { "type": ["object", "null"], "additionalProperties": true } } },
+    "idempotency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expectedUnchanged", "actualUnchanged"],
+      "properties": { "expectedUnchanged": { "type": "boolean" }, "actualUnchanged": { "type": "boolean" } }
+    },
+    "promptVariant": { "type": "integer", "minimum": 0, "maximum": 64 },
+    "notes": { "type": "string", "maxLength": 4096 }
+  },
+  "$defs": {
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "timestamp": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T" },
+    "state": { "type": "object", "additionalProperties": false, "required": ["digest", "changedPaths"], "properties": { "digest": { "$ref": "#/$defs/sha256" }, "changedPaths": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } } } }
+  }
+}

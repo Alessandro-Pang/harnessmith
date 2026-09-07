@@ -57,6 +57,7 @@ export function buildCodexInvocation(options: {
       '--json',
       '--ephemeral',
       '--approve-for-me',
+      '--skip-git-repo-check',
       '--cd',
       options.workspace,
       '-',

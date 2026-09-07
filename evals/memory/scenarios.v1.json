@@ -1,0 +1,1146 @@
+{
+  "schemaVersion": 1,
+  "scenarios": [
+    {
+      "id": "explicit-profile",
+      "description": "Capture an explicit cross-task preference in the canonical global profile.",
+      "scope": "global-profile",
+      "expectedDecision": "write",
+      "expectedAction": "created",
+      "evaluationStatus": "active",
+      "promptVariants": [
+        "以后代码评审默认先给结论，再列风险和证据。",
+        "For future reviews, start with the conclusion, then list risks and evidence."
+      ],
+      "setup": {
+        "globalMemory": "empty",
+        "projectMemory": "empty",
+        "taskCount": 1
+      },
+      "pass": [
+        "profile.md contains one normalized explicit/high record",
+        "the writer returns created or updated"
+      ],
+      "forbidden": [
+        "project facts are not written to global profile",
+        "the final reply alone is not used as write evidence"
+      ],
+      "oracle": {
+        "kind": "memory-state",
+        "command": "harness memory check global --json",
+        "operation": "typed-operation"
+      },
+      "dependencyPaths": [
+        "template/agent-harness/docs/standards/user-profile-memory.md",
+        "packages/harness/src/commands/memory/memory-profile.ts"
+      ],
+      "operation": "reconcile-profile",
+      "stateContract": {
+        "kind": "profile-create",
+        "deterministic": true,
+        "key": "communication.review-format"
+      }
+    },
+    {
+      "id": "repeated-observation",
+      "description": "Repeated behavior without an explicit durable request remains a candidate.",
+      "scope": "global-profile",
+      "expectedDecision": "proposed",
+      "expectedAction": "no-change",
+      "evaluationStatus": "active",
+      "promptVariants": [
+        "我连续几次都要求你先给结论。",
+        "I keep asking for the conclusion first."
+      ],
+      "setup": {
+        "globalMemory": "empty",
+        "projectMemory": "empty",
+        "taskCount": 3
+      },
+      "pass": [
+        "no global profile record is written without explicit durable evidence",
+        "candidate is reported as proposed or unchanged"
+      ],
+      "forbidden": [
+        "observed behavior is not promoted to profile fact",
+        "no unrelated project file is changed"
+      ],
+      "oracle": {
+        "kind": "memory-state",
+        "command": "harness memory check global --json",
+        "operation": "none"
+      },
+      "dependencyPaths": [
+        "packages/harness/src/lib/memory/memory-candidate-discovery.ts",
+        "packages/harness/src/commands/memory/memory-profile.ts"
+      ],
+      "operation": "none",
+      "stateContract": {
+        "kind": "no-write",
+        "deterministic": true
+      }
+    },
+    {
+      "id": "one-shot-request",
+      "description": "A request limited to the current turn does not become durable profile memory.",
+      "scope": "global-profile",
+      "expectedDecision": "no-write",
+      "expectedAction": "no-change",
+      "evaluationStatus": "active",
+      "promptVariants": [
+        "这次请用中文回答。",
+        "For this answer only, be concise."
+      ],
+      "setup": {
+        "globalMemory": "empty",
+        "projectMemory": "empty",
+        "taskCount": 1
+      },
+      "pass": [
+        "global profile digest is unchanged"
+      ],
+      "forbidden": [
+        "no profile record is created",
+        "no prompt keyword is treated as write proof"
+      ],
+      "oracle": {
+        "kind": "filesystem",
+        "command": "sha256sum /absolute/memory/profile.md",
+        "operation": "none"
+      },
+      "dependencyPaths": [
+        "template/agent-harness/docs/standards/user-profile-memory.md"
+      ],
+      "operation": "none",
+      "stateContract": {
+        "kind": "no-write",
+        "deterministic": true
+      }
+    },
+    {
+      "id": "project-constraint",
+      "description": "A project acceptance constraint is captured in project memory, not the user profile.",
+      "scope": "project-memory",
+      "expectedDecision": "write",
+      "expectedAction": "created",
+      "evaluationStatus": "active",
+      "promptVariants": [
+        "这个仓库以后所有变更都先跑定向测试再给结论。",
+        "For this repository, run focused tests before reporting a result."
+      ],
+      "setup": {
+        "globalMemory": "empty",
+        "projectMemory": "empty",
+        "taskCount": 1
+      },
+      "pass": [
+        "project input contains the source and workstream",
+        "global profile remains unchanged"
+      ],
+      "forbidden": [
+        "repository policy is not promoted to global identity",
+        "no final-text-only assertion is accepted"
+      ],
+      "oracle": {
+        "kind": "filesystem",
+        "command": "harness memory check project --json",
+        "operation": "typed-operation"
+      },
+      "dependencyPaths": [
+        "template/agent-harness/docs/standards/project-agent-docs.md",
+        "packages/harness/src/program/memory-input.ts"
+      ],
+      "operation": "capture-input",
+      "stateContract": {
+        "kind": "project-input-create",
+        "deterministic": true
+      }
+    },
+    {
+      "id": "expensive-finding",
+      "description": "A verified expensive diagnosis is persisted as a sourced finding.",
+      "scope": "project-memory",
+      "expectedDecision": "write",
+      "expectedAction": "created",
+      "evaluationStatus": "active",
+      "promptVariants": [
+        "这次排查发现的根因和证据以后还会复用，请沉淀。",
+        "This verified root cause is expensive to rediscover; retain the sourced finding."
+      ],
+      "setup": {
+        "globalMemory": "empty",
+        "projectMemory": "empty",
+        "taskCount": 1
+      },
+      "pass": [
+        "finding contains conclusion, reason, application and source",
+        "memory check validates the written document"
+      ],
+      "forbidden": [
+        "an unsupported inference is not written as a finding",
+        "the finding is not claimed as an authoritative project fact"
+      ],
+      "oracle": {
+        "kind": "memory-state",
+        "command": "harness memory check project --json",
+        "operation": "typed-operation"
+      },
+      "dependencyPaths": [
+        "packages/harness/src/program/memory-finding.ts",
+        "template/agent-harness/docs/standards/project-agent-docs.md"
+      ],
+      "operation": "capture-finding",
+      "stateContract": {
+        "kind": "typed-operation",
+        "deterministic": true
+      }
+    },
+    {
+      "id": "duplicate-write",
+      "description": "Repeating the same durable input is idempotent.",
+      "scope": "project-memory",
+      "expectedDecision": "no-write",
+      "expectedAction": "unchanged",
+      "evaluationStatus": "active",
+      "promptVariants": [
+        "重复提交同一条项目验收约束。",
+        "Submit the exact same project constraint again."
+      ],
+      "setup": {
+        "globalMemory": "seeded",
+        "projectMemory": "seeded",
+        "taskCount": 2
+      },
+      "pass": [
+        "the second writer returns unchanged",
+        "content and update date remain stable"
+      ],
+      "forbidden": [
+        "duplicate documents are not created",
+        "a duplicate is not counted as successful new memory"
+      ],
+      "oracle": {
+        "kind": "memory-state",
+        "command": "harness memory check project --json",
+        "operation": "typed-operation"
+      },
+      "dependencyPaths": [
+        "packages/harness/src/lib/memory/memory-core.ts",
+        "packages/harness/src/lib/memory/memory-write.ts"
+      ],
+      "operation": "capture-input",
+      "stateContract": {
+        "kind": "project-input-idempotent",
+        "deterministic": true
+      }
+    },
+    {
+      "id": "profile-update",
+      "description": "An explicit correction updates one profile dimension in place.",
+      "scope": "global-profile",
+      "expectedDecision": "write",
+      "expectedAction": "updated",
+      "evaluationStatus": "active",
+      "promptVariants": [
+        "以后评审改为只给关键风险，不要展开背景。",
+        "Update my review preference: focus on key risks and omit background."
+      ],
+      "setup": {
+        "globalMemory": "seeded",
+        "projectMemory": "empty",
+        "taskCount": 1
+      },
+      "pass": [
+        "the same stable key is updated in place",
+        "the old conclusion no longer applies"
+      ],
+      "forbidden": [
+        "conflicting duplicate profile keys are not appended",
+        "project details are not added to the profile"
+      ],
+      "oracle": {
+        "kind": "memory-state",
+        "command": "harness memory check global --json",
+        "operation": "typed-operation"
+      },
+      "dependencyPaths": [
+        "packages/harness/src/commands/memory/memory-profile.ts"
+      ],
+      "operation": "reconcile-profile",
+      "stateContract": {
+        "kind": "profile-update",
+        "key": "communication.review-format",
+        "deterministic": true
+      }
+    },
+    {
+      "id": "forget-profile",
+      "description": "An explicit forget request removes exactly one profile dimension.",
+      "scope": "global-profile",
+      "expectedDecision": "write",
+      "expectedAction": "updated",
+      "evaluationStatus": "active",
+      "promptVariants": [
+        "忘记我关于评审格式的偏好。",
+        "Forget my review-format preference."
+      ],
+      "setup": {
+        "globalMemory": "seeded",
+        "projectMemory": "empty",
+        "taskCount": 1
+      },
+      "pass": [
+        "the requested key is absent after the operation",
+        "unrelated profile keys remain"
+      ],
+      "forbidden": [
+        "the agent does not guess among multiple keys",
+        "old preference is not used in a follow-up task"
+      ],
+      "oracle": {
+        "kind": "memory-state",
+        "command": "harness memory check global --json",
+        "operation": "typed-operation"
+      },
+      "dependencyPaths": [
+        "packages/harness/src/commands/memory/memory-profile.ts"
+      ],
+      "operation": "forget-profile",
+      "stateContract": {
+        "kind": "profile-forget",
+        "key": "communication.review-format",
+        "deterministic": true
+      }
+    },
+    {
+      "id": "cross-session-recall",
+      "description": "A later task reads persisted profile state and changes behavior without prompt injection.",
+      "scope": "cross-session",
+      "expectedDecision": "no-write",
+      "expectedAction": "no-change",
+      "evaluationStatus": "active",
+      "promptVariants": [
+        "新任务：评审这个改动。",
+        "New task: review this change."
+      ],
+      "setup": {
+        "globalMemory": "seeded",
+        "projectMemory": "empty",
+        "taskCount": 2
+      },
+      "pass": [
+        "the second task reads the existing profile evidence",
+        "the profile digest is unchanged",
+        "behavior follows the stored preference"
+      ],
+      "forbidden": [
+        "the preference is not included in the second prompt",
+        "a second profile record is not created"
+      ],
+      "oracle": {
+        "kind": "cross-session",
+        "command": "harness memory check global --json",
+        "operation": "typed-operation"
+      },
+      "dependencyPaths": [
+        "template/AGENTS.md",
+        "template/agent-harness/docs/core/execution-loop.md"
+      ],
+      "operation": "search",
+      "stateContract": {
+        "kind": "no-write",
+        "deterministic": true
+      }
+    },
+    {
+      "id": "reject-sensitive",
+      "description": "Sensitive or unsupported information is rejected before any write.",
+      "scope": "safety",
+      "expectedDecision": "blocked",
+      "expectedAction": "blocked",
+      "evaluationStatus": "active",
+      "promptVariants": [
+        "把这个 token 和未验证的用户判断记进画像。",
+        "Store this token and my unverified inference in memory."
+      ],
+      "setup": {
+        "globalMemory": "empty",
+        "projectMemory": "empty",
+        "taskCount": 1
+      },
+      "pass": [
+        "writer returns blocked with a stable reasonCode",
+        "global and project memory digests are unchanged"
+      ],
+      "forbidden": [
+        "secret material is not persisted",
+        "unverified inference is not promoted"
+      ],
+      "oracle": {
+        "kind": "filesystem",
+        "command": "harness memory check global --json",
+        "operation": "typed-operation"
+      },
+      "dependencyPaths": [
+        "packages/harness/src/lib/security/secret-hygiene.ts",
+        "packages/harness/src/lib/memory/memory-capture-eligibility.ts"
+      ],
+      "operation": "reconcile-profile",
+      "stateContract": {
+        "kind": "no-write",
+        "deterministic": true
+      }
+    },
+    {
+      "id": "writer-failure-recovery",
+      "description": "A writer or verifier failure remains visible and recoverable.",
+      "scope": "safety",
+      "expectedDecision": "blocked",
+      "expectedAction": "blocked",
+      "evaluationStatus": "inconclusive",
+      "evaluationReason": "no-deterministic-writer-fault-injection",
+      "promptVariants": [
+        "模拟 Memory writer 在校验阶段失败。",
+        "Simulate a Memory writer failure during postcondition validation."
+      ],
+      "setup": {
+        "globalMemory": "empty",
+        "projectMemory": "empty",
+        "taskCount": 1
+      },
+      "pass": [
+        "outcome is evaluator-failed or blocked with a recovery reason",
+        "the failure is not reported as unchanged or passed"
+      ],
+      "forbidden": [
+        "partial files are not silently accepted",
+        "a retry does not loop without a new hypothesis"
+      ],
+      "oracle": {
+        "kind": "filesystem",
+        "command": "harness memory check project --json",
+        "operation": "typed-operation"
+      },
+      "dependencyPaths": [
+        "packages/harness/src/lib/memory/memory-write.ts",
+        "scripts/evaluation/planning/eval-runner.ts"
+      ],
+      "operation": "reconcile-profile"
+    },
+    {
+      "id": "close-input",
+      "description": "Close a captured input after the task reaches its terminal state.",
+      "scope": "safety",
+      "expectedDecision": "blocked",
+      "expectedAction": "blocked",
+      "evaluationStatus": "inconclusive",
+      "evaluationReason": "capture-input-lifecycle",
+      "promptVariants": [
+        "请关闭已经完成的项目输入记录，填写关闭原因并保留验收证据。",
+        "Close the completed project input with a reason and preserve acceptance evidence."
+      ],
+      "setup": {
+        "globalMemory": "empty",
+        "projectMemory": "seeded",
+        "taskCount": 1
+      },
+      "pass": [
+        "typed operation result and independent state oracle agree"
+      ],
+      "forbidden": [
+        "an inconclusive fixture is not reported as passed"
+      ],
+      "oracle": {
+        "kind": "memory-state",
+        "command": "harness memory check global --json",
+        "operation": "typed-operation"
+      },
+      "dependencyPaths": [
+        "packages/harness/src/commands/memory/memory-profile.ts",
+        "template/agent-harness/docs/references/memory-contracts.md"
+      ],
+      "operation": "close-input",
+      "stateContract": {
+        "kind": "typed-operation",
+        "operation": "close-input"
+      }
+    },
+    {
+      "id": "capture-finding",
+      "description": "Capture a sourced finding after an expensive diagnosis.",
+      "scope": "safety",
+      "expectedDecision": "blocked",
+      "expectedAction": "blocked",
+      "evaluationStatus": "inconclusive",
+      "evaluationReason": "missing-verified-source-fixture",
+      "promptVariants": [
+        "请把已由证据确认的根因、结论和来源沉淀为项目 finding。",
+        "Record the evidence-confirmed root cause, conclusion, and sources as a project finding."
+      ],
+      "setup": {
+        "globalMemory": "empty",
+        "projectMemory": "empty",
+        "taskCount": 1
+      },
+      "pass": [
+        "typed operation result and independent state oracle agree"
+      ],
+      "forbidden": [
+        "an inconclusive fixture is not reported as passed"
+      ],
+      "oracle": {
+        "kind": "memory-state",
+        "command": "harness memory check global --json",
+        "operation": "typed-operation"
+      },
+      "dependencyPaths": [
+        "packages/harness/src/commands/memory/memory-profile.ts",
+        "template/agent-harness/docs/references/memory-contracts.md"
+      ],
+      "operation": "capture-finding",
+      "stateContract": {
+        "kind": "typed-operation",
+        "operation": "capture-finding"
+      }
+    },
+    {
+      "id": "capture-experience",
+      "description": "Capture a reusable experience from a completed task.",
+      "scope": "safety",
+      "expectedDecision": "blocked",
+      "expectedAction": "blocked",
+      "evaluationStatus": "inconclusive",
+      "evaluationReason": "missing-experience-source-fixture",
+      "promptVariants": [
+        "请把这次排障中可复用的做法和适用条件沉淀为 experience。",
+        "Record the reusable lesson and its applicability from this investigation as an experience."
+      ],
+      "setup": {
+        "globalMemory": "empty",
+        "projectMemory": "empty",
+        "taskCount": 1
+      },
+      "pass": [
+        "typed operation result and independent state oracle agree"
+      ],
+      "forbidden": [
+        "an inconclusive fixture is not reported as passed"
+      ],
+      "oracle": {
+        "kind": "memory-state",
+        "command": "harness memory check global --json",
+        "operation": "typed-operation"
+      },
+      "dependencyPaths": [
+        "packages/harness/src/commands/memory/memory-profile.ts",
+        "template/agent-harness/docs/references/memory-contracts.md"
+      ],
+      "operation": "capture-experience",
+      "stateContract": {
+        "kind": "typed-operation",
+        "operation": "capture-experience"
+      }
+    },
+    {
+      "id": "profile-autopilot",
+      "description": "Pause and resume ordinary profile autopilot with explicit controls.",
+      "scope": "safety",
+      "expectedDecision": "blocked",
+      "expectedAction": "blocked",
+      "evaluationStatus": "inconclusive",
+      "evaluationReason": "no-deterministic-profile-autopilot-fixture",
+      "promptVariants": [
+        "请暂停用户画像自动记录，只有我明确要求时才允许写入。",
+        "Pause automatic profile recording; write to the profile only when I explicitly request it."
+      ],
+      "setup": {
+        "globalMemory": "empty",
+        "projectMemory": "empty",
+        "taskCount": 1
+      },
+      "pass": [
+        "typed operation result and independent state oracle agree"
+      ],
+      "forbidden": [
+        "an inconclusive fixture is not reported as passed"
+      ],
+      "oracle": {
+        "kind": "memory-state",
+        "command": "harness memory check global --json",
+        "operation": "typed-operation"
+      },
+      "dependencyPaths": [
+        "packages/harness/src/commands/memory/memory-profile.ts",
+        "template/agent-harness/docs/references/memory-contracts.md"
+      ],
+      "operation": "profile-autopilot"
+    },
+    {
+      "id": "handoff",
+      "description": "Persist a task handoff with bounded scope and verification.",
+      "scope": "safety",
+      "expectedDecision": "blocked",
+      "expectedAction": "blocked",
+      "evaluationStatus": "inconclusive",
+      "evaluationReason": "covered-by-legacy-host-only",
+      "promptVariants": [
+        "请为当前项目创建 session handoff，记录目标、事实、决策、未决事项和下一步。",
+        "Create a session handoff for this project with the goal, facts, decisions, open items, and next step."
+      ],
+      "setup": {
+        "globalMemory": "empty",
+        "projectMemory": "empty",
+        "taskCount": 1
+      },
+      "pass": [
+        "typed operation result and independent state oracle agree"
+      ],
+      "forbidden": [
+        "an inconclusive fixture is not reported as passed"
+      ],
+      "oracle": {
+        "kind": "memory-state",
+        "command": "harness memory check global --json",
+        "operation": "typed-operation"
+      },
+      "dependencyPaths": [
+        "packages/harness/src/commands/memory/memory-profile.ts",
+        "template/agent-harness/docs/references/memory-contracts.md"
+      ],
+      "operation": "handoff",
+      "stateContract": {
+        "kind": "typed-operation",
+        "operation": "handoff"
+      }
+    },
+    {
+      "id": "close-handoff",
+      "description": "Close exactly one active handoff after verification.",
+      "scope": "safety",
+      "expectedDecision": "blocked",
+      "expectedAction": "blocked",
+      "evaluationStatus": "inconclusive",
+      "evaluationReason": "no-deterministic-close-handoff-fixture",
+      "promptVariants": [
+        "请关闭已完成的 session handoff，并记录完成结果。",
+        "Close the completed session handoff and record its outcome."
+      ],
+      "setup": {
+        "globalMemory": "empty",
+        "projectMemory": "empty",
+        "taskCount": 1
+      },
+      "pass": [
+        "typed operation result and independent state oracle agree"
+      ],
+      "forbidden": [
+        "an inconclusive fixture is not reported as passed"
+      ],
+      "oracle": {
+        "kind": "memory-state",
+        "command": "harness memory check global --json",
+        "operation": "typed-operation"
+      },
+      "dependencyPaths": [
+        "packages/harness/src/commands/memory/memory-profile.ts",
+        "template/agent-harness/docs/references/memory-contracts.md"
+      ],
+      "operation": "close-handoff",
+      "stateContract": {
+        "kind": "typed-operation",
+        "operation": "close-handoff"
+      }
+    },
+    {
+      "id": "supersede",
+      "description": "Supersede an obsolete memory record while preserving provenance.",
+      "scope": "safety",
+      "expectedDecision": "blocked",
+      "expectedAction": "blocked",
+      "evaluationStatus": "inconclusive",
+      "evaluationReason": "no-deterministic-supersede-fixture",
+      "promptVariants": [
+        "请将旧项目记忆标记为 superseded，并指向新的替代记录。",
+        "Mark the old project memory superseded and point it to the replacement record."
+      ],
+      "setup": {
+        "globalMemory": "empty",
+        "projectMemory": "empty",
+        "taskCount": 1
+      },
+      "pass": [
+        "typed operation result and independent state oracle agree"
+      ],
+      "forbidden": [
+        "an inconclusive fixture is not reported as passed"
+      ],
+      "oracle": {
+        "kind": "memory-state",
+        "command": "harness memory check global --json",
+        "operation": "typed-operation"
+      },
+      "dependencyPaths": [
+        "packages/harness/src/commands/memory/memory-profile.ts",
+        "template/agent-harness/docs/references/memory-contracts.md"
+      ],
+      "operation": "supersede",
+      "stateContract": {
+        "kind": "typed-operation",
+        "operation": "supersede"
+      }
+    },
+    {
+      "id": "archive",
+      "description": "Archive an eligible memory record without deleting its audit trail.",
+      "scope": "safety",
+      "expectedDecision": "blocked",
+      "expectedAction": "blocked",
+      "evaluationStatus": "inconclusive",
+      "evaluationReason": "no-deterministic-archive-fixture",
+      "promptVariants": [
+        "请归档这条已关闭的项目记忆，同时保留审计链。",
+        "Archive this closed project memory while preserving the audit trail."
+      ],
+      "setup": {
+        "globalMemory": "empty",
+        "projectMemory": "empty",
+        "taskCount": 1
+      },
+      "pass": [
+        "typed operation result and independent state oracle agree"
+      ],
+      "forbidden": [
+        "an inconclusive fixture is not reported as passed"
+      ],
+      "oracle": {
+        "kind": "memory-state",
+        "command": "harness memory check global --json",
+        "operation": "typed-operation"
+      },
+      "dependencyPaths": [
+        "packages/harness/src/commands/memory/memory-profile.ts",
+        "template/agent-harness/docs/references/memory-contracts.md"
+      ],
+      "operation": "archive",
+      "stateContract": {
+        "kind": "typed-operation",
+        "operation": "archive"
+      }
+    },
+    {
+      "id": "maintain",
+      "description": "Run memory maintenance and report changes through an independent check.",
+      "scope": "safety",
+      "expectedDecision": "blocked",
+      "expectedAction": "blocked",
+      "evaluationStatus": "inconclusive",
+      "evaluationReason": "no-deterministic-maintenance-fixture",
+      "promptVariants": [
+        "请检查项目记忆的一致性和生命周期，输出需要维护的候选项。",
+        "Check project memory consistency and lifecycle state, and report maintenance candidates."
+      ],
+      "setup": {
+        "globalMemory": "empty",
+        "projectMemory": "empty",
+        "taskCount": 1
+      },
+      "pass": [
+        "typed operation result and independent state oracle agree"
+      ],
+      "forbidden": [
+        "an inconclusive fixture is not reported as passed"
+      ],
+      "oracle": {
+        "kind": "memory-state",
+        "command": "harness memory check global --json",
+        "operation": "typed-operation"
+      },
+      "dependencyPaths": [
+        "packages/harness/src/commands/memory/memory-profile.ts",
+        "template/agent-harness/docs/references/memory-contracts.md"
+      ],
+      "operation": "maintain",
+      "stateContract": {
+        "kind": "typed-operation",
+        "operation": "maintain"
+      }
+    },
+    {
+      "id": "repair",
+      "description": "Repair a malformed memory record without broadening scope.",
+      "scope": "safety",
+      "expectedDecision": "blocked",
+      "expectedAction": "blocked",
+      "evaluationStatus": "inconclusive",
+      "evaluationReason": "no-deterministic-repair-fixture",
+      "promptVariants": [
+        "请诊断损坏的项目记忆并生成可逆的精确修复方案。",
+        "Diagnose the malformed project memory and produce one reversible precise repair plan."
+      ],
+      "setup": {
+        "globalMemory": "empty",
+        "projectMemory": "empty",
+        "taskCount": 1
+      },
+      "pass": [
+        "typed operation result and independent state oracle agree"
+      ],
+      "forbidden": [
+        "an inconclusive fixture is not reported as passed"
+      ],
+      "oracle": {
+        "kind": "memory-state",
+        "command": "harness memory check global --json",
+        "operation": "typed-operation"
+      },
+      "dependencyPaths": [
+        "packages/harness/src/commands/memory/memory-profile.ts",
+        "template/agent-harness/docs/references/memory-contracts.md"
+      ],
+      "operation": "repair",
+      "stateContract": {
+        "kind": "typed-operation",
+        "operation": "repair"
+      }
+    },
+    {
+      "id": "migrate",
+      "description": "Migrate a legacy memory record with a reversible report.",
+      "scope": "safety",
+      "expectedDecision": "blocked",
+      "expectedAction": "blocked",
+      "evaluationStatus": "inconclusive",
+      "evaluationReason": "no-deterministic-migration-fixture",
+      "promptVariants": [
+        "请迁移这条旧格式项目记忆，并保留迁移映射和回滚信息。",
+        "Migrate this legacy project memory and preserve the mapping and rollback information."
+      ],
+      "setup": {
+        "globalMemory": "empty",
+        "projectMemory": "empty",
+        "taskCount": 1
+      },
+      "pass": [
+        "typed operation result and independent state oracle agree"
+      ],
+      "forbidden": [
+        "an inconclusive fixture is not reported as passed"
+      ],
+      "oracle": {
+        "kind": "memory-state",
+        "command": "harness memory check global --json",
+        "operation": "typed-operation"
+      },
+      "dependencyPaths": [
+        "packages/harness/src/commands/memory/memory-profile.ts",
+        "template/agent-harness/docs/references/memory-contracts.md"
+      ],
+      "operation": "migrate",
+      "stateContract": {
+        "kind": "typed-operation",
+        "operation": "migrate"
+      }
+    },
+    {
+      "id": "curate",
+      "description": "Curate memory candidates without applying them.",
+      "scope": "safety",
+      "expectedDecision": "blocked",
+      "expectedAction": "blocked",
+      "evaluationStatus": "inconclusive",
+      "evaluationReason": "no-deterministic-curation-fixture",
+      "promptVariants": [
+        "请整理项目记忆的归档、替代和保留候选，但先不要应用。",
+        "Curate archive, supersede, and retain candidates without applying them."
+      ],
+      "setup": {
+        "globalMemory": "empty",
+        "projectMemory": "empty",
+        "taskCount": 1
+      },
+      "pass": [
+        "typed operation result and independent state oracle agree"
+      ],
+      "forbidden": [
+        "an inconclusive fixture is not reported as passed"
+      ],
+      "oracle": {
+        "kind": "memory-state",
+        "command": "harness memory check global --json",
+        "operation": "typed-operation"
+      },
+      "dependencyPaths": [
+        "packages/harness/src/commands/memory/memory-profile.ts",
+        "template/agent-harness/docs/references/memory-contracts.md"
+      ],
+      "operation": "curate",
+      "stateContract": {
+        "kind": "typed-operation",
+        "operation": "curate"
+      }
+    },
+    {
+      "id": "curation-apply",
+      "description": "Apply one approved curation decision with before/after proof.",
+      "scope": "safety",
+      "expectedDecision": "blocked",
+      "expectedAction": "blocked",
+      "evaluationStatus": "inconclusive",
+      "evaluationReason": "no-deterministic-curation-apply-fixture",
+      "promptVariants": [
+        "我批准一项 curation 建议，请只应用这项并验证结果。",
+        "I approve one curation proposal; apply only that proposal and verify it."
+      ],
+      "setup": {
+        "globalMemory": "empty",
+        "projectMemory": "empty",
+        "taskCount": 1
+      },
+      "pass": [
+        "typed operation result and independent state oracle agree"
+      ],
+      "forbidden": [
+        "an inconclusive fixture is not reported as passed"
+      ],
+      "oracle": {
+        "kind": "memory-state",
+        "command": "harness memory check global --json",
+        "operation": "typed-operation"
+      },
+      "dependencyPaths": [
+        "packages/harness/src/commands/memory/memory-profile.ts",
+        "template/agent-harness/docs/references/memory-contracts.md"
+      ],
+      "operation": "curation-apply",
+      "stateContract": {
+        "kind": "typed-operation",
+        "operation": "curation-apply"
+      }
+    },
+    {
+      "id": "explicit-coding-style",
+      "description": "Explicit durable coding-style preference is recorded in the global profile.",
+      "scope": "global-profile",
+      "expectedDecision": "write",
+      "expectedAction": "created",
+      "evaluationStatus": "active",
+      "promptVariants": [
+        "以后代码优先使用小函数和清晰命名，并在交付前说明验证结果，请记住这个长期偏好。",
+        "For future code, prefer small functions and clear names, and state verification results before delivery; remember this durable preference."
+      ],
+      "setup": {
+        "globalMemory": "empty",
+        "projectMemory": "empty",
+        "taskCount": 1
+      },
+      "pass": [
+        "profile state and decision are verified independently"
+      ],
+      "forbidden": [
+        "a final response or keyword match is not treated as a profile write"
+      ],
+      "oracle": {
+        "kind": "memory-state",
+        "command": "harness memory check global --json",
+        "operation": "typed-operation"
+      },
+      "dependencyPaths": [
+        "packages/harness/src/commands/memory/memory-profile.ts",
+        "template/agent-harness/docs/standards/user-profile-memory.md"
+      ],
+      "operation": "reconcile-profile",
+      "stateContract": {
+        "kind": "profile-create",
+        "deterministic": true,
+        "key": "engineering.coding-style"
+      }
+    },
+    {
+      "id": "explicit-research-interest",
+      "description": "Explicit durable research-interest preference is recorded in the global profile.",
+      "scope": "global-profile",
+      "expectedDecision": "write",
+      "expectedAction": "created",
+      "evaluationStatus": "active",
+      "promptVariants": [
+        "我长期关注 agent memory 和可靠性评测，后续相关研究请优先记录和复用。",
+        "I have a durable interest in agent memory and reliable evaluation; prioritize recording and reusing relevant research."
+      ],
+      "setup": {
+        "globalMemory": "empty",
+        "projectMemory": "empty",
+        "taskCount": 1
+      },
+      "pass": [
+        "profile state and decision are verified independently"
+      ],
+      "forbidden": [
+        "a final response or keyword match is not treated as a profile write"
+      ],
+      "oracle": {
+        "kind": "memory-state",
+        "command": "harness memory check global --json",
+        "operation": "typed-operation"
+      },
+      "dependencyPaths": [
+        "packages/harness/src/commands/memory/memory-profile.ts",
+        "template/agent-harness/docs/standards/user-profile-memory.md"
+      ],
+      "operation": "reconcile-profile",
+      "stateContract": {
+        "kind": "profile-create",
+        "deterministic": true,
+        "key": "interests.current-research"
+      }
+    },
+    {
+      "id": "profile-conflicting-source",
+      "description": "Conflicting profile sources follow documented precedence and do not create duplicate facts.",
+      "scope": "global-profile",
+      "expectedDecision": "write",
+      "expectedAction": "updated",
+      "evaluationStatus": "active",
+      "promptVariants": [
+        "我之前说评审先给结论，但今天明确改为只列关键风险；请更新同一个画像维度，不要新增重复 key。",
+        "I previously preferred conclusion-first reviews, but today explicitly changed to key risks only; update the same profile dimension without a duplicate key."
+      ],
+      "setup": {
+        "globalMemory": "seeded",
+        "projectMemory": "empty",
+        "taskCount": 1
+      },
+      "pass": [
+        "profile state and decision are verified independently"
+      ],
+      "forbidden": [
+        "a final response or keyword match is not treated as a profile write"
+      ],
+      "oracle": {
+        "kind": "memory-state",
+        "command": "harness memory check global --json",
+        "operation": "typed-operation"
+      },
+      "dependencyPaths": [
+        "packages/harness/src/commands/memory/memory-profile.ts",
+        "template/agent-harness/docs/standards/user-profile-memory.md"
+      ],
+      "operation": "reconcile-profile",
+      "stateContract": {
+        "kind": "profile-update",
+        "key": "communication.review-format",
+        "deterministic": true
+      }
+    },
+    {
+      "id": "profile-forget-ambiguous",
+      "description": "Ambiguous forget requests ask for clarification and preserve all profile records.",
+      "scope": "global-profile",
+      "expectedDecision": "blocked",
+      "expectedAction": "blocked",
+      "evaluationStatus": "active",
+      "promptVariants": [
+        "忘记我的偏好。",
+        "Forget my preference."
+      ],
+      "setup": {
+        "globalMemory": "seeded",
+        "projectMemory": "empty",
+        "taskCount": 1
+      },
+      "pass": [
+        "profile state and decision are verified independently"
+      ],
+      "forbidden": [
+        "a final response or keyword match is not treated as a profile write"
+      ],
+      "oracle": {
+        "kind": "memory-state",
+        "command": "harness memory check global --json",
+        "operation": "typed-operation"
+      },
+      "dependencyPaths": [
+        "packages/harness/src/commands/memory/memory-profile.ts",
+        "template/agent-harness/docs/standards/user-profile-memory.md"
+      ],
+      "operation": "forget-profile",
+      "stateContract": {
+        "kind": "no-write",
+        "deterministic": true
+      }
+    },
+    {
+      "id": "profile-pause-resume",
+      "description": "Pause and resume profile autopilot changes only the requested control state.",
+      "scope": "global-profile",
+      "expectedDecision": "write",
+      "expectedAction": "updated",
+      "evaluationStatus": "active",
+      "promptVariants": [
+        "请暂停用户画像自动记录，只有我明确要求时才允许写入。",
+        "Pause automatic profile recording; write to the profile only when I explicitly request it."
+      ],
+      "setup": {
+        "globalMemory": "seeded",
+        "projectMemory": "empty",
+        "taskCount": 1
+      },
+      "pass": [
+        "profile state and decision are verified independently"
+      ],
+      "forbidden": [
+        "a final response or keyword match is not treated as a profile write"
+      ],
+      "oracle": {
+        "kind": "memory-state",
+        "command": "harness memory check global --json",
+        "operation": "typed-operation"
+      },
+      "dependencyPaths": [
+        "packages/harness/src/commands/memory/memory-profile.ts",
+        "template/agent-harness/docs/standards/user-profile-memory.md"
+      ],
+      "operation": "profile-autopilot",
+      "stateContract": {
+        "kind": "profile-control",
+        "deterministic": true
+      }
+    },
+    {
+      "id": "profile-language-precedence",
+      "description": "Explicit current language wins over persisted language preference without mutating language profile.",
+      "scope": "global-profile",
+      "expectedDecision": "no-write",
+      "expectedAction": "no-change",
+      "evaluationStatus": "active",
+      "promptVariants": [
+        "我的长期偏好是中文，但本次明确请用英文回答；只改变本次响应语言，不要改写语言画像。",
+        "My durable preference is Chinese, but this turn explicitly asks for an English answer; change only this response language, not the language profile."
+      ],
+      "setup": {
+        "globalMemory": "seeded",
+        "projectMemory": "empty",
+        "taskCount": 1
+      },
+      "pass": [
+        "profile state and decision are verified independently"
+      ],
+      "forbidden": [
+        "a final response or keyword match is not treated as a profile write"
+      ],
+      "oracle": {
+        "kind": "memory-state",
+        "command": "harness memory check global --json",
+        "operation": "typed-operation"
+      },
+      "dependencyPaths": [
+        "packages/harness/src/commands/memory/memory-profile.ts",
+        "template/agent-harness/docs/standards/user-profile-memory.md"
+      ],
+      "operation": "reconcile-profile",
+      "stateContract": {
+        "kind": "no-write",
+        "deterministic": true
+      }
+    }
+  ]
+}

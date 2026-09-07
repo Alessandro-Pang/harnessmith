@@ -9,7 +9,16 @@ test('Codex invocation keeps the prompt on stdin and uses bounded safe flags', (
 
   assert.deepEqual(invocation, {
     executable: '/bin/codex',
-    args: ['exec', '--json', '--ephemeral', '--approve-for-me', '--cd', '/tmp/eval', '-'],
+    args: [
+      'exec',
+      '--json',
+      '--ephemeral',
+      '--approve-for-me',
+      '--skip-git-repo-check',
+      '--cd',
+      '/tmp/eval',
+      '-',
+    ],
     cwd: '/tmp/eval',
   });
   assert.equal(

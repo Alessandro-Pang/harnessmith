@@ -18,7 +18,16 @@ const runFixture = (source: string, maxOutputBytes = 1024) =>
 
 assert.deepEqual(buildCodexInvocation({ executable: '/bin/codex', workspace: '/tmp/eval' }), {
   executable: '/bin/codex',
-  args: ['exec', '--json', '--ephemeral', '--approve-for-me', '--cd', '/tmp/eval', '-'],
+  args: [
+    'exec',
+    '--json',
+    '--ephemeral',
+    '--approve-for-me',
+    '--skip-git-repo-check',
+    '--cd',
+    '/tmp/eval',
+    '-',
+  ],
   cwd: '/tmp/eval',
 });
 assert.throws(() => buildCodexInvocation({ workspace: 'relative' }), /absolute workspace/);
