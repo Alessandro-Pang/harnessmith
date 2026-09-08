@@ -6,21 +6,25 @@ import { test } from 'vitest';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
 
-test('project declares Node 24.12 consistently across runtime and CI contracts', () => {
+test('project declares the Node 22.12 runtime floor consistently across runtime and CI contracts', () => {
   const packageManifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
   const harnessManifest = JSON.parse(
     readFileSync(join(root, 'template', 'agent-harness', 'manifest.json'), 'utf8'),
   );
   const workflow = readFileSync(join(root, '.github', 'workflows', 'ci.yml'), 'utf8');
   const buildConfig = readFileSync(join(root, 'config', 'tsup.config.ts'), 'utf8');
+  const typesVersion = String(packageManifest.devDependencies['@types/node']);
 
+  // Development pins the current LTS; the distributed CLI runs on the lower runtime floor.
   assert.equal(readFileSync(join(root, '.nvmrc'), 'utf8').trim(), 'v24.12.0');
-  assert.equal(packageManifest.engines.node, '>=24.12.0');
-  assert.equal(harnessManifest.node, '>=24.12.0');
-  assert.match(workflow, /node: \[24\]/);
-  assert.doesNotMatch(workflow, /node-version: 22/);
-  assert.equal(buildConfig.match(/target: 'node24'/g)?.length, 2);
-  assert.doesNotMatch(buildConfig, /target: 'node(?:20|22)'/);
+  assert.equal(packageManifest.engines.node, '>=22.12.0');
+  assert.equal(harnessManifest.node, '>=22.12.0');
+  // CI must exercise the floor and the development version; types and build target follow the floor
+  // so newer runtime APIs cannot slip into shipped code unnoticed.
+  assert.match(workflow, /node: \[22, 24\]/);
+  assert.match(typesVersion, /^22\./);
+  assert.equal(buildConfig.match(/target: 'node22'/g)?.length, 2);
+  assert.doesNotMatch(buildConfig, /target: 'node(?:20|24)'/);
 });
 
 test('Git normalizes text files to LF on every platform', () => {

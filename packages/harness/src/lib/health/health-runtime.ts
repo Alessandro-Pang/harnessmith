@@ -40,7 +40,7 @@ export function runtimeHealth(): RuntimeHealthCheck {
     .split('.')
     .slice(0, 2)
     .map((part) => Number.parseInt(part, 10));
-  const nodeCompatible = major > 24 || (major === 24 && minor >= 12);
+  const nodeCompatible = major > 22 || (major === 22 && minor >= 12);
   const git = gitVersion();
   const details = [`Node.js ${process.versions.node}`, git || 'Git unavailable'];
   return {

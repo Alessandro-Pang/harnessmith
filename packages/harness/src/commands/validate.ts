@@ -74,7 +74,7 @@ function validateVersion(runtime: Runtime, report: ValidationReport): void {
       typeof manifest.harnessVersion === 'string' &&
       manifest.schemaVersion === 3 &&
       manifest.memorySchemaVersion === 1 &&
-      manifest.node === '>=24.12.0';
+      manifest.node === '>=22.12.0';
     check(
       report,
       'harness-manifest',

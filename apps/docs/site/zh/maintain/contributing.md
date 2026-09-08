@@ -13,7 +13,7 @@ updated: 2026-09-05
 
 ## 环境与验证
 
-要求：Node.js `24.12.0` 或更高版本、pnpm `10.13.0`、Git。
+要求：Node.js `24.12.0` 或更高版本（`.nvmrc` 固定的开发工具链）、pnpm `10.13.0`、Git。分发出去的 CLI 本身的运行时下限是 Node.js `22.12.0`，CI 会同时验证这两个版本。
 
 ```bash
 pnpm install --frozen-lockfile --ignore-scripts

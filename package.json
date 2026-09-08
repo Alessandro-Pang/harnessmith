@@ -108,7 +108,7 @@
     "prepublishOnly": "node --import tsx scripts/release/release-publish.ts guard"
   },
   "engines": {
-    "node": ">=24.12.0"
+    "node": ">=22.12.0"
   },
   "packageManager": "pnpm@10.13.0",
   "pnpm": {
@@ -150,7 +150,7 @@
     "@commitlint/cli": "21.2.2",
     "@commitlint/config-conventional": "21.2.2",
     "@secretlint/secretlint-rule-preset-recommend": "13.0.4",
-    "@types/node": "24.13.3",
+    "@types/node": "22.20.1",
     "@types/proper-lockfile": "4.1.4",
     "@types/write-file-atomic": "4.0.3",
     "@vitest/coverage-v8": "4.1.11",

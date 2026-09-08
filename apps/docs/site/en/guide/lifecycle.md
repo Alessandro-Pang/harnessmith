@@ -116,7 +116,7 @@ For resource owners, retention conditions, and safe-deletion boundaries, see the
   to make the command pass.
 - **Symlink or out-of-bounds path detected**: fix the target root or directory structure; don't bypass the
   fail-closed checks. What they block is exactly the real risk.
-- **Node version not met**: upgrade to Node.js 24.12.0 or newer, then run the dry run again.
+- **Node version not met**: upgrade to Node.js 22.12.0 or newer, then run the dry run again.
 - **Multi-host operation failed midway**: Harnessmith rolls back along the steps already committed; run
   `status --agent <agent> --explain` again and check the scene Adapter by Adapter.
 - **rollback failure**: preserve the recovery path given in the output and don't repeatedly run overwriting

@@ -68,7 +68,7 @@ test('repository-map CLI initializes, checks, renders, verifies, maintains, and 
       harnessVersion: 'test',
       schemaVersion: 3,
       memorySchemaVersion: 1,
-      node: '>=24.12.0',
+      node: '>=22.12.0',
     }),
   );
   mkdirSync(join(runtime.harnessRoot, 'templates', 'personal', 'projects'), { recursive: true });

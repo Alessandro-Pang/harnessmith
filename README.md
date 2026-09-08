@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/harnessmith"><img alt="npm version" src="https://img.shields.io/npm/v/harnessmith.svg?color=orange" /></a>
   <a href="https://www.npmjs.com/package/harnessmith"><img alt="npm downloads" src="https://img.shields.io/npm/d18m/harnessmith" /></a>
-  <a href="https://nodejs.org/"><img alt="Node.js" src="https://img.shields.io/badge/Node.js-%E2%89%A524.12-43853d.svg" /></a>
+  <a href="https://nodejs.org/"><img alt="Node.js" src="https://img.shields.io/badge/Node.js-%E2%89%A522.12-43853d.svg" /></a>
   <a href="./LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
 </p>
 
@@ -35,7 +35,7 @@ Harnessmith 将这些问题分成几条可检查的边界。Repository Map 负�
 
 ## 🚀 30 秒开始
 
-要求 Node.js 24.12.0 或更高版本，不需要全局安装。
+要求 Node.js 22.12.0 或更高版本（建议使用 22 或 24 LTS），不需要全局安装。
 
 ```bash
 # 1. 预览目标、冲突、备份和恢复方式，不写入文件

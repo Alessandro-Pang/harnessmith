@@ -11,7 +11,7 @@ lang: en
 # Getting started
 
 This guide covers a first installation: preview the plan, write to one host, and verify the result. Harnessmith is an
-npm initializer, so run it with `npx`; no global install is needed. The only requirement is Node.js 24.12.0 or newer.
+npm initializer, so run it with `npx`; no global install is needed. The only requirement is Node.js 22.12.0 or newer.
 
 The whole process takes about five minutes if you're installing to a single host. The examples below use Codex. Other
 hosts use the same three-stage flow, but Cursor is project-scoped and requires `--project`; check the

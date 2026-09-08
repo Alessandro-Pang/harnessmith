@@ -17,8 +17,8 @@ export function doctor(
   const instructionFiles = runtime.instructionFiles;
   const checks: Array<[boolean, string]> = [
     [
-      major > 24 || (major === 24 && minor >= 12),
-      `Node.js ${process.versions.node} (required >= 24.12)`,
+      major > 22 || (major === 22 && minor >= 12),
+      `Node.js ${process.versions.node} (required >= 22.12)`,
     ],
     [Boolean(version), version || 'Git is unavailable'],
     ...instructionFiles.map((path): [boolean, string] => [

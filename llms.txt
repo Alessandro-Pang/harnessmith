@@ -6,7 +6,7 @@
 
 Project: <https://www.npmjs.com/package/harnessmith>
 Release channel: npm registry (`latest` dist-tag)
-Runtime: Node.js 24.12 or newer
+Runtime: Node.js 22.12 or newer
 Repository package manager: pnpm 10.13.0 (locked by `packageManager` and `pnpm-lock.yaml`)
 Distribution command: npm / npx
 Embedded Harness runtime dependencies: none (the bundle is self-contained); the npm initializer uses the
@@ -53,7 +53,7 @@ use the published `npx --yes harnessmith` commands below.
 
 ## LLM installation protocol
 
-1. Verify the runtime with `node --version`. Stop and explain the requirement if Node.js is older than 24.12.
+1. Verify the runtime with `node --version`. Stop and explain the requirement if Node.js is older than 22.12.
 2. Determine the exact agent selection from the user's request. Accepted values are `codex`, `cursor`,
    `claude`, `claude-code`, `opencode`, `kimi`, `kimi-code`, `zed`, and `all`. Never infer `all` from an ambiguous request.
 3. If Cursor is selected, determine the intended project path. Ask the user if more than one repository is

@@ -26,7 +26,7 @@ Memory 语义仍以 Core、playbook 和对应 owner 文档为准。
 
 ## 兼容性与 Runtime 身份
 
-- version --json 返回 harnessVersion、schemaVersion、memorySchemaVersion 和 Node 契约；当前兼容值为 schemaVersion: 3、memorySchemaVersion: 1、node: >=24.12.0。未知 schema 必须 fail closed。
+- version --json 返回 harnessVersion、schemaVersion、memorySchemaVersion 和 Node 契约；当前兼容值为 schemaVersion: 3、memorySchemaVersion: 1、node: >=22.12.0。未知 schema 必须 fail closed。
 - managed Runtime 必须由当前安装目录内合法的 install-context.json 证明，并匹配 adapter、harness home、memory/personal home、repository root、owner 和 instruction files；不能把缺失或损坏 context 降级成 standalone。
 - standalone 只在经源码布局、packages/harness/src/runtime.ts 和根 package manifest 共同证明时成立。
 - 任何写入命令先做 Runtime identity、SafePath、领域 schema 和 owner 状态校验；只读命令不得借此获得写入资格。

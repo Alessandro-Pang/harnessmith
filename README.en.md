@@ -14,7 +14,7 @@
   <a href="https://www.npmjs.com/package/harnessmith">
     <img alt="npm bundle size" src="https://img.shields.io/bundlephobia/minzip/harnessmith">
   </a>
-  <a href="https://nodejs.org/"><img alt="Node.js" src="https://img.shields.io/badge/Node.js-%E2%89%A524.12-43853d.svg" /></a>
+  <a href="https://nodejs.org/"><img alt="Node.js" src="https://img.shields.io/badge/Node.js-%E2%89%A522.12-43853d.svg" /></a>
   <a href="./LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
 </p>
 
@@ -42,7 +42,7 @@ If you use one agent and your rules fit in a few lines, a hand-written `AGENTS.m
 
 ## 🚀 Start in 30 seconds
 
-Node.js 24.12.0 or newer is required. No global installation is needed.
+Node.js 22.12.0 or newer is required (22 or 24 LTS recommended). No global installation is needed.
 
 ```bash
 # 1. Preview destinations, conflicts, backups, and recovery. Nothing is written.

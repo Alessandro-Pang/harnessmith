@@ -18,7 +18,7 @@ root; this page is a summary for getting started, and the root file wins if they
 
 ## Environment and verification
 
-Requirements: Node.js `24.12.0` or newer, pnpm `10.13.0`, and Git.
+Requirements: Node.js `24.12.0` or newer (the development toolchain pinned by `.nvmrc`), pnpm `10.13.0`, and Git. The distributed CLI itself runs on Node.js `22.12.0` or newer; CI exercises both versions.
 
 ```bash
 pnpm install --frozen-lockfile --ignore-scripts

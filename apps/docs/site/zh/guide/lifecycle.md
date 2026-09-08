@@ -76,6 +76,6 @@ pnpm run temp:scan
 
 - **目标已存在且 unmanaged**：先看 dry-run / status 输出，确认来源后再决定是否走 `adopt` 或 `--force`。不要为了让命令通过而删除原文件。
 - **检测到 symlink 或路径越界**：修正目标根或目录结构，不要绕过 fail-closed 检查。它们拦住的正是真正的风险。
-- **Node 版本不满足**：升级到 Node.js 24.12.0 或更高版本，然后重新运行 dry-run。
+- **Node 版本不满足**：升级到 Node.js 22.12.0 或更高版本，然后重新运行 dry-run。
 - **多宿主操作中途失败**：Harnessmith 会按已提交的步骤回滚；再跑一次 `status --agent <agent> --explain`，逐个 Adapter 核对现场。
 - **rollback failure**：保留输出中给出的 recovery path，不要重复执行覆盖性命令；先复制现场和备份，再按路径逐项恢复。

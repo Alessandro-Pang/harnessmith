@@ -293,7 +293,7 @@ test('Harness version exposes its schema compatibility contract as JSON', () => 
   assert.equal(contract.harnessVersion, '2.6.0');
   assert.equal(contract.schemaVersion, 3);
   assert.equal(contract.memorySchemaVersion, 1);
-  assert.equal(contract.node, '>=24.12.0');
+  assert.equal(contract.node, '>=22.12.0');
 });
 
 test('validation rejects an unsupported embedded memory schema version', () => {
