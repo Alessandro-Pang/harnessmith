@@ -210,7 +210,7 @@ entries:
   );
 });
 
-test('documentation routing prioritizes required topics within a hard topic budget', () => {
+test('documentation routing budgets required and supporting topics separately', () => {
   const root = mkdtempSync(join(tmpdir(), 'harness-required-topic-routes-'));
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
   writeFileSync(
@@ -242,14 +242,13 @@ entries:
   );
 
   const report = routeDocumentation(root, ['shared mandatory']);
+  // Required topics have their own budget, so the mandatory owner does not displace the
+  // fourth supporting topic.
   assert.deepEqual(
     report.topics.map(({ name }) => name),
-    ['required-owner', 'first', 'second', 'third'],
+    ['required-owner', 'first', 'second', 'third', 'fourth'],
   );
-  assert.deepEqual(
-    report.omittedTopics.map(({ name }) => name),
-    ['fourth'],
-  );
+  assert.deepEqual(report.omittedTopics, []);
   assert.deepEqual(
     report.requiredTopics.map(({ name }) => name),
     ['required-owner'],

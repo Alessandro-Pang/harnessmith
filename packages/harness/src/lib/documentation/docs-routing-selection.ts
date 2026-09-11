@@ -67,7 +67,6 @@ function routeFor(
     kind: entry.kind,
     name: entry.name,
     path: entry.path,
-    priority: entry.priority,
     matchedAliases,
   };
 }
@@ -175,13 +174,13 @@ export function boundSupportingRoutes(routes: SupportingRouteCandidate[]): {
         left.index - right.index,
     )
     .map(({ candidate }) => candidate);
+  // Required and supporting topics have separate budgets: a mandatory owner protocol never
+  // crowds out the supporting concepts, and supporting matches never push a required one
+  // into `omittedRequiredTopics`.
   const required = ranked.filter(({ required }) => required);
   const optional = ranked.filter(({ required }) => !required);
   const selectedRequired = required.slice(0, maximumDocumentationTopics);
-  const selected = [
-    ...selectedRequired,
-    ...optional.slice(0, Math.max(0, maximumDocumentationTopics - selectedRequired.length)),
-  ];
+  const selected = [...selectedRequired, ...optional.slice(0, maximumDocumentationTopics)];
   const selectedNames = new Set(selected.map(({ route }) => route.name));
   return {
     topics: selected.map(({ route }) => route),

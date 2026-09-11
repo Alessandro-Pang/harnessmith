@@ -84,7 +84,15 @@
           "type": "array",
           "minItems": 2,
           "maxItems": 6,
-          "items": { "$ref": "#/$defs/evidence" }
+          "items": { "$ref": "#/$defs/evidence" },
+          "allOf": [
+            {
+              "contains": { "properties": { "side": { "const": "provider" } }, "required": ["side"] }
+            },
+            {
+              "contains": { "properties": { "side": { "const": "consumer" } }, "required": ["side"] }
+            }
+          ]
         }
       }
     }

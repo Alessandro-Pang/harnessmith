@@ -64,7 +64,10 @@ function manifestRoutes(
   for (const [name, entry] of Object.entries(entries)) {
     const validEntry = Boolean(entry) && typeof entry === 'object' && !Array.isArray(entry);
     check(validEntry, `docs route ${name} must be an object`);
-    check(!invalidMetadata.has(name), `docs route ${name} has invalid kind or priority`);
+    check(
+      !invalidMetadata.has(name),
+      `docs route ${name} has invalid kind or a removed priority field`,
+    );
     const routePath = validEntry && typeof entry.path === 'string' ? entry.path.trim() : '';
     const aliases = validEntry ? manifestAliases(entry) : [];
     check(Boolean(routePath), `docs route ${name} has no path`);

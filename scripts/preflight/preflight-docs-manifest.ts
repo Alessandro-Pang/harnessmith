@@ -11,7 +11,6 @@ export interface ManifestEntry {
   load?: unknown;
   owner?: unknown;
   path?: unknown;
-  priority?: unknown;
   requiredConceptAliases?: unknown;
   triggers?: unknown;
 }
@@ -68,11 +67,8 @@ function metadataIsInvalid(
   const kinds = new Set(['playbook', 'topic', 'standard']);
   if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return true;
   if (typeof entry.kind !== 'string' || !kinds.has(entry.kind)) return true;
-  if (entry.kind === 'playbook') {
-    if (!Number.isInteger(entry.priority) || (entry.priority as number) <= 0) return true;
-  } else if (entry.priority !== undefined && !Number.isInteger(entry.priority)) {
-    return true;
-  }
+  // `priority` was never consulted by route selection; its presence is a stale signal.
+  if ('priority' in entry) return true;
   if (
     entry.load !== undefined &&
     (!['supporting', 'reference'].includes(String(entry.load)) ||

@@ -281,6 +281,26 @@ test('validation rejects malformed catalog, relation, and evidence shapes fail-c
   assert.match(noArrays.issues.join('\n'), /relations must be an array/);
 });
 
+test('published schema encodes the two-sided evidence rule the runtime enforces', () => {
+  const schema = JSON.parse(
+    readFileSync(
+      join(
+        process.cwd(),
+        'template/skills/agent-harness/assets/schemas/repository-map.schema.json',
+      ),
+      'utf8',
+    ),
+  );
+  const evidence = schema.$defs.relation.properties.evidence;
+  assert.equal(evidence.minItems, 2);
+  const requiredSides = (
+    evidence.allOf as { contains: { properties: { side: { const: string } } } }[]
+  )
+    .map(({ contains }) => contains.properties.side.const)
+    .sort();
+  assert.deepEqual(requiredSides, ['consumer', 'provider']);
+});
+
 test('reconcile validates and updates repository catalog observations', () => {
   const map = validMap();
   const repository = {

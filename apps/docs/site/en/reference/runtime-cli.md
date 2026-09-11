@@ -68,10 +68,11 @@ the manifest's `actionAliases` and `conceptAliases`, without loading bodies. Use
 the action can be reliably determined; when it is not provided, only conservative automatic inference is
 performed. The JSON report keeps the caller's `rawQuery` and the `normalizedQuery` used for matching, explicitly
 distinguishes `matched`, `unmatched`, and `ambiguous`, and provides `top1` only when there is a single action;
-no match or multiple real actions returns exit 2 rather than guessing by priority. It would rather make you ask
-again than give a wrong answer that looks certain. Supporting topics are stably sorted by the number of matched
-aliases and at most four are returned; required topics come first, those that cannot fit the hard budget go into
-`omittedRequiredTopics` and return exit 2, while optional candidates go into `omittedTopics`. Low-frequency
+no match or multiple real actions returns exit 2 rather than guessing by entry order (the manifest has no
+`priority` field). It would rather make you ask again than give a wrong answer that looks certain. Supporting
+topics are stably sorted by the number of matched aliases and at most four are returned; required topics have
+their own budget of four and never consume supporting slots, those beyond it go into `omittedRequiredTopics` and
+return exit 2, while optional candidates go into `omittedTopics`. Low-frequency
 deferred references go separately into `references`/`omittedReferences`; omission there only means loaded on
 demand, not nonexistent. This structured contract is version 3. Routing is only responsible for document
 discovery; it does not convey authorization:

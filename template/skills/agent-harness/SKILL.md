@@ -47,7 +47,7 @@ metadata:
 1. 路由查询保留用户当前原文，不得改写，以便命中遗漏验收、未来默认、仍有后续或 host-signal 等信号。
    重路由时运行 `<harness> route --intent <intent> --json "<用户当前原文>"`；intent 取值为 change、diagnose、review、
    research-and-design、understand-and-map、verify-and-accept、release-and-external；无法判定时向用户提问，不猜。
-2. 先读 `primaryPlaybook` 与 `docs/core/execution-loop.md`，再加载全部由路由返回的 `requiredTopics` 和预算内的 `topics`；
+2. 先读 `primaryPlaybook` 与 `docs/core/execution-loop.md`，再加载全部由路由返回的 `requiredTopics` 和 `topics`（各自最多四个）；
    报告含 `reasoningModes` 时读取 `docs/references/reasoning-modes.md` 对应章节并按步骤执行。
 3. `omittedRequiredTopics` 非空即停止并报告；`omittedTopics` 只是延迟候选；`unmatched` 或歧义时停止并提问。
    references 仅按 owner 按需加载。

@@ -45,7 +45,7 @@ Memory 语义仍以 Core、playbook 和对应 owner 文档为准。
 - 参数、退出码和 JSON 错误以 `--help`、源码和测试的当前实现为准；文档中的示例不是事实源。
 - `route`/`explain` 只读 manifest，不读取正文；报告区分 `rawQuery`、`normalizedQuery`、playbook、supporting
   topic、required topic 与 deferred reference。
-- required topic 超过硬预算时列入 `omittedRequiredTopics` 并返回非零；可选 topic 与 reference 的省略只表示延迟加载。
+- required topic 与 supporting topic 各有最多四个的独立预算；required 超出时列入 `omittedRequiredTopics` 并返回非零，可选 topic 与 reference 的省略只表示延迟加载。
 - 任何会写入托管状态的命令都必须经过 owning store/transaction、SafePath、锁、原子写和结果校验。
 
 ## 搜索与索引

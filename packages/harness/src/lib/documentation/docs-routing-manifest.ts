@@ -167,11 +167,9 @@ export function prepareManifestEntry(
     throw new Error(`Documentation manifest entry ${name} has no valid kind`);
   }
   const kind = rawEntry.kind as DocumentationRouteKind;
-  if (
-    rawEntry.priority !== undefined &&
-    (typeof rawEntry.priority !== 'number' || !Number.isInteger(rawEntry.priority))
-  ) {
-    throw new Error(`Documentation manifest entry ${name} has invalid priority`);
+  // Selection never ranked by priority; reject the field so it cannot resurface as a false signal.
+  if ('priority' in rawEntry) {
+    throw new Error(`Documentation manifest entry ${name} uses the removed field priority`);
   }
   const load = (rawEntry.load ?? 'supporting') as DocumentationLoad;
   if (!routeLoads.has(load)) {
@@ -209,7 +207,6 @@ export function prepareManifestEntry(
     kind,
     load,
     path: routePath(docsRoot, rawEntry.path),
-    priority: rawEntry.priority ?? 0,
     aliases,
     requiredAliases: required,
   };

@@ -297,11 +297,11 @@ test('enforced prompt rules require a runtime or verifier enforcement subject', 
   );
 });
 
-test('docs preflight validates route kinds and requires explicit playbook priority', () => {
+test('docs preflight validates route kinds and rejects the removed priority field', () => {
   assert.deepEqual(
     invalidManifestRouteMetadata({
       entries: {
-        change: { kind: 'playbook', priority: 40 },
+        change: { kind: 'playbook' },
         safety: { kind: 'topic' },
         standard: { kind: 'standard' },
       },
@@ -313,8 +313,7 @@ test('docs preflight validates route kinds and requires explicit playbook priori
       entries: {
         missing: {},
         unknown: { kind: 'workflow' },
-        unranked: { kind: 'playbook' },
-        fractional: { kind: 'playbook', priority: 1.5 },
+        ranked: { kind: 'playbook', priority: 40 },
         malformedRequired: { kind: 'topic', requiredConceptAliases: 'handoff' },
         normalizedDuplicate: {
           kind: 'topic',
@@ -335,15 +334,14 @@ test('docs preflight validates route kinds and requires explicit playbook priori
     [
       'deferredWithRequired',
       'deferredWithoutOwner',
-      'fractional',
       'malformedLoad',
       'malformedOwner',
       'malformedRequired',
       'missing',
       'normalizedDuplicate',
+      'ranked',
       'unknown',
       'unknownOwner',
-      'unranked',
     ],
   );
 });

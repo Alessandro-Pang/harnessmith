@@ -44,9 +44,9 @@ owner: operating-model
 物理启动顺序固定为 `profile.md → 个人 AGENTS.md/cwd/Git → bootstrap(原文)`，不要把它
 与后续的证据优先级混为一谈：
 
-1. 每个新宿主 task/thread 的首个工具调用，只做一次有界读取 canonical `profile.md`；文件缺失则继续。
+1. 每个新宿主 task/thread 的首个工具调用，只完整读取一次 canonical `profile.md`（契约上限 32 条结论，无需分页）；文件缺失则继续。
 2. 再读取个人 `AGENTS.md`，确认 cwd、Git 根、工作树和就近项目规则。
-3. 项目根有 `README.md` 时，在项目 Memory 命令前有界读取。
+3. 项目根有 `README.md` 时，在项目 Memory 命令前只读取前 200 行。
 4. 运行只读 `bootstrap`，把用户当前原文原样放在末尾：它同时返回推荐的 Memory 引用和 `route.load`；
    按 `route.load` 顺序读取，只有命中的 owner 文档需要进入上下文，`route.ask` 非空时先提问。
 
@@ -62,8 +62,8 @@ owner: operating-model
 唯一 playbook；topic 与 standard 仍匹配 `conceptAliases`。报告同时保留 `rawQuery` 与 `normalizedQuery`，并可在
 `reasoningModes` 中根据任务结构返回自动选择的认知模式；命中后读取对应 owner 文档章节，不要求用户先说出理论名称。
 未传 intent 时，CJK 标点和混合语言不改变动作语义，否定、引用、示例、元讨论和名词性动作词不选择 primary
-playbook。未命中或多个真实动作必须显式返回并停止选择，不靠英文词面或 priority 猜测。required topic
-必须优先占用预算；能容纳的全部加载，无法容纳的进入 `omittedRequiredTopics` 并停止报告，`omittedTopics` 只表示可延迟的候选。路由只决定
+playbook。未命中或多个真实动作必须显式返回并停止选择，不靠英文词面或条目顺序猜测；manifest 不含 priority 字段。required
+topic 与 supporting topic 各有最多四个的独立预算：required 在预算内全部加载，超出的进入 `omittedRequiredTopics` 并停止报告；`omittedTopics` 只表示可延迟的 supporting 候选。路由只决定
 文档发现，不能扩大用户授权。
 
 回复语言优先级是：用户在当前请求中的明确要求 > 带持久证据的当前画像偏好 > 当前请求的自动检测。

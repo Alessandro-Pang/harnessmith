@@ -46,7 +46,7 @@ node <harness-path>/scripts/harness.mjs bootstrap --project /path/to/project --d
 
 ## 文档路由与检索
 
-`route` 和 `explain` 根据显式 intent、manifest 的 `actionAliases` 与 `conceptAliases` 返回命中的文档名称、路径和 alias，不加载正文。能够可靠判断动作时使用受限 `--intent`；未提供时只做保守自动推断。JSON 报告保留调用方的 `rawQuery` 与匹配用的 `normalizedQuery`，显式区分 `matched`、`unmatched` 与 `ambiguous`，并只在唯一动作时给出 `top1`；未命中或多个真实动作返回 exit 2，不按 priority 猜测。宁可让你再问一次，不给一个貌似确定的错误答案。Supporting topics 按匹配 alias 数量稳定排序并最多返回四个；required topic 优先，硬预算无法容纳的进入 `omittedRequiredTopics` 并返回 exit 2，可选候选进入 `omittedTopics`。低频 deferred reference 单独进入 `references`/`omittedReferences`，省略只表示延迟加载，不表示不存在。该结构化契约为 version 3。路由只负责文档发现，不传递授权：
+`route` 和 `explain` 根据显式 intent、manifest 的 `actionAliases` 与 `conceptAliases` 返回命中的文档名称、路径和 alias，不加载正文。能够可靠判断动作时使用受限 `--intent`；未提供时只做保守自动推断。JSON 报告保留调用方的 `rawQuery` 与匹配用的 `normalizedQuery`，显式区分 `matched`、`unmatched` 与 `ambiguous`，并只在唯一动作时给出 `top1`；未命中或多个真实动作返回 exit 2，不按条目顺序猜测（manifest 不含 priority 字段）。宁可让你再问一次，不给一个貌似确定的错误答案。Supporting topics 按匹配 alias 数量稳定排序并最多返回四个；required topic 有独立的四个预算、不占用 supporting 名额，超出的进入 `omittedRequiredTopics` 并返回 exit 2，可选候选进入 `omittedTopics`。低频 deferred reference 单独进入 `references`/`omittedReferences`，省略只表示延迟加载，不表示不存在。该结构化契约为 version 3。路由只负责文档发现，不传递授权：
 
 ```bash
 node <harness-path>/scripts/harness.mjs route --intent diagnose payment callback --json

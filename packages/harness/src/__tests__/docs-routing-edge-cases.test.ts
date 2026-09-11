@@ -53,12 +53,10 @@ test('documentation routing reports equally ranked playbook ambiguity without gu
 entries:
   first:
     kind: playbook
-    priority: 10
     path: first.md
     actionAliases: [检查]
   second:
     kind: playbook
-    priority: 10
     path: second.md
     actionAliases: [检查]
 `,

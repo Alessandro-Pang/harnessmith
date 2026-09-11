@@ -10,7 +10,6 @@ export interface DocumentationManifestEntry {
   load?: unknown;
   owner?: unknown;
   path?: unknown;
-  priority?: unknown;
   requiredConceptAliases?: unknown;
   triggers?: unknown;
 }
@@ -26,7 +25,6 @@ export interface PreparedManifestEntry {
   kind: DocumentationRouteKind;
   load: DocumentationLoad;
   path: string;
-  priority: number;
   aliases: string[];
   requiredAliases: string[];
 }
@@ -44,7 +42,6 @@ export interface DocumentationRoute {
   kind: DocumentationRouteKind;
   name: string;
   path: string;
-  priority: number;
   matchedAliases: string[];
 }
 

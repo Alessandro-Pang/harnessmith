@@ -32,7 +32,7 @@ state 可在不同 checkout/Host 重建，不是项目事实，也不进入 mana
 Repository catalog 的必需语义是稳定 `id`、相对项目根的 `checkout`、非空职责描述、有限 `owns`、aliases、
 remotes 和 1–6 个正式 source。直接关系固定为 `provider -> contract -> consumer`，类型仅限 `package`、
 `http-api`、`rpc`、`event`、`artifact`、`proxy`、`migration`、`extension`；稳定 key 由
-`type + provider + contract + consumer` 计算。每条边必须有 provider 与 consumer 两侧的相对 evidence path，
+`type + provider + contract + consumer` 计算。每条边必须有 provider 与 consumer 两侧的相对 evidence path（schema 以 `contains` 声明，运行时校验同样拒绝），
 多消费者拆成多条边。
 
 ## 命令与副作用

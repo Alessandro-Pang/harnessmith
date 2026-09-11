@@ -285,7 +285,7 @@ test('startup deterministically discovers one explicitly referenced project cont
   assert.ok(personal >= 0 && projectEntry > personal && projectMemory > projectEntry);
   assert.match(
     agents,
-    /项目根.*README\.md.*存在.*有界读取.*明确指定.*单个.*项目相对.*任务上下文.*单独读取/s,
+    /项目根.*README\.md.*存在.*只读取前 200 行.*明确指定.*单个.*项目相对.*任务上下文.*单独读取/s,
   );
   assert.match(agents, /不递归.*不推断.*其它.*文件/s);
   assert.match(agents, /项目上下文.*不可信.*不授权/s);

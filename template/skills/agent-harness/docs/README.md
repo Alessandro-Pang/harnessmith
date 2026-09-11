@@ -7,7 +7,7 @@ updated: 2026-09-04
 
 # Personal Agent Harness Docs
 
-这里是安装器管理、按需读取的 coding-agent 规则与稳定说明层；个人 overlay 位于 `{{HARNESS_PERSONAL_HOME}}/`，跨项目记忆位于 `{{HARNESS_MEMORY_HOME}}/`，项目记忆位于仓库 `.agent-docs/`。本目录不应整体加载。
+这里是安装器管理、按需读取的规则与稳定说明层；个人 overlay 位于 `{{HARNESS_PERSONAL_HOME}}/`，跨项目记忆位于 `{{HARNESS_MEMORY_HOME}}/`，项目记忆位于仓库 `.agent-docs/`。本目录不应整体加载。
 
 ## 快速路由
 
@@ -42,9 +42,9 @@ updated: 2026-09-04
 
 ## 读取原则
 
-1. 能够可靠判断当前动作时，显式 `intent` 只选择唯一 playbook（即 `primaryPlaybook`）；自动推断多个动作返回歧义，无法匹配返回 `unmatched`，不可靠时不猜。
-2. `bootstrap` 的 `route.load` 已按 execution loop → primary playbook → `requiredTopics` → `topics` → `references/reasoning-modes.md`（仅当返回 `reasoningModes`）排序，按序读取即可；`rawQuery`/`matchedSignals` 用于审计。`omittedReasoningModes` 表示超过模式预算的候选，不能解释为未命中；需要执行被省略模式时应先缩小任务范围或显式重新路由。
-3. topic 总数默认最多四个，required 优先；`omittedTopics` 只是延迟候选，不能解释为不存在，`omittedRequiredTopics` 非空时停止并报告缺失。
+1. 能可靠判断动作时，显式 `intent` 只选唯一 playbook（`primaryPlaybook`）；自动推断出多个动作返回歧义，无法匹配返回 `unmatched`，不猜。
+2. `bootstrap` 的 `route.load` 已按 execution loop → primary playbook → `requiredTopics` → `topics` → `references/reasoning-modes.md`（仅当返回 `reasoningModes`）排序，按序读取；`rawQuery`/`matchedSignals` 用于审计。`omittedReasoningModes` 是超出模式预算的候选，不是未命中；需要时先缩小任务范围或显式重新路由。
+3. `requiredTopics` 与 `topics` 各自最多四个、互不占预算；manifest 无 priority，只按命中 alias 数量与条目顺序选择。`omittedTopics` 只是延迟候选，不是不存在；`omittedRequiredTopics` 非空时停止并报告缺失。
 4. 更具体的 `AGENTS.md`、skill 或项目事实源优先；路由只决定发现，不授予权限。
 5. 检索先返回标题、元信息或命中段落，确认相关后才读全文；长期规则在本目录，单次证据在项目 `.agent-docs/`。
 6. 通用规范使用“标准术语 + 项目差异 + 一个正/反例 + 可执行验收”；字段状态机、路径和安全门禁只在 owner 文档或 CLI/schema 定义。
@@ -57,7 +57,7 @@ updated: 2026-09-04
 | Core | 信任、授权、事实源、执行循环、未验证和交付边界 | 每个相关任务 |
 | Playbook | 当前唯一任务动作的执行流程 | 选定动作后 |
 | Required topic | 高损失信号绑定的 owner 协议 | 命中后全部加载 |
-| Supporting topic | 当前任务的补充概念 | 按顺序、受预算限制 |
+| Supporting topic | 当前任务的补充概念 | 按顺序、最多四个 |
 | Reference | 低频背景、benchmark、长命令 | 用户或诊断明确需要时 |
 
 ## 最小发现入口
@@ -67,4 +67,4 @@ node {{HARNESS_HOME}}/skills/agent-harness/scripts/harness.mjs bootstrap --proje
 node {{HARNESS_HOME}}/skills/agent-harness/scripts/harness.mjs search --project /absolute/project/path --json "authentication"
 ```
 
-`bootstrap` 带原文即完成路由并返回 `route.load`，`route --intent` 只用于重路由；命中后只读所需文档；搜索模式、刷新、预算和 benchmark 细节见 [search reference](references/search-and-benchmarks.md)，其他参数以同一 CLI 的 `--help` 和子命令 `--help` 为准。
+`bootstrap` 带原文即完成路由并返回 `route.load`，`route --intent` 只用于重路由，命中后只读所需文档；搜索模式、刷新、预算和 benchmark 见 [search reference](references/search-and-benchmarks.md)，其他参数以 CLI 与子命令的 `--help` 为准。
