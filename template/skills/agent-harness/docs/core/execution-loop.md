@@ -29,8 +29,8 @@ frame → observe → decide → act → verify → deliver
 每个用户回合在 `deliver` 前执行一次有界的 Memory 判定，不等待用户再次提醒：
 
 1. 检查本回合是否产生跨回合仍有价值的约束、昂贵结论、失败经验、未完成状态或恢复信息。
-2. 先将回合事实结构化（可用 `memory discover-candidates` 生成候选），再补齐候选的来源、价值、授权和 root 状态并运行
-   `memory evaluate-capture`；通过后只使用对应 typed writer：用户约束用 `capture-input`，高价值分析用 `capture-finding`，可复用经验或失败经验用 `capture-experience`，未完成工作用 `handoff`。
+2. 先将回合事实结构化（可用 `memory discover-candidates` 生成候选线索），再按 `memory-contracts.md` 的扁平自评 schema
+   为每个候选单独写 payload 并运行 `memory evaluate-capture`——候选输出不能直接当作它的输入；通过后只使用对应 typed writer：用户约束用 `capture-input`，高价值分析用 `capture-finding`，可复用经验或失败经验用 `capture-experience`，未完成工作用 `handoff`。
 3. 用户明确表达跨任务默认或纠正时，按 `user-profile-memory` owner 调用 `reconcile-profile`；单次行为只能保留为候选或
    `proposed`，不得升级为画像事实。
 4. 写入后立即运行最小 `memory check` 或对应 verifier；失败保留 `blocked`/`proposed` 和恢复路径，不能把发现候选当成已沉淀。

@@ -126,3 +126,47 @@ test('memory evaluate-capture emits stable machine-readable status and reason co
     reasonCode: 'memory-root-uninitialized',
   });
 });
+
+test('memory evaluate-capture is self-describing without reading the source', () => {
+  const root = mkdtempSync(join(tmpdir(), 'harness-capture-eligibility-help-'));
+  onTestFinished(() => rmSync(root, { recursive: true, force: true }));
+  const runtime = harnessRuntime(root);
+
+  // `--help` names every key, every enum value, and a paste-ready example.
+  const help = capturedIo();
+  runCli(['memory', 'evaluate-capture', '--help'], { runtime, io: help });
+  const helpText = help.logs.join('\n');
+  for (const key of Object.keys(eligibleInput()))
+    assert.match(helpText, new RegExp(`\\b${key}\\b`));
+  assert.match(helpText, /"capture-experience"/);
+  assert.match(helpText, /not the output of discover-candidates/);
+  const example = helpText.slice(helpText.indexOf('{'), helpText.lastIndexOf('}') + 1);
+  assert.deepEqual(
+    Object.keys(JSON.parse(example.replace(/\n\s*/g, ''))).sort(),
+    Object.keys(eligibleInput()).sort(),
+  );
+
+  // Closed value sets are enforced at the payload layer, naming the allowed values.
+  const badEnum = join(root, 'bad-enum.json');
+  writeFileSync(badEnum, JSON.stringify(eligibleInput({ candidateKind: 'bogus' as 'finding' })));
+  assert.throws(
+    () =>
+      runCli(['memory', 'evaluate-capture', '--payload-file', badEnum, '--json'], {
+        runtime,
+        io: capturedIo(),
+      }),
+    /candidateKind must be one of input, experience, finding, handoff, profile/,
+  );
+
+  // Feeding a discover-candidates shaped payload fails once, with the full allowed key list.
+  const payload = join(root, 'candidate-shaped.json');
+  writeFileSync(payload, JSON.stringify({ kind: 'finding', retention: 'durable' }));
+  assert.throws(
+    () =>
+      runCli(['memory', 'evaluate-capture', '--payload-file', payload, '--json'], {
+        runtime,
+        io: capturedIo(),
+      }),
+    /unknown key: kind; allowed keys: evaluation, candidateKind, .*existingMatch/,
+  );
+});

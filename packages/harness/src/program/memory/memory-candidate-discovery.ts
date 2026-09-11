@@ -4,8 +4,10 @@ import {
   executeCommandPayload,
   resolveCommandPayload,
 } from '../../lib/filesystem/command-payload.js';
+import { commandPayloadHelp } from '../../lib/filesystem/command-payload-help.js';
 import {
   type CandidateDiscoveryEvent,
+  candidateDiscoverySources,
   discoverMemoryCandidates,
 } from '../../lib/memory/memory-candidate-discovery.js';
 import type { Io } from '../../types.js';
@@ -17,6 +19,7 @@ const candidateDiscoveryPayloadSchema = {
     text: 'string',
     taskId: 'string',
   },
+  values: { source: candidateDiscoverySources },
   required: ['source', 'text'],
 } as const satisfies CommandPayloadSchema;
 
@@ -31,6 +34,13 @@ export function registerMemoryCandidateDiscoveryCommand(
     .requiredOption('--payload-file <path>', 'read one bounded conversation or tool event')
     .option('--consume-payload-file', 'delete the unchanged payload after processing')
     .option('--json', 'write machine-readable candidates')
+    .addHelpText(
+      'after',
+      commandPayloadHelp(
+        candidateDiscoveryPayloadSchema,
+        'candidates are hints to map into memory evaluate-capture, not its input',
+      ),
+    )
     .action(
       run((options) => {
         const payload = resolveCommandPayload<CandidateDiscoveryEvent>(

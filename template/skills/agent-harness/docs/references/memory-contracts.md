@@ -78,6 +78,17 @@ finding 进入 `working` 并绑定 expiry。
 `memory evaluate-capture --payload-file <path> --json` 是只读统一资格入口。它先检查 negative eligibility，
 再检查价值、来源、typed writer、授权、root 状态和语义重复；不会初始化 Memory，也不代替具体写命令。
 
+payload 是 Agent 对单个候选的扁平自评，不是 `discover-candidates` 的输出；15 个 key 全部必填，缺一或多一都拒绝：
+
+- 枚举：`evaluation` complete|not-run；`candidateKind` input|experience|finding|handoff|profile；`retention`
+  workstream|durable；`typedWriter` capture-input|capture-experience|capture-finding|handoff|reconcile-profile|none；
+  `source` verified|missing|inferred；`sensitiveData` none|redacted|unredacted；`existingMatch` none|same|source-update。
+- 布尔：`taskReadOnly`、`highValue`、`rootInitialized`、`authorized`、`containsSecret`、`cheaplyRecoverable`、
+  `oneShotAuthorization`、`authoritativeDuplicate`。
+
+`discover-candidates` 的候选只给出 `kind`、`retention`、`purpose` 等线索；Agent 需把 `kind` 映射为 `candidateKind`、
+选定 `typedWriter`，并自行补齐来源、价值、授权与 root 状态。完整示例见 `memory evaluate-capture --help`。
+
 资格结果使用 `unchanged`、`proposed`、`blocked`、`not-evaluated`；实际 writer 返回 `created`、`updated`、
 `unchanged`。每个结果带稳定 `reasonCode`：没有运行资格判断必须是 `not-evaluated`，缺少 writer 或未初始化的
 高价值候选是 `proposed`，冲突、敏感信息、来源缺失或校验失败是 `blocked`。完全重复才可 `unchanged`；新来源交给

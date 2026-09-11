@@ -4,8 +4,10 @@ import {
   executeCommandPayload,
   resolveCommandPayload,
 } from '../../lib/filesystem/command-payload.js';
+import { commandPayloadHelp } from '../../lib/filesystem/command-payload-help.js';
 import {
   type CaptureEligibilityInput,
+  captureEligibilityValues,
   evaluateCaptureEligibility,
 } from '../../lib/memory/memory-capture-eligibility.js';
 import type { Io } from '../../types.js';
@@ -29,6 +31,7 @@ const captureEligibilityPayloadSchema = {
     authoritativeDuplicate: 'boolean',
     existingMatch: 'string',
   },
+  values: captureEligibilityValues,
   required: [
     'evaluation',
     'candidateKind',
@@ -59,6 +62,13 @@ export function registerMemoryCaptureEligibilityCommand(
     .requiredOption('--payload-file <path>', 'read the complete candidate from bounded JSON')
     .option('--consume-payload-file', 'delete the unchanged payload after schema validation')
     .option('--json', 'write a machine-readable eligibility result')
+    .addHelpText(
+      'after',
+      commandPayloadHelp(
+        captureEligibilityPayloadSchema,
+        'one flat self-assessment, not the output of discover-candidates',
+      ),
+    )
     .action(
       run((options) => {
         const payload = resolveCommandPayload<CaptureEligibilityInput>(

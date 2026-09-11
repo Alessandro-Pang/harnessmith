@@ -1,4 +1,5 @@
-type CandidateDiscoverySource = 'chat' | 'tool';
+export const candidateDiscoverySources = ['chat', 'tool'] as const;
+type CandidateDiscoverySource = (typeof candidateDiscoverySources)[number];
 type MemoryCandidateKind = 'input' | 'profile';
 type MemoryCandidatePurpose = 'acceptance' | 'constraint' | 'explicit-retain';
 

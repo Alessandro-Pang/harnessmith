@@ -7,6 +7,8 @@ type PayloadValueKind = 'boolean' | 'number' | 'string' | 'string[]';
 
 export interface CommandPayloadSchema {
   fields: Readonly<Record<string, PayloadValueKind>>;
+  /** Closed value sets for string fields; enforced on input and rendered into `--help`. */
+  values?: Readonly<Record<string, readonly string[]>>;
   required?: readonly string[];
   exactlyOne?: ReadonlyArray<readonly string[]>;
   aliases?: Readonly<Record<string, string>>;
@@ -44,7 +46,13 @@ function plainObject(value: unknown): value is Record<string, unknown> {
   return prototype === Object.prototype || prototype === null;
 }
 
-function validateValue(command: string, key: string, value: unknown, kind: PayloadValueKind): void {
+function validateValue(
+  command: string,
+  key: string,
+  value: unknown,
+  schema: CommandPayloadSchema,
+): void {
+  const kind = schema.fields[key];
   const valid =
     kind === 'string'
       ? typeof value === 'string'
@@ -54,6 +62,10 @@ function validateValue(command: string, key: string, value: unknown, kind: Paylo
           ? typeof value === 'number'
           : Array.isArray(value) && value.every((item) => typeof item === 'string');
   if (!valid) throw new Error(`${command} payload option ${key} must be ${kind}`);
+  const allowed = schema.values?.[key];
+  if (allowed && !allowed.includes(value as string)) {
+    throw new Error(`${command} payload option ${key} must be one of ${allowed.join(', ')}`);
+  }
 }
 
 function domainOptions(
@@ -77,7 +89,12 @@ function domainOptions(
     if (!plainObject(parsed.value))
       throw new Error(`${command} payload must be a top-level plain object`);
     const unknown = Object.keys(parsed.value).filter((key) => !allowed.includes(key));
-    if (unknown.length > 0) throw new Error(`${command} payload has unknown key: ${unknown[0]}`);
+    if (unknown.length > 0) {
+      // Name every allowed key so a caller without the source can converge in one retry.
+      throw new Error(
+        `${command} payload has unknown key: ${unknown[0]}; allowed keys: ${allowed.join(', ')}`,
+      );
+    }
     return { values: parsed.value, payload: { path: parsed.path, identity: parsed.identity } };
   }
 
@@ -113,7 +130,7 @@ export function resolveCommandPayload<T extends object>(
 ): T & { json?: boolean } {
   const { values: resolved, payload } = domainOptions(command, cli, schema);
   for (const [key, value] of Object.entries(resolved)) {
-    validateValue(command, key, value, schema.fields[key]);
+    validateValue(command, key, value, schema);
   }
   for (const key of schema.required || []) {
     if (resolved[key] === undefined) throw new Error(`${command} requires payload option ${key}`);

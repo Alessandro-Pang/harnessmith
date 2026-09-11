@@ -43,6 +43,9 @@ Memory 语义仍以 Core、playbook 和对应 owner 文档为准。
 - 预期无结果、歧义、非法输入、身份失败和执行失败必须保持可区分；不要用后续命令的成功码覆盖前一条失败。
 
 - 参数、退出码和 JSON 错误以 `--help`、源码和测试的当前实现为准；文档中的示例不是事实源。
+- 项目定位有三种形态，不可互换：`bootstrap`、`health`、`task *` 用 `--project <path>`；读写 Memory 的
+  `memory *` 用位置参数 `<scope>`（`.` 为当前项目）；`memory evaluate-capture`、`discover-candidates` 是不触盘的
+  纯函数，两者都不接受。
 - `route`/`explain` 只读 manifest，不读取正文；报告区分 `rawQuery`、`normalizedQuery`、playbook、supporting
   topic、required topic 与 deferred reference。
 - required topic 与 supporting topic 各有最多四个的独立预算；required 超出时列入 `omittedRequiredTopics` 并返回非零，可选 topic 与 reference 的省略只表示延迟加载。

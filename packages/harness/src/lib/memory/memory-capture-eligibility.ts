@@ -1,29 +1,39 @@
-type CaptureCandidateKind = 'input' | 'experience' | 'finding' | 'handoff' | 'profile';
-type CaptureRetention = 'workstream' | 'durable';
-type CaptureTypedWriter =
-  | 'capture-input'
-  | 'capture-experience'
-  | 'capture-finding'
-  | 'handoff'
-  | 'reconcile-profile'
-  | 'none';
+export const captureEligibilityValues = {
+  evaluation: ['complete', 'not-run'],
+  candidateKind: ['input', 'experience', 'finding', 'handoff', 'profile'],
+  retention: ['workstream', 'durable'],
+  typedWriter: [
+    'capture-input',
+    'capture-experience',
+    'capture-finding',
+    'handoff',
+    'reconcile-profile',
+    'none',
+  ],
+  source: ['verified', 'missing', 'inferred'],
+  sensitiveData: ['none', 'redacted', 'unredacted'],
+  existingMatch: ['none', 'same', 'source-update'],
+} as const;
+
+type CaptureEligibilityValues = typeof captureEligibilityValues;
+type ValueOf<K extends keyof CaptureEligibilityValues> = CaptureEligibilityValues[K][number];
 
 export interface CaptureEligibilityInput {
-  evaluation: 'complete' | 'not-run';
-  candidateKind: CaptureCandidateKind;
-  retention: CaptureRetention;
+  evaluation: ValueOf<'evaluation'>;
+  candidateKind: ValueOf<'candidateKind'>;
+  retention: ValueOf<'retention'>;
   taskReadOnly: boolean;
   highValue: boolean;
   rootInitialized: boolean;
-  typedWriter: CaptureTypedWriter;
+  typedWriter: ValueOf<'typedWriter'>;
   authorized: boolean;
-  source: 'verified' | 'missing' | 'inferred';
+  source: ValueOf<'source'>;
   containsSecret: boolean;
-  sensitiveData: 'none' | 'redacted' | 'unredacted';
+  sensitiveData: ValueOf<'sensitiveData'>;
   cheaplyRecoverable: boolean;
   oneShotAuthorization: boolean;
   authoritativeDuplicate: boolean;
-  existingMatch: 'none' | 'same' | 'source-update';
+  existingMatch: ValueOf<'existingMatch'>;
 }
 
 type CaptureEligibilityStatus = 'unchanged' | 'proposed' | 'blocked' | 'not-evaluated';
@@ -61,35 +71,11 @@ function result(
 }
 
 function assertInput(input: CaptureEligibilityInput): void {
-  if (!['complete', 'not-run'].includes(input.evaluation)) {
-    throw new Error(`Invalid capture evaluation state: ${String(input.evaluation)}`);
-  }
-  if (!['input', 'experience', 'finding', 'handoff', 'profile'].includes(input.candidateKind)) {
-    throw new Error(`Invalid capture candidate kind: ${String(input.candidateKind)}`);
-  }
-  if (!['workstream', 'durable'].includes(input.retention)) {
-    throw new Error(`Invalid capture retention: ${String(input.retention)}`);
-  }
-  if (
-    ![
-      'capture-input',
-      'capture-experience',
-      'capture-finding',
-      'handoff',
-      'reconcile-profile',
-      'none',
-    ].includes(input.typedWriter)
-  ) {
-    throw new Error(`Invalid capture typed writer: ${String(input.typedWriter)}`);
-  }
-  if (!['verified', 'missing', 'inferred'].includes(input.source)) {
-    throw new Error(`Invalid capture source state: ${String(input.source)}`);
-  }
-  if (!['none', 'redacted', 'unredacted'].includes(input.sensitiveData)) {
-    throw new Error(`Invalid capture sensitive data state: ${String(input.sensitiveData)}`);
-  }
-  if (!['none', 'same', 'source-update'].includes(input.existingMatch)) {
-    throw new Error(`Invalid capture existing match: ${String(input.existingMatch)}`);
+  for (const [key, allowed] of Object.entries(captureEligibilityValues)) {
+    const value = input[key as keyof CaptureEligibilityValues];
+    if (!(allowed as readonly string[]).includes(value)) {
+      throw new Error(`Invalid capture ${key}: ${String(value)}`);
+    }
   }
 }
 
@@ -120,7 +106,7 @@ export function evaluateCaptureEligibility(
     return result('proposed', false, 'memory-root-uninitialized');
   }
   if (input.typedWriter === 'none') return result('proposed', false, 'typed-writer-unavailable');
-  const expectedWriters: Record<CaptureCandidateKind, CaptureTypedWriter> = {
+  const expectedWriters: Record<ValueOf<'candidateKind'>, ValueOf<'typedWriter'>> = {
     input: 'capture-input',
     experience: 'capture-experience',
     finding: 'capture-finding',
