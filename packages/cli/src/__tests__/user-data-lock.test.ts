@@ -59,8 +59,8 @@ async function waitForFile(path: string): Promise<void> {
 }
 
 function writeHarness(home: string): void {
-  const harness = join(home, 'agent-harness');
-  const script = join(harness, 'bin', 'harness.mjs');
+  const harness = join(home, 'skills', 'agent-harness');
+  const script = join(harness, 'scripts', 'harness.mjs');
   mkdirSync(dirname(script), { recursive: true });
   writeFileSync(
     script,

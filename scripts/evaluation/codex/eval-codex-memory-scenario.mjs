@@ -147,7 +147,7 @@ writeFileSync(join(repo, 'README.md'), '# Disposable Memory Evaluation\n');
 const env = { HARNESS_MEMORY_HOME: memory, HARNESS_PERSONAL_HOME: personal, HARNESS_REPOSITORY_ROOT: repo, TMPDIR: temp, HOME: home, CODEX_HOME: configHome, PATH: `${process.env.PATH ?? ''}:${dirname(nodeBin)}` };
 checked('git', ['init', '-b', 'main'], { cwd: repo, env });
 checked(nodeBin, [outerBin, 'install', '--agent', 'codex', '--project', repo, '--yes', '--json'], { env });
-const harnessBin = join(configHome, 'agent-harness/bin/harness.mjs');
+const harnessBin = join(home, '.agents/skills/agent-harness/scripts/harness.mjs');
 if (scenario.setup.globalMemory !== 'empty') checked(nodeBin, [harnessBin, 'init', 'global'], { env });
 if (scenario.setup.projectMemory !== 'empty') checked(nodeBin, [harnessBin, 'init', 'project', repo], { env });
 // Every candidate starts with initialized memory so an empty state is observable, too.

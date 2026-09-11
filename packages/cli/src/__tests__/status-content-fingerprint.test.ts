@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { createAdapter } from '../adapters/adapters.js';
 import { installAll } from '../installation/install.js';
@@ -55,7 +55,7 @@ test('effective content fingerprints expose drift and status explanation evidenc
     after,
   );
 
-  rmSync(adapter.harness, { recursive: true });
+  rmSync(adapter.hub.harness, { recursive: true });
   const missing = statusAll([adapter])[0].contentFingerprint;
   assert.equal(missing.state, 'drifted');
   assert.notEqual(missing.current, after.current);
@@ -82,9 +82,9 @@ test('unmanaged content has a current fingerprint without a recorded identity', 
 test('legacy installation records remain readable and report an unrecorded fingerprint', () => {
   const { env, adapter } = fixture('harnessmith-fingerprint-legacy-');
   installAll([adapter], { env, noInitGlobal: true });
-  const record = JSON.parse(readFileSync(adapter.record, 'utf8'));
+  const record = JSON.parse(readFileSync(adapter.hub.record, 'utf8'));
   delete record.contentFingerprint;
-  writeFileSync(adapter.record, `${JSON.stringify(record, null, 2)}\n`);
+  writeFileSync(adapter.hub.record, `${JSON.stringify(record, null, 2)}\n`);
 
   const status = statusAll([adapter])[0];
 
@@ -97,7 +97,7 @@ test('legacy installation records remain readable and report an unrecorded finge
 test('a malformed install context is reported as drift instead of breaking status', () => {
   const { env, adapter } = fixture('harnessmith-fingerprint-context-');
   installAll([adapter], { env, noInitGlobal: true });
-  writeFileSync(join(adapter.harness, 'install-context.json'), '{invalid json\n');
+  writeFileSync(join(adapter.hub.harness, 'install-context.json'), '{invalid json\n');
 
   const status = statusAll([adapter])[0];
 
@@ -112,19 +112,22 @@ test('fingerprint normalization handles JSON-escaped Windows paths', () => {
     [left, 'C:\\Users\\left'],
     [right, 'C:\\Users\\right'],
   ] as const) {
-    mkdirSync(fixtureValue.adapter.harness, { recursive: true });
-    const harnessHome = `${root}\\.codex`;
-    const instruction = `${harnessHome}\\AGENTS.md`;
+    const { hub } = fixtureValue.adapter;
+    mkdirSync(hub.harness, { recursive: true });
+    const agentsHome = `${root}\\.agents`;
+    const harnessHome = `${agentsHome}\\harnessmith`;
+    const instruction = `${harnessHome}\\entry\\AGENTS.md`;
     writeFileSync(
-      join(fixtureValue.adapter.harness, 'install-context.json'),
+      join(hub.harness, 'install-context.json'),
       `${JSON.stringify(
         {
-          version: 1,
-          adapter: 'codex',
+          version: 2,
           harnessHome,
+          agentsHome,
           instructionFiles: [instruction],
-          memoryHome: `${root}\\.agent-docs`,
-          personalHome: `${root}\\.agent-harness`,
+          stateHome: `${harnessHome}\\state`,
+          memoryHome: `${harnessHome}\\memory`,
+          personalHome: `${harnessHome}\\rules`,
           repositoryRoot: `${root}\\git-repo`,
           owner: 'fingerprint-test',
         },
@@ -132,11 +135,12 @@ test('fingerprint normalization handles JSON-escaped Windows paths', () => {
         2,
       )}\n`,
     );
-    writeFileSync(fixtureValue.adapter.instructions[0].path, `Read ${harnessHome}\\docs\n`);
+    mkdirSync(dirname(hub.entry), { recursive: true });
+    writeFileSync(hub.entry, `Read ${harnessHome}\\skills\\agent-harness\\docs\n`);
   }
 
   assert.equal(
-    effectiveContentFingerprint(left.adapter),
-    effectiveContentFingerprint(right.adapter),
+    effectiveContentFingerprint(left.adapter.hub),
+    effectiveContentFingerprint(right.adapter.hub),
   );
 });

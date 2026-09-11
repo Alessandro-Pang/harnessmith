@@ -1,7 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Command, Option } from 'commander';
-import { type BootstrapOptions, bootstrapProject } from './commands/bootstrap/bootstrap.js';
 import { doctor } from './commands/health/doctor.js';
 import { health } from './commands/health/health.js';
 import { initGlobal, initPersonal, initProject } from './commands/init.js';
@@ -10,6 +9,7 @@ import { contextSearch } from './commands/search/search.js';
 import { validate } from './commands/validate.js';
 import { containsHighConfidenceSecret } from './lib/security/secret-hygiene.js';
 import { registerAuditCommands } from './program/audit/audit.js';
+import { registerBootstrapCommand } from './program/bootstrap/bootstrap.js';
 import { registerDocumentationCommands } from './program/documentation/documentation.js';
 import { registerMemoryCommands } from './program/memory/memory.js';
 import { registerReplayCommands } from './program/replay/replay.js';
@@ -22,10 +22,6 @@ import type { Io, Runtime } from './types.js';
 
 interface JsonProjectOptions {
   json?: boolean;
-  project?: string;
-}
-
-interface BootstrapCommandOptions extends BootstrapOptions {
   project?: string;
 }
 
@@ -77,29 +73,6 @@ interface HarnessManifest {
   schemaVersion: number;
   memorySchemaVersion: number;
   node: string;
-}
-
-function registerBootstrapCommand(
-  program: Command,
-  runtime: Runtime,
-  io: Io,
-  run: CommandRunner,
-): void {
-  program
-    .command('bootstrap')
-    .description('read one bounded project and Memory startup summary')
-    .requiredOption('--project <path>', 'project path')
-    .addOption(
-      new Option('--detail <level>', 'startup detail level')
-        .choices(['brief', 'full'])
-        .default('brief'),
-    )
-    .option('--json', 'write a machine-readable startup summary')
-    .action(
-      run((options: BootstrapCommandOptions) =>
-        bootstrapProject(runtime, options.project as string, options, io),
-      ),
-    );
 }
 
 function registerCoreCommands(

@@ -5,52 +5,52 @@ import { test } from 'vitest';
 
 const root = join(import.meta.dirname, '..', '..', '..', '..');
 const longRunningCore = readFileSync(
-  join(root, 'template/agent-harness/docs/core/long-running-tasks.md'),
+  join(root, 'template/skills/agent-harness/docs/core/long-running-tasks.md'),
   'utf8',
 );
 const longRunningReference = readFileSync(
-  join(root, 'template/agent-harness/docs/references/task-and-replay-contracts.md'),
+  join(root, 'template/skills/agent-harness/docs/references/task-and-replay-contracts.md'),
   'utf8',
 );
 const projectMemoryCore = readFileSync(
-  join(root, 'template/agent-harness/docs/standards/project-agent-docs.md'),
+  join(root, 'template/skills/agent-harness/docs/standards/project-agent-docs.md'),
   'utf8',
 );
 const projectMemoryReference = readFileSync(
-  join(root, 'template/agent-harness/docs/references/memory-contracts.md'),
+  join(root, 'template/skills/agent-harness/docs/references/memory-contracts.md'),
   'utf8',
 );
 const userProfileCore = readFileSync(
-  join(root, 'template/agent-harness/docs/standards/user-profile-memory.md'),
+  join(root, 'template/skills/agent-harness/docs/standards/user-profile-memory.md'),
   'utf8',
 );
 const userProfileReference = readFileSync(
-  join(root, 'template/agent-harness/docs/references/profile-contracts.md'),
+  join(root, 'template/skills/agent-harness/docs/references/profile-contracts.md'),
   'utf8',
 );
 const cliContractsReference = readFileSync(
-  join(root, 'template/agent-harness/docs/references/cli-contracts.md'),
+  join(root, 'template/skills/agent-harness/docs/references/cli-contracts.md'),
   'utf8',
 );
 const observabilityCore = readFileSync(
-  join(root, 'template/agent-harness/docs/core/observability.md'),
+  join(root, 'template/skills/agent-harness/docs/core/observability.md'),
   'utf8',
 );
 const toolRoutingCore = readFileSync(
-  join(root, 'template/agent-harness/docs/core/tool-routing.md'),
+  join(root, 'template/skills/agent-harness/docs/core/tool-routing.md'),
   'utf8',
 );
 const documents = new Map([
-  ['agents', readFileSync(join(root, 'template/AGENTS.md'), 'utf8')],
+  ['agents', readFileSync(join(root, 'template/entry/AGENTS.md'), 'utf8')],
   [
     'operating-model',
-    readFileSync(join(root, 'template/agent-harness/docs/core/operating-model.md'), 'utf8'),
+    readFileSync(join(root, 'template/skills/agent-harness/docs/core/operating-model.md'), 'utf8'),
   ],
   ['long-running-tasks', [longRunningCore, longRunningReference].join('\n')],
   [
     'cli-architecture',
     readFileSync(
-      join(root, 'template/agent-harness/docs/core/harness-cli-architecture.md'),
+      join(root, 'template/skills/agent-harness/docs/core/harness-cli-architecture.md'),
       'utf8',
     ),
   ],

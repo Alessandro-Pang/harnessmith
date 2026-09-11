@@ -12,8 +12,9 @@ interface AdapterOutput {
 
 interface AdapterResult {
   adapter?: string;
-  harness?: string;
+  harness?: string | null;
   record?: string;
+  hub?: { home?: string; record?: string; owners?: string[] };
   outputs?: AdapterOutput[];
 }
 
@@ -85,14 +86,27 @@ function checkInstall(
     check,
   );
   for (const result of results) {
-    const installedHarness = result.harness || '';
+    const hubHarness = join(result.hub?.home || '', 'skills', 'agent-harness');
     check(existsSync(result.record || ''), `${result.adapter} install record was not created`);
+    check(existsSync(result.hub?.record || ''), `${result.adapter} hub record was not created`);
+    // Owner ids are `<agent>` for global hosts and `<agent>:<project>` for project hosts.
     check(
-      !existsSync(join(installedHarness, 'packages/cli/src')),
-      `${result.adapter} installed Harness unexpectedly contains TypeScript sources`,
+      Boolean(
+        result.hub?.owners?.some(
+          (owner) => owner === result.adapter || owner.startsWith(`${result.adapter}:`),
+        ),
+      ),
+      `${result.adapter} is not recorded as a hub owner`,
     );
+    check(
+      !existsSync(join(hubHarness, 'packages/cli/src')),
+      'hub Harness unexpectedly contains TypeScript sources',
+    );
+    // Hosts that do not scan ~/.agents/skills receive a symlink; verify the link resolves.
+    const entry = result.harness ? join(result.harness, 'scripts', 'harness.mjs') : null;
+    if (entry) check(existsSync(entry), `${result.adapter} skill link does not resolve`);
     const validation = JSON.parse(
-      runNode(join(installedHarness, 'bin', 'harness.mjs'), ['validate', '--json'], env),
+      runNode(entry || join(hubHarness, 'scripts', 'harness.mjs'), ['validate', '--json'], env),
     ) as { valid?: boolean };
     check(validation.valid === true, `${result.adapter} installed Harness validation did not pass`);
   }

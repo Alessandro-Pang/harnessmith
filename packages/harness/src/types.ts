@@ -4,9 +4,10 @@ export interface Io {
 }
 
 export interface InstallationContext {
-  adapter?: string;
   harnessHome?: string;
+  agentsHome?: string;
   instructionFiles?: string[];
+  stateHome?: string;
   memoryHome?: string;
   personalHome?: string;
   repositoryRoot?: string;
@@ -18,11 +19,16 @@ export interface Runtime {
   readonly home: string;
   readonly harnessRoot: string;
   readonly distributionRoot: string;
+  /** Hub home (`~/.agents/harnessmith`) for managed installs; the template parent otherwise. */
   readonly harnessHome: string;
+  /** `~/.agents`, where the hub publishes its skill discovery link. */
+  readonly agentsHome: string;
   readonly hostAdapter: string;
   readonly instructionFiles: string[];
   readonly installedHarness: string;
   readonly docsRoot: string;
+  /** Mutable runtime state (`<hub>/state`), kept outside the distributed skill. */
+  readonly stateRoot: string;
   readonly memoryHome: string;
   readonly personalHome: string;
   readonly repositoryRoot: string;

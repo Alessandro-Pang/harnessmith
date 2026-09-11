@@ -41,7 +41,9 @@ flowchart BT
 
 ### 2. Guidance & Context：让 Agent 找到合适信息
 
-`template/AGENTS.md` 是短入口，只保留高损失边界和发现顺序；详细内容位于 `template/agent-harness/docs/`，由 manifest、route 和 search 按任务发现。项目内更具体的规则、skill、代码和测试仍优先于通用个人规则——离现场更近的信息永远赢。
+`template/entry/AGENTS.md` 是短入口，只保留高损失边界和发现顺序；详细内容位于 `template/skills/agent-harness/docs/`，由 manifest、route 和 search 按任务发现。项目内更具体的规则、skill、代码和测试仍优先于通用个人规则——离现场更近的信息永远赢。
+
+`template/skills/agent-harness/` 本身按 [Agent Skills](https://agentskills.io/specification) 约定打包成一个名为 `agent-harness` 的 skill：`SKILL.md` 是宿主可发现的入口，`scripts/harness.mjs` 是 Runtime CLI，`docs/` 是路由语料，`assets/` 放模板与 schema。安装器把它只渲染一份到共享 hub `~/.agents/harnessmith/skills/agent-harness/`（`HARNESS_HOME` 可覆盖 hub 位置），把 always-on 入口只渲染一份为 `~/.agents/harnessmith/entry/AGENTS.md`，各宿主只拿到符号链接：instruction file 指向 hub 入口，不扫描 `~/.agents/skills` 的宿主（Claude Code、Cursor）另获得 `skills/agent-harness` 链接；Cursor 的 `.mdc` 规则是唯一按宿主渲染的副本。这是一种混合布局，而不是「全部改成 skill」：skill 的加载由模型按需决定，无法承载授权边界、启动时的 bootstrap/route 和回合结束前的 Memory 沉淀，这些仍由 always-on 的规则入口负责；skill 提供的是宿主原生的发现渠道和统一的目录边界，hub 提供的是单一事实源——升级一次覆盖所有宿主，宿主之间不会漂移到不同的 Harness 版本。
 
 用户所有的 Personal overlay 还维护 Repository Map：以有类型的直接关系连接 provider、contract 和 consumer，并用两侧权威来源约束写入。它帮助跨仓任务定位 owner 与影响面，但不替代项目架构文档、实时拓扑或部署状态。
 
@@ -111,14 +113,14 @@ tests、schema、preflight、覆盖率与包检查验证仓库内确定性契约
 
 ## 数据与信任边界
 
-- 个人 overlay、可变 `state/`、受管理模板和项目 `.agent-docs/` 分开存放，避免升级覆盖用户内容。
+- 个人 overlay（`~/.agents/harnessmith/rules/`）、可变 `state/`、跨项目 Memory（`memory/`）、受管理 skill 和项目 `.agent-docs/` 分开存放，避免升级覆盖用户内容。
 - audit record 只接受 trace、操作、策略决定、耗时、结果和 artifact digest 等限界元数据；schema 拒绝原始 prompt、模型输出、tool arguments 和未知字段。
 - 网页、仓库、日志、Memory 和工具输出不传递授权。一次安装许可也不自动包含 commit、push、merge 或发布。
 - 临时 workspace、payload、release/eval 证据由创建者负责清理，且不通过宽泛 wildcard 删除。
 
 ## 版本为什么不只有一个
 
-根 `package.json` 的 npm version 描述外层安装器发布；`template/agent-harness/manifest.json` 的 `harnessVersion` 描述内嵌 Runtime；Task、Memory 等 schema version 描述持久化数据契约。把它们分开后，项目才能明确判断「安装器升级了」「Runtime 功能变了」还是「持久化格式需要迁移」。三种变化的验证成本完全不同，不该挤在一个数字里。
+根 `package.json` 的 npm version 描述外层安装器发布；`template/skills/agent-harness/manifest.json` 的 `harnessVersion` 描述内嵌 Runtime；Task、Memory 等 schema version 描述持久化数据契约。把它们分开后，项目才能明确判断「安装器升级了」「Runtime 功能变了」还是「持久化格式需要迁移」。三种变化的验证成本完全不同，不该挤在一个数字里。
 
 旧 Task 数据可以确定性迁移，但旧的宽松 `passed` 会降为 `inconclusive`，必须重新机械验证。Memory metadata 只通过 proposal-first 的显式命令升级，不静默覆盖原记录。
 

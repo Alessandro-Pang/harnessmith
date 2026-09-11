@@ -90,7 +90,7 @@ test('fingerprint rejects distributed rules that do not match the release worktr
 
   assert.equal(firstResult.status, 0, firstResult.stderr);
   const fingerprint = JSON.parse(firstResult.stdout);
-  assert.ok(fingerprint.ruleSources.includes('template/AGENTS.md'));
+  assert.ok(fingerprint.ruleSources.includes('template/entry/AGENTS.md'));
   assert.ok(fingerprint.ruleSources.includes('dist/cli.js'));
   assert.ok(!fingerprint.ruleSources.some((path: string) => path.startsWith('packages/cli/src/')));
   assert.equal(secondResult.status, 1);
@@ -214,7 +214,7 @@ test('fingerprint requires the npm tgz extension and core distribution files', (
     incomplete,
     tarGzip(
       candidateEntries(process.cwd()).filter(
-        ({ path }) => path !== 'package/template/agent-harness/dist/harness.mjs',
+        ({ path }) => path !== 'package/template/skills/agent-harness/dist/harness.mjs',
       ),
     ),
   );
@@ -225,7 +225,10 @@ test('fingerprint requires the npm tgz extension and core distribution files', (
   assert.equal(extensionResult.status, 1);
   assert.match(extensionResult.stderr, /must be an npm \.tgz/i);
   assert.equal(incompleteResult.status, 1);
-  assert.match(incompleteResult.stderr, /missing template\/agent-harness\/dist\/harness\.mjs/i);
+  assert.match(
+    incompleteResult.stderr,
+    /missing template\/skills\/agent-harness\/dist\/harness\.mjs/i,
+  );
 });
 
 test('fingerprint rejects a tarball with a corrupted header checksum', () => {

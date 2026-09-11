@@ -74,7 +74,7 @@ export function candidateEntries(
 ): TarEntry[] {
   const packageManifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
   const harnessManifest = JSON.parse(
-    readFileSync(join(root, 'template', 'agent-harness', 'manifest.json'), 'utf8'),
+    readFileSync(join(root, 'template', 'skills', 'agent-harness', 'manifest.json'), 'utf8'),
   );
   const scenarioCatalog =
     scenarios ?? JSON.parse(readFileSync(join(root, 'evals', 'scenarios.json'), 'utf8'));
@@ -100,8 +100,8 @@ export function candidateEntries(
   for (const path of distributionPaths) {
     const packagePath = `package/${relative(root, path).split('\\').join('/')}`;
     let content: string | Buffer = readFileSync(path);
-    if (packagePath === 'package/template/AGENTS.md' && rule !== undefined) content = rule;
-    if (packagePath === 'package/template/agent-harness/manifest.json' && harnessVersion) {
+    if (packagePath === 'package/template/entry/AGENTS.md' && rule !== undefined) content = rule;
+    if (packagePath === 'package/template/skills/agent-harness/manifest.json' && harnessVersion) {
       content = JSON.stringify(harnessManifest);
     }
     if (packagePath === 'package/evals/scenarios.json' && scenarios !== undefined) {

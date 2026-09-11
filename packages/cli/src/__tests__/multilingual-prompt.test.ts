@@ -7,13 +7,21 @@ import { test } from 'vitest';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
 
 test('entry guidance routes multilingual response policy without persisting one turn', () => {
-  const agents = readFileSync(join(root, 'template', 'AGENTS.md'), 'utf8');
+  const agents = readFileSync(join(root, 'template', 'entry', 'AGENTS.md'), 'utf8');
   const operatingModel = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'core', 'operating-model.md'),
+    join(root, 'template', 'skills', 'agent-harness', 'docs', 'core', 'operating-model.md'),
     'utf8',
   );
   const profile = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'standards', 'user-profile-memory.md'),
+    join(
+      root,
+      'template',
+      'skills',
+      'agent-harness',
+      'docs',
+      'standards',
+      'user-profile-memory.md',
+    ),
     'utf8',
   );
 

@@ -27,8 +27,8 @@ updated: 2026-09-05
 ### 当前项目契约
 
 - [能力证据矩阵](https://github.com/Alessandro-Pang/harnessmith/blob/main/apps/docs/site/capability-evidence.yaml)：能力 owner、状态和可执行证据路径。
-- [Harness CLI 架构](https://github.com/Alessandro-Pang/harnessmith/blob/main/template/agent-harness/docs/core/harness-cli-architecture.md)：Runtime 命令、数据边界和模块 owner。
-- [Manifest](https://github.com/Alessandro-Pang/harnessmith/blob/main/template/agent-harness/manifest.json)：Runtime、schema 和分发文件契约。
+- [Harness CLI 架构](https://github.com/Alessandro-Pang/harnessmith/blob/main/template/skills/agent-harness/docs/core/harness-cli-architecture.md)：Runtime 命令、数据边界和模块 owner。
+- [Manifest](https://github.com/Alessandro-Pang/harnessmith/blob/main/template/skills/agent-harness/manifest.json)：Runtime、schema 和分发文件契约。
 - [Security Policy](https://github.com/Alessandro-Pang/harnessmith/blob/main/SECURITY.md)：漏洞报告与支持范围。
 
 ### Agent 规则与渐进上下文

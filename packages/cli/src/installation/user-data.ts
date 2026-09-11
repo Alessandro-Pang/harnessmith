@@ -1,79 +1,66 @@
 import { existsSync, rmdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { execaSync } from 'execa';
-import type { PreparedInstall } from '../shared/types.js';
-import { installationValues } from './install-template.js';
+import type { Hub } from '../shared/types.js';
 import { restoreSnapshots, snapshotFiles } from './records.js';
 import { withUserDataCoordinationLocks } from './user-data-lock.js';
 
+/**
+ * Initialize the shared personal rules (`hub.rules`) and, unless disabled, the global
+ * memory (`hub.memory`) through the installed Harness CLI. Both live beside the hub but are
+ * user data: they are created once and never rewritten or removed by Harnessmith.
+ */
 export function initializeUserData(
-  prepared: PreparedInstall,
+  hub: Hub,
   env: NodeJS.ProcessEnv,
   { global, afterInitialize }: { global: boolean; afterInitialize?: () => void },
 ): string {
-  const values = installationValues(prepared.adapter, env);
   const memoryFiles = global
-    ? ['README.md', 'core.md', 'profile.md'].map((name) => join(values.memoryHome, name))
+    ? ['README.md', 'core.md', 'profile.md'].map((name) => join(hub.memory, name))
     : [];
   const personalFiles = [
-    join(values.personalHome, 'README.md'),
-    join(values.personalHome, 'AGENTS.md'),
-    join(values.personalHome, 'projects', 'repository-map.yaml'),
-    join(values.personalHome, 'projects', 'repository-map.md'),
+    join(hub.rules, 'README.md'),
+    join(hub.rules, 'AGENTS.md'),
+    join(hub.rules, 'projects', 'repository-map.yaml'),
+    join(hub.rules, 'projects', 'repository-map.md'),
   ];
-  const roots = [values.personalHome, ...(global ? [values.memoryHome] : [])];
+  const roots = [hub.rules, ...(global ? [hub.memory] : [])];
   const childEnv = {
     ...env,
-    HARNESS_MEMORY_HOME: values.memoryHome,
-    HARNESS_PERSONAL_HOME: values.personalHome,
+    HARNESS_HOME: hub.home,
+    HARNESS_MEMORY_HOME: hub.memory,
+    HARNESS_PERSONAL_HOME: hub.rules,
   };
+  const harnessCli = join(hub.harness, 'scripts', 'harness.mjs');
   return withUserDataCoordinationLocks(roots, (lockKeys) => {
     const coordination = ['--coordination-keys', lockKeys.join(',')];
     const snapshots = snapshotFiles([...memoryFiles, ...personalFiles].map((path) => ({ path })));
-    const memoryRootExisted = existsSync(values.memoryHome);
-    const personalRootExisted = existsSync(values.personalHome);
+    const memoryRootExisted = existsSync(hub.memory);
+    const personalRootExisted = existsSync(hub.rules);
+    const run = (target: 'personal' | 'global'): string =>
+      execaSync(process.execPath, [harnessCli, 'init', target, ...coordination], {
+        encoding: 'utf8',
+        env: childEnv,
+        extendEnv: false,
+      }).stdout.trim();
     try {
-      const output = [
-        execaSync(
-          process.execPath,
-          [
-            join(prepared.adapter.harness, 'bin', 'harness.mjs'),
-            'init',
-            'personal',
-            ...coordination,
-          ],
-          { encoding: 'utf8', env: childEnv, extendEnv: false },
-        ).stdout.trim(),
-      ];
-      if (global) {
-        output.push(
-          execaSync(
-            process.execPath,
-            [
-              join(prepared.adapter.harness, 'bin', 'harness.mjs'),
-              'init',
-              'global',
-              ...coordination,
-            ],
-            { encoding: 'utf8', env: childEnv, extendEnv: false },
-          ).stdout.trim(),
-        );
-      }
+      const output = [run('personal')];
+      if (global) output.push(run('global'));
       afterInitialize?.();
       return output.filter(Boolean).join('\n');
     } catch (error) {
       restoreSnapshots(snapshots);
-      if (!personalRootExisted && existsSync(values.personalHome)) {
+      if (!personalRootExisted && existsSync(hub.rules)) {
         try {
-          rmdirSync(join(values.personalHome, 'projects'));
-          rmdirSync(values.personalHome);
+          rmdirSync(join(hub.rules, 'projects'));
+          rmdirSync(hub.rules);
         } catch {
           // Preserve unexpected user content created concurrently.
         }
       }
-      if (!memoryRootExisted && existsSync(values.memoryHome)) {
+      if (!memoryRootExisted && existsSync(hub.memory)) {
         try {
-          rmdirSync(values.memoryHome);
+          rmdirSync(hub.memory);
         } catch {
           // Preserve unexpected user content created concurrently.
         }

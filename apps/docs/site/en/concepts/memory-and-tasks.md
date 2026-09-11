@@ -141,9 +141,9 @@ traceability would require a different system, not a loosened version of this sc
 
 Commands, schemas, and state machines are defined by the Runtime distributed with the npm package:
 
-- [Harness CLI architecture](https://github.com/Alessandro-Pang/harnessmith/blob/main/template/agent-harness/docs/core/harness-cli-architecture.md)
-- [Project Memory standard](https://github.com/Alessandro-Pang/harnessmith/blob/main/template/agent-harness/docs/standards/project-agent-docs.md)
-- [Long-running task protocol](https://github.com/Alessandro-Pang/harnessmith/blob/main/template/agent-harness/docs/core/long-running-tasks.md)
+- [Harness CLI architecture](https://github.com/Alessandro-Pang/harnessmith/blob/main/template/skills/agent-harness/docs/core/harness-cli-architecture.md)
+- [Project Memory standard](https://github.com/Alessandro-Pang/harnessmith/blob/main/template/skills/agent-harness/docs/standards/project-agent-docs.md)
+- [Long-running task protocol](https://github.com/Alessandro-Pang/harnessmith/blob/main/template/skills/agent-harness/docs/core/long-running-tasks.md)
 
 This site helps people understand the concepts; the installed template documentation and the code and schemas of
 the corresponding version are that version's operational contract.

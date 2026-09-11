@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { bootstrapMetadataLimit, bootstrapProject } from '../commands/bootstrap/bootstrap.js';
 import { initProject } from '../commands/init.js';
@@ -11,7 +11,7 @@ import { initTask } from '../commands/task/task.js';
 import { readBootstrapMemory } from '../lib/bootstrap/bootstrap-memory.js';
 import { memoryCoreHardByteLimit } from '../lib/memory/memory-core-budget.js';
 import { projectSnapshot } from '../lib/project/project.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { capturedIo, harnessRuntime, sourceHarnessRoot } from './helpers/harness.js';
 
 function fixture({ git = true }: { git?: boolean } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'harness-bootstrap-'));
@@ -217,4 +217,66 @@ test('bootstrap reports invalid reads when initialized Memory changes after snap
   assert.ok(reasons.some((reason) => /Core skipped/i.test(reason)));
   assert.ok(reasons.some((reason) => /metadata skipped/i.test(reason)));
   assert.ok(reasons.some((reason) => /maintenance skipped/i.test(reason)));
+});
+
+test('bootstrap folds documentation routing of the verbatim request into the startup command', () => {
+  const { project, runtime: base } = fixture();
+  const runtime = harnessRuntime(dirname(base.harnessHome), {
+    docsRoot: join(sourceHarnessRoot, 'docs'),
+  });
+  initProject(runtime, project, capturedIo());
+
+  const plain = bootstrapProject(runtime, project, { json: true }, capturedIo());
+  assert.equal(plain.route, null);
+  assert.equal(plain.skill, join(runtime.installedHarness, 'SKILL.md'));
+
+  const io = capturedIo();
+  const routed = bootstrapProject(runtime, project, { query: ['修复登录偶发失败的 bug'] }, io);
+  assert.ok(routed.route);
+  assert.equal(routed.route.status, 'matched');
+  assert.equal(routed.route.intent.requested, 'change');
+  assert.equal(routed.route.ask, null);
+  assert.deepEqual(routed.route.load.slice(0, 2), [
+    join(runtime.docsRoot, 'core', 'execution-loop.md'),
+    join(runtime.docsRoot, 'playbooks', 'change.md'),
+  ]);
+  assert.equal(new Set(routed.route.load).size, routed.route.load.length);
+  assert.ok(io.logs.some((line) => line === 'Route: matched change'));
+  assert.ok(io.logs.some((line) => line.startsWith('Load: ')));
+
+  const explicit = bootstrapProject(
+    runtime,
+    project,
+    { query: ['评审 permissions 设计，用批判性思维'], intent: 'review' },
+    capturedIo(),
+  );
+  assert.equal(explicit.route?.intent.source, 'explicit');
+  assert.ok(explicit.route?.reasoningModes.length);
+  assert.equal(
+    explicit.route?.load.at(-1),
+    join(runtime.docsRoot, 'references', 'reasoning-modes.md'),
+  );
+
+  const unmatched = bootstrapProject(runtime, project, { query: ['帮我看看这个'] }, capturedIo());
+  assert.equal(unmatched.route?.status, 'unmatched');
+  assert.deepEqual(unmatched.route?.load, []);
+  assert.match(unmatched.route?.ask ?? '', /ask the user which action/);
+
+  const ambiguous = bootstrapProject(
+    runtime,
+    project,
+    { query: ['先评审这个模块，然后帮我修复并发布'] },
+    capturedIo(),
+  );
+  if (ambiguous.route?.status === 'ambiguous') {
+    assert.match(ambiguous.route.ask ?? '', /matches several playbooks/);
+    assert.deepEqual(ambiguous.route.load, []);
+  }
+
+  // Same PEM envelope fixture as secret-hygiene.test.ts: no real credential shape.
+  const privateKeyEnvelope = ['-----BEGIN', 'DSA PRIVATE KEY-----'].join(' ');
+  assert.throws(
+    () => bootstrapProject(runtime, project, { query: [privateKeyEnvelope] }, capturedIo()),
+    /secret/i,
+  );
 });

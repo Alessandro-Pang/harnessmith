@@ -11,11 +11,11 @@ export interface RuleFingerprint {
 const rulePrefixes = [
   'bin',
   'dist',
-  'template/agent-harness/bin',
-  'template/agent-harness/dist',
-  'template/agent-harness/docs',
-  'template/agent-harness/schemas',
-  'template/agent-harness/templates',
+  'template/skills/agent-harness/scripts',
+  'template/skills/agent-harness/dist',
+  'template/skills/agent-harness/docs',
+  'template/skills/agent-harness/assets/schemas',
+  'template/skills/agent-harness/assets/templates',
 ];
 
 function filesUnder(path: string): string[] {
@@ -110,13 +110,14 @@ function worktreeRuleFiles(root: string): Map<string, Buffer> {
   const paths = [
     ...filesUnder(join(root, 'bin')),
     ...filesUnder(join(root, 'dist')),
-    join(root, 'template', 'AGENTS.md'),
-    ...filesUnder(join(root, 'template', 'agent-harness', 'bin')),
-    ...filesUnder(join(root, 'template', 'agent-harness', 'dist')),
-    ...filesUnder(join(root, 'template', 'agent-harness', 'docs')),
-    join(root, 'template', 'agent-harness', 'manifest.json'),
-    ...filesUnder(join(root, 'template', 'agent-harness', 'schemas')),
-    ...filesUnder(join(root, 'template', 'agent-harness', 'templates')),
+    join(root, 'template', 'entry', 'AGENTS.md'),
+    join(root, 'template', 'skills', 'agent-harness', 'SKILL.md'),
+    ...filesUnder(join(root, 'template', 'skills', 'agent-harness', 'scripts')),
+    ...filesUnder(join(root, 'template', 'skills', 'agent-harness', 'dist')),
+    ...filesUnder(join(root, 'template', 'skills', 'agent-harness', 'docs')),
+    join(root, 'template', 'skills', 'agent-harness', 'manifest.json'),
+    ...filesUnder(join(root, 'template', 'skills', 'agent-harness', 'assets', 'schemas')),
+    ...filesUnder(join(root, 'template', 'skills', 'agent-harness', 'assets', 'templates')),
   ].sort();
   return new Map(
     paths.map((path) => [relative(root, path).split(sep).join('/'), readFileSync(path)]),
@@ -125,8 +126,9 @@ function worktreeRuleFiles(root: string): Map<string, Buffer> {
 
 function isRuleSource(path: string): boolean {
   return (
-    path === 'template/AGENTS.md' ||
-    path === 'template/agent-harness/manifest.json' ||
+    path === 'template/entry/AGENTS.md' ||
+    path === 'template/skills/agent-harness/SKILL.md' ||
+    path === 'template/skills/agent-harness/manifest.json' ||
     rulePrefixes.some((prefix) => path.startsWith(`${prefix}/`))
   );
 }

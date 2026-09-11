@@ -1,8 +1,16 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  cpSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { digestPath } from '../../../../packages/cli/src/shared/files.js';
 import { runCli } from '../cli.js';
@@ -20,8 +28,9 @@ function installedFixture() {
   cpSync(sourceHarnessRoot, runtime.installedHarness, { recursive: true });
   const instructions = render(
     runtime,
-    readFileSync(join(packageRoot, 'template', 'AGENTS.md'), 'utf8'),
+    readFileSync(join(packageRoot, 'template', 'entry', 'AGENTS.md'), 'utf8'),
   );
+  mkdirSync(dirname(runtime.instructionFiles[0]), { recursive: true });
   writeFileSync(runtime.instructionFiles[0], instructions);
   initPersonal(runtime, capturedIo());
   initGlobal(runtime, capturedIo());
@@ -62,7 +71,7 @@ test('Harness CLI dispatches version and memory commands through injected IO', (
   const runtime = harnessRuntime(root);
   const version = capturedIo();
   assert.equal(runCli(['version'], { runtime, io: version }), 0);
-  assert.deepEqual(version.logs, ['2.6.0']);
+  assert.deepEqual(version.logs, ['3.0.0']);
   assert.equal(runCli(['init', 'global'], { runtime, io: capturedIo() }), 0);
   assert.equal(runCli(['init', 'personal'], { runtime, io: capturedIo() }), 0);
   assert.equal(runCli(['memory', 'check', 'global'], { runtime, io: capturedIo() }), 0);
@@ -290,7 +299,7 @@ test('Harness version exposes its schema compatibility contract as JSON', () => 
   assert.equal(runCli(['version', '--json'], { runtime, io: output }), 0);
   const contract = JSON.parse(output.logs[0]);
   assert.equal(contract.version, 1);
-  assert.equal(contract.harnessVersion, '2.6.0');
+  assert.equal(contract.harnessVersion, '3.0.0');
   assert.equal(contract.schemaVersion, 3);
   assert.equal(contract.memorySchemaVersion, 1);
   assert.equal(contract.node, '>=22.12.0');
@@ -381,34 +390,36 @@ test('Harness health verifies managed output checksums for installed host adapte
   const fixture = installedFixture();
   const runtime = {
     ...fixture.runtime,
-    hostAdapter: 'managed-host',
+    hostAdapter: 'hub',
     harnessRoot: fixture.runtime.installedHarness,
     distributionRoot: fixture.runtime.harnessHome,
   };
   writeFileSync(
     join(runtime.harnessRoot, 'install-context.json'),
     `${JSON.stringify({
-      version: 1,
-      adapter: runtime.hostAdapter,
+      version: 2,
       harnessHome: runtime.harnessHome,
+      agentsHome: runtime.agentsHome,
       instructionFiles: runtime.instructionFiles,
+      stateHome: runtime.stateRoot,
       memoryHome: runtime.memoryHome,
       personalHome: runtime.personalHome,
       repositoryRoot: runtime.repositoryRoot,
       owner: runtime.owner,
     })}\n`,
   );
+  const discoveryLink = join(runtime.agentsHome, 'skills', 'agent-harness');
+  mkdirSync(join(runtime.agentsHome, 'skills'), { recursive: true });
+  symlinkSync(runtime.installedHarness, discoveryLink);
   const recordPath = join(runtime.harnessHome, '.harnessmith', 'install.json');
   mkdirSync(join(runtime.harnessHome, '.harnessmith'), { recursive: true });
   const record = {
-    schemaVersion: 1,
-    adapter: 'managed-host',
+    schemaVersion: 2,
+    scope: 'hub',
     outputs: [
       {
         path: runtime.installedHarness,
-        checksum: digestPath(runtime.installedHarness, {
-          exclude: (relativePath) => relativePath.split(/[\\/]/)[0] === 'state',
-        }),
+        checksum: digestPath(runtime.installedHarness),
         backup: null,
       },
       {
@@ -416,6 +427,7 @@ test('Harness health verifies managed output checksums for installed host adapte
         checksum: digestPath(runtime.instructionFiles[0]),
         backup: null,
       },
+      { path: discoveryLink, checksum: digestPath(discoveryLink), backup: null },
     ],
     ignoreFiles: [],
     recordBackup: null,

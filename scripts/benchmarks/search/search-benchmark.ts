@@ -54,7 +54,7 @@ function benchmarkSizes(): number[] {
 }
 
 function fixtureRuntime(root: string): Runtime {
-  const installedHarness = join(root, 'host', 'agent-harness');
+  const installedHarness = join(root, 'host', 'skills', 'agent-harness');
   mkdirSync(installedHarness, { recursive: true });
   return {
     env: { HOME: join(root, 'home'), TZ: 'UTC' },
@@ -62,10 +62,12 @@ function fixtureRuntime(root: string): Runtime {
     harnessRoot: join(root, 'source'),
     distributionRoot: join(root, 'distribution'),
     harnessHome: join(root, 'host'),
+    agentsHome: join(root, 'agents'),
     hostAdapter: 'test',
     instructionFiles: [join(root, 'host', 'AGENTS.md')],
     installedHarness,
     docsRoot: join(installedHarness, 'docs'),
+    stateRoot: join(root, 'host', 'state'),
     memoryHome: join(root, 'memory'),
     personalHome: join(root, 'personal'),
     repositoryRoot: join(root, 'repositories'),

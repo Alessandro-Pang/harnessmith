@@ -8,9 +8,10 @@ import type { InstallationContext, Runtime } from './types.js';
 const sourceDirectory = dirname(fileURLToPath(import.meta.url));
 
 interface ManagedInstallationContext extends InstallationContext {
-  adapter: string;
   harnessHome: string;
+  agentsHome: string;
   instructionFiles: string[];
+  stateHome: string;
   memoryHome: string;
   personalHome: string;
   repositoryRoot: string;
@@ -33,9 +34,15 @@ function sameExistingPath(left: string, right: string): boolean {
 function validContext(value: unknown, harnessRoot: string): value is ManagedInstallationContext {
   if (!value || typeof value !== 'object') return false;
   const context = value as Record<string, unknown>;
-  const absoluteFields = ['harnessHome', 'memoryHome', 'personalHome', 'repositoryRoot'];
-  if (context.version !== 1) return false;
-  if (typeof context.adapter !== 'string' || !context.adapter.trim()) return false;
+  const absoluteFields = [
+    'harnessHome',
+    'agentsHome',
+    'stateHome',
+    'memoryHome',
+    'personalHome',
+    'repositoryRoot',
+  ];
+  if (context.version !== 2) return false;
   if (typeof context.owner !== 'string' || !context.owner.trim()) return false;
   if (absoluteFields.some((field) => typeof context[field] !== 'string')) return false;
   if (absoluteFields.some((field) => !isAbsolute(context[field] as string))) return false;
@@ -45,8 +52,13 @@ function validContext(value: unknown, harnessRoot: string): value is ManagedInst
     return false;
   }
   const harnessHome = context.harnessHome as string;
-  if (!sameExistingPath(resolve(harnessHome, 'agent-harness'), resolve(harnessRoot))) return false;
+  if (!sameExistingPath(installedHarnessPath(harnessHome), resolve(harnessRoot))) return false;
   return context.instructionFiles.every((path) => isPathInside(harnessHome, path));
+}
+
+/** Installed Harness location inside the hub home: the `agent-harness` skill under `skills/`. */
+function installedHarnessPath(harnessHome: string): string {
+  return join(harnessHome, 'skills', 'agent-harness');
 }
 
 function isStandaloneSourceTree(harnessRoot: string): boolean {
@@ -55,7 +67,7 @@ function isStandaloneSourceTree(harnessRoot: string): boolean {
     ? dirname(dirname(normalized))
     : dirname(dirname(dirname(normalized)));
   const validHarnessRoot =
-    resolve(packageRoot, 'template', 'agent-harness') === normalized ||
+    resolve(packageRoot, 'template', 'skills', 'agent-harness') === normalized ||
     resolve(packageRoot, 'packages', 'harness') === normalized;
   if (
     !validHarnessRoot ||
@@ -140,8 +152,10 @@ export function verifyRuntimeIdentity(
   const expectedInstructions = runtime.instructionFiles.map((path) => resolve(path)).sort();
   const contextInstructions = context.instructionFiles.map((path) => resolve(path)).sort();
   const matches =
-    context.adapter === runtime.hostAdapter &&
+    runtime.hostAdapter === managedHostAdapter &&
     resolve(context.harnessHome) === resolve(runtime.harnessHome) &&
+    resolve(context.agentsHome) === resolve(runtime.agentsHome) &&
+    resolve(context.stateHome) === resolve(runtime.stateRoot) &&
     canonicalPath(context.memoryHome) === canonicalPath(runtime.memoryHome) &&
     canonicalPath(context.personalHome) === canonicalPath(runtime.personalHome) &&
     resolve(context.repositoryRoot) === resolve(runtime.repositoryRoot) &&
@@ -167,38 +181,50 @@ function username(home: string): string {
   }
 }
 
+/** Managed installs are shared by every host through the hub; no single host owns them. */
+const managedHostAdapter = 'hub';
+
 export function createRuntime(env: NodeJS.ProcessEnv = process.env): Runtime {
   const home = resolve(env.HOME || homedir());
   const adjacentHarnessRoot = resolve(sourceDirectory, '..');
   const harnessRoot = existsSync(join(adjacentHarnessRoot, 'manifest.json'))
     ? adjacentHarnessRoot
-    : resolve(sourceDirectory, '..', '..', '..', 'template', 'agent-harness');
+    : resolve(sourceDirectory, '..', '..', '..', 'template', 'skills', 'agent-harness');
   const identity = resolveRuntimeIdentity(harnessRoot);
   const context = identity.kind === 'managed' ? identity.context : null;
-  const harnessHome = resolve(
-    env.HARNESS_HOME || context?.harnessHome || resolve(harnessRoot, '..'),
-  );
-  const installedHarness = join(harnessHome, 'agent-harness');
+  const explicitHome = env.HARNESS_HOME || context?.harnessHome;
+  // A managed install resolves the hub home from install-context.json (or an explicit
+  // HARNESS_HOME) and serves `<hub>/skills/agent-harness`. A standalone source tree has no
+  // hub; `template/` mirrors the hub layout (`entry/` + `skills/`), so it plays that role.
+  const harnessHome = resolve(explicitHome || resolve(harnessRoot, '..', '..'));
+  const installedHarness = explicitHome ? installedHarnessPath(harnessHome) : harnessRoot;
+  const userDataHome = explicitHome ? harnessHome : join(home, '.agents', 'harnessmith');
   return Object.freeze({
     env,
     home,
     harnessRoot,
-    distributionRoot: resolve(harnessRoot, '..'),
+    distributionRoot: harnessHome,
     harnessHome,
+    agentsHome: resolve(context?.agentsHome || join(home, '.agents')),
     hostAdapter:
       identity.kind === 'managed'
-        ? identity.context.adapter
+        ? managedHostAdapter
         : identity.kind === 'standalone'
           ? 'standalone'
           : 'invalid-installation-context',
-    instructionFiles: context?.instructionFiles || [join(harnessHome, 'AGENTS.md')],
+    instructionFiles: context?.instructionFiles || [join(harnessHome, 'entry', 'AGENTS.md')],
     installedHarness,
     docsRoot: join(installedHarness, 'docs'),
+    stateRoot: resolve(
+      env.HARNESS_STATE_HOME ||
+        context?.stateHome ||
+        join(explicitHome ? harnessHome : harnessRoot, 'state'),
+    ),
     memoryHome: canonicalPath(
-      env.HARNESS_MEMORY_HOME || context?.memoryHome || join(home, '.agent-docs'),
+      env.HARNESS_MEMORY_HOME || context?.memoryHome || join(userDataHome, 'memory'),
     ),
     personalHome: canonicalPath(
-      env.HARNESS_PERSONAL_HOME || context?.personalHome || join(home, '.agent-harness'),
+      env.HARNESS_PERSONAL_HOME || context?.personalHome || join(userDataHome, 'rules'),
     ),
     repositoryRoot: resolve(
       env.HARNESS_REPOSITORY_ROOT || context?.repositoryRoot || join(home, 'git-repo'),

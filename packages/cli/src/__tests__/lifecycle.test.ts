@@ -4,8 +4,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { createAdapter } from '../adapters/adapters.js';
+import { describeLifecycle } from '../installation/hub-lifecycle.js';
 import { installAll } from '../installation/install.js';
-import { describeLifecycle } from '../installation/lifecycle-plan.js';
 
 /**
  * Adapter-specific / edge-case lifecycle coverage.
@@ -38,8 +38,12 @@ test('lifecycle preflight rejects a missing installation-record backup before mu
   rmSync(record.recordBackup);
 
   for (const command of ['restore', 'uninstall'] as const) {
-    assert.throws(() => describeLifecycle(command, adapter), /record backup is missing/i);
+    assert.throws(
+      () => describeLifecycle(command, adapter, false, [adapter]),
+      /record backup is missing/i,
+    );
     assert.equal(readFileSync(adapter.record, 'utf8'), recordBefore);
-    assert.ok(existsSync(adapter.harness));
+    assert.ok(existsSync(adapter.instructions[0].path));
+    assert.ok(existsSync(adapter.hub.harness));
   }
 });

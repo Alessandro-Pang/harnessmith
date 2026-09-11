@@ -53,7 +53,7 @@ test('repair bounds journal discovery and leaves oversized unknown state untouch
   execFileSync('git', ['-C', project, 'init', '-q']);
   const runtime = harnessRuntime(fixture);
   initProject(runtime, project, capturedIo());
-  const journalRoot = join(runtime.installedHarness, 'state', 'repair');
+  const journalRoot = join(runtime.stateRoot, 'repair');
   mkdirSync(journalRoot, { recursive: true });
   for (let index = 0; index < 257; index += 1) {
     writeFileSync(join(journalRoot, `${index.toString(16).padStart(64, '0')}.backup`), 'unknown\n');

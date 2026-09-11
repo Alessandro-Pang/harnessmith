@@ -4,8 +4,7 @@ import { basename, dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execaSync } from 'execa';
 import { fdir } from 'fdir';
-import { canonicalPath } from '../shared/safe-path.js';
-import type { Adapter } from '../shared/types.js';
+import type { Hub } from '../shared/types.js';
 
 function resolvePackageRoot(start: string): string {
   let current = resolve(start);
@@ -14,7 +13,10 @@ function resolvePackageRoot(start: string): string {
       const manifest = JSON.parse(readFileSync(join(current, 'package.json'), 'utf8')) as {
         name?: string;
       };
-      if (manifest.name === 'harnessmith' && existsSync(join(current, 'template', 'agent-harness')))
+      if (
+        manifest.name === 'harnessmith' &&
+        existsSync(join(current, 'template', 'skills', 'agent-harness'))
+      )
         return current;
     } catch {
       // Missing or malformed manifests do not identify the distribution root.
@@ -27,17 +29,22 @@ function resolvePackageRoot(start: string): string {
 
 const packageRoot = resolvePackageRoot(dirname(fileURLToPath(import.meta.url)));
 export const templateRoot = packageRoot;
-export const harnessTemplateRoot = join(packageRoot, 'template', 'agent-harness');
+export const harnessTemplateRoot = join(packageRoot, 'template', 'skills', 'agent-harness');
 export const packageVersion = JSON.parse(
   readFileSync(join(packageRoot, 'package.json'), 'utf8'),
 ).version;
+/**
+ * Top-level entries of the distributed `agent-harness` skill. The layout follows the
+ * Agent Skills convention: `SKILL.md` entry point, `scripts/` executables, `assets/`
+ * templates and schemas; `docs/` is the routed guidance corpus and `dist/` the bundle.
+ */
 const harnessDistributionEntries = new Set([
-  'bin',
+  'SKILL.md',
+  'assets',
   'dist',
   'docs',
   'manifest.json',
-  'schemas',
-  'templates',
+  'scripts',
 ]);
 
 export function isHarnessDistributionPath(path: string): boolean {
@@ -53,22 +60,22 @@ function owner(env: NodeJS.ProcessEnv): string {
   }
 }
 
+/**
+ * Placeholder values shared by every host: the hub is rendered once, so `HARNESS_HOME` is
+ * the hub home rather than a host directory.
+ */
 export function installationRenderer(
-  adapter: Adapter,
+  hub: Hub,
   env: NodeJS.ProcessEnv,
 ): (content: string, path?: string) => string {
   const values: Record<string, string> = {
-    HOME: resolve(env.HOME || homedir()),
-    HARNESS_HOME: adapter.home,
-    HARNESS_MEMORY_HOME: canonicalPath(
-      env.HARNESS_MEMORY_HOME || join(env.HOME || homedir(), '.agent-docs'),
-    ),
-    HARNESS_PERSONAL_HOME: canonicalPath(
-      env.HARNESS_PERSONAL_HOME || join(env.HOME || homedir(), '.agent-harness'),
-    ),
-    HARNESS_REPOSITORY_ROOT: resolve(
-      env.HARNESS_REPOSITORY_ROOT || join(env.HOME || homedir(), 'git-repo'),
-    ),
+    HOME: hub.userHome,
+    HARNESS_HOME: hub.home,
+    HARNESS_AGENTS_HOME: hub.agentsHome,
+    HARNESS_STATE_HOME: hub.state,
+    HARNESS_MEMORY_HOME: hub.memory,
+    HARNESS_PERSONAL_HOME: hub.rules,
+    HARNESS_REPOSITORY_ROOT: repositoryRoot(hub, env),
     HARNESS_OWNER: owner(env),
   };
   return (content: string, path = '') => {
@@ -77,16 +84,21 @@ export function installationRenderer(
   };
 }
 
-export function installationValues(adapter: Adapter, env: NodeJS.ProcessEnv) {
-  const home = resolve(env.HOME || homedir());
+function repositoryRoot(hub: Hub, env: NodeJS.ProcessEnv): string {
+  return resolve(env.HARNESS_REPOSITORY_ROOT || join(hub.userHome, 'git-repo'));
+}
+
+/** Contents of `install-context.json`, the runtime identity of the installed Harness. */
+export function installationValues(hub: Hub, env: NodeJS.ProcessEnv) {
   return {
-    version: 1,
-    adapter: adapter.name,
-    harnessHome: adapter.home,
-    instructionFiles: adapter.instructions.map(({ path }) => path),
-    memoryHome: canonicalPath(env.HARNESS_MEMORY_HOME || join(home, '.agent-docs')),
-    personalHome: canonicalPath(env.HARNESS_PERSONAL_HOME || join(home, '.agent-harness')),
-    repositoryRoot: resolve(env.HARNESS_REPOSITORY_ROOT || join(home, 'git-repo')),
+    version: 2,
+    harnessHome: hub.home,
+    agentsHome: hub.agentsHome,
+    instructionFiles: [hub.entry],
+    stateHome: hub.state,
+    memoryHome: hub.memory,
+    personalHome: hub.rules,
+    repositoryRoot: repositoryRoot(hub, env),
     owner: owner(env),
   };
 }

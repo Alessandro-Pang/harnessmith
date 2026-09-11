@@ -48,8 +48,8 @@ test('Handoff snapshots replace unrelated pivot fields without leaking prior tas
       facts: 'Shared constraint: keep writes local.',
       next: 'Verify the docs routing manifest.',
       reason: 'multi-task',
-      scope: ['template/agent-harness/docs'],
-      sourceRefs: ['template/agent-harness/docs/manifest.yaml'],
+      scope: ['template/skills/agent-harness/docs'],
+      sourceRefs: ['template/skills/agent-harness/docs/manifest.yaml'],
       clearDecisions: true,
       clearVerification: true,
       clearOpen: true,
@@ -63,9 +63,9 @@ test('Handoff snapshots replace unrelated pivot fields without leaking prior tas
   const body = parsed.body.trimStart();
   assert.equal(pivoted.action, 'updated');
   assert.equal(parsed.metadata.get('title'), 'Docs routing audit');
-  assert.deepEqual(parsed.metadata.get('scope'), ['template/agent-harness/docs']);
+  assert.deepEqual(parsed.metadata.get('scope'), ['template/skills/agent-harness/docs']);
   assert.deepEqual(parsed.metadata.get('source-refs'), [
-    'template/agent-harness/docs/manifest.yaml',
+    'template/skills/agent-harness/docs/manifest.yaml',
   ]);
   assert.match(body, /^# 当前目标\n\nAudit unrelated documentation routing\./);
   assert.match(body, /# 已确认事实\n\nShared constraint: keep writes local\./);

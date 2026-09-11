@@ -111,11 +111,13 @@ function checkMarkdownDocs(
 
 function checkPortableTemplate(root: string, check: DocsContext['check']): void {
   const allowedTokens = new Set([
+    'HARNESS_AGENTS_HOME',
     'HARNESS_HOME',
     'HARNESS_MEMORY_HOME',
     'HARNESS_OWNER',
     'HARNESS_PERSONAL_HOME',
     'HARNESS_REPOSITORY_ROOT',
+    'HARNESS_STATE_HOME',
     'PROJECT_KEY',
     'PROJECT_ROOT',
     'DATE',

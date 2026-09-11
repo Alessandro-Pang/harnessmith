@@ -52,7 +52,7 @@ export function createDiagnosticsReport(
     failures,
     verification: [
       'harnessmith diagnostics --agent <agent> --json',
-      'node <harness-path>/bin/harness.mjs health --json',
+      'node <harness-path>/scripts/harness.mjs health --json',
     ],
   };
 }

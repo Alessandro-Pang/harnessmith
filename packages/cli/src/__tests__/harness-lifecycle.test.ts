@@ -38,7 +38,7 @@ test('packaged Harness completes project memory and task lifecycle', { timeout: 
     HARNESS_MEMORY_HOME: memoryHome,
   };
   run(process.execPath, [installer, '--agent', 'codex'], { cwd: root, env });
-  const harness = join(agentHome, 'agent-harness', 'bin', 'harness.mjs');
+  const harness = join(root, '.agents', 'skills', 'agent-harness', 'scripts', 'harness.mjs');
   assert.ok(existsSync(join(memoryHome, 'README.md')));
   assert.ok(existsSync(join(memoryHome, 'profile.md')));
   assert.match(

@@ -4,7 +4,7 @@ import pc from 'picocolors';
 import type { AdoptReport } from '../adoption/adopt.js';
 import type { SetupGuide, SetupVerification } from '../setup/setup.js';
 import { supportedAgents } from '../shared/agents.js';
-import type { AdapterStatus, InstallPlan, InstallResult, Io } from '../shared/types.js';
+import type { InstallPlan, InstallResult, Io } from '../shared/types.js';
 import type { StatusExplanation } from '../status/status-explanation.js';
 
 type PromptInput = Readable & { isTTY?: boolean };
@@ -114,21 +114,9 @@ export function finishInteractive(message: string, output: PromptOutput): void {
   outro(message, { output });
 }
 
-export function printPlans(plans: InstallPlan[], io: Io = console): void {
-  for (const plan of plans) {
-    io.log(`${pc.bold(plan.adapter)}  ${pc.dim(plan.home)}`);
-    for (const { path, action } of plan.outputs) {
-      const label = action.padEnd(15);
-      const state =
-        action === 'conflict'
-          ? pc.yellow(label)
-          : action === 'create'
-            ? pc.green(label)
-            : pc.cyan(label);
-      io.log(`  ${state} ${path}`);
-    }
-  }
-}
+import { printPlans } from './print.js';
+
+export { printLifecyclePlans, printPlans, printStatuses } from './print.js';
 
 export function printSetupGuide(guide: SetupGuide, io: Io = console): void {
   printPlans(guide.adapters, io);
@@ -153,24 +141,6 @@ export function printSetupVerification(verification: SetupVerification, io: Io =
     io.log(
       `${item.adapter}: ownership=${item.ownership}, runtime-health=${item.runtimeHealth}, real-host=not-verified`,
     );
-  }
-}
-
-export function printStatuses(statuses: AdapterStatus[], io: Io = console): void {
-  for (const status of statuses) {
-    io.log(
-      `${pc.bold(status.adapter)}  ${status.installed ? pc.green('installed') : pc.dim('not installed')}`,
-    );
-    for (const output of status.outputs) {
-      const label = output.status.padEnd(12);
-      const state =
-        output.status === 'managed'
-          ? pc.green(label)
-          : output.status === 'modified'
-            ? pc.yellow(label)
-            : pc.red(label);
-      io.log(`  ${state} ${output.path}`);
-    }
   }
 }
 
@@ -201,8 +171,13 @@ export function printInstallResults(
     if (interactive) log.success(`${result.adapter} installed in ${result.home}`, { output });
     else io.log(`Installed ${result.adapter}: ${result.home}`);
     for (const path of result.instructions) io.log(`  ${pc.dim('instructions')} ${path}`);
-    io.log(`  ${pc.dim('harness')}      ${result.harness}`);
+    if (result.harness) io.log(`  ${pc.dim('skill link')}   ${result.harness}`);
     for (const { backup } of result.backups) io.log(`  ${pc.yellow('backup')}       ${backup}`);
+  }
+  if (results[0]) {
+    io.log(`${pc.bold('hub')}  ${results[0].hub.home}`);
+    io.log(`  ${pc.dim('harness')}      ${results[0].hub.outputs[0]?.path ?? ''}`);
+    io.log(`  ${pc.dim('owners')}       ${results[0].hub.owners.join(', ')}`);
   }
   if (results[0]?.initialization) {
     if (interactive) log.info(results[0].initialization, { output });

@@ -2,6 +2,7 @@ import { adapterCapabilities, createAdapter } from '../adapters/adapters.js';
 import { executeAdopt } from '../adoption/adopt-command.js';
 import type { HarnessmithCommand } from '../app/program.js';
 import { executeDiagnostics } from '../diagnostics/diagnostics-command.js';
+import { describeLifecycle } from '../installation/hub-lifecycle.js';
 import { installAll } from '../installation/install.js';
 import {
   inspectStatusAll,
@@ -9,7 +10,6 @@ import {
   statusAll,
   uninstallAll,
 } from '../installation/lifecycle.js';
-import { describeLifecycle } from '../installation/lifecycle-plan.js';
 import { assertNonOverlappingAdapters, describeInstall } from '../installation/records.js';
 import {
   executePortableConfigExport,
@@ -19,6 +19,7 @@ import {
   confirmConflicts,
   finishInteractive,
   printInstallResults,
+  printLifecyclePlans,
   printPlans,
   printStatusExplanations,
   printStatuses,
@@ -55,27 +56,6 @@ async function resolveAdapters(options: CliOptions, context: ExecuteContext): Pr
   assertNonOverlappingAdapters(adapters);
   return adapters;
 }
-function printLifecyclePlans(
-  plans: Array<ReturnType<typeof describeLifecycle>>,
-  context: ExecuteContext,
-  machineReadable: boolean,
-): void {
-  if (machineReadable) {
-    for (const plan of plans) context.io.log(JSON.stringify(plan));
-    return;
-  }
-  for (const plan of plans) {
-    context.io.log(`${plan.command} ${plan.adapter}  ${plan.home}`);
-    for (const [index, layer] of plan.layers.entries()) {
-      context.io.log(`  layer ${index + 1}  ${layer.sourceRecord}`);
-      for (const change of layer.changes) {
-        context.io.log(
-          `    ${change.action.padEnd(20)} ${change.path}${change.source ? ` <- ${change.source}` : ''}`,
-        );
-      }
-    }
-  }
-}
 function previewLifecycle(
   command: LifecycleCommand,
   adapters: Adapter[],
@@ -84,9 +64,9 @@ function previewLifecycle(
   interactive: boolean,
 ): number {
   const plans = adapters.map((adapter) =>
-    describeLifecycle(command, adapter, options.force || false),
+    describeLifecycle(command, adapter, options.force || false, adapters),
   );
-  printLifecyclePlans(plans, context, Boolean(options.json || !interactive));
+  printLifecyclePlans(plans, context.io, Boolean(options.json || !interactive));
   if (interactive) finishInteractive('Preview complete. No files were changed.', context.output);
   return 0;
 }

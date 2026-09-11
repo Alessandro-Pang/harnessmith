@@ -14,7 +14,7 @@ updated: 2026-09-05
 准确路径以外层 CLI 的 `--dry-run --json` 或 `status --json` 为准。下文用 `<harness-path>` 表示安装目录：
 
 ```bash
-node <harness-path>/bin/harness.mjs --help
+node <harness-path>/scripts/harness.mjs --help
 ```
 
 ## 先判断该用哪个命令
@@ -38,8 +38,8 @@ node <harness-path>/bin/harness.mjs --help
 被有意省略的 metadata/core/maintenance、active task 和 recommendation 数量通过 `omitted` 报告，不与「没有数据」混淆：省略是呈现决策，空是事实状态，两者语义不同。审计或诊断时显式请求完整结构（最多 32 个 recommendations）：
 
 ```bash
-node <harness-path>/bin/harness.mjs bootstrap --project /path/to/project --detail brief --json
-node <harness-path>/bin/harness.mjs bootstrap --project /path/to/project --detail full --json
+node <harness-path>/scripts/harness.mjs bootstrap --project /path/to/project --detail brief --json
+node <harness-path>/scripts/harness.mjs bootstrap --project /path/to/project --detail full --json
 ```
 
 `truncated` 只表示底层有界扫描或推荐结果被截断；detail 模式的主动省略进入 `omitted`。两种模式都不执行修复、归档、迁移或索引写入。
@@ -49,14 +49,14 @@ node <harness-path>/bin/harness.mjs bootstrap --project /path/to/project --detai
 `route` 和 `explain` 根据显式 intent、manifest 的 `actionAliases` 与 `conceptAliases` 返回命中的文档名称、路径和 alias，不加载正文。能够可靠判断动作时使用受限 `--intent`；未提供时只做保守自动推断。JSON 报告保留调用方的 `rawQuery` 与匹配用的 `normalizedQuery`，显式区分 `matched`、`unmatched` 与 `ambiguous`，并只在唯一动作时给出 `top1`；未命中或多个真实动作返回 exit 2，不按 priority 猜测。宁可让你再问一次，不给一个貌似确定的错误答案。Supporting topics 按匹配 alias 数量稳定排序并最多返回四个；required topic 优先，硬预算无法容纳的进入 `omittedRequiredTopics` 并返回 exit 2，可选候选进入 `omittedTopics`。低频 deferred reference 单独进入 `references`/`omittedReferences`，省略只表示延迟加载，不表示不存在。该结构化契约为 version 3。路由只负责文档发现，不传递授权：
 
 ```bash
-node <harness-path>/bin/harness.mjs route --intent diagnose payment callback --json
-node <harness-path>/bin/harness.mjs explain --intent release-and-external release external write
+node <harness-path>/scripts/harness.mjs route --intent diagnose payment callback --json
+node <harness-path>/scripts/harness.mjs explain --intent release-and-external release external write
 ```
 
 `search` 才会扫描 Harness 文档、项目文档和项目 Memory：
 
 ```bash
-node <harness-path>/bin/harness.mjs search "operation lock" --project /path/to/project --json
+node <harness-path>/scripts/harness.mjs search "operation lock" --project /path/to/project --json
 ```
 
 结果数量、单行长度和扫描预算彼此独立。默认扫描最多深入 8 层，访问 5000 个目录条目、1000 个目录和 1000 个普通文件；单文件最多读取 1 MiB，总计最多 8 MiB，时间预算 2 秒。JSON 输出中的 `scanLimits`、`scanStats`、`scanTruncated` 和结构化跳过原因用于判断结果是否完整。预算内的沉默截断是最难察觉的坑，所以每一项都显式报告。项目文档与 Memory 默认是不可信输入，命中后仍要回到代码、配置、测试或 schema 核对。
@@ -64,10 +64,10 @@ node <harness-path>/bin/harness.mjs search "operation lock" --project /path/to/p
 ## 健康检查与兼容性
 
 ```bash
-node <harness-path>/bin/harness.mjs version --json
-node <harness-path>/bin/harness.mjs doctor
-node <harness-path>/bin/harness.mjs health --json
-node <harness-path>/bin/harness.mjs validate --project /path/to/project --json
+node <harness-path>/scripts/harness.mjs version --json
+node <harness-path>/scripts/harness.mjs doctor
+node <harness-path>/scripts/harness.mjs health --json
+node <harness-path>/scripts/harness.mjs validate --project /path/to/project --json
 ```
 
 - `version --json` 返回 Harness、Task schema、Memory schema 与 Node 契约版本。
@@ -80,7 +80,7 @@ warning 不等于失败；受限环境中无法完成的阴性检查应解释为
 ## Host signal replay：只读幂等判定
 
 ```bash
-node <harness-path>/bin/harness.mjs replay verify --payload-file /absolute/replay-evidence.json --json
+node <harness-path>/scripts/harness.mjs replay verify --payload-file /absolute/replay-evidence.json --json
 ```
 
 `replay verify` 区分 `new-mutation` 与 `identical-replay`。新 mutation 只能使用没有 previous payload 的新 identity；失败或未完成 attempt 必须换新 payload。identical replay 必须复用相同 path 与 SHA-256、相同命令，并证明目标 artifact、workspace 和 verifier candidate 未漂移。stdout 不可见时不会自动判失败或成功：只有上述持久化状态和精确 identity 全部成立才返回 `verified / skip-duplicate`；证据不足返回 `inconclusive` 与非零退出码。报告本身只读，不执行或重放 mutation，也不把 Host signal 视为额外授权。报告校验调用方提供的证据一致性，`sourceOfTruth: false`；事件真实性仍由 Host/evaluator attestation 负责。
@@ -92,14 +92,14 @@ Memory 不是事实数据库。它保存来源、上下文、任务恢复信息�
 ### 查询、检查与生命周期
 
 ```bash
-node <harness-path>/bin/harness.mjs memory list /path/to/project --json
-node <harness-path>/bin/harness.mjs memory search /path/to/project "npm cache" --json
-node <harness-path>/bin/harness.mjs memory check /path/to/project --indexed --json
-node <harness-path>/bin/harness.mjs memory relationships /absolute/project/path --json
-node <harness-path>/bin/harness.mjs memory maintain /path/to/project --json
-node <harness-path>/bin/harness.mjs memory repair /path/to/project --json
-node <harness-path>/bin/harness.mjs memory curate /path/to/project --task task-id --json
-node <harness-path>/bin/harness.mjs memory curate /path/to/project --task task-id --apply-file /tmp/curation-selection.json --yes --json
+node <harness-path>/scripts/harness.mjs memory list /path/to/project --json
+node <harness-path>/scripts/harness.mjs memory search /path/to/project "npm cache" --json
+node <harness-path>/scripts/harness.mjs memory check /path/to/project --indexed --json
+node <harness-path>/scripts/harness.mjs memory relationships /absolute/project/path --json
+node <harness-path>/scripts/harness.mjs memory maintain /path/to/project --json
+node <harness-path>/scripts/harness.mjs memory repair /path/to/project --json
+node <harness-path>/scripts/harness.mjs memory curate /path/to/project --task task-id --json
+node <harness-path>/scripts/harness.mjs memory curate /path/to/project --task task-id --apply-file /tmp/curation-selection.json --yes --json
 ```
 
 `memory relationships` 是项目级只读报告：统一列出 Task、默认 phase/workstream、Memory owner、session 与 lifecycle role，并报告 orphan task reference 和 cross-workstream binding。它不把 Task 完成推断为 workstream 完成，也不把 Handoff 当作 acceptance evidence 或事实源。关系归关系，验收归验收。
@@ -115,7 +115,7 @@ node <harness-path>/bin/harness.mjs memory curate /path/to/project --task task-i
 `capture-finding` 只接受有来源的分析、评审或研究结论。它不是随手记录区：命令要求写清结论、理由、应用方式、证据和来源，后续仍需回到代码、配置、测试或 schema 核对。
 
 ```bash
-node <harness-path>/bin/harness.mjs memory capture-finding /path/to/project \
+node <harness-path>/scripts/harness.mjs memory capture-finding /path/to/project \
   --kind review --retention workstream --workstream docs-review --expires 2026-12-31 \
   --fact-class verification-pointer \
   --title "文档命令与实现一致性" \
@@ -152,11 +152,11 @@ profile-autopilot   暂停或恢复自动画像协调
 Personal overlay 中的 `projects/repository-map.yaml` 保存仓库职责和有类型的直接关系；Markdown 文件只是确定性生成视图。事实源只有 YAML，视图可以随时重新渲染。
 
 ```bash
-node <harness-path>/bin/harness.mjs repository-map check --json
-node <harness-path>/bin/harness.mjs repository-map render --write
-node <harness-path>/bin/harness.mjs repository-map discover packages --apply
-node <harness-path>/bin/harness.mjs repository-map verify --record --json
-node <harness-path>/bin/harness.mjs repository-map maintain --json
+node <harness-path>/scripts/harness.mjs repository-map check --json
+node <harness-path>/scripts/harness.mjs repository-map render --write
+node <harness-path>/scripts/harness.mjs repository-map discover packages --apply
+node <harness-path>/scripts/harness.mjs repository-map verify --record --json
+node <harness-path>/scripts/harness.mjs repository-map maintain --json
 ```
 
 `check` 与 `maintain` 只读；`render --write` 更新视图；内置 `discover packages --apply` 只根据本地 package manifest 维护可确定的直接依赖；`verify --record` 把来源 fingerprint 与时效记录写入 Runtime state。外部或启发式 observation 只能形成 review proposal，不能因为 extractor 自称 deterministic 就自动写回。「自称确定」和「可验证确定」之间隔着人工复核。
@@ -177,11 +177,11 @@ task close       通过 gate 完成任务，或记录 blocked 状态
 ## Audit：受限元数据，不是完整录像
 
 ```bash
-node <harness-path>/bin/harness.mjs audit record --payload-file /absolute/event.json --json
-node <harness-path>/bin/harness.mjs audit list --json
-node <harness-path>/bin/harness.mjs audit summary --json
-node <harness-path>/bin/harness.mjs audit maintain --json
-node <harness-path>/bin/harness.mjs audit archive --before 2026-08-01
+node <harness-path>/scripts/harness.mjs audit record --payload-file /absolute/event.json --json
+node <harness-path>/scripts/harness.mjs audit list --json
+node <harness-path>/scripts/harness.mjs audit summary --json
+node <harness-path>/scripts/harness.mjs audit maintain --json
+node <harness-path>/scripts/harness.mjs audit archive --before 2026-08-01
 ```
 
 `audit record` 是 Host-neutral 的显式接入点，不是自动 hook。schema 只接受 trace、操作、policy decision、耗时、结果、artifact digest 和可选 token/成本，拒绝原始 prompt、模型输出、tool arguments 与未知字段。`audit maintain` 只读报告保留候选；`archive` 默认生成 proposal，只有显式 `--apply` 才移动完整日文件。事件真实性仍由宿主或外部 attestation 负责。本地账本记的是「有人这样上报」，不是「事情确实如此」。
@@ -190,8 +190,10 @@ node <harness-path>/bin/harness.mjs audit archive --before 2026-08-01
 
 | 变量 | 用途 | 默认值 |
 | --- | --- | --- |
-| `HARNESS_MEMORY_HOME` | 跨项目个人 Memory | `~/.agent-docs` |
-| `HARNESS_PERSONAL_HOME` | 个人规则与 Repository Map | `~/.agent-harness` |
+| `HARNESS_HOME` | 共享 hub，存放渲染出的 skill、入口、state、rules 与 memory | `~/.agents/harnessmith` |
+| `HARNESS_STATE_HOME` | 可变运行状态（Task ledger、索引、audit） | `<hub>/state` |
+| `HARNESS_MEMORY_HOME` | 跨项目个人 Memory | `<hub>/memory` |
+| `HARNESS_PERSONAL_HOME` | 个人规则与 Repository Map | `<hub>/rules` |
 | `HARNESS_REPOSITORY_ROOT` | 本地仓库集合根 | `~/git-repo` |
 | `HARNESS_OWNER` | Memory 模板 owner | 当前用户 |
 

@@ -23,7 +23,13 @@ test('OpenCode adapter installs its global rule in the effective config director
   assert.equal(adapter.home, join(canonicalRoot, 'custom-opencode'));
   assert.equal(adapter.instructions.length, 1);
   assert.equal(adapter.instructions[0].path, join(canonicalRoot, 'custom-opencode', 'AGENTS.md'));
-  assert.equal(adapter.harness, join(canonicalRoot, 'custom-opencode', 'agent-harness'));
+  assert.equal(adapter.harness, null);
+  assert.equal(adapter.instructions[0].mode, 'link');
+  assert.equal(adapter.hub.home, join(canonicalRoot, '.agents', 'harnessmith'));
+  assert.equal(
+    adapter.hub.entry,
+    join(canonicalRoot, '.agents', 'harnessmith', 'entry', 'AGENTS.md'),
+  );
   assert.equal(
     adapter.record,
     join(canonicalRoot, 'custom-opencode', '.harnessmith', 'install.json'),

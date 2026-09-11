@@ -79,7 +79,7 @@ export function verifySetup(adapters: Adapter[], options: CliOptions, env: NodeJ
       status?.installed && status.outputs.every(({ status: value }) => value === 'managed')
         ? ('managed' as const)
         : ('failed' as const);
-    const healthCommand = `${process.execPath} ${join(adapter.harness, 'bin', 'harness.mjs')} health --json`;
+    const healthCommand = `${process.execPath} ${join(adapter.hub.harness, 'scripts', 'harness.mjs')} health --json`;
     if (options.initGlobal === false) {
       return {
         adapter: adapter.name,
@@ -91,7 +91,7 @@ export function verifySetup(adapters: Adapter[], options: CliOptions, env: NodeJ
     }
     const result = execaSync(
       process.execPath,
-      [join(adapter.harness, 'bin', 'harness.mjs'), 'health', '--json'],
+      [join(adapter.hub.harness, 'scripts', 'harness.mjs'), 'health', '--json'],
       {
         cwd: adapter.project ?? env.HOME ?? process.cwd(),
         env,

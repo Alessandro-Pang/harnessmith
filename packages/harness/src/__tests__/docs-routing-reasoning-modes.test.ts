@@ -10,6 +10,7 @@ const docsRoot = join(
   '..',
   '..',
   'template',
+  'skills',
   'agent-harness',
   'docs',
 );

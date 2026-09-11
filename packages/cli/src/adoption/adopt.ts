@@ -48,14 +48,14 @@ function exactDiff(path: string, before: string, after: string): string {
 }
 
 function personalTemplate(adapter: Adapter, env: NodeJS.ProcessEnv): string {
-  const render = installationRenderer(adapter, env);
+  const render = installationRenderer(adapter.hub, env);
   return render(
-    readFileSync(join(harnessTemplateRoot, 'templates', 'personal', 'AGENTS.md'), 'utf8'),
+    readFileSync(join(harnessTemplateRoot, 'assets', 'templates', 'personal', 'AGENTS.md'), 'utf8'),
   );
 }
 
 function targetState(adapter: Adapter, env: NodeJS.ProcessEnv) {
-  const values = installationValues(adapter, env);
+  const values = installationValues(adapter.hub, env);
   const target = join(values.personalHome, 'AGENTS.md');
   if (existsSync(target) && lstatSync(target).isSymbolicLink()) {
     return {

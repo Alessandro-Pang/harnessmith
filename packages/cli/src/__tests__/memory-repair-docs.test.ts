@@ -8,11 +8,11 @@ const root = process.cwd();
 test('public repair guidance preserves proposal, identity, rollback, and verifier boundaries', () => {
   const runtimeCli = readFileSync(join(root, 'apps/docs/site/zh/reference/runtime-cli.md'), 'utf8');
   const architecture = readFileSync(
-    join(root, 'template/agent-harness/docs/core/harness-cli-architecture.md'),
+    join(root, 'template/skills/agent-harness/docs/core/harness-cli-architecture.md'),
     'utf8',
   );
   const reference = readFileSync(
-    join(root, 'template/agent-harness/docs/references/memory-contracts.md'),
+    join(root, 'template/skills/agent-harness/docs/references/memory-contracts.md'),
     'utf8',
   );
   const llms = readFileSync(join(root, 'llms.txt'), 'utf8');

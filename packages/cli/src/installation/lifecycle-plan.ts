@@ -1,39 +1,57 @@
-import { existsSync } from 'node:fs';
-import { assertSafeAdapterPaths, assertSafePath, ignoreRoot } from '../shared/safe-path.js';
+import {
+  assertSafeOutputPath,
+  assertSafePath,
+  entryExists,
+  ignoreRoot,
+} from '../shared/safe-path.js';
 import type {
-  Adapter,
   InstallRecord,
   LifecycleChange,
-  LifecycleCommand,
   LifecycleLayerPlan,
-  LifecyclePlan,
+  ManagedScope,
+  MigratedOutput,
 } from '../shared/types.js';
 import { HarnessmithError } from '../shared/types.js';
-import { digestManagedOutput, readInstallRecordAt } from './records.js';
+import { digestManagedOutput, isHub, outputSpec, readInstallRecordAt } from './records.js';
 
 export interface RecordLayer {
   path: string;
   record: InstallRecord;
 }
 
-export function assertLifecyclePaths(adapter: Adapter, layers: RecordLayer[] = []): void {
-  assertSafeAdapterPaths(adapter);
-  for (const ignore of adapter.localIgnoreFiles || []) {
-    assertSafePath(ignoreRoot(adapter, ignore), ignore.path);
+/** Hub migrations retire pre-hub user data under the user home; host ones stay in the host home. */
+export function migrationRoot(scope: ManagedScope): string {
+  return isHub(scope) ? scope.userHome : scope.home;
+}
+
+export function assertLifecyclePaths(scope: ManagedScope, layers: RecordLayer[] = []): void {
+  for (const output of scope.outputs) assertSafeOutputPath(scope, output, output.path);
+  assertSafePath(scope.home, scope.record);
+  for (const ignore of scope.localIgnoreFiles || []) {
+    assertSafePath(ignoreRoot(scope, ignore), ignore.path);
   }
   for (const layer of layers) {
-    assertSafePath(adapter.home, layer.path);
-    if (layer.record.recordBackup) assertSafePath(adapter.home, layer.record.recordBackup);
+    assertSafePath(scope.home, layer.path);
+    if (layer.record.recordBackup) assertSafePath(scope.home, layer.record.recordBackup);
     for (const output of layer.record.outputs) {
-      assertSafePath(adapter.home, output.path);
-      if (output.backup) assertSafePath(adapter.home, output.backup);
+      const spec = outputSpec(scope, output.path);
+      assertSafeOutputPath(scope, spec, output.path);
+      if (output.backup) assertSafeOutputPath(scope, spec, output.backup);
+    }
+    for (const migrated of migratedOutputs(layer.record)) {
+      assertSafePath(migrationRoot(scope), migrated.path);
+      assertSafePath(migrationRoot(scope), migrated.backup);
     }
   }
 }
 
-export function assertRestorable(adapter: Adapter, record: InstallRecord, force: boolean): void {
+export function migratedOutputs(record: InstallRecord): MigratedOutput[] {
+  return record.migratedOutputs ?? [];
+}
+
+export function assertRestorable(scope: ManagedScope, record: InstallRecord, force: boolean): void {
   const modified = record.outputs.filter(
-    ({ path, checksum }) => existsSync(path) && digestManagedOutput(adapter, path) !== checksum,
+    ({ path, checksum }) => entryExists(path) && digestManagedOutput(scope, path) !== checksum,
   );
   if (modified.length > 0 && !force) {
     throw new HarnessmithError(
@@ -42,7 +60,9 @@ export function assertRestorable(adapter: Adapter, record: InstallRecord, force:
       3,
     );
   }
-  const missingBackups = record.outputs.filter(({ backup }) => backup && !existsSync(backup));
+  const missingBackups = [...record.outputs, ...migratedOutputs(record)].filter(
+    ({ backup }) => backup && !entryExists(backup),
+  );
   if (missingBackups.length > 0) {
     throw new HarnessmithError(
       'INTEGRITY_ERROR',
@@ -52,11 +72,11 @@ export function assertRestorable(adapter: Adapter, record: InstallRecord, force:
   }
 }
 
-export function installationLayers(adapter: Adapter): RecordLayer[] {
-  assertLifecyclePaths(adapter);
+export function installationLayers(scope: ManagedScope): RecordLayer[] {
+  assertLifecyclePaths(scope);
   const layers: RecordLayer[] = [];
   const seen = new Set<string>();
-  let path: string | null = adapter.record;
+  let path: string | null = scope.record;
   while (path) {
     if (seen.has(path)) {
       throw new HarnessmithError(
@@ -66,7 +86,7 @@ export function installationLayers(adapter: Adapter): RecordLayer[] {
       );
     }
     seen.add(path);
-    const record = readInstallRecordAt(adapter, path);
+    const record = readInstallRecordAt(scope, path);
     if (!record) {
       if (layers.length === 0) break;
       throw new HarnessmithError(
@@ -78,19 +98,23 @@ export function installationLayers(adapter: Adapter): RecordLayer[] {
     layers.push({ path, record });
     path = record.recordBackup;
   }
-  assertLifecyclePaths(adapter, layers);
+  assertLifecyclePaths(scope, layers);
   return layers;
 }
 
-export function assertUninstallable(adapter: Adapter, layers: RecordLayer[], force: boolean): void {
+export function assertUninstallable(
+  scope: ManagedScope,
+  layers: RecordLayer[],
+  force: boolean,
+): void {
   let activePaths = new Map(layers[0]?.record.outputs.map(({ path }) => [path, path]) || []);
   for (const [index, layer] of layers.entries()) {
     const modified = layer.record.outputs.filter(({ path, checksum }) => {
       const activePath = activePaths.get(path);
       return Boolean(
         activePath &&
-          existsSync(activePath) &&
-          digestManagedOutput(adapter, activePath, path) !== checksum,
+          entryExists(activePath) &&
+          digestManagedOutput(scope, activePath, path) !== checksum,
       );
     });
     if (modified.length > 0 && !force) {
@@ -100,8 +124,8 @@ export function assertUninstallable(adapter: Adapter, layers: RecordLayer[], for
         3,
       );
     }
-    const missingBackups = layer.record.outputs.filter(
-      ({ backup }) => backup && !existsSync(backup),
+    const missingBackups = [...layer.record.outputs, ...migratedOutputs(layer.record)].filter(
+      ({ backup }) => backup && !entryExists(backup),
     );
     if (missingBackups.length > 0) {
       throw new HarnessmithError(
@@ -110,75 +134,50 @@ export function assertUninstallable(adapter: Adapter, layers: RecordLayer[], for
         3,
       );
     }
-    if (!layer.record.recordBackup) continue;
+    const previous = layers[index + 1];
+    if (!layer.record.recordBackup || !previous) continue;
     const next = new Map<string, string>();
+    for (const migrated of migratedOutputs(layer.record)) next.set(migrated.path, migrated.backup);
     for (const output of layer.record.outputs) {
-      if (!output.backup) {
+      if (output.backup) {
+        next.set(output.path, output.backup);
+        continue;
+      }
+      // A path the previous layer did not own has nothing to restore; a path it did own
+      // must either carry a backup or have been retired through migratedOutputs.
+      if (previous.record.outputs.some(({ path }) => path === output.path)) {
         throw new HarnessmithError(
           'INTEGRITY_ERROR',
           `Installation layer is missing its previous output: ${output.path}`,
           3,
         );
       }
-      next.set(output.path, output.backup);
     }
     activePaths = next;
   }
 }
 
-function describeLayer(adapter: Adapter, layer: RecordLayer): LifecycleLayerPlan {
+export function describeLayer(scope: ManagedScope, layer: RecordLayer): LifecycleLayerPlan {
   const changes: LifecycleChange[] = layer.record.outputs.map(({ path, backup }) =>
     backup ? { path, action: 'restore-backup', source: backup } : { path, action: 'remove' },
   );
   changes.push(
+    ...migratedOutputs(layer.record).map(
+      ({ path, backup }): LifecycleChange => ({ path, action: 'restore-migrated', source: backup }),
+    ),
+  );
+  changes.push(
     layer.record.recordBackup
-      ? {
-          path: adapter.record,
-          action: 'restore-backup',
-          source: layer.record.recordBackup,
-        }
-      : { path: adapter.record, action: 'remove' },
+      ? { path: scope.record, action: 'restore-backup', source: layer.record.recordBackup }
+      : { path: scope.record, action: 'remove' },
   );
   if (!layer.record.recordBackup) {
     changes.push(
-      ...(adapter.localIgnoreFiles || []).map(({ path }) => ({
+      ...(scope.localIgnoreFiles || []).map(({ path }) => ({
         path,
         action: 'remove-managed-block' as const,
       })),
     );
   }
   return { sourceRecord: layer.path, changes };
-}
-
-export function describeLifecycle(
-  command: LifecycleCommand,
-  adapter: Adapter,
-  force = false,
-): LifecyclePlan {
-  const layers = installationLayers(adapter);
-  if (command === 'restore') {
-    const current = layers[0];
-    if (!current)
-      throw new HarnessmithError(
-        'STATE_CONFLICT',
-        `No Harnessmith installation found for ${adapter.label}: ${adapter.record}`,
-        5,
-      );
-    assertRestorable(adapter, current.record, force);
-    return {
-      command,
-      adapter: adapter.name,
-      capabilities: adapter.capabilities,
-      home: adapter.home,
-      layers: [describeLayer(adapter, current)],
-    };
-  }
-  assertUninstallable(adapter, layers, force);
-  return {
-    command,
-    adapter: adapter.name,
-    capabilities: adapter.capabilities,
-    home: adapter.home,
-    layers: layers.map((layer) => describeLayer(adapter, layer)),
-  };
 }

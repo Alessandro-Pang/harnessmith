@@ -59,6 +59,6 @@ test('OpenCode install, status, and uninstall use the effective global config ro
   const uninstalled = execute(root, ['uninstall', '--agent', 'opencode', '--json']);
   assert.equal(uninstalled.status, 0, uninstalled.stderr);
   assert.equal(readFileSync(rules, 'utf8'), 'existing opencode rules');
-  assert.equal(existsSync(join(agentHome, 'agent-harness')), false);
+  assert.equal(existsSync(join(agentHome, 'skills', 'agent-harness')), false);
   assert.equal(existsSync(join(agentHome, '.harnessmith', 'install.json')), false);
 });

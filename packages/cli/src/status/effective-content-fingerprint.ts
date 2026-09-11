@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { existsSync, lstatSync, readdirSync, readFileSync, readlinkSync } from 'node:fs';
 import { join, sep } from 'node:path';
-import type { Adapter } from '../shared/types.js';
+import type { Hub } from '../shared/types.js';
 
 interface FingerprintBudget {
   entries: number;
@@ -27,8 +27,8 @@ function portable(path: string): string {
   return path.replaceAll(sep, '/');
 }
 
-function replacements(adapter: Adapter): Replacement[] {
-  const contextPath = join(adapter.harness, 'install-context.json');
+function replacements(hub: Hub): Replacement[] {
+  const contextPath = join(hub.harness, 'install-context.json');
   if (!existsSync(contextPath)) return [];
   let context: Record<string, unknown>;
   try {
@@ -39,6 +39,8 @@ function replacements(adapter: Adapter): Replacement[] {
   const values: Replacement[] = [];
   for (const [key, token] of [
     ['harnessHome', '{{HARNESS_HOME}}'],
+    ['agentsHome', '{{HARNESS_AGENTS_HOME}}'],
+    ['stateHome', '{{HARNESS_STATE_HOME}}'],
     ['memoryHome', '{{HARNESS_MEMORY_HOME}}'],
     ['personalHome', '{{HARNESS_PERSONAL_HOME}}'],
     ['repositoryRoot', '{{HARNESS_REPOSITORY_ROOT}}'],
@@ -134,7 +136,6 @@ function hashOutput(
       reserve(budget, item.path, item.depth);
       hash.update(`directory:${identity}\n`);
       const children = readdirSync(item.path)
-        .filter((name) => !(role === 'harness' && !item.relative && name === 'state'))
         .sort((left, right) => right.localeCompare(left))
         .map((name) => ({
           path: join(item.path, name),
@@ -156,18 +157,21 @@ function hashOutput(
   }
 }
 
-export function effectiveContentFingerprint(adapter: Adapter): string {
+/**
+ * Location-independent fingerprint of the rendered hub content (skill plus shared entry):
+ * install paths are replaced by their placeholders so two machines with the same package
+ * and template produce the same value.
+ */
+export function effectiveContentFingerprint(hub: Hub): string {
   const hash = createHash('sha256');
-  const substitutions = replacements(adapter);
+  const substitutions = replacements(hub);
   const budget = {
     entries: 0,
     bytes: 0,
     deadline: Date.now() + fingerprintLimits.maxDurationMs,
   };
-  hash.update(`adapter:${adapter.name}\n`);
-  hashOutput(hash, adapter.harness, 'harness', substitutions, budget);
-  adapter.instructions.forEach(({ path }, index) => {
-    hashOutput(hash, path, `instruction:${index}`, substitutions, budget);
-  });
+  hash.update('scope:hub\n');
+  hashOutput(hash, hub.harness, 'harness', substitutions, budget);
+  hashOutput(hash, hub.entry, 'instruction:0', substitutions, budget);
   return `sha256:${hash.digest('hex')}`;
 }

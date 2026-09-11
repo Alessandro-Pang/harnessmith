@@ -57,7 +57,8 @@ function installHarness() {
 }
 
 function harnessBin() {
-  return join(configHome, 'agent-harness', 'bin', 'harness.mjs');
+  // Codex discovers the shared hub skill through ~/.agents/skills; hosts hold no Harness copy.
+  return join(home, '.agents', 'skills', 'agent-harness', 'scripts', 'harness.mjs');
 }
 
 function initProjectMemory() {

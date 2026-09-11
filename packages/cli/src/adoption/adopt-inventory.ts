@@ -1,8 +1,9 @@
 import { createHash } from 'node:crypto';
-import { existsSync, lstatSync, readFileSync } from 'node:fs';
+import { lstatSync, readFileSync } from 'node:fs';
 import { extname } from 'node:path';
 import { digestManagedOutput, readInstallRecord } from '../installation/records.js';
-import type { Adapter, InstallRecord } from '../shared/types.js';
+import { entryExists } from '../shared/safe-path.js';
+import type { Adapter, InstallRecord, ManagedOutput, ManagedScope } from '../shared/types.js';
 import { containsAdoptSecret } from './adopt-secret.js';
 
 const maxRuleBytes = 256 * 1024;
@@ -70,18 +71,19 @@ function addBlocked(result: InventoryAccumulator, item: AdoptInventoryItem): voi
   result.blocked.push({ path: item.path, reasonCode: item.reasonCode });
 }
 
-function inventoryHarness(
-  adapter: Adapter,
+/** Skill directories (hub tree or host skill link) carry no importable rules. */
+function inventoryDistribution(
+  path: string,
   record: InstallRecord | null,
   checksum: string | null,
   result: InventoryAccumulator,
 ): void {
-  const entry = lstatSync(adapter.harness);
+  const entry = lstatSync(path);
   const reasonCode = entry.isSymbolicLink()
     ? 'SYMLINK_REJECTED'
     : 'MANAGED_DISTRIBUTION_NOT_IMPORTABLE';
   const item: AdoptInventoryItem = {
-    path: adapter.harness,
+    path,
     owner: record ? 'harnessmith' : 'unknown',
     classification: record ? 'conflict-rule' : 'not-importable',
     reasonCode,
@@ -145,17 +147,24 @@ function inventoryPortableRule(
   }
 }
 
+function isDistribution(scope: ManagedScope, output: ManagedOutput): boolean {
+  if (output.kind === 'tree') return true;
+  return output.kind === 'link' && scope.scope === 'adapter'
+    ? output.target === (scope as Adapter).hub.harness
+    : output.kind === 'link';
+}
+
 function inventoryOutput(
-  adapter: Adapter,
+  scope: ManagedScope,
   record: InstallRecord | null,
-  output: string,
+  output: ManagedOutput,
   result: InventoryAccumulator,
 ): void {
-  const checksum = digestManagedOutput(adapter, output);
-  result.expectedOutputChecksums[output] = checksum;
-  if (!existsSync(output)) {
+  const checksum = digestManagedOutput(scope, output.path);
+  result.expectedOutputChecksums[output.path] = checksum;
+  if (!entryExists(output.path)) {
     result.inventory.push({
-      path: output,
+      path: output.path,
       owner: 'unknown',
       classification: 'managed-compatible',
       reasonCode: 'DESTINATION_MISSING',
@@ -164,9 +173,9 @@ function inventoryOutput(
     });
     return;
   }
-  if (record?.outputs.find(({ path }) => path === output)?.checksum === checksum) {
+  if (record?.outputs.find(({ path }) => path === output.path)?.checksum === checksum) {
     result.inventory.push({
-      path: output,
+      path: output.path,
       owner: 'harnessmith',
       classification: 'managed-compatible',
       reasonCode: 'RECORDED_CHECKSUM_MATCH',
@@ -175,20 +184,25 @@ function inventoryOutput(
     });
     return;
   }
-  if (output === adapter.harness) {
-    inventoryHarness(adapter, record, checksum, result);
+  if (isDistribution(scope, output)) {
+    inventoryDistribution(output.path, record, checksum, result);
   } else if (record) {
     addBlocked(result, {
-      path: output,
+      path: output.path,
       owner: 'harnessmith',
       classification: 'conflict-rule',
       reasonCode: 'MANAGED_RULE_MODIFIED',
       proposal: 'inspect-and-resolve-before-adopt',
       checksum,
     });
-  } else inventoryPortableRule(output, checksum, result);
+  } else inventoryPortableRule(output.path, checksum, result);
 }
 
+/**
+ * Inventory the hub once and every selected host: existing host rule files are import
+ * candidates for the personal overlay; recorded managed outputs (including hub links whose
+ * target still matches) need no change.
+ */
 export function collectAdoptInventory(adapters: Adapter[]): InventoryAccumulator {
   const result: InventoryAccumulator = {
     inventory: [],
@@ -196,15 +210,10 @@ export function collectAdoptInventory(adapters: Adapter[]): InventoryAccumulator
     blocked: [],
     expectedOutputChecksums: {},
   };
-  for (const adapter of adapters) {
-    const outputs = [adapter.harness, ...adapter.instructions.map(({ path }) => path)];
-    const hasSymlink = outputs.some(
-      (output) => existsSync(output) && lstatSync(output).isSymbolicLink(),
-    );
-    const record = hasSymlink ? null : readInstallRecord(adapter);
-    for (const output of outputs) {
-      inventoryOutput(adapter, record, output, result);
-    }
+  const scopes: ManagedScope[] = [...(adapters[0] ? [adapters[0].hub] : []), ...adapters];
+  for (const scope of scopes) {
+    const record = readInstallRecord(scope);
+    for (const output of scope.outputs) inventoryOutput(scope, record, output, result);
   }
   return result;
 }

@@ -10,7 +10,7 @@ import { checkPackage } from './preflight-package.js';
 
 type Mode = 'all' | 'cli' | 'docs';
 const root = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
-const harnessRoot = join(root, 'template', 'agent-harness');
+const harnessRoot = join(root, 'template', 'skills', 'agent-harness');
 const errors: string[] = [];
 let passed = 0;
 
@@ -79,7 +79,7 @@ function checkCli(): void {
   checkBranch(root, check);
   checkPackage(root, harnessRoot, check);
   const outerCli = join(root, 'bin', 'harnessmith.mjs');
-  const harnessCli = join(harnessRoot, 'bin', 'harness.mjs');
+  const harnessCli = join(harnessRoot, 'scripts', 'harness.mjs');
   checkCliHelp(outerCli, harnessCli);
   const versionContract = JSON.parse(runNode(harnessCli, ['version', '--json'])) as {
     version?: number;

@@ -26,7 +26,7 @@ export function runDiagnosticJson(
 ): DiagnosticCommandResult {
   const result = spawnSync(
     process.execPath,
-    [join(adapter.harness, 'bin', 'harness.mjs'), ...args],
+    [join(adapter.hub.harness, 'scripts', 'harness.mjs'), ...args],
     {
       cwd: project,
       env,

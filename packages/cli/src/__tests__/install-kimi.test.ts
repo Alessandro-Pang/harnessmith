@@ -66,7 +66,7 @@ test('Kimi Code CLI install, status, restore, and uninstall use the effective da
   const uninstalled = execute(root, ['uninstall', '--agent', 'kimi', '--json']);
   assert.equal(uninstalled.status, 0, uninstalled.stderr);
   assert.equal(readFileSync(rules, 'utf8'), 'existing Kimi Code CLI rules');
-  assert.equal(existsSync(join(agentHome, 'agent-harness')), false);
+  assert.equal(existsSync(join(agentHome, 'skills', 'agent-harness')), false);
   assert.equal(existsSync(join(agentHome, '.harnessmith', 'install.json')), false);
 });
 

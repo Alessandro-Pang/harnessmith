@@ -7,7 +7,7 @@
     "../scripts/evaluation/contracts/eval-run-schema.ts",
     "../scripts/preflight/preflight.ts",
     "../scripts/release/release-publish.ts",
-    "../template/agent-harness/bin/harness.mjs",
+    "../template/skills/agent-harness/scripts/harness.mjs",
     "config/*.config.{ts,mjs}",
     "config/.markdownlint-cli2.mjs"
   ],
@@ -31,6 +31,6 @@
   ],
   "ignore": [
     "apps/docs/site/.vitepress/**",
-    "template/agent-harness/dist/**"
+    "template/skills/agent-harness/dist/**"
   ]
 }

@@ -9,12 +9,14 @@ import {
   readBootstrapMemory,
   recommendedBootstrapReads,
 } from '../../lib/bootstrap/bootstrap-memory.js';
+import type { DocumentationIntent } from '../../lib/documentation/docs-routing.js';
 import { listFiles } from '../../lib/filesystem/files.js';
 import { projectSnapshot } from '../../lib/project/project.js';
 import { assertNoHighConfidenceSecret } from '../../lib/security/secret-hygiene.js';
 import { taskSummary } from '../../lib/task/task-model.js';
 import { readTask } from '../../lib/task/task-store.js';
 import type { Io, ProjectSnapshot, Runtime, TaskSummary } from '../../types.js';
+import { type BootstrapRouteSummary, bootstrapRoute } from './bootstrap-route.js';
 
 export { bootstrapMetadataLimit } from '../../lib/bootstrap/bootstrap-memory.js';
 
@@ -26,6 +28,10 @@ type BootstrapDetail = 'brief' | 'full';
 interface BootstrapReportBase {
   version: 2;
   detail: BootstrapDetail;
+  /** Installed skill entry; the discovery layer for agents that arrived without the always-on entry. */
+  skill: string;
+  /** Present when the startup command received the user's raw request. */
+  route: BootstrapRouteSummary | null;
   project: ProjectSnapshot;
   tasks: { state: 'ok' | 'skipped' | 'inconclusive'; active: TaskSummary[] };
   scan: {
@@ -69,6 +75,9 @@ export type BootstrapReport = BootstrapBriefReport | BootstrapFullReport;
 export interface BootstrapOptions {
   detail?: BootstrapDetail;
   json?: boolean;
+  /** The user's current request, verbatim; routes documentation inside the same command. */
+  query?: string[];
+  intent?: DocumentationIntent;
 }
 
 function readBootstrapTasks(snapshot: ProjectSnapshot, reasons: string[]) {
@@ -115,6 +124,13 @@ function outputBootstrap(report: BootstrapReport, json: boolean, io: Io): void {
   io.log(`Active tasks: ${report.tasks.active.length}`);
   io.log(`Recommended reads: ${report.memory.recommended.length}`);
   if (report.truncated) io.log('Bootstrap result is truncated');
+  if (report.route) {
+    io.log(
+      `Route: ${report.route.status}${report.route.primaryPlaybook ? ` ${basename(report.route.primaryPlaybook, '.md')}` : ''}`,
+    );
+    for (const path of report.route.load) io.log(`Load: ${path}`);
+    if (report.route.ask) io.log(`Ask: ${report.route.ask}`);
+  }
 }
 
 export function bootstrapProject(
@@ -138,10 +154,11 @@ export function bootstrapProject(
 export function bootstrapProject(
   runtime: Runtime,
   project: string,
-  { detail = 'brief', json = false }: BootstrapOptions = {},
+  { detail = 'brief', json = false, query = [], intent }: BootstrapOptions = {},
   io: Io = console,
 ): BootstrapReport {
   assertNoHighConfidenceSecret([project], 'Bootstrap request');
+  const route = query.length > 0 ? bootstrapRoute(runtime, query, intent) : null;
   const snapshot = projectSnapshot(project);
   const reasons: string[] = [];
   const memory = readBootstrapMemory(runtime, snapshot, reasons);
@@ -164,6 +181,8 @@ export function bootstrapProject(
   };
   const common = {
     version: 2 as const,
+    skill: join(runtime.installedHarness, 'SKILL.md'),
+    route,
     project: snapshot,
     tasks: { state: tasks.state, active: activeTasks },
     scan: {

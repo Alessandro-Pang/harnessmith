@@ -91,8 +91,8 @@ Runtime audit 只接受 trace、操作、策略决定、耗时、结果、artifa
 
 命令、schema 和状态机以随 npm 包分发的 Runtime 为准：
 
-- [Harness CLI architecture](https://github.com/Alessandro-Pang/harnessmith/blob/main/template/agent-harness/docs/core/harness-cli-architecture.md)
-- [Project Memory standard](https://github.com/Alessandro-Pang/harnessmith/blob/main/template/agent-harness/docs/standards/project-agent-docs.md)
-- [Long-running task protocol](https://github.com/Alessandro-Pang/harnessmith/blob/main/template/agent-harness/docs/core/long-running-tasks.md)
+- [Harness CLI architecture](https://github.com/Alessandro-Pang/harnessmith/blob/main/template/skills/agent-harness/docs/core/harness-cli-architecture.md)
+- [Project Memory standard](https://github.com/Alessandro-Pang/harnessmith/blob/main/template/skills/agent-harness/docs/standards/project-agent-docs.md)
+- [Long-running task protocol](https://github.com/Alessandro-Pang/harnessmith/blob/main/template/skills/agent-harness/docs/core/long-running-tasks.md)
 
 本站帮助人理解概念；安装后的模板文档与对应版本的代码、schema 才是该版本的操作契约。

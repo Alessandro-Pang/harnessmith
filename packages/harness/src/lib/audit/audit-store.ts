@@ -1,5 +1,5 @@
 import { existsSync, lstatSync, mkdirSync, readdirSync, renameSync, statSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import type { Runtime } from '../../types.js';
 import { readBoundedRegularFile } from '../filesystem/bounded-file.js';
 import { withExclusiveDirectoryLock } from '../filesystem/exclusive-lock.js';
@@ -13,7 +13,7 @@ const maximumAuditEvents = 50_000;
 const auditFilePattern = /^\d{4}-\d{2}-\d{2}\.jsonl$/;
 
 export function auditRoot(runtime: Runtime): string {
-  return join(runtime.installedHarness, 'state', 'audit');
+  return join(runtime.stateRoot, 'audit');
 }
 
 function eventPath(runtime: Runtime, event: AuditEvent): string {
@@ -23,10 +23,10 @@ function eventPath(runtime: Runtime, event: AuditEvent): string {
 export function appendAuditEvent(runtime: Runtime, event: AuditEvent): string {
   const root = auditRoot(runtime);
   const path = eventPath(runtime, event);
-  assertSafePath(runtime.installedHarness, root);
+  assertSafePath(dirname(runtime.stateRoot), root);
   assertSafePath(root, path);
   return withExclusiveDirectoryLock(root, 'Audit log', () => {
-    assertSafePath(runtime.installedHarness, root);
+    assertSafePath(dirname(runtime.stateRoot), root);
     assertSafePath(root, path);
     const existing = existsSync(path)
       ? readBoundedRegularFile(path, {

@@ -78,7 +78,10 @@ test('corpus references must resolve to manifest route names', () => {
   } as unknown as PromptRouteCorpus;
   assert.throws(
     () =>
-      validateCorpusReferences(corpus, join(repositoryRoot, 'template', 'agent-harness', 'docs')),
+      validateCorpusReferences(
+        corpus,
+        join(repositoryRoot, 'template', 'skills', 'agent-harness', 'docs'),
+      ),
     /unknown playbook: missing-playbook/,
   );
 });

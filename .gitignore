@@ -1,6 +1,6 @@
 node_modules/
 /dist/
-/template/agent-harness/dist/
+/template/skills/agent-harness/dist/
 *.tgz
 .DS_Store
 coverage/

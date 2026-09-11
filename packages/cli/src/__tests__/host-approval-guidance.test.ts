@@ -7,17 +7,17 @@ import { test } from 'vitest';
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
 
 test('prompt guidance routes authorization blockers through host HITL and resumes safely', () => {
-  const agents = readFileSync(join(root, 'template', 'AGENTS.md'), 'utf8');
+  const agents = readFileSync(join(root, 'template', 'entry', 'AGENTS.md'), 'utf8');
   const toolRouting = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'core', 'tool-routing.md'),
+    join(root, 'template', 'skills', 'agent-harness', 'docs', 'core', 'tool-routing.md'),
     'utf8',
   );
   const rules = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'prompt-rules.yaml'),
+    join(root, 'template', 'skills', 'agent-harness', 'docs', 'prompt-rules.yaml'),
     'utf8',
   );
   const manifest = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'manifest.yaml'),
+    join(root, 'template', 'skills', 'agent-harness', 'docs', 'manifest.yaml'),
     'utf8',
   );
   const boundaries = readFileSync(
@@ -43,7 +43,7 @@ test('prompt guidance routes authorization blockers through host HITL and resume
 
 test('multilingual routing rule does not claim runtime control of host responses', () => {
   const rules = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'prompt-rules.yaml'),
+    join(root, 'template', 'skills', 'agent-harness', 'docs', 'prompt-rules.yaml'),
     'utf8',
   );
   const rule = rules.match(

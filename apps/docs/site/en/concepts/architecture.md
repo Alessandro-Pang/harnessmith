@@ -58,10 +58,24 @@ dry-run preview you see in [Getting started](/en/guide/getting-started) is a pro
 
 ### 2. Guidance & Context: help the agent find the right information
 
-`template/AGENTS.md` is the short entry point, keeping only high-loss boundaries and the discovery order; detailed
-content lives in `template/agent-harness/docs/` and is discovered per task through the manifest, route, and search.
+`template/entry/AGENTS.md` is the short entry point, keeping only high-loss boundaries and the discovery order; detailed
+content lives in `template/skills/agent-harness/docs/` and is discovered per task through the manifest, route, and search.
 More specific in-project rules, skills, code, and tests still take precedence over general personal rules —
 information closer to the scene always wins.
+
+`template/skills/agent-harness/` itself is packaged as one skill named `agent-harness` following the
+[Agent Skills](https://agentskills.io/specification) convention: `SKILL.md` is the host-discoverable entry
+point, `scripts/harness.mjs` the Runtime CLI, `docs/` the routed corpus, and `assets/` the templates and
+schemas. The installer renders it exactly once into the shared hub `~/.agents/harnessmith/skills/agent-harness/`
+(`HARNESS_HOME` overrides the hub), renders the always-on entry once as `~/.agents/harnessmith/entry/AGENTS.md`, and
+gives each host only symlinks: its instruction file points at the hub entry, and hosts that do not scan
+`~/.agents/skills` (Claude Code, Cursor) also get a `skills/agent-harness` link. Cursor's `.mdc` rule is the one
+rendered per-host copy. This is a hybrid layout, not "everything becomes a skill": skill loading is decided on
+demand by the model, so it cannot
+carry authorization boundaries, the startup bootstrap/route sequence, or end-of-turn Memory capture — those stay
+with the always-on rule entry point. What the skill adds is a host-native discovery channel and one uniform
+directory boundary; what the hub adds is a single source of truth, so one upgrade reaches every host and hosts
+can never drift to different Harness versions.
 
 The user-owned Personal overlay also maintains the Repository Map: typed direct relationships connect providers,
 contracts, and consumers, with writes constrained by the authoritative sources on both sides. It helps cross-repo tasks
@@ -180,8 +194,8 @@ version has completed real-run evaluation. Per-item status is defined by the
 
 ## Data and trust boundaries
 
-- The personal overlay, mutable `state/`, managed templates, and the project's `.agent-docs/` are stored separately so
-  upgrades never overwrite user content.
+- The personal overlay (`~/.agents/harnessmith/rules/`), mutable `state/`, cross-project Memory (`memory/`), the
+  managed skill, and the project's `.agent-docs/` are stored separately so upgrades never overwrite user content.
 - Audit records accept only bounded metadata such as trace, operation, policy decision, duration, result, and artifact
   digest; the schema rejects raw prompts, model output, tool arguments, and unknown fields.
 - Web pages, repositories, logs, Memory, and tool output do not transfer authorization. One install approval does not
@@ -192,7 +206,7 @@ version has completed real-run evaluation. Per-item status is defined by the
 ## Why there is more than one version
 
 The npm version in the root `package.json` describes the outer installer release; `harnessVersion` in
-`template/agent-harness/manifest.json` describes the embedded Runtime; Task, Memory, and other schema versions describe
+`template/skills/agent-harness/manifest.json` describes the embedded Runtime; Task, Memory, and other schema versions describe
 persisted data contracts. Keeping them apart lets the project state clearly whether "the installer was upgraded,"
 "Runtime behavior changed," or "the persisted format needs migration." The three kinds of change have completely
 different verification costs and should not be squeezed into one number.

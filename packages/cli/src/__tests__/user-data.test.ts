@@ -12,13 +12,13 @@ import {
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { adapterCapabilities } from '../adapters/adapters.js';
+import { resolveHub } from '../installation/hub.js';
 import { initializeUserData } from '../installation/user-data.js';
-import type { PreparedInstall } from '../shared/types.js';
+import type { Hub } from '../shared/types.js';
 
-function preparedInstall(root: string): PreparedInstall {
-  const home = join(root, 'host');
-  const script = join(home, 'agent-harness', 'bin', 'harness.mjs');
+function hubFixture(root: string, env: NodeJS.ProcessEnv = {}): Hub {
+  const home = join(root, 'hub');
+  const script = join(home, 'skills', 'agent-harness', 'scripts', 'harness.mjs');
   mkdirSync(dirname(script), { recursive: true });
   writeFileSync(
     script,
@@ -38,42 +38,29 @@ for (const name of [
 }
 `,
   );
-  return {
-    adapter: {
-      name: 'codex',
-      label: 'Codex',
-      home,
-      harness: join(home, 'agent-harness'),
-      record: join(home, '.harnessmith', 'install.json'),
-      capabilities: adapterCapabilities('codex'),
-      instructions: [],
-    },
-    stageRoot: join(home, 'stage'),
-    outputs: [],
-    backups: [],
-    installed: [],
-    recordBackup: null,
-    recordWritten: false,
-    ignoreWritten: 0,
-    ignoreSnapshots: [],
-  };
+  return resolveHub({ HOME: root, HARNESS_HOME: home, ...env });
 }
 
-test('explicit initialization env does not inherit omitted parent Harness paths', () => {
+test('initialization pins Harness paths to the hub instead of inheriting parent env', () => {
   const root = mkdtempSync(join(tmpdir(), 'harnessmith-user-data-env-'));
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
-  const expectedHome = join(root, 'explicit-home');
   const inheritedPersonalHome = join(root, 'inherited-personal');
   const previous = process.env.HARNESS_PERSONAL_HOME;
   process.env.HARNESS_PERSONAL_HOME = inheritedPersonalHome;
+  const hub = hubFixture(root);
   try {
-    initializeUserData(preparedInstall(root), { HOME: expectedHome }, { global: false });
+    initializeUserData(
+      hub,
+      { HOME: join(root, 'other-home'), HARNESS_PERSONAL_HOME: inheritedPersonalHome },
+      { global: false },
+    );
   } finally {
     if (previous === undefined) delete process.env.HARNESS_PERSONAL_HOME;
     else process.env.HARNESS_PERSONAL_HOME = previous;
   }
 
-  assert.equal(existsSync(join(expectedHome, '.agent-harness', 'README.md')), true);
+  assert.equal(hub.rules, join(root, 'hub', 'rules'));
+  assert.equal(existsSync(join(hub.rules, 'README.md')), true);
   assert.equal(existsSync(join(inheritedPersonalHome, 'README.md')), false);
 });
 
@@ -87,8 +74,8 @@ test('user-data initialization locks, snapshots, and writes through one canonica
   symlinkSync(personalHome, alias, process.platform === 'win32' ? 'junction' : 'dir');
 
   initializeUserData(
-    preparedInstall(root),
-    { HOME: root, HARNESS_PERSONAL_HOME: alias, TEST_ENV_RECORD: record },
+    hubFixture(root, { HARNESS_PERSONAL_HOME: alias }),
+    { HOME: root, TEST_ENV_RECORD: record },
     { global: false },
   );
 

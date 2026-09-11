@@ -109,7 +109,7 @@ test('replay verification CLI is read-only and schema-backed', () => {
   assert.equal(readFileSync(input, 'utf8'), before);
   const schema = JSON.parse(
     readFileSync(
-      join(process.cwd(), 'template/agent-harness/schemas/replay-report.schema.json'),
+      join(process.cwd(), 'template/skills/agent-harness/assets/schemas/replay-report.schema.json'),
       'utf8',
     ),
   );

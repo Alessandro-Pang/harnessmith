@@ -22,7 +22,7 @@ test('fingerprint binds the candidate package and every complete scenario contra
   const output = JSON.parse(result.stdout);
   const packageManifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
   const harnessManifest = JSON.parse(
-    readFileSync(join(root, 'template', 'agent-harness', 'manifest.json'), 'utf8'),
+    readFileSync(join(root, 'template', 'skills', 'agent-harness', 'manifest.json'), 'utf8'),
   );
   const catalog = JSON.parse(readFileSync(join(root, 'evals', 'scenarios.json'), 'utf8'));
 
@@ -40,12 +40,13 @@ test('fingerprint binds the candidate package and every complete scenario contra
     'dist/adapters/adapters.js',
     'dist/installation/install-template.js',
     'dist/installation/lifecycle.js',
-    'template/AGENTS.md',
-    'template/agent-harness/docs/README.md',
-    'template/agent-harness/manifest.json',
-    'template/agent-harness/schemas/task.schema.json',
-    'template/agent-harness/dist/harness.mjs',
-    'template/agent-harness/templates/project-AGENTS.md',
+    'template/entry/AGENTS.md',
+    'template/skills/agent-harness/SKILL.md',
+    'template/skills/agent-harness/docs/README.md',
+    'template/skills/agent-harness/manifest.json',
+    'template/skills/agent-harness/assets/schemas/task.schema.json',
+    'template/skills/agent-harness/dist/harness.mjs',
+    'template/skills/agent-harness/assets/templates/project-AGENTS.md',
   ]) {
     assert.ok(output.ruleSources.includes(source), `missing rule fingerprint source: ${source}`);
   }

@@ -25,31 +25,53 @@ use the published `npx --yes harnessmith` commands below.
 
 ## Supported agents and destinations
 
+The Harness is distributed as one Agent Skill named `agent-harness` (a `SKILL.md` entry point with `scripts/`,
+`docs/`, and `assets/`). It is rendered exactly once into the shared hub `~/.agents/harnessmith/` (override with
+`HARNESS_HOME`): the skill lives at `<hub>/skills/agent-harness`, the shared always-on instruction file at
+`<hub>/entry/AGENTS.md`, mutable runtime state at `<hub>/state/`, personal rules at `<hub>/rules/` (`HARNESS_PERSONAL_HOME`),
+and cross-project Memory at `<hub>/memory/` (`HARNESS_MEMORY_HOME`). Hosts never receive a Harness copy: every host
+instruction file is a symlink to `<hub>/entry/AGENTS.md`, hosts that do not scan `~/.agents/skills` get a
+`<host-home>/skills/agent-harness` symlink, and `~/.agents/skills/agent-harness` is the only Harnessmith-managed entry
+directly under `~/.agents`. One upgrade therefore reaches every installed host at once.
+
+Records are layered: `<hub>/.harnessmith/install.json` lists the hub `owners` and the hosts installed by its latest
+transaction; each `<host-home>/.harnessmith/install.json` points at the hub. Owner ids are `<agent>` for global hosts
+and `<agent>:<project-root>` for project-scoped hosts (Cursor), so every project owns the hub separately. `uninstall`
+of one host only releases its ownership; the hub content is removed when the last owner leaves. `restore` unwinds the hub layer together with the hosts
+installed in the same transaction and refuses (`STATE_CONFLICT`) to split that set.
+
+Pre-hub installs kept a Harness copy at `<host-home>/agent-harness` plus user data at `~/.agent-harness` (personal
+rules) and `~/.agent-docs` (global Memory). `setup`/`install` migrates such a recorded installation once: user data
+is copied into `<hub>/rules` and `<hub>/memory` only when those hub locations are still empty, then the old copies and
+directories are renamed beside themselves to `<name>.backup-<timestamp>`, and the old `state/` seeds `<hub>/state`.
+The moves are recorded so `restore` puts them back. Recorded legacy layouts stay readable by `status`, `restore`, and
+`uninstall`; an unrecorded `agent-harness` directory is user content and is never touched.
+
 - `codex`
-  - Instructions: `$CODEX_HOME/AGENTS.md`, default `~/.codex/AGENTS.md`
-  - Harness: `$CODEX_HOME/agent-harness`
+  - Instructions: `$CODEX_HOME/AGENTS.md` (symlink), default `~/.codex/AGENTS.md`
+  - Harness skill: discovered through `~/.agents/skills/agent-harness`; no per-host link
 - `claude`
-  - Active instructions: `$CLAUDE_CONFIG_DIR/CLAUDE.md`, default `~/.claude/CLAUDE.md`
-  - Canonical copy: `$CLAUDE_CONFIG_DIR/AGENTS.md`
-  - Harness: `$CLAUDE_CONFIG_DIR/agent-harness`
+  - Active instructions: `$CLAUDE_CONFIG_DIR/CLAUDE.md` (symlink), default `~/.claude/CLAUDE.md`
+  - Canonical link: `$CLAUDE_CONFIG_DIR/AGENTS.md`
+  - Harness skill: `$CLAUDE_CONFIG_DIR/skills/agent-harness` (symlink; Claude Code only scans `~/.claude/skills`)
 - `cursor`
-  - Active project rule: `<project>/.cursor/rules/agent-harness.mdc`
-  - Canonical copy: `<project>/.cursor/AGENTS.md`
-  - Harness: `<project>/.cursor/agent-harness`
+  - Active project rule: `<project>/.cursor/rules/agent-harness.mdc` (rendered copy with frontmatter)
+  - Canonical link: `<project>/.cursor/AGENTS.md`
+  - Harness skill: `<project>/.cursor/skills/agent-harness` (symlink; Cursor only scans `.cursor/skills`)
   - Cursor installation is project-scoped. Resolve `--project` to the intended repository; Harnessmith
     automatically uses its Git root when possible.
 - `opencode`
   - Instructions: `$OPENCODE_CONFIG_DIR/AGENTS.md` when set
-  - Default instructions: `${XDG_CONFIG_HOME:-~/.config}/opencode/AGENTS.md`
-  - Harness: `agent-harness` under the same effective OpenCode config directory
+  - Default instructions: `${XDG_CONFIG_HOME:-~/.config}/opencode/AGENTS.md` (symlink)
+  - Harness skill: discovered through `~/.agents/skills/agent-harness`; no per-host link
 - `kimi`
   - Alias: `kimi-code`
-  - Instructions: `$KIMI_CODE_HOME/AGENTS.md`, default `~/.kimi-code/AGENTS.md`
-  - Harness: `agent-harness` under the same effective Kimi Code CLI data directory
+  - Instructions: `$KIMI_CODE_HOME/AGENTS.md` (symlink), default `~/.kimi-code/AGENTS.md`
+  - Harness skill: discovered through `~/.agents/skills/agent-harness`; no per-host link
   - Supports Kimi Code CLI `0.12.0` or newer; does not target legacy Python `kimi-cli` data at `~/.kimi/`
 - `zed`
-  - Instructions: `~/.config/zed/AGENTS.md` (Windows: `%APPDATA%\Zed\AGENTS.md`)
-  - Harness: `agent-harness` under the same effective Zed configuration directory
+  - Instructions: `~/.config/zed/AGENTS.md` (symlink; Windows: `%APPDATA%\Zed\AGENTS.md`)
+  - Harness skill: discovered through the managed `~/.agents/skills/agent-harness` link; no per-host link
 
 ## LLM installation protocol
 
@@ -114,9 +136,9 @@ shared global memory unless `--no-init-global` was explicitly supplied. Existing
 overwritten. If shared global memory was initialized, verify it with:
 
 ```bash
-node <harness-path>/bin/harness.mjs memory check global
-node <harness-path>/bin/harness.mjs doctor
-node <harness-path>/bin/harness.mjs health --json
+node <harness-path>/scripts/harness.mjs memory check global
+node <harness-path>/scripts/harness.mjs doctor
+node <harness-path>/scripts/harness.mjs health --json
 ```
 
 If `--no-init-global` was used, do not run the global-memory checks above; verify installation status and version instead:
@@ -124,7 +146,7 @@ If `--no-init-global` was used, do not run the global-memory checks above; verif
 ```bash
 npx --yes harnessmith status --agent <agents> --project <project-path> --json
 npx --yes harnessmith status --agent <agents> --project <project-path> --explain --json
-node <harness-path>/bin/harness.mjs --version
+node <harness-path>/scripts/harness.mjs --version
 ```
 
 Omit `--project` when Cursor is not selected.
@@ -132,17 +154,17 @@ Omit `--project` when Cursor is not selected.
 If the user intentionally used `--no-init-global` and later requests initialization, run:
 
 ```bash
-node <harness-path>/bin/harness.mjs init global
+node <harness-path>/scripts/harness.mjs init global
 ```
 
 Initialize project memory only when workspace writes are authorized and the task needs cross-session handoff,
 unfinished work, or redacted evidence:
 
 ```bash
-node <harness-path>/bin/harness.mjs init project <absolute-project-path>
-node <harness-path>/bin/harness.mjs memory check <absolute-project-path>
-node <harness-path>/bin/harness.mjs memory repair <absolute-project-path> --json
-node <harness-path>/bin/harness.mjs validate --project <absolute-project-path>
+node <harness-path>/scripts/harness.mjs init project <absolute-project-path>
+node <harness-path>/scripts/harness.mjs memory check <absolute-project-path>
+node <harness-path>/scripts/harness.mjs memory repair <absolute-project-path> --json
+node <harness-path>/scripts/harness.mjs validate --project <absolute-project-path>
 ```
 
 `memory repair` is diagnose-only by default. Apply exactly one content-bound repair with both
@@ -164,8 +186,9 @@ the project-root `.gitignore` or `.ignore`.
 ## Safety decisions
 
 - A failed dry-run, unexpected destination, `conflict`, modified managed file, or missing backup is a blocker.
-  Never add `--force` merely to make a command pass. With explicit authorization, `--force` first renames the
-  instruction to `<filename>.backup-<timestamp>` and the runtime to `agent-harness.backup-<timestamp>`.
+  Never add `--force` merely to make a command pass. With explicit authorization, `--force` first renames each
+  conflicting output beside itself to `<name>.backup-<timestamp>` (host instruction files, `<hub>/entry/AGENTS.md`,
+  `<hub>/skills/agent-harness`) before writing.
 - Do not use `sudo`, delete or move files manually, delete locks, publish, commit, or configure remotes. Request
   only the minimum filesystem or network permission needed for the selected installation.
 - Use `status --explain --json` when ownership alone is insufficient. Preserve `observedState`, `reasonCode`, evidence,
@@ -198,10 +221,12 @@ npx --yes harnessmith uninstall --agent codex
 
 ## Success criteria
 
-- The requested Agent instruction files exist at the resolved destinations.
-- `<agent-home>/agent-harness/manifest.json` exists.
-- `<agent-home>/.harnessmith/install.json` exists and `status` reports every output as `managed`.
-- `node <harness-path>/bin/harness.mjs --version` exits successfully.
+- The requested Agent instruction files exist at the resolved destinations and resolve to `<hub>/entry/AGENTS.md`.
+- `<hub>/skills/agent-harness/SKILL.md`, `<hub>/skills/agent-harness/manifest.json`, and the
+  `~/.agents/skills/agent-harness` link exist.
+- `<hub>/.harnessmith/install.json` lists the agent as an owner, `<agent-home>/.harnessmith/install.json` exists,
+  and `status` reports every hub and host output as `managed`.
+- `node <hub>/skills/agent-harness/scripts/harness.mjs --version` exits successfully.
 - If shared global memory was initialized, global memory check, `doctor`, and `health --json` pass.
 - If project memory was initialized, both `.agent-docs`-local ignore files contain `*` and project validation
   passes without requiring changes to project-root ignore files.

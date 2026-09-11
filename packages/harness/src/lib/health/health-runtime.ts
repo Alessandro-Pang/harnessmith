@@ -11,7 +11,7 @@ export interface RuntimeHealthCheck {
 
 export interface ManagedInstallRecord {
   schemaVersion?: number;
-  adapter?: string;
+  scope?: string;
   outputs?: Array<{ path?: string; checksum?: string }>;
 }
 
@@ -29,7 +29,7 @@ export function isManagedInstallRecord(value: unknown): value is ManagedInstallR
   const record = value as Record<string, unknown>;
   return (
     (record.schemaVersion === undefined || typeof record.schemaVersion === 'number') &&
-    (record.adapter === undefined || typeof record.adapter === 'string') &&
+    (record.scope === undefined || typeof record.scope === 'string') &&
     (record.outputs === undefined ||
       (Array.isArray(record.outputs) && record.outputs.every(isManagedInstallOutput)))
   );

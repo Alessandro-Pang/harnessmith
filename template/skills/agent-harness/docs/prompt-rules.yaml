@@ -9,8 +9,8 @@ rules:
     guarantee: guided
     enforcedBy: agent
     boundary:
-      - template/AGENTS.md
-      - template/agent-harness/docs/core/operating-model.md
+      - template/entry/AGENTS.md
+      - template/skills/agent-harness/docs/core/operating-model.md
     confusingWith: [sidecar-write-eligibility]
 
   - id: sidecar-write-eligibility
@@ -22,7 +22,7 @@ rules:
     guarantee: guided
     enforcedBy: agent
     boundary:
-      - template/agent-harness/docs/standards/project-agent-docs.md
+      - template/skills/agent-harness/docs/standards/project-agent-docs.md
       - packages/harness/src/lib/memory/memory-capture-eligibility.ts
     confusingWith: [user-task-read-only]
 
@@ -35,8 +35,8 @@ rules:
     guarantee: guided
     enforcedBy: agent
     boundary:
-      - template/agent-harness/docs/core/execution-loop.md
-      - template/agent-harness/docs/standards/project-agent-docs.md
+      - template/skills/agent-harness/docs/core/execution-loop.md
+      - template/skills/agent-harness/docs/standards/project-agent-docs.md
 
   - id: managed-work-state-write-path
     owner: harness-cli-architecture
@@ -115,8 +115,8 @@ rules:
     guarantee: guided
     enforcedBy: agent
     boundary:
-      - template/agent-harness/docs/core/execution-loop.md
-      - template/agent-harness/docs/references/prompt-examples.md
+      - template/skills/agent-harness/docs/core/execution-loop.md
+      - template/skills/agent-harness/docs/references/prompt-examples.md
 
   - id: host-approval-continuation
     owner: tool-routing
@@ -127,7 +127,7 @@ rules:
     guarantee: host-dependent
     enforcedBy: host
     boundary:
-      - template/agent-harness/docs/core/tool-routing.md
+      - template/skills/agent-harness/docs/core/tool-routing.md
       - apps/docs/site/zh/concepts/boundaries.md
 
   - id: reasoning-mode-output-contract
@@ -139,7 +139,7 @@ rules:
     guarantee: guided
     enforcedBy: agent
     boundary:
-      - template/agent-harness/docs/references/reasoning-modes.md
+      - template/skills/agent-harness/docs/references/reasoning-modes.md
       - packages/harness/src/lib/documentation/docs-routing.ts
 
   - id: pre-execution-judgment
@@ -151,9 +151,9 @@ rules:
     guarantee: guided
     enforcedBy: agent
     boundary:
-      - template/agent-harness/docs/references/reasoning-modes.md
-      - template/agent-harness/docs/playbooks/change.md
-      - template/agent-harness/docs/playbooks/research-and-design.md
+      - template/skills/agent-harness/docs/references/reasoning-modes.md
+      - template/skills/agent-harness/docs/playbooks/change.md
+      - template/skills/agent-harness/docs/playbooks/research-and-design.md
 
   - id: multilingual-routing-and-response
     owner: operating-model
@@ -164,13 +164,13 @@ rules:
     guarantee: guided
     enforcedBy: agent
     boundary:
-      - template/agent-harness/docs/core/operating-model.md
+      - template/skills/agent-harness/docs/core/operating-model.md
       - apps/docs/site/zh/concepts/boundaries.md
     evidence:
       implementation:
         - packages/harness/src/lib/documentation/docs-routing.ts
         - packages/harness/src/lib/routing/response-language.ts
-        - template/agent-harness/docs/manifest.yaml
+        - template/skills/agent-harness/docs/manifest.yaml
       verification:
         - packages/harness/src/__tests__/docs-routing.test.ts
         - packages/cli/src/__tests__/multilingual-prompt.test.ts
@@ -201,7 +201,7 @@ rules:
     enforcedBy: host
     boundary:
       - apps/docs/site/zh/concepts/architecture.md
-      - template/agent-harness/docs/core/observability.md
+      - template/skills/agent-harness/docs/core/observability.md
 
   - id: host-signal-replay-proof
     owner: long-running-tasks

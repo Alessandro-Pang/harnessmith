@@ -48,7 +48,13 @@ dry-run 输出包含解析后的目标、每个文件的状态、冲突、备份
 
 无论哪种范围，所有路径在写入前都会先做 containment 与 symlink 检查，防止目标被符号链接引到预期之外的位置。这个检查的实际意义是：如果你或某个工具曾经把 `~/.codex` 链接到了别的地方（比如一个同步盘），安装器会发现并停下来，而不是把文件写进你意想不到的位置。
 
-每个入口的同目录下还会有 `agent-harness/` 和 `.harnessmith/install.json`（Cursor 的记录在 `.cursor/.harnessmith/`）。前者是分发出来的 Harness Runtime，后者是安装记录——卸载和恢复都依赖它。安装记录里存了版本、时间戳、文件清单和 checksum，有了它，`restore` 才能精确回滚到上一层，`uninstall` 才能知道该删哪些文件、不碰哪些。
+上表里的入口都不是副本。每一个都是指向同一个共享文件 `~/.agents/harnessmith/entry/AGENTS.md` 的符号链接，而 Harness 本身只渲染一份到 `~/.agents/harnessmith/skills/agent-harness/`（整个 `~/.agents/harnessmith/` 目录称为 hub，可用 `HARNESS_HOME` 覆盖位置）。skill 按 [Agent Skills](https://agentskills.io/specification) 约定组织——`SKILL.md` 是发现入口，`scripts/harness.mjs` 是 Runtime CLI，`docs/` 是按任务路由的规则文档，`assets/` 放模板和 schema。Codex、OpenCode、Kimi Code CLI 与 Zed 会原生扫描 `~/.agents/skills/`，所以 Harnessmith 只在那里维护一个受管理链接 `~/.agents/skills/agent-harness`；Claude Code 和 Cursor 只扫描自己的 `skills/` 目录，因此在入口旁额外获得一个 `skills/agent-harness` 符号链接。Cursor 的 `.cursor/rules/agent-harness.mdc` 是唯一渲染出的副本，因为 MDC frontmatter 无法用链接表达。实际效果是：升级一次即更新所有已安装宿主，也不可能出现两个宿主停在不同 Harness 版本的情况。
+
+hub 还保存你的数据，且位于受管理 skill 之外：`state/`（Task ledger、索引等可变运行状态）、`rules/`（个人 overlay，可用 `HARNESS_PERSONAL_HOME` 覆盖）和 `memory/`（跨项目 Memory，可用 `HARNESS_MEMORY_HOME` 覆盖）。升级从不改写它们，`uninstall` 也从不删除它们。
+
+每个宿主在入口旁保留一份小的安装记录 `.harnessmith/install.json`（Cursor 的记录在 `.cursor/.harnessmith/`），hub 也有自己的记录，登记拥有它的宿主。记录里存了版本、时间戳、文件清单、链接目标和 checksum，有了它们，`restore` 才能精确回滚到上一层，`uninstall` 才能知道该删哪些链接、不碰哪些。由于 hub 是共享的，生命周期命令按所有权推理：卸载一个宿主只移除它的链接并把它从 hub 所有者中去掉，hub 内容在最后一个所有者离开时才移除。`restore` 会把 hub 层与同一事务中安装的宿主一起回退——如果你一次装了 `codex,claude`，只恢复 `codex` 会被以 `STATE_CONFLICT` 拒绝，错误信息会列出需要一并包含的 Agent。
+
+hub 之前的版本把完整的 Harness 副本放在每个宿主目录下的 `agent-harness/`，个人规则放在 `~/.agent-harness/`，全局 Memory 放在 `~/.agent-docs/`。对这类有安装记录的旧安装，`setup` 会把用户数据复制到 `~/.agents/harnessmith/rules` 与 `memory`（仅当这两个位置仍为空时）、把每个旧目录原地改名为 `<名称>.backup-<时间戳>`、把 `state/` 带到 hub，并把这些移动写进安装记录；`restore` 会把它们移回原处，`uninstall` 会逐层收回。没有安装记录的 `agent-harness/` 目录被视为用户内容，不会被移动或报告。
 
 环境变量解析、目标文件名和迁移兼容属于外层 Adapter，分发模板保持宿主中立。要判断你本机的实际目标路径，优先跑一次 `--dry-run --json`，不要凭文档猜。环境变量和平台差异都可能让真实路径和默认值不同。一个常见例子：如果你设置了 `XDG_CONFIG_HOME`，OpenCode 的规则入口就不在 `~/.config/opencode`，而在你指定的位置。dry-run 会把解析后的真实路径列出来，装之前看一眼，可以避免「装完了找不到文件」的困惑。
 

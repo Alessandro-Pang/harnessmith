@@ -35,10 +35,10 @@ file、非 symlink、内容和大小；访问控制由 Windows ACL 与宿主负�
 自动产生的 conclusion 等自由文本先写入 task-scoped 绝对 JSON，再传给单独的 CLI 进程，禁止 shell 插值或试错重试。
 
 ```bash
-node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory reconcile-profile \
+node {{HARNESS_HOME}}/skills/agent-harness/scripts/harness.mjs memory reconcile-profile \
   --payload-file /absolute/path/to/profile-reconcile.json --json
 
-node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory forget-profile \
+node {{HARNESS_HOME}}/skills/agent-harness/scripts/harness.mjs memory forget-profile \
   --key "<stable-key>" --json
 ```
 
@@ -52,8 +52,8 @@ reconcile payload 只接受 `key`、`conclusion`、`evidence`、`confidence` 和
 ## Autopilot pause and resume
 
 ```bash
-node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory profile-autopilot pause --json
-node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory profile-autopilot resume --json
+node {{HARNESS_HOME}}/skills/agent-harness/scripts/harness.mjs memory profile-autopilot pause --json
+node {{HARNESS_HOME}}/skills/agent-harness/scripts/harness.mjs memory profile-autopilot resume --json
 ```
 
 `profile-autopilot: paused` 会机械拒绝自动 reconcile；只有用户明确要求修改画像本身时，payload 才可设置

@@ -34,9 +34,9 @@ as `inconclusive`; do not treat titles or search snippets as facts.
 
 - [Capability evidence matrix](https://github.com/Alessandro-Pang/harnessmith/blob/main/apps/docs/site/capability-evidence.yaml):
   capability owners, states, and executable evidence paths.
-- [Harness CLI architecture](https://github.com/Alessandro-Pang/harnessmith/blob/main/template/agent-harness/docs/core/harness-cli-architecture.md):
+- [Harness CLI architecture](https://github.com/Alessandro-Pang/harnessmith/blob/main/template/skills/agent-harness/docs/core/harness-cli-architecture.md):
   Runtime commands, data boundaries, and module owners.
-- [Manifest](https://github.com/Alessandro-Pang/harnessmith/blob/main/template/agent-harness/manifest.json):
+- [Manifest](https://github.com/Alessandro-Pang/harnessmith/blob/main/template/skills/agent-harness/manifest.json):
   Runtime, schema, and distribution file contracts.
 - [Security Policy](https://github.com/Alessandro-Pang/harnessmith/blob/main/SECURITY.md):
   vulnerability reporting and support scope.

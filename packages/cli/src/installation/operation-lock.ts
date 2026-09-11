@@ -1,23 +1,24 @@
 import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import lockfile from 'proper-lockfile';
-import { assertSafeAdapterPaths, assertSafePath } from '../shared/safe-path.js';
-import type { Adapter } from '../shared/types.js';
+import { assertSafePath, assertSafeScopePaths } from '../shared/safe-path.js';
+import type { ManagedScope } from '../shared/types.js';
 import { errorMessage, HarnessmithError } from '../shared/types.js';
 
 const operationLockName = '.harnessmith-operation.lock';
 const lockStaleMilliseconds = 15 * 60_000;
 
-export function operationLockPath(adapter: Adapter): string {
-  return join(adapter.home, operationLockName);
+export function operationLockPath(scope: ManagedScope): string {
+  return join(scope.home, operationLockName);
 }
 
-export function withAdapterLocks<T>(
-  adapters: Adapter[],
+/** Hold one operation lock per scope (hub and hosts) in a stable order to avoid deadlocks. */
+export function withScopeLocks<T>(
+  scopes: ManagedScope[],
   operation: () => T,
   { createHomes = true }: { createHomes?: boolean } = {},
 ): T {
-  const ordered = [...adapters].sort((left, right) =>
+  const ordered = [...scopes].sort((left, right) =>
     operationLockPath(left).localeCompare(operationLockPath(right)),
   );
   const releases: Array<() => void> = [];
@@ -25,16 +26,16 @@ export function withAdapterLocks<T>(
   let operationFailed = false;
   let operationError: unknown;
   try {
-    for (const adapter of ordered) {
-      assertSafeAdapterPaths(adapter);
-      if (!existsSync(adapter.home) && !createHomes) continue;
-      mkdirSync(adapter.home, { recursive: true });
-      assertSafeAdapterPaths(adapter);
-      const lockPath = operationLockPath(adapter);
-      assertSafePath(adapter.home, lockPath);
+    for (const scope of ordered) {
+      assertSafeScopePaths(scope);
+      if (!existsSync(scope.home) && !createHomes) continue;
+      mkdirSync(scope.home, { recursive: true });
+      assertSafeScopePaths(scope);
+      const lockPath = operationLockPath(scope);
+      assertSafePath(scope.home, lockPath);
       try {
         releases.push(
-          lockfile.lockSync(adapter.home, {
+          lockfile.lockSync(scope.home, {
             lockfilePath: lockPath,
             realpath: false,
             stale: lockStaleMilliseconds,
@@ -44,7 +45,7 @@ export function withAdapterLocks<T>(
       } catch (error) {
         throw new HarnessmithError(
           'OPERATION_LOCKED',
-          `Another Harnessmith process holds the operation lock for ${adapter.label}: ${errorMessage(error)}`,
+          `Another Harnessmith process holds the operation lock for ${scope.label}: ${errorMessage(error)}`,
           4,
           { cause: error },
         );
@@ -66,7 +67,7 @@ export function withAdapterLocks<T>(
   if (operationFailed) {
     if (releaseErrors.length > 0) {
       throw new Error(
-        `Adapter operation failed and lock release was incomplete: ${errorMessage(operationError)}; releases: ${releaseErrors.map(errorMessage).join('; ')}`,
+        `Scope operation failed and lock release was incomplete: ${errorMessage(operationError)}; releases: ${releaseErrors.map(errorMessage).join('; ')}`,
         { cause: operationError instanceof Error ? operationError : undefined },
       );
     }
@@ -74,7 +75,7 @@ export function withAdapterLocks<T>(
   }
   if (releaseErrors.length > 0) {
     throw new Error(
-      `Adapter lock release was incomplete: ${releaseErrors.map(errorMessage).join('; ')}`,
+      `Scope lock release was incomplete: ${releaseErrors.map(errorMessage).join('; ')}`,
       { cause: releaseErrors[0] instanceof Error ? releaseErrors[0] : undefined },
     );
   }

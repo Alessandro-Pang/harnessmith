@@ -1,51 +1,94 @@
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { basename, dirname, resolve, sep } from 'node:path';
 import { atomicWrite, digestPath, readJson, removeExact } from '../shared/files.js';
-import { assertSafeAdapterPaths, assertSafePath, ignoreRoot } from '../shared/safe-path.js';
+import { assertSafeOutputPath, assertSafeScopePaths, entryExists } from '../shared/safe-path.js';
 import type {
   Adapter,
+  Hub,
+  HubPlan,
   InstallPlan,
   InstallRecord,
+  InstallTargetState,
+  ManagedOutput,
+  ManagedScope,
   OutputAction,
+  PlannedOutput,
   Snapshot,
 } from '../shared/types.js';
 import { errorMessage, HarnessmithError } from '../shared/types.js';
+import {
+  legacyOutputs,
+  plannedAdapterMigrations,
+  plannedHubMigrations,
+} from './layout-migration.js';
+import { validateRecord } from './record-validation.js';
 
 export const managedBlockMarker = 'harnessmith managed files';
 
+export function isAdapter(scope: ManagedScope): scope is Adapter {
+  return scope.scope === 'adapter';
+}
+
+export function isHub(scope: ManagedScope): scope is Hub {
+  return scope.scope === 'hub';
+}
+
+/** Look up the contract entry for a recorded path (current layout first, then pre-hub). */
+export function outputSpec(scope: ManagedScope, path: string): ManagedOutput {
+  const found =
+    scope.outputs.find((output) => output.path === path) ??
+    (isAdapter(scope) ? legacyOutputs(scope).find((output) => output.path === path) : undefined);
+  if (!found) {
+    throw new HarnessmithError(
+      'INTEGRITY_ERROR',
+      `Managed output is outside the ${scope.label} contract: ${path}`,
+      3,
+    );
+  }
+  return found;
+}
+
+/** Pre-hub host copies kept their mutable `state/` inside the Harness directory. */
 export function digestManagedOutput(
-  adapter: Adapter,
+  scope: ManagedScope,
   path: string,
   managedPath = path,
 ): string | null {
+  const legacyState = isAdapter(scope) && managedPath === scope.legacyHarness;
   return digestPath(path, {
-    exclude: (relativePath) =>
-      managedPath === adapter.harness && relativePath.split(sep)[0] === 'state',
+    exclude: (relativePath) => legacyState && relativePath.split(sep)[0] === 'state',
   });
 }
 
-export function plannedOutputs(adapter: Adapter): string[] {
-  return [adapter.harness, ...adapter.instructions.map(({ path }) => path)];
-}
-
-export function assertAdapterContract(adapter: Adapter): void {
-  const home = resolve(adapter.home);
-  for (const path of [...plannedOutputs(adapter), adapter.record]) {
+export function assertScopeContract(scope: ManagedScope): void {
+  const home = resolve(scope.home);
+  const inside = (root: string, path: string): boolean => {
     const target = resolve(path);
-    if (target !== home && !target.startsWith(`${home}${sep}`)) {
-      throw new Error(`Adapter path escapes its home: ${path}`);
-    }
+    return target === root || target.startsWith(`${root}${sep}`);
+  };
+  const paths = [
+    ...scope.outputs.map((output) => ({
+      root: resolve(output.root || scope.home),
+      path: output.path,
+    })),
+    ...(isAdapter(scope)
+      ? legacyOutputs(scope).map((output) => ({ root: home, path: output.path }))
+      : []),
+    { root: home, path: scope.record },
+  ];
+  for (const { root, path } of paths) {
+    if (!inside(root, path)) throw new Error(`${scope.label} path escapes its root: ${path}`);
   }
-  assertSafeAdapterPaths(adapter);
+  assertSafeScopePaths(scope);
 }
 
-export function readInstallRecordAt(adapter: Adapter, recordPath: string): InstallRecord | null {
-  assertAdapterContract(adapter);
+export function readInstallRecordAt(scope: ManagedScope, recordPath: string): InstallRecord | null {
+  assertScopeContract(scope);
   const resolvedRecordPath = resolve(recordPath);
   const validRecordPath =
-    resolvedRecordPath === adapter.record ||
-    (dirname(resolvedRecordPath) === dirname(adapter.record) &&
-      basename(resolvedRecordPath).startsWith(`${basename(adapter.record)}.backup-`));
+    resolvedRecordPath === scope.record ||
+    (dirname(resolvedRecordPath) === dirname(scope.record) &&
+      basename(resolvedRecordPath).startsWith(`${basename(scope.record)}.backup-`));
   if (!validRecordPath)
     throw new HarnessmithError(
       'INTEGRITY_ERROR',
@@ -55,59 +98,7 @@ export function readInstallRecordAt(adapter: Adapter, recordPath: string): Insta
   try {
     const record = readJson(resolvedRecordPath) as InstallRecord | null;
     if (!record) return null;
-    if (
-      record.schemaVersion !== 1 ||
-      record.adapter !== adapter.name ||
-      !Array.isArray(record.outputs)
-    ) {
-      throw new Error('unsupported schema or adapter');
-    }
-    const expected = [...plannedOutputs(adapter)].sort();
-    const actual = record.outputs.map(({ path }) => path).sort();
-    if (
-      actual.length !== expected.length ||
-      actual.some((path, index) => path !== expected[index])
-    ) {
-      throw new Error('managed output paths do not match the Adapter contract');
-    }
-    for (const output of record.outputs) {
-      if (typeof output.checksum !== 'string' || output.checksum.length === 0) {
-        throw new Error(`missing checksum for ${output.path}`);
-      }
-      if (output.backup) {
-        const validBackup =
-          resolve(output.backup) === output.backup &&
-          dirname(output.backup) === dirname(output.path) &&
-          basename(output.backup).startsWith(`${basename(output.path)}.backup-`);
-        if (!validBackup) throw new Error(`invalid backup path for ${output.path}`);
-        assertSafePath(adapter.home, output.backup);
-      }
-    }
-    if (
-      record.contentFingerprint !== undefined &&
-      !/^sha256:[a-f0-9]{64}$/.test(record.contentFingerprint)
-    ) {
-      throw new Error('invalid content fingerprint');
-    }
-    if (record.recordBackup) {
-      const validRecordBackup =
-        resolve(record.recordBackup) === record.recordBackup &&
-        dirname(record.recordBackup) === dirname(adapter.record) &&
-        basename(record.recordBackup).startsWith(`${basename(adapter.record)}.backup-`);
-      if (!validRecordBackup) throw new Error('invalid installation-record backup path');
-      assertSafePath(adapter.home, record.recordBackup);
-    }
-    const expectedIgnores = (adapter.localIgnoreFiles || []).map(({ path }) => path).sort();
-    const actualIgnores = Array.isArray(record.ignoreFiles) ? [...record.ignoreFiles].sort() : [];
-    if (
-      actualIgnores.length !== expectedIgnores.length ||
-      actualIgnores.some((path, index) => path !== expectedIgnores[index])
-    ) {
-      throw new Error('managed ignore paths do not match the Adapter contract');
-    }
-    for (const ignore of adapter.localIgnoreFiles || []) {
-      assertSafePath(ignoreRoot(adapter, ignore), ignore.path);
-    }
+    validateRecord(scope, record);
     return record;
   } catch (error) {
     if (error instanceof HarnessmithError) throw error;
@@ -120,13 +111,17 @@ export function readInstallRecordAt(adapter: Adapter, recordPath: string): Insta
   }
 }
 
-export function readInstallRecord(adapter: Adapter): InstallRecord | null {
-  return readInstallRecordAt(adapter, adapter.record);
+export function readInstallRecord(scope: ManagedScope): InstallRecord | null {
+  return readInstallRecordAt(scope, scope.record);
+}
+
+export function hubOwners(record: InstallRecord | null): string[] {
+  return record?.owners ?? [];
 }
 
 export function assertNonOverlappingAdapters(adapters: Adapter[]): void {
   const ownership = adapters.flatMap((adapter) =>
-    [...plannedOutputs(adapter), adapter.record].map((path) => ({
+    [...adapter.outputs.map(({ path }) => path), adapter.record].map((path) => ({
       adapter: adapter.name,
       path: resolve(path),
     })),
@@ -152,20 +147,47 @@ export function assertNonOverlappingAdapters(adapters: Adapter[]): void {
 }
 
 function outputState(
-  adapter: Adapter,
-  path: string,
+  scope: ManagedScope,
+  output: ManagedOutput,
   record: InstallRecord | null,
-): { action: OutputAction; state: InstallPlan['outputs'][number]['state'] } {
-  if (!existsSync(path)) return { action: 'create', state: 'missing' };
-  const managed = record?.outputs?.find((item) => item.path === path);
-  if (managed && managed.checksum === digestManagedOutput(adapter, path)) {
+): { action: OutputAction; state: InstallTargetState } {
+  assertSafeOutputPath(scope, output, output.path);
+  if (!entryExists(output.path)) return { action: 'create', state: 'missing' };
+  const managed = record?.outputs.find((item) => item.path === output.path);
+  if (managed && managed.checksum === digestManagedOutput(scope, output.path)) {
     return { action: 'replace-managed', state: 'managed' };
   }
   return { action: 'conflict', state: managed ? 'modified' : 'unmanaged' };
 }
 
+export function plannedOutputs(scope: ManagedScope, record: InstallRecord | null): PlannedOutput[] {
+  return scope.outputs.map((output) => ({
+    path: output.path,
+    kind: output.kind,
+    ...(output.target ? { target: output.target } : {}),
+    ...outputState(scope, output, record),
+  }));
+}
+
+export function describeHub(hub: Hub): HubPlan {
+  const record = readInstallRecord(hub);
+  return {
+    home: hub.home,
+    agentsHome: hub.agentsHome,
+    record: hub.record,
+    installed: Boolean(record),
+    owners: hubOwners(record),
+    state: hub.state,
+    rules: hub.rules,
+    memory: hub.memory,
+    outputs: plannedOutputs(hub, record),
+    migrations: plannedHubMigrations(hub).map(({ path, action }) => ({ path, action })),
+  };
+}
+
 export function describeInstall(adapter: Adapter): InstallPlan {
   const record = readInstallRecord(adapter);
+  const hub = describeHub(adapter.hub);
   return {
     adapter: adapter.name,
     home: adapter.home,
@@ -174,10 +196,12 @@ export function describeInstall(adapter: Adapter): InstallPlan {
     capabilities: adapter.capabilities,
     instructions: adapter.instructions.map(({ path }) => path),
     initializeGlobalMemory: true,
-    outputs: plannedOutputs(adapter).map((path) => ({
-      path,
-      ...outputState(adapter, path, record),
-    })),
+    hub,
+    outputs: [...hub.outputs, ...plannedOutputs(adapter, record)],
+    migrations: [
+      ...hub.migrations,
+      ...plannedAdapterMigrations(adapter, record).map(({ path, action }) => ({ path, action })),
+    ],
   };
 }
 

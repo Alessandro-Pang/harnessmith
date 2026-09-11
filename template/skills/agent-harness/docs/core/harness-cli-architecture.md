@@ -22,10 +22,16 @@ Reference 独占。
 | 参数注册 | `packages/harness/src/cli.ts`、`packages/harness/src/program/` | 注册命令和参数契约 |
 | 可复用原语 | `packages/harness/src/lib/` | 不依赖 `commands/` |
 | Runtime 环境 | `packages/harness/src/runtime.ts` | 解析 root、owner、日期、身份和可覆盖路径 |
-| 分发入口 | `bin/harnessmith.mjs`、`template/agent-harness/bin/harness.mjs` | 外层安装器与内层 bundle 的入口 |
+| 分发入口 | `bin/harnessmith.mjs`、`template/skills/agent-harness/scripts/harness.mjs` | 外层安装器与内层 bundle 的入口 |
+| always-on 模块 | `template/entry/` | 以 `AGENTS.md` 为入口：只放边界、启动顺序和进入 skill 的触发规则 |
+| skill 模块 | `template/skills/agent-harness/` | 以 `SKILL.md` 为入口的单个 skill：`scripts/`、`dist/`、`docs/`、`assets/`、`manifest.json` |
 
-外层 Adapter 不是通用 Memory/Task 实现的 owner。`template/agent-harness/dist/` 和根 `dist/` 是构建产物，
+外层 Adapter 不是通用 Memory/Task 实现的 owner。`template/skills/agent-harness/dist/` 和根 `dist/` 是构建产物，
 只能由构建生成，不能手工编辑；模板必须保持宿主中立。Node.js 运行时要求以当前 package、源码和测试为准。
+分发模板按 Agent Skills 约定组织，只渲染一份到共享 hub `{{HARNESS_HOME}}/skills/agent-harness/`（默认
+`~/.agents/harnessmith`），always-on 入口渲染为 `{{HARNESS_HOME}}/entry/AGENTS.md`；各宿主只收到指向 hub 的符号链接。
+hub 内 `state/`、`rules/`（个人 overlay）与 `memory/`（跨项目记忆）位于 skill 之外，升级不触碰。宿主链接路径与旧布局
+迁移只属于外层 Adapter，模板内只用 `{{HARNESS_HOME}}/skills/agent-harness` 引用自身。
 
 ## 修改边界
 
@@ -77,5 +83,5 @@ pnpm run check:docs
 pnpm run preflight
 ```
 
-端到端命令必须使用 task-scoped 临时 `HARNESS_HOME`、`HARNESS_MEMORY_HOME` 和 `HARNESS_PERSONAL_HOME`，避免修改
-真实全局目录。
+端到端命令必须使用 task-scoped 临时 `HOME`（或 `HARNESS_HOME`、`HARNESS_MEMORY_HOME`、`HARNESS_PERSONAL_HOME`），
+避免修改真实的 `~/.agents/harnessmith`。

@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { join, resolve, sep } from 'node:path';
+import { join, resolve } from 'node:path';
 import { managedOutputWithinHome } from '../../runtime.js';
 import { errorMessage, type Runtime } from '../../types.js';
 import { digestPath } from '../filesystem/files.js';
@@ -33,11 +33,7 @@ function managedInstallationHealth(runtime: Runtime): HealthCheck {
       details: [recordPath],
     };
   }
-  if (
-    record.schemaVersion !== 1 ||
-    record.adapter !== runtime.hostAdapter ||
-    !Array.isArray(record.outputs)
-  ) {
+  if (record.schemaVersion !== 2 || record.scope !== 'hub' || !Array.isArray(record.outputs)) {
     return {
       id: 'installation',
       status: 'failed',
@@ -45,7 +41,12 @@ function managedInstallationHealth(runtime: Runtime): HealthCheck {
       details: [recordPath],
     };
   }
-  const expected = [...runtime.instructionFiles, runtime.installedHarness]
+  // The hub owns the shared entry, the skill and the `~/.agents/skills` discovery link.
+  const expected = [
+    ...runtime.instructionFiles,
+    runtime.installedHarness,
+    join(runtime.agentsHome, 'skills', 'agent-harness'),
+  ]
     .map((path) => resolve(path))
     .sort();
   const actual = record.outputs
@@ -55,7 +56,7 @@ function managedInstallationHealth(runtime: Runtime): HealthCheck {
     return {
       id: 'installation',
       status: 'failed',
-      message: 'Installation record outputs do not match the host contract',
+      message: 'Installation record outputs do not match the hub contract',
       details: [recordPath],
     };
   }
@@ -65,16 +66,16 @@ function managedInstallationHealth(runtime: Runtime): HealthCheck {
       details.push('invalid managed output checksum record');
       continue;
     }
-    if (!managedOutputWithinHome(runtime.harnessHome, output.path)) {
+    if (
+      !managedOutputWithinHome(runtime.harnessHome, output.path) &&
+      !managedOutputWithinHome(runtime.agentsHome, output.path)
+    ) {
       details.push(`unsafe managed output: ${output.path}`);
       continue;
     }
     const path = resolve(output.path);
     try {
-      const checksum = digestPath(path, {
-        exclude: (relativePath) =>
-          path === resolve(runtime.installedHarness) && relativePath.split(sep)[0] === 'state',
-      });
+      const checksum = digestPath(path);
       if (checksum === null) details.push(`missing managed output: ${path}`);
       else if (checksum !== output.checksum) details.push(`modified managed output: ${path}`);
     } catch (error) {
@@ -98,7 +99,7 @@ export function installationHealth(runtime: Runtime): HealthCheck {
   const manifestPath = join(runtime.installedHarness, 'manifest.json');
   const required = [
     ...runtime.instructionFiles,
-    join(runtime.installedHarness, 'bin', 'harness.mjs'),
+    join(runtime.installedHarness, 'scripts', 'harness.mjs'),
     manifestPath,
     join(runtime.personalHome, 'AGENTS.md'),
   ];

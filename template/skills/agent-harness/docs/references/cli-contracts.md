@@ -20,7 +20,7 @@ Memory 语义仍以 Core、playbook 和对应 owner 文档为准。
 | 用例命令 | `packages/harness/src/commands/` |
 | 可复用领域原语 | `packages/harness/src/lib/` |
 | Runtime 路径、身份和环境 | `packages/harness/src/runtime.ts` |
-| 分发入口 | `template/agent-harness/bin/harness.mjs`、`template/agent-harness/dist/harness.mjs` |
+| 分发入口 | `template/skills/agent-harness/scripts/harness.mjs`、`template/skills/agent-harness/dist/harness.mjs` |
 
 `packages/cli` 是外层 Adapter，不是通用 Memory/Task 实现的 owner。`dist/` 是生成物，不手工编辑。
 
@@ -33,8 +33,10 @@ Memory 语义仍以 Core、playbook 和对应 owner 文档为准。
 
 ## 命令与输出
 
-- bootstrap --project <path> --detail brief|full --json 只读地汇总项目与 Memory 启动信息；brief 是默认边界，
-  不能把省略或截断解释为不存在。
+- bootstrap --project <path> --detail brief|full [--intent <intent>] --json [query...] 只读地汇总项目与 Memory 启动信息；
+  brief 是默认边界，不能把省略或截断解释为不存在。带 query 时在同一命令内完成文档路由：`route.load` 为按序读取的绝对路径，
+  `route.ask` 非空表示 unmatched、歧义或 required topic 被预算省略，必须先提问；不带 query 时 `route` 为 `null`。
+  `skill` 字段指向已安装的 `SKILL.md`。
 - health --project <path> --json 聚合 Runtime、installation、global memory、audit 和可选 project memory；
   healthy 只由 failed check 决定，audit 未配置是允许状态，warning 不是 failed。doctor 偏环境/入口可用性，
   validate 偏安装、内容、schema 与项目接入。

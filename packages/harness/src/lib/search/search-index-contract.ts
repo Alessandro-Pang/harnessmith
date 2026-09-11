@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { lstatSync } from 'node:fs';
-import { basename, join, relative, resolve } from 'node:path';
+import { basename, dirname, join, relative, resolve } from 'node:path';
 import type { Runtime } from '../../types.js';
 import { assertSafePath, canonicalPath } from '../filesystem/safe-path.js';
 import type { SearchOptions, SearchSource } from './search.js';
@@ -103,14 +103,8 @@ export function searchScopeHash(sources: SearchSource[]): string {
 }
 
 export function searchIndexPath(runtime: Runtime, sources: SearchSource[]): string {
-  const path = join(
-    runtime.installedHarness,
-    'state',
-    'search',
-    searchScopeHash(sources),
-    'index-v1.json',
-  );
-  assertSafePath(runtime.installedHarness, path);
+  const path = join(runtime.stateRoot, 'search', searchScopeHash(sources), 'index-v1.json');
+  assertSafePath(dirname(runtime.stateRoot), path);
   return path;
 }
 

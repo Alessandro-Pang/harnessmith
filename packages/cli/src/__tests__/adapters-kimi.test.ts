@@ -19,7 +19,13 @@ test('Kimi Code CLI adapter installs its global rule in the effective data direc
   assert.equal(adapter.home, join(canonicalRoot, 'custom-kimi-code'));
   assert.equal(adapter.instructions.length, 1);
   assert.equal(adapter.instructions[0].path, join(canonicalRoot, 'custom-kimi-code', 'AGENTS.md'));
-  assert.equal(adapter.harness, join(canonicalRoot, 'custom-kimi-code', 'agent-harness'));
+  assert.equal(adapter.harness, null);
+  assert.equal(adapter.instructions[0].mode, 'link');
+  assert.equal(adapter.hub.home, join(canonicalRoot, '.agents', 'harnessmith'));
+  assert.equal(
+    adapter.hub.entry,
+    join(canonicalRoot, '.agents', 'harnessmith', 'entry', 'AGENTS.md'),
+  );
   assert.equal(
     adapter.record,
     join(canonicalRoot, 'custom-kimi-code', '.harnessmith', 'install.json'),

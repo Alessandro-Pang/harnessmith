@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { existsSync, mkdirSync, mkdtempSync, rmSync, truncateSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { runCli } from '../cli.js';
 import { initGlobal } from '../commands/init.js';
@@ -25,18 +25,19 @@ function managedHealthFixture(): {
 } {
   const root = temporaryRoot();
   const harnessHome = join(root, 'host');
-  const harnessRoot = join(harnessHome, 'agent-harness');
-  const instruction = join(harnessHome, 'AGENTS.md');
+  const harnessRoot = join(harnessHome, 'skills', 'agent-harness');
+  const instruction = join(harnessHome, 'entry', 'AGENTS.md');
   const memoryHome = join(root, 'memory');
   const personalHome = join(root, 'personal');
   const repositoryRoot = join(root, 'repositories');
   const recordPath = join(harnessHome, '.harnessmith', 'install.json');
-  mkdirSync(join(harnessRoot, 'bin'), { recursive: true });
+  mkdirSync(join(harnessRoot, 'scripts'), { recursive: true });
   mkdirSync(join(harnessHome, '.harnessmith'), { recursive: true });
   mkdirSync(personalHome, { recursive: true });
+  mkdirSync(dirname(instruction), { recursive: true });
   writeFileSync(instruction, '# rules\n');
   writeFileSync(join(personalHome, 'AGENTS.md'), '# personal\n');
-  writeFileSync(join(harnessRoot, 'bin', 'harness.mjs'), '#!/usr/bin/env node\n');
+  writeFileSync(join(harnessRoot, 'scripts', 'harness.mjs'), '#!/usr/bin/env node\n');
   writeFileSync(
     join(harnessRoot, 'manifest.json'),
     JSON.stringify({ schemaVersion: 3, memorySchemaVersion: 1 }),
@@ -44,10 +45,11 @@ function managedHealthFixture(): {
   writeFileSync(
     join(harnessRoot, 'install-context.json'),
     JSON.stringify({
-      version: 1,
-      adapter: 'coverage-host',
+      version: 2,
       harnessHome,
+      agentsHome: join(root, 'agents'),
       instructionFiles: [instruction],
+      stateHome: join(harnessHome, 'state'),
       memoryHome,
       personalHome,
       repositoryRoot,
@@ -60,7 +62,7 @@ function managedHealthFixture(): {
       harnessRoot,
       distributionRoot: harnessHome,
       harnessHome,
-      hostAdapter: 'coverage-host',
+      hostAdapter: 'hub',
       instructionFiles: [instruction],
       installedHarness: harnessRoot,
       docsRoot: join(harnessRoot, 'docs'),
@@ -98,15 +100,16 @@ test('runtime identity accepts only an explicit source tree or valid managed con
 
   const managed = temporaryRoot();
   const harnessHome = join(managed, 'host');
-  const harnessRoot = join(harnessHome, 'agent-harness');
+  const harnessRoot = join(harnessHome, 'skills', 'agent-harness');
   mkdirSync(harnessRoot, { recursive: true });
   writeFileSync(
     join(harnessRoot, 'install-context.json'),
     JSON.stringify({
-      version: 1,
-      adapter: 'test-host',
+      version: 2,
       harnessHome,
-      instructionFiles: [join(harnessHome, 'AGENTS.md')],
+      agentsHome: join(managed, 'agents'),
+      instructionFiles: [join(harnessHome, 'entry', 'AGENTS.md')],
+      stateHome: join(harnessHome, 'state'),
       memoryHome: join(managed, 'memory'),
       personalHome: join(managed, 'personal'),
       repositoryRoot: join(managed, 'repositories'),
@@ -115,7 +118,7 @@ test('runtime identity accepts only an explicit source tree or valid managed con
   );
   const identity = resolveRuntimeIdentity(harnessRoot);
   assert.equal(identity.kind, 'managed');
-  assert.equal(identity.context.adapter, 'test-host');
+  assert.equal(identity.context.harnessHome, harnessHome);
 });
 
 test('runtime identity does not trust a copied source marker in a managed layout', () => {
@@ -128,7 +131,7 @@ test('runtime identity does not trust a copied source marker in a managed layout
 
 test('health refuses an unverified standalone identity in a managed layout', () => {
   const root = temporaryRoot();
-  const managedRoot = join(root, 'host', 'agent-harness');
+  const managedRoot = join(root, 'host', 'skills', 'agent-harness');
   mkdirSync(managedRoot, { recursive: true });
   const runtime = harnessRuntime(root, {
     harnessRoot: managedRoot,
@@ -146,16 +149,17 @@ test('health refuses an unverified standalone identity in a managed layout', () 
 test('a persisted test adapter cannot bypass managed installation verification', () => {
   const root = temporaryRoot();
   const harnessHome = join(root, 'host');
-  const harnessRoot = join(harnessHome, 'agent-harness');
-  const instruction = join(harnessHome, 'AGENTS.md');
+  const harnessRoot = join(harnessHome, 'skills', 'agent-harness');
+  const instruction = join(harnessHome, 'entry', 'AGENTS.md');
   const memoryHome = join(root, 'memory');
   const personalHome = join(root, 'personal');
   const repositoryRoot = join(root, 'repositories');
-  mkdirSync(join(harnessRoot, 'bin'), { recursive: true });
+  mkdirSync(join(harnessRoot, 'scripts'), { recursive: true });
   mkdirSync(personalHome, { recursive: true });
+  mkdirSync(dirname(instruction), { recursive: true });
   writeFileSync(instruction, '# rules\n');
   writeFileSync(join(personalHome, 'AGENTS.md'), '# personal\n');
-  writeFileSync(join(harnessRoot, 'bin', 'harness.mjs'), '#!/usr/bin/env node\n');
+  writeFileSync(join(harnessRoot, 'scripts', 'harness.mjs'), '#!/usr/bin/env node\n');
   writeFileSync(
     join(harnessRoot, 'manifest.json'),
     JSON.stringify({ schemaVersion: 3, memorySchemaVersion: 1 }),
@@ -163,10 +167,11 @@ test('a persisted test adapter cannot bypass managed installation verification',
   writeFileSync(
     join(harnessRoot, 'install-context.json'),
     JSON.stringify({
-      version: 1,
-      adapter: 'test',
+      version: 2,
       harnessHome,
+      agentsHome: join(root, 'agents'),
       instructionFiles: [instruction],
+      stateHome: join(harnessHome, 'state'),
       memoryHome,
       personalHome,
       repositoryRoot,
@@ -177,7 +182,7 @@ test('a persisted test adapter cannot bypass managed installation verification',
     harnessRoot,
     distributionRoot: harnessHome,
     harnessHome,
-    hostAdapter: 'test',
+    hostAdapter: 'hub',
     instructionFiles: [instruction],
     installedHarness: harnessRoot,
     docsRoot: join(harnessRoot, 'docs'),
@@ -196,17 +201,18 @@ test('a persisted test adapter cannot bypass managed installation verification',
 test('health reports managed digest budget failures instead of losing its report', () => {
   const root = temporaryRoot();
   const harnessHome = join(root, 'host');
-  const harnessRoot = join(harnessHome, 'agent-harness');
-  const instruction = join(harnessHome, 'AGENTS.md');
+  const harnessRoot = join(harnessHome, 'skills', 'agent-harness');
+  const instruction = join(harnessHome, 'entry', 'AGENTS.md');
   const memoryHome = join(root, 'memory');
   const personalHome = join(root, 'personal');
   const repositoryRoot = join(root, 'repositories');
-  mkdirSync(join(harnessRoot, 'bin'), { recursive: true });
+  mkdirSync(join(harnessRoot, 'scripts'), { recursive: true });
   mkdirSync(join(harnessHome, '.harnessmith'), { recursive: true });
   mkdirSync(personalHome, { recursive: true });
+  mkdirSync(dirname(instruction), { recursive: true });
   writeFileSync(instruction, '# rules\n');
   writeFileSync(join(personalHome, 'AGENTS.md'), '# personal\n');
-  writeFileSync(join(harnessRoot, 'bin', 'harness.mjs'), '#!/usr/bin/env node\n');
+  writeFileSync(join(harnessRoot, 'scripts', 'harness.mjs'), '#!/usr/bin/env node\n');
   writeFileSync(
     join(harnessRoot, 'manifest.json'),
     JSON.stringify({ schemaVersion: 3, memorySchemaVersion: 1 }),
@@ -214,10 +220,11 @@ test('health reports managed digest budget failures instead of losing its report
   writeFileSync(
     join(harnessRoot, 'install-context.json'),
     JSON.stringify({
-      version: 1,
-      adapter: 'review-host',
+      version: 2,
       harnessHome,
+      agentsHome: join(root, 'agents'),
       instructionFiles: [instruction],
+      stateHome: join(harnessHome, 'state'),
       memoryHome,
       personalHome,
       repositoryRoot,
@@ -230,11 +237,12 @@ test('health reports managed digest budget failures instead of losing its report
   writeFileSync(
     join(harnessHome, '.harnessmith', 'install.json'),
     JSON.stringify({
-      schemaVersion: 1,
-      adapter: 'review-host',
+      schemaVersion: 2,
+      scope: 'hub',
       outputs: [
         { path: instruction, checksum: 'invalid' },
         { path: harnessRoot, checksum: 'invalid' },
+        { path: join(root, 'agents', 'skills', 'agent-harness'), checksum: 'invalid' },
       ],
     }),
   );
@@ -242,7 +250,7 @@ test('health reports managed digest budget failures instead of losing its report
     harnessRoot,
     distributionRoot: harnessHome,
     harnessHome,
-    hostAdapter: 'review-host',
+    hostAdapter: 'hub',
     instructionFiles: [instruction],
     installedHarness: harnessRoot,
     docsRoot: join(harnessRoot, 'docs'),
@@ -267,8 +275,8 @@ test('health reports malformed managed output records instead of crashing', () =
   writeFileSync(
     recordPath,
     JSON.stringify({
-      schemaVersion: 1,
-      adapter: 'coverage-host',
+      schemaVersion: 2,
+      scope: 'hub',
       outputs: [null],
     }),
   );
@@ -276,6 +284,34 @@ test('health reports malformed managed output records instead of crashing', () =
   const installation = createHealthReport(runtime).checks.find(({ id }) => id === 'installation');
   assert.equal(installation?.status, 'failed');
   assert.match(installation?.message ?? '', /installation|output|invalid/i);
+});
+
+test('health reports malformed checksum records and missing hub outputs per output', () => {
+  const { runtime, recordPath } = managedHealthFixture();
+  writeFileSync(
+    recordPath,
+    JSON.stringify({
+      schemaVersion: 2,
+      scope: 'hub',
+      outputs: [
+        { path: runtime.instructionFiles[0], checksum: 'x' },
+        { path: runtime.installedHarness },
+        { path: join(runtime.agentsHome, 'skills', 'agent-harness'), checksum: 'x' },
+      ],
+    }),
+  );
+
+  const installation = createHealthReport(runtime).checks.find(({ id }) => id === 'installation');
+  assert.equal(installation?.status, 'failed');
+  assert.equal(
+    installation?.details?.some((detail) => /modified managed output:.*AGENTS\.md$/.test(detail)),
+    true,
+  );
+  assert.equal(installation?.details?.includes('invalid managed output checksum record'), true);
+  assert.equal(
+    installation?.details?.some((detail) => /missing managed output:.*agent-harness$/.test(detail)),
+    true,
+  );
 });
 
 test('invalid runtime identity disables CLI write commands but keeps diagnostics available', () => {
@@ -340,7 +376,7 @@ test('health reports malformed, incompatible, and mismatched managed installatio
   const incompatible = managedHealthFixture();
   writeFileSync(
     incompatible.recordPath,
-    JSON.stringify({ schemaVersion: 2, adapter: 'coverage-host', outputs: [] }),
+    JSON.stringify({ schemaVersion: 1, adapter: 'coverage-host', outputs: [] }),
   );
   const incompatibleCheck = createHealthReport(incompatible.runtime).checks.find(
     ({ id }) => id === 'installation',
@@ -350,7 +386,7 @@ test('health reports malformed, incompatible, and mismatched managed installatio
   const mismatched = managedHealthFixture();
   writeFileSync(
     mismatched.recordPath,
-    JSON.stringify({ schemaVersion: 1, adapter: 'coverage-host', outputs: [] }),
+    JSON.stringify({ schemaVersion: 2, scope: 'hub', outputs: [] }),
   );
   const mismatchedCheck = createHealthReport(mismatched.runtime).checks.find(
     ({ id }) => id === 'installation',
@@ -361,11 +397,12 @@ test('health reports malformed, incompatible, and mismatched managed installatio
 test('health reports an invalid installation manifest without throwing', () => {
   const root = temporaryRoot();
   const runtime = harnessRuntime(root);
-  mkdirSync(join(runtime.installedHarness, 'bin'), { recursive: true });
+  mkdirSync(join(runtime.installedHarness, 'scripts'), { recursive: true });
   mkdirSync(runtime.personalHome, { recursive: true });
+  mkdirSync(dirname(runtime.instructionFiles[0]), { recursive: true });
   writeFileSync(runtime.instructionFiles[0], '# rules\n');
   writeFileSync(join(runtime.personalHome, 'AGENTS.md'), '# personal\n');
-  writeFileSync(join(runtime.installedHarness, 'bin', 'harness.mjs'), '#!/usr/bin/env node\n');
+  writeFileSync(join(runtime.installedHarness, 'scripts', 'harness.mjs'), '#!/usr/bin/env node\n');
   writeFileSync(join(runtime.installedHarness, 'manifest.json'), '{invalid json\n');
 
   const check = createHealthReport(runtime).checks.find(({ id }) => id === 'installation');

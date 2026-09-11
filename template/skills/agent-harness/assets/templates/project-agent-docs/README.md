@@ -35,5 +35,5 @@ schema-version: 1
 读取整棵目录。显式检索使用：
 
 ```bash
-node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs memory search . "<query>"
+node {{HARNESS_HOME}}/skills/agent-harness/scripts/harness.mjs memory search . "<query>"
 ```

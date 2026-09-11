@@ -1,6 +1,6 @@
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import addFormatsModule from 'ajv-formats';
-import taskSchema from '../../../../../template/agent-harness/schemas/task.schema.json' with {
+import taskSchema from '../../../../../template/skills/agent-harness/assets/schemas/task.schema.json' with {
   type: 'json',
 };
 import type { AcceptanceStatus, TaskEvidence, TaskRecord } from '../../types.js';

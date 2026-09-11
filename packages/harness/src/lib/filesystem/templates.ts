@@ -24,7 +24,7 @@ export function render(
 }
 
 export function readTemplate(runtime: Runtime, path: string): string {
-  const fullPath = join(runtime.harnessRoot, 'templates', path);
+  const fullPath = join(runtime.harnessRoot, 'assets', 'templates', path);
   if (!existsSync(fullPath)) throw new Error(`Missing template: ${fullPath}`);
   return readFileSync(fullPath, 'utf8');
 }

@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { memoryCheck } from '../../commands/memory/memory.js';
 import { closeHandoff } from '../../commands/memory/memory-autopilot.js';
 import { curateMemory } from '../../commands/memory/memory-curation.js';
@@ -135,8 +135,8 @@ function passedItem(
 
 export function curationApplyLockRoot(runtime: Runtime, project: string): string {
   const identity = createHash('sha256').update(project).digest('hex').slice(0, 24);
-  const root = join(runtime.installedHarness, 'state', 'curation', identity);
-  assertSafePath(runtime.installedHarness, root);
+  const root = join(runtime.stateRoot, 'curation', identity);
+  assertSafePath(dirname(runtime.stateRoot), root);
   return root;
 }
 

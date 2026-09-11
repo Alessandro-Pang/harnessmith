@@ -97,7 +97,10 @@ test('workflow relation CLI emits the shared model without mutating project stat
 test('workflow relation schema is packaged with the CLI contract', () => {
   const schema = JSON.parse(
     readFileSync(
-      join(process.cwd(), 'template/agent-harness/schemas/workflow-relations.schema.json'),
+      join(
+        process.cwd(),
+        'template/skills/agent-harness/assets/schemas/workflow-relations.schema.json',
+      ),
       'utf8',
     ),
   );

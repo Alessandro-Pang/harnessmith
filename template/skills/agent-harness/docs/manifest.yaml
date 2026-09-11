@@ -1,7 +1,7 @@
 version: 1
 updated: 2026-09-04
 root: |-
-  {{HARNESS_HOME}}/agent-harness/docs
+  {{HARNESS_HOME}}/skills/agent-harness/docs
 principle: progressive-disclosure
 entries:
   operating-model:

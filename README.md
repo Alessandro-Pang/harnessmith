@@ -89,11 +89,11 @@ npx harnessmith import --input ./harness-config.json --json
 npx harnessmith import --input ./harness-config.json --proposal <proposalId> --yes --json
 ```
 
-安装结果会给出 Runtime 的实际路径。将它填入 `<harness-path>` 后，可以运行健康检查和 Repository Map 检查：
+安装结果会给出 Runtime 的实际路径（默认是共享 hub 中的 skill `~/.agents/harnessmith/skills/agent-harness`，各宿主只通过符号链接指向它）。将它填入 `<harness-path>` 后，可以运行健康检查和 Repository Map 检查：
 
 ```bash
-node <harness-path>/bin/harness.mjs health --json
-node <harness-path>/bin/harness.mjs repository-map check --json
+node <harness-path>/scripts/harness.mjs health --json
+node <harness-path>/scripts/harness.mjs repository-map check --json
 ```
 
 新建宿主会话后，规则入口会自动参与任务路由。长任务用 `task checkpoint` 保存进度，用 `task verify` 绑定机械证据；只有验收门禁通过后，才能运行 `task close --status complete`。`search` 和 `memory search` 默认使用 `--mode auto`：有可用索引时走全文检索，否则退回有界扫描。`--mode fulltext` 在索引不可用时直接失败，`--mode scan` 强制扫描。只有显式传入 `--refresh-index` 才会写入索引，而且索引只是可重建缓存。

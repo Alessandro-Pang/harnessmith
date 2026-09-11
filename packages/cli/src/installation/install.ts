@@ -1,126 +1,82 @@
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
+import { existsSync, mkdirSync, renameSync } from 'node:fs';
+import { dirname } from 'node:path';
+import { atomicWrite, removeExact, replaceManagedBlock, timestamp } from '../shared/files.js';
 import {
-  atomicWrite,
-  copyRenderedTree,
-  removeExact,
-  replaceManagedBlock,
-  timestamp,
-} from '../shared/files.js';
-import { assertSafeAdapterPaths, assertSafePath, ignoreRoot } from '../shared/safe-path.js';
-import type { Adapter, InstallOptions, InstallResult, PreparedInstall } from '../shared/types.js';
-import { errorMessage, HarnessmithError } from '../shared/types.js';
+  assertSafeOutputPath,
+  assertSafePath,
+  assertSafeScopePaths,
+  entryExists,
+  ignoreRoot,
+  pruneEmptyDirectories,
+} from '../shared/safe-path.js';
+import type {
+  Adapter,
+  InstallOptions,
+  InstallRecord,
+  InstallResult,
+  PreparedInstall,
+} from '../shared/types.js';
+import { errorMessage } from '../shared/types.js';
 import { effectiveContentFingerprint } from '../status/effective-content-fingerprint.js';
+import { hubOwnerId, sharedHub } from './hub.js';
+import { prepareHub, prepareInstall } from './install-stage.js';
+import { packageVersion } from './install-template.js';
 import {
-  checkModules,
-  harnessTemplateRoot,
-  installationRenderer,
-  installationValues,
-  isHarnessDistributionPath,
-  packageVersion,
-  templateRoot,
-} from './install-template.js';
-import { withAdapterLocks } from './operation-lock.js';
+  assertMigrationPaths,
+  commitMigrations,
+  commitSeeds,
+  recordedMigrations,
+} from './layout-migration.js';
+import { withScopeLocks } from './operation-lock.js';
 import {
   assertNonOverlappingAdapters,
   describeInstall,
   digestManagedOutput,
+  hubOwners,
+  isHub,
   managedBlockMarker,
+  readInstallRecord,
   restoreSnapshots,
-  snapshotFiles,
 } from './records.js';
 import { initializeUserData } from './user-data.js';
 
-function assertInstallable(adapter: Adapter, force: boolean): void {
-  const conflicts = describeInstall(adapter).outputs.filter(({ action }) => action === 'conflict');
-  if (conflicts.length > 0 && !force) {
-    throw new HarnessmithError(
-      'SAFETY_CONFLICT',
-      `Existing unmanaged or modified files require --force:\n${conflicts.map(({ path }) => `  ${path}`).join('\n')}`,
-      3,
-    );
-  }
-}
+export { prepareHub, prepareInstall } from './install-stage.js';
 
-function assertExpectedOutputs(
-  adapter: Adapter,
-  expected: Record<string, string | null> | undefined,
-): void {
-  if (!expected) return;
-  for (const path of [adapter.harness, ...adapter.instructions.map(({ path }) => path)]) {
-    if (!(path in expected) || digestManagedOutput(adapter, path) !== expected[path]) {
-      throw new HarnessmithError(
-        'STATE_CONFLICT',
-        `Adopt proposal changed before installation: ${path}`,
-        3,
-      );
-    }
-  }
-}
+type RecordIdentity = Pick<InstallRecord, 'adapter' | 'hub' | 'owners' | 'installed' | 'stamp'>;
 
-export function prepareInstall(adapter: Adapter, options: InstallOptions = {}): PreparedInstall {
-  const { env = process.env, force = false } = options;
-  assertSafeAdapterPaths(adapter);
-  assertExpectedOutputs(adapter, options.expectedOutputChecksums);
-  assertInstallable(adapter, force);
-  mkdirSync(adapter.home, { recursive: true });
-  assertSafeAdapterPaths(adapter);
-  const stageRoot = mkdtempSync(join(adapter.home, '.harnessmith-stage-'));
-  assertSafePath(adapter.home, stageRoot);
-  try {
-    const render = installationRenderer(adapter, env);
-    const stagedHarness = join(stageRoot, 'agent-harness');
-    copyRenderedTree(harnessTemplateRoot, stagedHarness, render, '', isHarnessDistributionPath);
-    atomicWrite(
-      join(stagedHarness, 'install-context.json'),
-      `${JSON.stringify(installationValues(adapter, env), null, 2)}\n`,
-    );
-    if (existsSync(join(adapter.harness, 'state'))) {
-      cpSync(join(adapter.harness, 'state'), join(stagedHarness, 'state'), { recursive: true });
-    }
-    checkModules(stagedHarness);
-
-    const agentsSource = render(readFileSync(join(templateRoot, 'template', 'AGENTS.md'), 'utf8'));
-    const outputs = [{ staged: stagedHarness, destination: adapter.harness }];
-    for (const instruction of adapter.instructions) {
-      const staged = join(stageRoot, 'instructions', relative(adapter.home, instruction.path));
-      atomicWrite(staged, instruction.render(agentsSource));
-      outputs.push({ staged, destination: instruction.path });
-    }
-    return {
-      adapter,
-      stageRoot,
-      outputs,
-      backups: [],
-      installed: [],
-      recordBackup: null,
-      recordWritten: false,
-      ignoreWritten: 0,
-      ignoreSnapshots: snapshotFiles(adapter.localIgnoreFiles || []),
-    };
-  } catch (error) {
-    removeExact(stageRoot);
-    throw new Error(`Could not stage ${adapter.label}: ${errorMessage(error)}`);
-  }
-}
-
-export function commitInstall(prepared: PreparedInstall, stamp = timestamp()): PreparedInstall {
-  assertSafeAdapterPaths(prepared.adapter);
-  assertSafePath(prepared.adapter.home, prepared.stageRoot);
+function assertCommitPaths(prepared: PreparedInstall, stamp: string): void {
+  const { scope } = prepared;
+  assertSafeScopePaths(scope);
+  assertSafePath(scope.home, prepared.stageRoot);
   for (const output of prepared.outputs) {
-    assertSafePath(prepared.stageRoot, output.staged);
-    assertSafePath(prepared.adapter.home, output.destination);
-    assertSafePath(prepared.adapter.home, `${output.destination}.backup-${stamp}`);
+    assertSafePath(prepared.stageRoot, output.staged, { allowSymlinkLeaf: true });
+    assertSafeOutputPath(scope, output, output.destination);
+    assertSafeOutputPath(scope, output, `${output.destination}.backup-${stamp}`);
   }
-  for (const ignore of prepared.adapter.localIgnoreFiles || []) {
-    assertSafePath(ignoreRoot(prepared.adapter, ignore), ignore.path);
+  assertMigrationPaths(prepared, stamp);
+  for (const ignore of scope.localIgnoreFiles || []) {
+    assertSafePath(ignoreRoot(scope, ignore), ignore.path);
   }
-  assertSafePath(prepared.adapter.home, prepared.adapter.record);
-  assertSafePath(prepared.adapter.home, `${prepared.adapter.record}.backup-${stamp}`);
+  assertSafePath(scope.home, scope.record);
+  assertSafePath(scope.home, `${scope.record}.backup-${stamp}`);
+}
+
+/**
+ * Move staged outputs into place with sibling backups, retire migrated paths, update ignore
+ * blocks and write this layer's record. Every step is undone by `rollbackInstall`.
+ */
+export function commitInstall(
+  prepared: PreparedInstall,
+  stamp = timestamp(),
+  identity: RecordIdentity = {},
+): PreparedInstall {
+  const { scope } = prepared;
+  assertCommitPaths(prepared, stamp);
+  if (isHub(scope)) commitSeeds(prepared, scope);
   for (const output of prepared.outputs) {
     mkdirSync(dirname(output.destination), { recursive: true });
-    assertSafePath(prepared.adapter.home, output.destination);
-    if (existsSync(output.destination)) {
+    assertSafeOutputPath(scope, output, output.destination);
+    if (entryExists(output.destination)) {
       const backup = `${output.destination}.backup-${stamp}`;
       renameSync(output.destination, backup);
       prepared.backups.push({ original: output.destination, backup });
@@ -128,104 +84,144 @@ export function commitInstall(prepared: PreparedInstall, stamp = timestamp()): P
     renameSync(output.staged, output.destination);
     prepared.installed.push(output.destination);
   }
-  for (const ignore of prepared.adapter.localIgnoreFiles || []) {
-    assertSafePath(ignoreRoot(prepared.adapter, ignore), ignore.path);
+  commitMigrations(prepared, stamp);
+  for (const ignore of scope.localIgnoreFiles || []) {
+    assertSafePath(ignoreRoot(scope, ignore), ignore.path);
     replaceManagedBlock(ignore.path, managedBlockMarker, ignore.lines, ignore);
     prepared.ignoreWritten += 1;
   }
-  mkdirSync(dirname(prepared.adapter.record), { recursive: true });
-  assertSafePath(prepared.adapter.home, prepared.adapter.record);
-  if (existsSync(prepared.adapter.record)) {
-    prepared.recordBackup = `${prepared.adapter.record}.backup-${stamp}`;
-    renameSync(prepared.adapter.record, prepared.recordBackup);
+  mkdirSync(dirname(scope.record), { recursive: true });
+  assertSafePath(scope.home, scope.record);
+  if (existsSync(scope.record)) {
+    prepared.recordBackup = `${scope.record}.backup-${stamp}`;
+    renameSync(scope.record, prepared.recordBackup);
   }
-  const record = {
-    schemaVersion: 1,
+  const record: InstallRecord = {
+    schemaVersion: 2,
+    scope: scope.scope,
     packageVersion,
-    adapter: prepared.adapter.name,
+    ...identity,
+    stamp,
     installedAt: new Date().toISOString(),
-    contentFingerprint: effectiveContentFingerprint(prepared.adapter),
-    outputs: prepared.outputs.map(({ destination }) => ({
+    ...(isHub(scope) ? { contentFingerprint: effectiveContentFingerprint(scope) } : {}),
+    outputs: prepared.outputs.map(({ destination, link, linkMode }) => ({
       path: destination,
-      checksum: digestManagedOutput(prepared.adapter, destination),
+      checksum: digestManagedOutput(scope, destination) ?? '',
       backup: prepared.backups.find(({ original }) => original === destination)?.backup || null,
+      ...(link ? { link, linkMode } : {}),
     })),
-    ignoreFiles: (prepared.adapter.localIgnoreFiles || []).map(({ path }) => path),
+    ...(prepared.migrations.length > 0 ? { migratedOutputs: recordedMigrations(prepared) } : {}),
+    ignoreFiles: (scope.localIgnoreFiles || []).map(({ path }) => path),
     recordBackup: prepared.recordBackup,
   };
-  atomicWrite(prepared.adapter.record, `${JSON.stringify(record, null, 2)}\n`);
+  atomicWrite(scope.record, `${JSON.stringify(record, null, 2)}\n`);
   prepared.recordWritten = true;
   removeExact(prepared.stageRoot);
   return prepared;
 }
 
 export function rollbackInstall(prepared: PreparedInstall): void {
+  const { scope } = prepared;
   if (prepared.recordWritten) {
-    assertSafePath(prepared.adapter.home, prepared.adapter.record);
-    removeExact(prepared.adapter.record);
+    assertSafePath(scope.home, scope.record);
+    removeExact(scope.record);
   }
   if (prepared.recordBackup && existsSync(prepared.recordBackup)) {
-    assertSafePath(prepared.adapter.home, prepared.recordBackup);
-    assertSafePath(prepared.adapter.home, prepared.adapter.record);
-    renameSync(prepared.recordBackup, prepared.adapter.record);
+    assertSafePath(scope.home, prepared.recordBackup);
+    assertSafePath(scope.home, scope.record);
+    renameSync(prepared.recordBackup, scope.record);
   }
   for (const path of [...prepared.installed].reverse()) {
-    assertSafePath(prepared.adapter.home, path);
+    const output = prepared.outputs.find(({ destination }) => destination === path);
+    if (output) assertSafeOutputPath(scope, output, path);
     removeExact(path);
   }
   for (const { original, backup } of [...prepared.backups].reverse()) {
-    assertSafePath(prepared.adapter.home, original);
-    assertSafePath(prepared.adapter.home, backup);
-    if (existsSync(backup)) renameSync(backup, original);
+    const output = prepared.outputs.find(({ destination }) => destination === original);
+    const migration = prepared.migrations.find(({ path }) => path === original);
+    const root = output ? output.root : migration?.root;
+    if (!root) continue;
+    assertSafePath(root, original, { allowSymlinkLeaf: true });
+    assertSafePath(root, backup, { allowSymlinkLeaf: true });
+    if (entryExists(backup)) renameSync(backup, original);
   }
+  for (const seeded of [...prepared.seeded].reverse()) removeExact(seeded);
   for (let index = 0; index < prepared.ignoreWritten; index += 1) {
-    const ignore = prepared.adapter.localIgnoreFiles?.[index];
+    const ignore = scope.localIgnoreFiles?.[index];
     const snapshot = prepared.ignoreSnapshots[index];
     if (!ignore || !snapshot) continue;
-    assertSafePath(ignoreRoot(prepared.adapter, ignore), snapshot.path);
+    assertSafePath(ignoreRoot(scope, ignore), snapshot.path);
     restoreSnapshots([snapshot]);
   }
-  assertSafePath(prepared.adapter.home, prepared.stageRoot);
+  assertSafePath(scope.home, prepared.stageRoot);
   removeExact(prepared.stageRoot);
+  if (!prepared.recordBackup) {
+    pruneEmptyDirectories([
+      ...prepared.outputs
+        .filter(
+          ({ destination }) => !prepared.backups.some(({ original }) => original === destination),
+        )
+        .map(({ destination, root }) => ({ path: dirname(destination), root })),
+      { path: dirname(scope.record), root: scope.home },
+    ]);
+  }
 }
 
+function rollbackAll(prepared: PreparedInstall[], error: unknown): never {
+  const rollbackErrors: string[] = [];
+  for (const item of [...prepared].reverse()) {
+    try {
+      rollbackInstall(item);
+    } catch (rollbackError) {
+      rollbackErrors.push(`${item.scope.label}: ${errorMessage(rollbackError)}`);
+    }
+  }
+  if (rollbackErrors.length > 0) {
+    throw new Error(
+      `Installation failed and rollback was incomplete: ${errorMessage(error)}; rollback: ${rollbackErrors.join('; ')}`,
+      { cause: error instanceof Error ? error : undefined },
+    );
+  }
+  throw error;
+}
+
+/**
+ * Install or upgrade the hub and the selected hosts in one transaction: the hub layer is
+ * committed first so host links always point at a complete Harness, then each host layer,
+ * then user data is initialized. Any failure rolls every layer back.
+ */
 export function installAll(adapters: Adapter[], options: InstallOptions = {}): InstallResult[] {
   assertNonOverlappingAdapters(adapters);
-  return withAdapterLocks(adapters, () => {
+  const hub = sharedHub(adapters);
+  return withScopeLocks([hub, ...adapters], () => {
     const prepared: PreparedInstall[] = [];
     try {
-      for (const adapter of adapters) prepared.push(prepareInstall(adapter, options));
+      const hubStage = prepareHub(hub, adapters, options);
+      prepared.push(hubStage);
+      for (const adapter of adapters) prepared.push(prepareInstall(adapter, hubStage, options));
       const stamp = options.stamp || timestamp();
-      for (const item of prepared) commitInstall(item, stamp);
-      const initialization =
-        prepared.length > 0
-          ? initializeUserData(prepared[0], options.env || process.env, {
-              global: !options.noInitGlobal,
-              afterInitialize: options.afterUserDataInitialize,
-            })
-          : '';
-      return prepared.map(({ adapter, backups }) => ({
-        ...describeInstall(adapter),
+      const installed = adapters.map(hubOwnerId);
+      const owners = [...new Set([...hubOwners(readInstallRecord(hub)), ...installed])];
+      commitInstall(hubStage, stamp, { owners, installed });
+      for (const item of prepared.slice(1)) {
+        commitInstall(item, stamp, { adapter: item.scope.name as Adapter['name'], hub: hub.home });
+      }
+      const initialization = initializeUserData(hub, options.env || process.env, {
+        global: !options.noInitGlobal,
+        afterInitialize: options.afterUserDataInitialize,
+      });
+      return prepared.slice(1).map((item, index) => ({
+        ...describeInstall(adapters[index]),
+        migrations: [...hubStage.migrations, ...item.migrations].map(({ path, action }) => ({
+          path,
+          action,
+        })),
         initializeGlobalMemory: !options.noInitGlobal,
-        backups,
+        backups: [...hubStage.backups, ...item.backups],
         initialization,
       }));
     } catch (error) {
-      const rollbackErrors: string[] = [];
-      for (const item of [...prepared].reverse()) {
-        try {
-          rollbackInstall(item);
-        } catch (rollbackError) {
-          rollbackErrors.push(`${item.adapter.label}: ${errorMessage(rollbackError)}`);
-        }
-      }
-      if (rollbackErrors.length > 0) {
-        throw new Error(
-          `Installation failed and rollback was incomplete: ${errorMessage(error)}; rollback: ${rollbackErrors.join('; ')}`,
-          { cause: error instanceof Error ? error : undefined },
-        );
-      }
-      throw error;
+      return rollbackAll(prepared, error);
     }
   });
 }

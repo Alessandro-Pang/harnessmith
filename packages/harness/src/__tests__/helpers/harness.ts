@@ -6,7 +6,7 @@ import { modeMatches } from '../../lib/filesystem/portable-mode.js';
 import type { Io, Runtime } from '../../types.js';
 
 export const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../../../..');
-export const sourceHarnessRoot = join(packageRoot, 'template', 'agent-harness');
+export const sourceHarnessRoot = join(packageRoot, 'template', 'skills', 'agent-harness');
 
 export interface CapturedIo extends Io {
   logs: string[];
@@ -43,7 +43,7 @@ export function assertMode(path: string, expected: number): void {
 export function harnessRuntime(root: string, overrides: Partial<Runtime> = {}): Runtime {
   const home = join(root, 'home');
   const harnessHome = join(root, 'host');
-  const installedHarness = join(harnessHome, 'agent-harness');
+  const installedHarness = join(harnessHome, 'skills', 'agent-harness');
   mkdirSync(home, { recursive: true });
   return Object.freeze({
     env: { HOME: home, TZ: 'UTC' },
@@ -51,10 +51,12 @@ export function harnessRuntime(root: string, overrides: Partial<Runtime> = {}): 
     harnessRoot: sourceHarnessRoot,
     distributionRoot: join(packageRoot, 'template'),
     harnessHome,
+    agentsHome: join(root, 'agents'),
     hostAdapter: 'test',
-    instructionFiles: [join(harnessHome, 'AGENTS.md')],
+    instructionFiles: [join(harnessHome, 'entry', 'AGENTS.md')],
     installedHarness,
     docsRoot: join(installedHarness, 'docs'),
+    stateRoot: join(harnessHome, 'state'),
     memoryHome: join(root, 'memory'),
     personalHome: join(root, 'personal'),
     repositoryRoot: join(root, 'repositories'),

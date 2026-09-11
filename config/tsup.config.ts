@@ -37,7 +37,7 @@ export default defineConfig([
   },
   {
     entry: { harness: 'packages/harness/src/cli.ts' },
-    outDir: 'template/agent-harness/dist',
+    outDir: 'template/skills/agent-harness/dist',
     format: ['esm'],
     outExtension: () => ({ js: '.mjs' }),
     target: 'node22',

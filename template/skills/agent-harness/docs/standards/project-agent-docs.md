@@ -52,8 +52,9 @@ Harnesssmith 自身的产品目标、验收约束和实现缺陷属于项目正�
 
 canonical profile 仍由 Host 在新 task/thread 的首个工具调用中单独、有界读取。个人规则、项目根和就近规则确认后，项目启动只运行一次只读聚合入口：
 
-`<harness> bootstrap --project <absolute-project-root> --detail brief --json`
+`<harness> bootstrap --project <absolute-project-root> --detail brief --json "<用户当前原文>"`
 
+末尾的原文让同一条命令顺带完成文档路由：`route.load` 是按顺序读取的文档路径，`route.ask` 非空时先提问；不带原文时 `route` 为 `null`。
 brief 验证 Memory 并计算 metadata、core、maintenance 与推荐，但只返回 project/Git、Memory state、最多四个 active task、最多八个 recommendations、扫描预算、原因和 `omitted`；不把省略 section 伪装成不存在。`recommended` 保留兼容引用，`recommendations` 带 reason、来源、状态与是否需要重新核验。显式 `--detail full` 才返回完整 metadata、core、maintenance、最多 32 个 task 和最多 32 个 recommendations，供审计或诊断。两种模式都只读，不修复、归档、迁移或写索引；`partial`、`invalid`、`inconclusive`、`truncated` 和未初始化必须可区分。
 
 按 recommendations 的稳定顺序加载与当前任务相关的正文：blocked/active core 优先，维护候选次之，过期和已关闭输入不能挤占当前工作；同一引用合并原因和来源。不因被推荐就读取无关正文，也不递归读取 archive。随后必须回到代码、测试、契约或正式文档核对；bootstrap 不授予 mutation 权限。

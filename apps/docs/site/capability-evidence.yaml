@@ -342,7 +342,7 @@ claims:
       - README.md
       - README.en.md
       - apps/docs/site/zh/concepts/architecture.md
-      - template/agent-harness/docs/core/observability.md
+      - template/skills/agent-harness/docs/core/observability.md
 
   - id: trusted-host-execution-attestation
     status: delegated

@@ -22,7 +22,13 @@ test('Zed Agent adapter uses the documented Unix personal configuration director
   assert.equal(adapter.home, expectedHome);
   assert.equal(adapter.instructions.length, 1);
   assert.equal(adapter.instructions[0].path, join(expectedHome, 'AGENTS.md'));
-  assert.equal(adapter.harness, join(expectedHome, 'agent-harness'));
+  assert.equal(adapter.harness, null);
+  assert.equal(adapter.instructions[0].mode, 'link');
+  assert.equal(adapter.hub.home, join(canonicalRoot, '.agents', 'harnessmith'));
+  assert.equal(
+    adapter.hub.entry,
+    join(canonicalRoot, '.agents', 'harnessmith', 'entry', 'AGENTS.md'),
+  );
   assert.equal(adapter.record, join(expectedHome, '.harnessmith', 'install.json'));
   assert.equal(adapter.capabilities.scope, 'global');
   assert.equal(adapter.capabilities.instructionFormat, 'markdown');

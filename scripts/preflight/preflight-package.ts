@@ -63,13 +63,14 @@ export function checkPackage(root: string, harnessRoot: string, check: Check): v
   for (const required of [
     'bin',
     'dist',
-    'template/AGENTS.md',
-    'template/agent-harness/bin',
-    'template/agent-harness/dist',
-    'template/agent-harness/docs',
-    'template/agent-harness/manifest.json',
-    'template/agent-harness/schemas',
-    'template/agent-harness/templates',
+    'template/entry/AGENTS.md',
+    'template/skills/agent-harness/SKILL.md',
+    'template/skills/agent-harness/scripts',
+    'template/skills/agent-harness/dist',
+    'template/skills/agent-harness/docs',
+    'template/skills/agent-harness/manifest.json',
+    'template/skills/agent-harness/assets/schemas',
+    'template/skills/agent-harness/assets/templates',
     'evals/scenarios.json',
     'evals/scenarios.schema.json',
     'evals/run.schema.json',
@@ -104,7 +105,8 @@ export function checkPackage(root: string, harnessRoot: string, check: Check): v
     'npm package files must not publish TypeScript sources or test directories',
   );
   check(existsSync(join(root, 'bin', 'harnessmith.mjs')), 'outer CLI launcher is missing');
-  check(existsSync(join(harnessRoot, 'bin', 'harness.mjs')), 'Harness CLI launcher is missing');
+  check(existsSync(join(harnessRoot, 'scripts', 'harness.mjs')), 'Harness CLI launcher is missing');
+  check(existsSync(join(harnessRoot, 'SKILL.md')), 'Harness skill entry point is missing');
   check(
     existsSync(join(harnessRoot, 'dist', 'harness.mjs')),
     'Harness bundle is missing; run pnpm run build',

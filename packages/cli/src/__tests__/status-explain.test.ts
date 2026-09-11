@@ -66,7 +66,7 @@ test('status explanation reports managed, modified, partial, and backup evidence
   assert.equal(modified.reasonCode, 'MANAGED_OUTPUT_MODIFIED');
   assert.ok(modified.actions.some(({ code }) => code === 'INSPECT_DIFF'));
 
-  rmSync(adapter.harness, { recursive: true });
+  rmSync(adapter.hub.harness, { recursive: true });
   const partial = explainStatus(inspectStatusAll([adapter])[0]);
   assert.equal(partial.observedState, 'partial');
   assert.equal(partial.reasonCode, 'PARTIAL_INSTALLATION');

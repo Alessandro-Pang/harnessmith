@@ -5,7 +5,7 @@ import { parseRepositoryMap } from './repository-map-format.js';
 
 export function repositoryMapPaths(runtime: Runtime) {
   const projects = join(runtime.personalHome, 'projects');
-  const state = join(runtime.installedHarness, 'state', 'repository-map');
+  const state = join(runtime.stateRoot, 'repository-map');
   return {
     projects,
     canonical: join(projects, 'repository-map.yaml'),

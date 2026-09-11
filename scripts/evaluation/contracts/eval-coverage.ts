@@ -121,10 +121,13 @@ function scenarioCoverage(entries: EvaluationCase[], results: SuiteCaseResult[])
 export function evaluateCoverage(results: SuiteCaseResult[] = [], entries = evaluationRegistry()) {
   const contract = loadCoverageContract();
   const manifest = YAML.parse(
-    readFileSync(join(repositoryRoot, 'template/agent-harness/docs/manifest.yaml'), 'utf8'),
+    readFileSync(join(repositoryRoot, 'template/skills/agent-harness/docs/manifest.yaml'), 'utf8'),
   ) as { entries: Record<string, { kind: string; activationRules?: { mode: string }[] }> };
   const rules = YAML.parse(
-    readFileSync(join(repositoryRoot, 'template/agent-harness/docs/prompt-rules.yaml'), 'utf8'),
+    readFileSync(
+      join(repositoryRoot, 'template/skills/agent-harness/docs/prompt-rules.yaml'),
+      'utf8',
+    ),
   ) as {
     rules: {
       id: string;

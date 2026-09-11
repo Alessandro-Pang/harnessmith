@@ -47,8 +47,20 @@ export function copyRenderedTree(
   }
 }
 
+/** Remove `path` itself (never following a symlink), including dangling symlinks. */
 export function removeExact(path: string): void {
-  if (existsSync(path)) rmSync(path, { recursive: true, force: true });
+  if (entryExists(path)) rmSync(path, { recursive: true, force: true });
+}
+
+function entryExists(path: string): boolean {
+  try {
+    lstatSync(path);
+    return true;
+  } catch (error) {
+    const { code } = error as NodeJS.ErrnoException;
+    if (code === 'ENOENT' || code === 'ENOTDIR') return false;
+    throw error;
+  }
 }
 
 export interface DigestOptions {
@@ -155,7 +167,7 @@ function digestChildren(
 }
 
 export function digestPath(path: string, options: DigestOptions = {}): string | null {
-  if (!existsSync(path)) return null;
+  if (!entryExists(path)) return null;
   const exclude = options.exclude ?? (() => false);
   const budget = digestBudget(options);
   const hash = createHash('sha256');

@@ -187,7 +187,8 @@ export function collectDiagnosticAdapter(
     const inspection = inspectStatusAll([adapter])[0];
     const installation = installationSummary(inspection);
     const canRun =
-      installation.status === 'managed' && existsSync(join(adapter.harness, 'bin', 'harness.mjs'));
+      installation.status === 'managed' &&
+      existsSync(join(adapter.hub.harness, 'scripts', 'harness.mjs'));
     const runtime = canRun
       ? summarizeRuntime(adapter, env, project, failures)
       : {

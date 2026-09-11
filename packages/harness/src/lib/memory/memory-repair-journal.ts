@@ -1,5 +1,5 @@
 import { existsSync, lstatSync, readdirSync, readFileSync, rmSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import type { Runtime } from '../../types.js';
 import { atomicWrite } from '../filesystem/files.js';
 import { assertSafePath } from '../filesystem/safe-path.js';
@@ -34,11 +34,11 @@ function validProposalId(value: string): boolean {
 
 export function repairJournalPaths(runtime: Runtime, proposalId: string) {
   if (!validProposalId(proposalId)) throw new Error('Invalid repair proposal id');
-  const root = join(runtime.installedHarness, 'state', 'repair');
+  const root = join(runtime.stateRoot, 'repair');
   const identity = proposalId.slice('sha256:'.length);
   const marker = join(root, `${identity}.json`);
   const backup = join(root, `${identity}.backup`);
-  for (const path of [root, marker, backup]) assertSafePath(runtime.installedHarness, path);
+  for (const path of [root, marker, backup]) assertSafePath(dirname(runtime.stateRoot), path);
   return { root, marker, backup };
 }
 
@@ -146,9 +146,9 @@ function observeMarker(runtime: Runtime, root: string, markerPath: string) {
 }
 
 export function discoverRepairJournals(runtime: Runtime, root: string): RepairJournalObservation[] {
-  const journalRoot = join(runtime.installedHarness, 'state', 'repair');
+  const journalRoot = join(runtime.stateRoot, 'repair');
   if (!existsSync(journalRoot)) return [];
-  assertSafePath(runtime.installedHarness, journalRoot);
+  assertSafePath(dirname(runtime.stateRoot), journalRoot);
   const names = readdirSync(journalRoot).sort();
   if (names.length > 256) {
     return [

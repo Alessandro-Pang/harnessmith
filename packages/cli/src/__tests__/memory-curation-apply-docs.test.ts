@@ -11,19 +11,27 @@ test('public curation apps/docs/site preserve explicit typed apply and acceptanc
     'utf8',
   );
   const architecture = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'core', 'harness-cli-architecture.md'),
+    join(
+      root,
+      'template',
+      'skills',
+      'agent-harness',
+      'docs',
+      'core',
+      'harness-cli-architecture.md',
+    ),
     'utf8',
   );
   const standard = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'standards', 'project-agent-docs.md'),
+    join(root, 'template', 'skills', 'agent-harness', 'docs', 'standards', 'project-agent-docs.md'),
     'utf8',
   );
   const reference = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'references', 'memory-contracts.md'),
+    join(root, 'template', 'skills', 'agent-harness', 'docs', 'references', 'memory-contracts.md'),
     'utf8',
   );
   const manifest = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'manifest.yaml'),
+    join(root, 'template', 'skills', 'agent-harness', 'docs', 'manifest.yaml'),
     'utf8',
   );
 

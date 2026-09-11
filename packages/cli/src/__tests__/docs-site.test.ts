@@ -227,8 +227,11 @@ test('history reflects the project origin without presenting the blind review as
 test('memory and task overview links to the current canonical runtime protocols', () => {
   const overview = read('apps/docs/site/zh/concepts/memory-and-tasks.md');
 
-  assert.match(overview, /template\/agent-harness\/docs\/standards\/project-agent-docs\.md/);
-  assert.match(overview, /template\/agent-harness\/docs\/core\/long-running-tasks\.md/);
+  assert.match(
+    overview,
+    /template\/skills\/agent-harness\/docs\/standards\/project-agent-docs\.md/,
+  );
+  assert.match(overview, /template\/skills\/agent-harness\/docs\/core\/long-running-tasks\.md/);
   assert.doesNotMatch(overview, /core\/memory-architecture\.md|topics\/task-lifecycle\.md/);
 });
 

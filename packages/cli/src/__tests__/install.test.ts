@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import {
   existsSync,
+  lstatSync,
   mkdirSync,
   mkdtempSync,
   readdirSync,
@@ -77,9 +78,12 @@ test('installs all adapters, maps paths, and renames existing rules', { timeout:
   mkdirSync(join(cursor, 'rules'), { recursive: true });
   mkdirSync(codex, { recursive: true });
   mkdirSync(claude, { recursive: true });
-  mkdirSync(join(codex, 'agent-harness', 'state'), { recursive: true });
-  writeFileSync(join(codex, 'agent-harness', 'marker.txt'), 'old harness');
-  writeFileSync(join(codex, 'agent-harness', 'state', 'keep.txt'), 'preserved state');
+  const hub = join(root, '.agents', 'harnessmith');
+  const hubHarness = join(hub, 'skills', 'agent-harness');
+  mkdirSync(hubHarness, { recursive: true });
+  mkdirSync(join(hub, 'state'), { recursive: true });
+  writeFileSync(join(hubHarness, 'marker.txt'), 'old harness');
+  writeFileSync(join(hub, 'state', 'keep.txt'), 'preserved state');
   writeFileSync(join(codex, 'AGENTS.md'), 'old codex');
   writeFileSync(join(claude, 'AGENTS.md'), 'old claude canonical');
   writeFileSync(join(claude, 'CLAUDE.md'), 'old claude');
@@ -95,12 +99,25 @@ test('installs all adapters, maps paths, and renames existing rules', { timeout:
   const claudeRules = readFileSync(join(claude, 'CLAUDE.md'), 'utf8');
   const cursorRules = readFileSync(join(cursor, 'rules', 'agent-harness.mdc'), 'utf8');
   assert.doesNotMatch(codexRules, /\{\{HARNESS_HOME\}\}/);
-  const codexContext = JSON.parse(
-    readFileSync(join(codex, 'agent-harness', 'install-context.json'), 'utf8'),
-  ) as { harnessHome: string; memoryHome: string };
-  assert.ok(codexRules.includes(`${codexContext.memoryHome}/profile.md`));
-  assert.ok(codexRules.includes(`${codexContext.harnessHome}/agent-harness`));
-  assert.match(claudeRules, /宿主原生 memory 仅作待核对线索/);
+  const hubContext = JSON.parse(readFileSync(join(hubHarness, 'install-context.json'), 'utf8')) as {
+    version: number;
+    harnessHome: string;
+    memoryHome: string;
+  };
+  assert.equal(hubContext.version, 2);
+  assert.equal(hubContext.harnessHome, realpathSync.native(hub));
+  assert.ok(codexRules.includes(`${hubContext.memoryHome}/profile.md`));
+  assert.ok(codexRules.includes(`${hubContext.harnessHome}/skills/agent-harness`));
+  assert.equal(lstatSync(join(codex, 'AGENTS.md')).isSymbolicLink(), true);
+  assert.equal(lstatSync(join(claude, 'CLAUDE.md')).isSymbolicLink(), true);
+  assert.equal(lstatSync(join(cursor, 'AGENTS.md')).isSymbolicLink(), true);
+  assert.equal(lstatSync(join(cursor, 'rules', 'agent-harness.mdc')).isSymbolicLink(), false);
+  assert.equal(readFileSync(join(hub, 'entry', 'AGENTS.md'), 'utf8'), codexRules);
+  assert.equal(lstatSync(join(root, '.agents', 'skills', 'agent-harness')).isSymbolicLink(), true);
+  assert.equal(existsSync(join(codex, 'skills')), false, 'codex scans ~/.agents/skills natively');
+  assert.equal(lstatSync(join(claude, 'skills', 'agent-harness')).isSymbolicLink(), true);
+  assert.equal(lstatSync(join(cursor, 'skills', 'agent-harness')).isSymbolicLink(), true);
+  assert.match(claudeRules, /宿主原生 memory 只是待核对线索/);
   assert.match(cursorRules, /^---\ndescription: Personal coding agent harness/m);
   assert.match(cursorRules, /alwaysApply: true/);
   assert.match(cursorRules, /managed-by: harnessmith/);
@@ -109,9 +126,10 @@ test('installs all adapters, maps paths, and renames existing rules', { timeout:
   assert.ok(existsSync(join(root, 'agent-docs', 'README.md')));
   assert.ok(existsSync(join(root, 'agent-docs', 'profile.md')));
   assert.ok(existsSync(join(root, 'personal-harness', 'AGENTS.md')));
-  assert.equal(existsSync(join(codex, 'agent-harness', 'packages/cli/src')), false);
-  assert.ok(existsSync(join(codex, 'agent-harness', 'dist', 'harness.mjs')));
-  assert.ok(existsSync(join(codex, 'agent-harness', 'docs', 'README.md')));
+  assert.equal(existsSync(join(hubHarness, 'packages/cli/src')), false);
+  assert.ok(existsSync(join(hubHarness, 'dist', 'harness.mjs')));
+  assert.ok(existsSync(join(hubHarness, 'docs', 'README.md')));
+  assert.ok(existsSync(join(hub, '.harnessmith', 'install.json')));
 
   const projectStatus = spawnSync('git', ['-C', project, 'status', '--short'], {
     encoding: 'utf8',
@@ -122,36 +140,41 @@ test('installs all adapters, maps paths, and renames existing rules', { timeout:
   backupWithContent(codex, 'AGENTS.md.backup-', 'old codex');
   backupWithContent(claude, 'CLAUDE.md.backup-', 'old claude');
   backupWithContent(join(cursor, 'rules'), 'agent-harness.mdc.backup-', 'old cursor');
-  const harnessBackup = readdirSync(codex).find((name) => name.startsWith('agent-harness.backup-'));
-  assert.ok(harnessBackup);
-  assert.equal(readFileSync(join(codex, harnessBackup, 'marker.txt'), 'utf8'), 'old harness');
-  assert.equal(
-    readFileSync(join(codex, 'agent-harness', 'state', 'keep.txt'), 'utf8'),
-    'preserved state',
+  const harnessBackup = readdirSync(join(hub, 'skills')).find((name) =>
+    name.startsWith('agent-harness.backup-'),
   );
+  assert.ok(harnessBackup);
+  assert.equal(
+    readFileSync(join(hub, 'skills', harnessBackup, 'marker.txt'), 'utf8'),
+    'old harness',
+  );
+  assert.equal(readFileSync(join(hub, 'state', 'keep.txt'), 'utf8'), 'preserved state');
 
-  for (const [agentHome, agent] of [
-    [codex, 'codex'],
-    [claude, 'claude'],
-    [cursor, 'cursor'],
+  const contextValue = JSON.parse(readFileSync(join(hubHarness, 'install-context.json'), 'utf8'));
+  assert.equal(contextValue.adapter, undefined);
+  assert.equal(contextValue.agentsHome, realpathSync.native(join(root, '.agents')));
+  assert.equal(contextValue.stateHome, join(realpathSync.native(hub), 'state'));
+  assert.equal(contextValue.memoryHome, realpathSync.native(join(root, 'agent-docs')));
+  assert.equal(contextValue.personalHome, realpathSync.native(join(root, 'personal-harness')));
+  assert.equal(contextValue.repositoryRoot, join(root, 'repos'));
+  for (const skill of [
+    join(root, '.agents', 'skills', 'agent-harness'),
+    join(claude, 'skills', 'agent-harness'),
+    join(cursor, 'skills', 'agent-harness'),
   ]) {
-    const contextValue = JSON.parse(
-      readFileSync(join(agentHome, 'agent-harness', 'install-context.json'), 'utf8'),
-    );
-    assert.equal(contextValue.adapter, agent);
-    assert.equal(contextValue.memoryHome, realpathSync.native(join(root, 'agent-docs')));
-    assert.equal(contextValue.personalHome, realpathSync.native(join(root, 'personal-harness')));
-    assert.equal(contextValue.repositoryRoot, join(root, 'repos'));
     const version = spawnSync(
       process.execPath,
-      [join(agentHome, 'agent-harness', 'bin', 'harness.mjs'), '--version'],
-      { encoding: 'utf8', env: { ...process.env, HOME: root } },
+      [join(skill, 'scripts', 'harness.mjs'), '--version'],
+      {
+        encoding: 'utf8',
+        env: { ...process.env, HOME: root },
+      },
     );
     assert.equal(version.status, 0, version.stderr);
-    assert.equal(version.stdout.trim(), '2.6.0');
+    assert.equal(version.stdout.trim(), '3.0.0');
   }
 
-  const claudeHarness = join(claude, 'agent-harness', 'bin', 'harness.mjs');
+  const claudeHarness = join(claude, 'skills', 'agent-harness', 'scripts', 'harness.mjs');
   const initMemory = spawnSync(process.execPath, [claudeHarness, 'init', 'global'], {
     encoding: 'utf8',
     env: { ...process.env, HOME: root },
@@ -192,8 +215,10 @@ test('refuses unmanaged files without force and restores them on uninstall', () 
   const uninstalled = execute(root, ['uninstall', '--agent', 'codex']);
   assert.match(uninstalled, /restored 2 installation layer/);
   assert.equal(readFileSync(join(codex, 'AGENTS.md'), 'utf8'), 'personal rules');
-  assert.equal(existsSync(join(codex, 'agent-harness')), false);
+  assert.equal(existsSync(join(root, '.agents', 'harnessmith', 'skills')), false);
+  assert.equal(existsSync(join(root, '.agents', 'skills')), false);
   assert.equal(existsSync(join(codex, '.harnessmith', 'install.json')), false);
+  assert.equal(existsSync(join(root, '.agents', 'harnessmith', '.harnessmith')), false);
 });
 
 test('requires force when a managed file was modified and restore returns the previous layer', () => {
@@ -241,7 +266,7 @@ test('rejects a tampered installation record before recovery touches paths', () 
 
   const result = executeResult(root, ['uninstall', '--agent', 'codex', '--force']);
   assert.equal(result.status, 1);
-  assert.match(result.stderr, /do not match the Adapter contract/);
+  assert.match(result.stderr, /do not match the contract/);
   assert.equal(readFileSync(victim, 'utf8'), 'keep me');
 });
 
@@ -347,7 +372,10 @@ test('no-init-global installs files without creating shared memory', () => {
   const root = mkdtempSync(join(tmpdir(), 'harnessmith-no-init-'));
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
   execute(root, ['--agent', 'codex', '--no-init-global']);
-  assert.ok(existsSync(join(root, 'codex-home', 'agent-harness')));
+  assert.ok(
+    existsSync(join(root, '.agents', 'harnessmith', 'skills', 'agent-harness', 'SKILL.md')),
+  );
+  assert.ok(existsSync(join(root, '.agents', 'skills', 'agent-harness', 'SKILL.md')));
   assert.equal(existsSync(join(root, 'agent-docs')), false);
   assert.ok(existsSync(join(root, 'personal-harness', 'AGENTS.md')));
 });
@@ -363,7 +391,9 @@ test('global-memory initialization failure rolls back installed files', () => {
   const result = executeResult(root, ['--agent', 'codex', '--force']);
   assert.equal(result.status, 1);
   assert.equal(readFileSync(join(codex, 'AGENTS.md'), 'utf8'), 'original rules');
-  assert.equal(existsSync(join(codex, 'agent-harness')), false);
+  assert.equal(existsSync(join(root, '.agents', 'harnessmith', 'skills')), false);
+  assert.equal(existsSync(join(root, '.agents', 'harnessmith', '.harnessmith')), false);
+  assert.equal(existsSync(join(root, '.agents', 'skills', 'agent-harness')), false);
   assert.equal(readFileSync(join(root, 'agent-docs'), 'utf8'), 'path blocker');
 });
 
@@ -371,7 +401,7 @@ test('mutable Harness state stays managed across status and upgrade', () => {
   const root = mkdtempSync(join(tmpdir(), 'harnessmith-state-'));
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
   execute(root, ['--agent', 'codex']);
-  const state = join(root, 'codex-home', 'agent-harness', 'state');
+  const state = join(root, '.agents', 'harnessmith', 'state');
   mkdirSync(state, { recursive: true });
   writeFileSync(join(state, 'runtime.json'), '{"checkpoint":1}\n');
 
@@ -434,7 +464,7 @@ test('rejects a symlinked Cursor rules directory before writing outside the proj
   assert.equal(result.status, 1);
   assert.match(result.stderr, /symlink|symbolic link/i);
   assert.equal(existsSync(join(outside, 'agent-harness.mdc')), false);
-  assert.equal(existsSync(join(cursor, 'agent-harness')), false);
+  assert.equal(existsSync(join(cursor, 'skills', 'agent-harness')), false);
   assert.equal(existsSync(join(cursor, '.harnessmith', 'install.json')), false);
 });
 

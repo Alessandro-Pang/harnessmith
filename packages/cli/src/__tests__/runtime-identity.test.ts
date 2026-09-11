@@ -31,11 +31,16 @@ test('managed runtime identity accepts a canonical alias to the recorded install
   const root = mkdtempSync(join(tmpdir(), 'harnessmith-runtime-alias-'));
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
   installCodex(root);
-  const agentHome = join(root, 'codex-home');
-  const alias = join(root, 'codex-home-alias');
-  symlinkSync(agentHome, alias, process.platform === 'win32' ? 'junction' : 'dir');
+  const hub = join(root, '.agents', 'harnessmith');
+  const alias = join(root, 'hub-alias');
+  symlinkSync(hub, alias, process.platform === 'win32' ? 'junction' : 'dir');
 
-  assert.equal(resolveRuntimeIdentity(join(alias, 'agent-harness')).kind, 'managed');
+  assert.equal(resolveRuntimeIdentity(join(alias, 'skills', 'agent-harness')).kind, 'managed');
+  assert.equal(
+    resolveRuntimeIdentity(join(root, '.agents', 'skills', 'agent-harness')).kind,
+    'managed',
+    'the ~/.agents/skills discovery link resolves to the hub',
+  );
 });
 
 test('managed runtime identity rejects a context copied outside the recorded installation', () => {
@@ -43,10 +48,10 @@ test('managed runtime identity rejects a context copied outside the recorded ins
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
   installCodex(root);
   const installedContext = readFileSync(
-    join(root, 'codex-home', 'agent-harness', 'install-context.json'),
+    join(root, '.agents', 'harnessmith', 'skills', 'agent-harness', 'install-context.json'),
     'utf8',
   );
-  const copiedHarness = join(root, 'copied-host', 'agent-harness');
+  const copiedHarness = join(root, 'copied-host', 'skills', 'agent-harness');
   mkdirSync(copiedHarness, { recursive: true });
   writeFileSync(join(copiedHarness, 'install-context.json'), installedContext);
 

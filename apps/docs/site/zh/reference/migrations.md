@@ -18,8 +18,8 @@ updated: 2026-09-05
 ```bash
 npx harnessmith --version
 npx harnessmith status --agent codex --explain --json
-node <harness-path>/bin/harness.mjs version --json
-node <harness-path>/bin/harness.mjs memory check /path/to/project --indexed --json
+node <harness-path>/scripts/harness.mjs version --json
+node <harness-path>/scripts/harness.mjs memory check /path/to/project --indexed --json
 ```
 
 保存上述 JSON 和当前 Git/工作区状态。先运行 `setup --dry-run --json`，确认目标文件是 `managed`、没有意外的 `modified` 或 `unmanaged`，再决定是否写入。
@@ -33,6 +33,24 @@ npx harnessmith setup --agent codex --dry-run --json
 npx harnessmith setup --agent codex --yes --json
 npx harnessmith status --agent codex --explain --json
 ```
+
+### Harness 布局 3.0：统一到 `~/.agents/harnessmith/` 共享 hub
+
+Harness `3.0.0` 不再把 Harness 复制进每个宿主。skill 只渲染一份到 `~/.agents/harnessmith/skills/agent-harness/` 并带
+`SKILL.md` 入口（`bin/` 改为 `scripts/`，`templates/` 与 `schemas/` 移入 `assets/`），共享的 always-on 入口是
+`~/.agents/harnessmith/entry/AGENTS.md`，每个宿主的 instruction file 都变成指向它的符号链接。不扫描 `~/.agents/skills` 的宿主
+（Claude Code、Cursor）获得 `skills/agent-harness` 符号链接；Cursor 的 `.mdc` 规则仍是渲染副本。个人规则从 `~/.agent-harness/`
+迁到 `~/.agents/harnessmith/rules/`，全局 Memory 从 `~/.agent-docs/` 迁到 `~/.agents/harnessmith/memory/`
+（`HARNESS_PERSONAL_HOME` / `HARNESS_MEMORY_HOME` 仍可覆盖）。
+
+对有安装记录的 3.0 之前安装，`--dry-run --json` 会在 `migrations` 中列出：`~/.agent-harness` 与 `~/.agent-docs`，动作为
+`migrate-user-data`（仅当 hub 位置仍为空时）；`<宿主目录>/agent-harness`，动作为 `migrate-legacy-layout`；hub 输出显示为
+`create`。写入时 `setup` 把用户数据复制进 hub、把每个旧目录原地改名为 `<名称>.backup-<时间戳>`、用旧 `state/` 填充
+`~/.agents/harnessmith/state/`，并把这些移动记录到 hub 与宿主记录的 `migratedOutputs`；`restore` 把目录移回并重新激活上一层
+记录，`uninstall` 会逐层收回。复制出的 `rules/` 与 `memory/` 是用户数据，不会被自动删除。硬编码
+`<宿主目录>/agent-harness/bin/harness.mjs` 或 `<宿主目录>/skills/agent-harness/scripts/harness.mjs` 的脚本要改用
+`~/.agents/harnessmith/skills/agent-harness/scripts/harness.mjs`（或 `~/.agents/skills/agent-harness` 链接）。
+没有安装记录的 `agent-harness/` 目录不会被移动。
 
 如果预览发现冲突，先停止并处理冲突；不要用 `--force` 掩盖未知内容。写入失败时按下面顺序恢复：
 
@@ -49,18 +67,18 @@ npx harnessmith status --agent codex --explain
 Runtime 的 `version --json` 会报告 Harness、Task 和 Memory schema 版本。升级后先执行只读检查：
 
 ```bash
-node <harness-path>/bin/harness.mjs version --json
-node <harness-path>/bin/harness.mjs doctor
-node <harness-path>/bin/harness.mjs validate --project /absolute/project/path --json
-node <harness-path>/bin/harness.mjs memory check /absolute/project/path --indexed --json
+node <harness-path>/scripts/harness.mjs version --json
+node <harness-path>/scripts/harness.mjs doctor
+node <harness-path>/scripts/harness.mjs validate --project /absolute/project/path --json
+node <harness-path>/scripts/harness.mjs memory check /absolute/project/path --indexed --json
 ```
 
 未知 schema、缺少 owner 或引用断裂时，先保留原目录和输出，不要手工改 JSON。能自动处理的旧 metadata 通过 `memory migrate` 生成 proposal；只有 proposal 状态为 `ready`，并在重新核对目标未变化后，才显式应用：
 
 ```bash
-node <harness-path>/bin/harness.mjs memory migrate /absolute/project/path --json
-node <harness-path>/bin/harness.mjs memory migrate /absolute/project/path --proposal <proposal-id> --apply --yes --json
-node <harness-path>/bin/harness.mjs memory check /absolute/project/path --indexed --json
+node <harness-path>/scripts/harness.mjs memory migrate /absolute/project/path --json
+node <harness-path>/scripts/harness.mjs memory migrate /absolute/project/path --proposal <proposal-id> --apply --yes --json
+node <harness-path>/scripts/harness.mjs memory check /absolute/project/path --indexed --json
 ```
 
 若当前版本没有对应迁移命令或 proposal 不是 `ready`，结果应记录为 `inconclusive`，保留原数据并提交维护者处理。

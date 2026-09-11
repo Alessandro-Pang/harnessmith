@@ -75,8 +75,8 @@ function workspacePaths(workspace: string): RegistrySmokePaths & { downloads: st
     paths.installRoot,
     paths.home,
     paths.codexHome,
-    join(home, '.agent-docs'),
-    join(home, '.agent-harness'),
+    join(home, '.agents', 'harnessmith', 'memory'),
+    join(home, '.agents', 'harnessmith', 'rules'),
   ]) {
     mkdirSync(directory, { recursive: true, mode: 0o700 });
   }
@@ -87,8 +87,8 @@ function workspaceEnvironment(paths: RegistrySmokePaths): NodeJS.ProcessEnv {
   return {
     ...registryEnvironment(paths.workspace),
     CODEX_HOME: paths.codexHome,
-    HARNESS_MEMORY_HOME: join(paths.home, '.agent-docs'),
-    HARNESS_PERSONAL_HOME: join(paths.home, '.agent-harness'),
+    HARNESS_MEMORY_HOME: join(paths.home, '.agents', 'harnessmith', 'memory'),
+    HARNESS_PERSONAL_HOME: join(paths.home, '.agents', 'harnessmith', 'rules'),
     HARNESS_REPOSITORY_ROOT: join(paths.home, 'git-repo'),
     HARNESS_OWNER: 'registry-verification',
   };

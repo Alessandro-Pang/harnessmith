@@ -30,11 +30,11 @@ const requiredDistributionFiles = [
   'package.json',
   'bin/harnessmith.mjs',
   'dist/cli.js',
-  'template/AGENTS.md',
-  'template/agent-harness/bin/harness.mjs',
-  'template/agent-harness/dist/harness.mjs',
-  'template/agent-harness/manifest.json',
-  'template/agent-harness/schemas/task.schema.json',
+  'template/entry/AGENTS.md',
+  'template/skills/agent-harness/scripts/harness.mjs',
+  'template/skills/agent-harness/dist/harness.mjs',
+  'template/skills/agent-harness/manifest.json',
+  'template/skills/agent-harness/assets/schemas/task.schema.json',
   'evals/scenarios.json',
   'evals/scenarios.schema.json',
   'evals/host-capability-matrix.v1.json',
@@ -98,11 +98,14 @@ function assertCurrentReleaseContract(tarball: NpmPackageTarball): RuleFingerpri
     throw new Error('Candidate package manifest does not match the release worktree');
   }
   const candidateHarness = parseJson<{ harnessVersion?: string }>(
-    requiredFile(tarball, 'template/agent-harness/manifest.json'),
-    'template/agent-harness/manifest.json',
+    requiredFile(tarball, 'template/skills/agent-harness/manifest.json'),
+    'template/skills/agent-harness/manifest.json',
   );
   const currentHarness = JSON.parse(
-    readFileSync(join(repositoryRoot, 'template', 'agent-harness', 'manifest.json'), 'utf8'),
+    readFileSync(
+      join(repositoryRoot, 'template', 'skills', 'agent-harness', 'manifest.json'),
+      'utf8',
+    ),
   ) as { harnessVersion: string };
   if (candidateHarness.harnessVersion !== currentHarness.harnessVersion) {
     throw new Error('Candidate Harness version does not match the release worktree');
@@ -152,8 +155,8 @@ export function evaluationFingerprint(packageArtifactPath = releaseArtifactPath(
     'package.json',
   );
   const harnessManifest = parseJson<{ harnessVersion: string }>(
-    requiredFile(tarball, 'template/agent-harness/manifest.json'),
-    'template/agent-harness/manifest.json',
+    requiredFile(tarball, 'template/skills/agent-harness/manifest.json'),
+    'template/skills/agent-harness/manifest.json',
   );
   const catalog = readScenarioCatalog(
     requiredFile(tarball, 'evals/scenarios.json'),

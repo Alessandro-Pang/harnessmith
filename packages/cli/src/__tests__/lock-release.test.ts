@@ -3,25 +3,23 @@ import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test, vi } from 'vitest';
-import type { Adapter } from '../shared/types.js';
+import type { ManagedScope } from '../shared/types.js';
 
 const locks = vi.hoisted(() => ({ lockSync: vi.fn() }));
 
 vi.mock('proper-lockfile', () => ({ default: { lockSync: locks.lockSync } }));
 
 import { withExclusiveDirectoryLock } from '../../../../packages/harness/src/lib/filesystem/exclusive-lock.js';
-import { adapterCapabilities } from '../adapters/adapters.js';
-import { withAdapterLocks } from '../installation/operation-lock.js';
+import { withScopeLocks } from '../installation/operation-lock.js';
 
-function adapter(home: string, name: Adapter['name']): Adapter {
+function adapter(home: string, name: string): ManagedScope {
   return {
+    scope: 'adapter',
     name,
     label: name,
     home,
-    harness: join(home, 'agent-harness'),
     record: join(home, '.harnessmith', 'install.json'),
-    capabilities: adapterCapabilities(name),
-    instructions: [],
+    outputs: [],
   };
 }
 
@@ -40,12 +38,9 @@ test('adapter locks release every acquired lock and preserve the operation failu
 
   let caught: unknown;
   try {
-    withAdapterLocks(
-      [adapter(join(root, 'a'), 'codex'), adapter(join(root, 'b'), 'cursor')],
-      () => {
-        throw primary;
-      },
-    );
+    withScopeLocks([adapter(join(root, 'a'), 'codex'), adapter(join(root, 'b'), 'cursor')], () => {
+      throw primary;
+    });
   } catch (error) {
     caught = error;
   }
@@ -66,7 +61,7 @@ test('adapter locks sort, acquire, release, and return successful operations', (
     .mockReturnValueOnce(() => released.push('a'))
     .mockReturnValueOnce(() => released.push('b'));
 
-  const result = withAdapterLocks(
+  const result = withScopeLocks(
     [adapter(join(root, 'b'), 'cursor'), adapter(join(root, 'a'), 'codex')],
     () => 'complete',
   );
@@ -83,7 +78,7 @@ test('adapter locks can inspect an absent home without creating or locking it', 
   locks.lockSync.mockReset();
 
   assert.equal(
-    withAdapterLocks([adapter(home, 'codex')], () => 42, { createHomes: false }),
+    withScopeLocks([adapter(home, 'codex')], () => 42, { createHomes: false }),
     42,
   );
   assert.equal(locks.lockSync.mock.calls.length, 0);
@@ -97,7 +92,7 @@ test('adapter lock acquisition failures use the stable operation-locked contract
   });
 
   assert.throws(
-    () => withAdapterLocks([adapter(join(root, 'home'), 'codex')], () => 'never'),
+    () => withScopeLocks([adapter(join(root, 'home'), 'codex')], () => 'never'),
     (error: unknown) =>
       error instanceof Error &&
       'code' in error &&
@@ -113,7 +108,7 @@ test('adapter locks preserve a non-Error operation failure after successful rele
 
   let caught: unknown;
   try {
-    withAdapterLocks([adapter(join(root, 'home'), 'codex')], () => {
+    withScopeLocks([adapter(join(root, 'home'), 'codex')], () => {
       throw 'primary scalar';
     });
   } catch (error) {
@@ -129,7 +124,7 @@ test('adapter locks do not swallow a falsy thrown value', () => {
   let completed = false;
 
   try {
-    withAdapterLocks([adapter(join(root, 'home'), 'codex')], () => {
+    withScopeLocks([adapter(join(root, 'home'), 'codex')], () => {
       throw undefined;
     });
     completed = true;
@@ -150,12 +145,12 @@ test('adapter locks report a release-only failure and preserve Error cause', () 
 
   let caught: unknown;
   try {
-    withAdapterLocks([adapter(join(root, 'home'), 'codex')], () => 'complete');
+    withScopeLocks([adapter(join(root, 'home'), 'codex')], () => 'complete');
   } catch (error) {
     caught = error;
   }
   assert.ok(caught instanceof Error);
-  assert.match(caught.message, /Adapter lock release was incomplete/);
+  assert.match(caught.message, /Scope lock release was incomplete/);
   assert.equal(caught.cause, release);
 });
 
@@ -168,7 +163,7 @@ test('adapter locks report a non-Error release-only failure without a cause', ()
 
   let caught: unknown;
   try {
-    withAdapterLocks([adapter(join(root, 'home'), 'codex')], () => 'complete');
+    withScopeLocks([adapter(join(root, 'home'), 'codex')], () => 'complete');
   } catch (error) {
     caught = error;
   }
@@ -186,7 +181,7 @@ test('adapter locks handle non-Error primary and release failures without synthe
 
   let caught: unknown;
   try {
-    withAdapterLocks([adapter(join(root, 'home'), 'codex')], () => {
+    withScopeLocks([adapter(join(root, 'home'), 'codex')], () => {
       throw 'primary scalar';
     });
   } catch (error) {

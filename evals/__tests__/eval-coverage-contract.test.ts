@@ -24,7 +24,10 @@ const root = process.cwd();
 
 function readManifest(): Manifest {
   return YAML.parse(
-    readFileSync(join(root, 'template', 'agent-harness', 'docs', 'manifest.yaml'), 'utf8'),
+    readFileSync(
+      join(root, 'template', 'skills', 'agent-harness', 'docs', 'manifest.yaml'),
+      'utf8',
+    ),
   ) as Manifest;
 }
 

@@ -72,11 +72,39 @@ from being redirected by symlinks to unexpected locations. In practical terms: i
 linked `~/.codex` somewhere else (such as a sync drive), the installer detects it and stops rather than
 writing files to a place you didn't expect.
 
-Next to each entry point you'll also find `agent-harness/` and `.harnessmith/install.json` (Cursor's record
-lives in `.cursor/.harnessmith/`). The former is the distributed Harness Runtime; the latter is the install
-record — both uninstall and restore depend on it. The install record stores the version, timestamps, the file
-manifest, and checksums. With it, `restore` can roll back precisely to the previous layer, and `uninstall`
-knows which files to delete and which to leave alone.
+The entry points in the table are not copies. Every one of them is a symlink to a single shared file,
+`~/.agents/harnessmith/entry/AGENTS.md`, and the Harness itself is rendered exactly once into
+`~/.agents/harnessmith/skills/agent-harness/` (the whole `~/.agents/harnessmith/` directory is the "hub";
+`HARNESS_HOME` overrides its location). The skill follows the
+[Agent Skills](https://agentskills.io/specification) layout — `SKILL.md` is the discovery entry point,
+`scripts/harness.mjs` the Runtime CLI, `docs/` the task-routed guidance, and `assets/` the templates and
+schemas. Codex, OpenCode, Kimi Code CLI, and Zed scan `~/.agents/skills/` natively, so Harnessmith keeps one
+managed link there, `~/.agents/skills/agent-harness`; Claude Code and Cursor only scan their own
+`skills/` directory, so they additionally receive a `skills/agent-harness` symlink next to their entry point.
+Cursor's `.cursor/rules/agent-harness.mdc` is the one rendered copy, because MDC frontmatter cannot be
+expressed as a link. The practical consequence: upgrading once updates every installed host, and you can never
+end up with two hosts on different Harness versions.
+
+The hub also holds your data, outside the managed skill: `state/` (mutable runtime state such as Task
+ledgers and indexes), `rules/` (your personal overlay; `HARNESS_PERSONAL_HOME` overrides it) and `memory/`
+(cross-project Memory; `HARNESS_MEMORY_HOME` overrides it). Upgrades never rewrite these, and `uninstall`
+never deletes them.
+
+Each host keeps a small install record, `.harnessmith/install.json`, next to its entry point (Cursor's lives in
+`.cursor/.harnessmith/`), and the hub keeps its own record listing the hosts that own it. Records store the
+version, timestamps, the file manifest, link targets, and checksums. With them, `restore` can roll back precisely
+to the previous layer and `uninstall` knows which links to remove and what to leave alone. Because the hub is
+shared, lifecycle commands reason about ownership: uninstalling one host only removes its links and drops it from
+the hub owners; the hub content is removed when the last owner leaves. `restore` unwinds the hub layer together
+with the hosts installed in the same transaction — if you installed `codex,claude` together, restoring only
+`codex` is refused with `STATE_CONFLICT` and the message names the agents to include.
+
+Releases before the hub kept a full Harness copy in each host directory as `agent-harness/`, personal rules at
+`~/.agent-harness/`, and global Memory at `~/.agent-docs/`. For such a recorded legacy installation, `setup` copies the
+user data into `~/.agents/harnessmith/rules` and `memory` (only when those are still empty), renames each old
+directory in place to `<name>.backup-<timestamp>`, carries `state/` over to the hub, and writes the moves into the
+install records; `restore` moves them back and `uninstall` unwinds the layers. An `agent-harness/` directory
+without an install record is treated as user content and is neither moved nor reported.
 
 Environment variable resolution, target file names, and migration compatibility belong to the outer Adapter;
 the distribution template stays host-neutral. To determine the actual target paths on your machine, run

@@ -2,7 +2,7 @@
 
 Harnessmith 是跨 Codex、Cursor、Claude Code、OpenCode、Kimi Code CLI 分发个人 Agent Harness 的 npm initializer。详细贡献
 规范见 `CONTRIBUTING.md`；内置 Harness 架构见
-`template/agent-harness/docs/core/harness-cli-architecture.md`。
+`template/skills/agent-harness/docs/core/harness-cli-architecture.md`。
 
 ## 不可破坏的边界
 

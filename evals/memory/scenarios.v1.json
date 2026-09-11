@@ -31,7 +31,7 @@
         "operation": "typed-operation"
       },
       "dependencyPaths": [
-        "template/agent-harness/docs/standards/user-profile-memory.md",
+        "template/skills/agent-harness/docs/standards/user-profile-memory.md",
         "packages/harness/src/commands/memory/memory-profile.ts"
       ],
       "operation": "reconcile-profile",
@@ -109,7 +109,7 @@
         "operation": "none"
       },
       "dependencyPaths": [
-        "template/agent-harness/docs/standards/user-profile-memory.md"
+        "template/skills/agent-harness/docs/standards/user-profile-memory.md"
       ],
       "operation": "none",
       "stateContract": {
@@ -147,7 +147,7 @@
         "operation": "typed-operation"
       },
       "dependencyPaths": [
-        "template/agent-harness/docs/standards/project-agent-docs.md",
+        "template/skills/agent-harness/docs/standards/project-agent-docs.md",
         "packages/harness/src/program/memory-input.ts"
       ],
       "operation": "capture-input",
@@ -187,7 +187,7 @@
       },
       "dependencyPaths": [
         "packages/harness/src/program/memory-finding.ts",
-        "template/agent-harness/docs/standards/project-agent-docs.md"
+        "template/skills/agent-harness/docs/standards/project-agent-docs.md"
       ],
       "operation": "capture-finding",
       "stateContract": {
@@ -343,8 +343,8 @@
         "operation": "typed-operation"
       },
       "dependencyPaths": [
-        "template/AGENTS.md",
-        "template/agent-harness/docs/core/execution-loop.md"
+        "template/entry/AGENTS.md",
+        "template/skills/agent-harness/docs/core/execution-loop.md"
       ],
       "operation": "search",
       "stateContract": {
@@ -457,7 +457,7 @@
       },
       "dependencyPaths": [
         "packages/harness/src/commands/memory/memory-profile.ts",
-        "template/agent-harness/docs/references/memory-contracts.md"
+        "template/skills/agent-harness/docs/references/memory-contracts.md"
       ],
       "operation": "close-input",
       "stateContract": {
@@ -495,7 +495,7 @@
       },
       "dependencyPaths": [
         "packages/harness/src/commands/memory/memory-profile.ts",
-        "template/agent-harness/docs/references/memory-contracts.md"
+        "template/skills/agent-harness/docs/references/memory-contracts.md"
       ],
       "operation": "capture-finding",
       "stateContract": {
@@ -533,7 +533,7 @@
       },
       "dependencyPaths": [
         "packages/harness/src/commands/memory/memory-profile.ts",
-        "template/agent-harness/docs/references/memory-contracts.md"
+        "template/skills/agent-harness/docs/references/memory-contracts.md"
       ],
       "operation": "capture-experience",
       "stateContract": {
@@ -571,7 +571,7 @@
       },
       "dependencyPaths": [
         "packages/harness/src/commands/memory/memory-profile.ts",
-        "template/agent-harness/docs/references/memory-contracts.md"
+        "template/skills/agent-harness/docs/references/memory-contracts.md"
       ],
       "operation": "profile-autopilot"
     },
@@ -605,7 +605,7 @@
       },
       "dependencyPaths": [
         "packages/harness/src/commands/memory/memory-profile.ts",
-        "template/agent-harness/docs/references/memory-contracts.md"
+        "template/skills/agent-harness/docs/references/memory-contracts.md"
       ],
       "operation": "handoff",
       "stateContract": {
@@ -643,7 +643,7 @@
       },
       "dependencyPaths": [
         "packages/harness/src/commands/memory/memory-profile.ts",
-        "template/agent-harness/docs/references/memory-contracts.md"
+        "template/skills/agent-harness/docs/references/memory-contracts.md"
       ],
       "operation": "close-handoff",
       "stateContract": {
@@ -681,7 +681,7 @@
       },
       "dependencyPaths": [
         "packages/harness/src/commands/memory/memory-profile.ts",
-        "template/agent-harness/docs/references/memory-contracts.md"
+        "template/skills/agent-harness/docs/references/memory-contracts.md"
       ],
       "operation": "supersede",
       "stateContract": {
@@ -719,7 +719,7 @@
       },
       "dependencyPaths": [
         "packages/harness/src/commands/memory/memory-profile.ts",
-        "template/agent-harness/docs/references/memory-contracts.md"
+        "template/skills/agent-harness/docs/references/memory-contracts.md"
       ],
       "operation": "archive",
       "stateContract": {
@@ -757,7 +757,7 @@
       },
       "dependencyPaths": [
         "packages/harness/src/commands/memory/memory-profile.ts",
-        "template/agent-harness/docs/references/memory-contracts.md"
+        "template/skills/agent-harness/docs/references/memory-contracts.md"
       ],
       "operation": "maintain",
       "stateContract": {
@@ -795,7 +795,7 @@
       },
       "dependencyPaths": [
         "packages/harness/src/commands/memory/memory-profile.ts",
-        "template/agent-harness/docs/references/memory-contracts.md"
+        "template/skills/agent-harness/docs/references/memory-contracts.md"
       ],
       "operation": "repair",
       "stateContract": {
@@ -833,7 +833,7 @@
       },
       "dependencyPaths": [
         "packages/harness/src/commands/memory/memory-profile.ts",
-        "template/agent-harness/docs/references/memory-contracts.md"
+        "template/skills/agent-harness/docs/references/memory-contracts.md"
       ],
       "operation": "migrate",
       "stateContract": {
@@ -871,7 +871,7 @@
       },
       "dependencyPaths": [
         "packages/harness/src/commands/memory/memory-profile.ts",
-        "template/agent-harness/docs/references/memory-contracts.md"
+        "template/skills/agent-harness/docs/references/memory-contracts.md"
       ],
       "operation": "curate",
       "stateContract": {
@@ -909,7 +909,7 @@
       },
       "dependencyPaths": [
         "packages/harness/src/commands/memory/memory-profile.ts",
-        "template/agent-harness/docs/references/memory-contracts.md"
+        "template/skills/agent-harness/docs/references/memory-contracts.md"
       ],
       "operation": "curation-apply",
       "stateContract": {
@@ -946,7 +946,7 @@
       },
       "dependencyPaths": [
         "packages/harness/src/commands/memory/memory-profile.ts",
-        "template/agent-harness/docs/standards/user-profile-memory.md"
+        "template/skills/agent-harness/docs/standards/user-profile-memory.md"
       ],
       "operation": "reconcile-profile",
       "stateContract": {
@@ -984,7 +984,7 @@
       },
       "dependencyPaths": [
         "packages/harness/src/commands/memory/memory-profile.ts",
-        "template/agent-harness/docs/standards/user-profile-memory.md"
+        "template/skills/agent-harness/docs/standards/user-profile-memory.md"
       ],
       "operation": "reconcile-profile",
       "stateContract": {
@@ -1022,7 +1022,7 @@
       },
       "dependencyPaths": [
         "packages/harness/src/commands/memory/memory-profile.ts",
-        "template/agent-harness/docs/standards/user-profile-memory.md"
+        "template/skills/agent-harness/docs/standards/user-profile-memory.md"
       ],
       "operation": "reconcile-profile",
       "stateContract": {
@@ -1060,7 +1060,7 @@
       },
       "dependencyPaths": [
         "packages/harness/src/commands/memory/memory-profile.ts",
-        "template/agent-harness/docs/standards/user-profile-memory.md"
+        "template/skills/agent-harness/docs/standards/user-profile-memory.md"
       ],
       "operation": "forget-profile",
       "stateContract": {
@@ -1097,7 +1097,7 @@
       },
       "dependencyPaths": [
         "packages/harness/src/commands/memory/memory-profile.ts",
-        "template/agent-harness/docs/standards/user-profile-memory.md"
+        "template/skills/agent-harness/docs/standards/user-profile-memory.md"
       ],
       "operation": "profile-autopilot",
       "stateContract": {
@@ -1134,7 +1134,7 @@
       },
       "dependencyPaths": [
         "packages/harness/src/commands/memory/memory-profile.ts",
-        "template/agent-harness/docs/standards/user-profile-memory.md"
+        "template/skills/agent-harness/docs/standards/user-profile-memory.md"
       ],
       "operation": "reconcile-profile",
       "stateContract": {

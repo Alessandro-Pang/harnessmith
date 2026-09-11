@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {
   existsSync,
+  lstatSync,
   mkdirSync,
   mkdtempSync,
   readdirSync,
@@ -77,7 +78,11 @@ for (const entry of adapterRegistry) {
       true,
     );
     assert.ok(existsSync(adapter.record));
-    assert.ok(existsSync(adapter.harness));
+    assert.ok(existsSync(adapter.hub.record));
+    assert.equal(lstatSync(adapter.hub.discoveryLink).isSymbolicLink(), true);
+    assert.equal(lstatSync(primaryInstruction(adapter)).isSymbolicLink(), true);
+    if (adapter.harness) assert.equal(lstatSync(adapter.harness).isSymbolicLink(), true);
+    assert.ok(existsSync(join(adapter.hub.harness, 'SKILL.md')));
 
     installAll([adapter], { env, noInitGlobal: true });
     assert.equal(
@@ -93,7 +98,11 @@ for (const entry of adapterRegistry) {
     const uninstalled = uninstallAll([adapter]);
     assert.equal(uninstalled[0].adapter, entry.name);
     assert.equal(existsSync(adapter.record), false);
-    assert.equal(existsSync(adapter.harness), false);
+    assert.equal(existsSync(primaryInstruction(adapter)), false);
+    if (adapter.harness) assert.equal(existsSync(adapter.harness), false);
+    assert.equal(existsSync(adapter.hub.record), false);
+    assert.equal(existsSync(adapter.hub.harness), false);
+    assert.equal(existsSync(adapter.hub.discoveryLink), false);
     assert.equal(statusAll([adapter])[0].installed, false);
   });
 
@@ -126,13 +135,14 @@ test('conformance multi-adapter: preflight rejects a modified peer without mutat
   writeFileSync(instruction, `${readFileSync(instruction, 'utf8')}\nuser edit\n`);
 
   const peerRecordBefore = readFileSync(peer.record, 'utf8');
-  const peerHarnessBefore = existsSync(peer.harness);
+  const peerInstruction = primaryInstruction(peer);
 
   assert.throws(() => uninstallAll(adapters), /modified/);
   assert.ok(existsSync(victim.record));
   assert.ok(existsSync(peer.record));
   assert.equal(readFileSync(peer.record, 'utf8'), peerRecordBefore);
-  assert.equal(existsSync(peer.harness), peerHarnessBefore);
+  assert.equal(lstatSync(peerInstruction).isSymbolicLink(), true);
+  assert.ok(existsSync(victim.hub.record));
 });
 
 test('conformance multi-adapter: later failure rolls back earlier adapter mutations', () => {
@@ -154,7 +164,8 @@ test('conformance multi-adapter: later failure rolls back earlier adapter mutati
   assert.equal(readFileSync(first.record, 'utf8'), firstRecordBefore);
   assert.equal(readFileSync(firstRules, 'utf8'), firstRulesBefore);
   assert.ok(existsSync(second.record));
-  assert.ok(existsSync(second.harness));
+  assert.ok(second.harness && existsSync(second.harness));
+  assert.ok(existsSync(first.hub.record));
   assert.deepEqual(
     readdirSync(second.home).filter((name) => name.startsWith('.harnessmith-restore-')),
     [],

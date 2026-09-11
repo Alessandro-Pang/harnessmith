@@ -5,6 +5,8 @@ import { fileURLToPath } from 'node:url';
 import { test } from 'vitest';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
+const harnessDocs = join(root, 'template', 'skills', 'agent-harness', 'docs');
+const harnessAssets = join(root, 'template', 'skills', 'agent-harness', 'assets');
 
 test('llms.txt exposes a complete non-interactive install protocol', () => {
   const content = readFileSync(join(root, 'llms.txt'), 'utf8');
@@ -77,11 +79,8 @@ test('public guidance routes advanced runtime contracts instead of duplicating t
   const llms = readFileSync(join(root, 'llms.txt'), 'utf8');
   const readme = readFileSync(join(root, 'README.md'), 'utf8');
   const english = readFileSync(join(root, 'README.en.md'), 'utf8');
-  const agents = readFileSync(join(root, 'template', 'AGENTS.md'), 'utf8');
-  const docsIndex = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'README.md'),
-    'utf8',
-  );
+  const agents = readFileSync(join(root, 'template', 'entry', 'AGENTS.md'), 'utf8');
+  const docsIndex = readFileSync(join(harnessDocs, 'README.md'), 'utf8');
 
   assert.match(docsIndex, /core\/long-running-tasks\.md/);
   assert.doesNotMatch(llms, /Task acceptance boundary|CI\/Host-owned verifier/);
@@ -108,51 +107,33 @@ test('post-install checks are conditional when global memory initialization is s
 test('routed prompts keep Memory policy and command contracts with their designated owners', () => {
   const readme = readFileSync(join(root, 'README.md'), 'utf8');
   const english = readFileSync(join(root, 'README.en.md'), 'utf8');
-  const agents = readFileSync(join(root, 'template', 'AGENTS.md'), 'utf8');
+  const agents = readFileSync(join(root, 'template', 'entry', 'AGENTS.md'), 'utf8');
   const projectMemory = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'standards', 'project-agent-docs.md'),
+    join(harnessDocs, 'standards', 'project-agent-docs.md'),
     'utf8',
   );
   const projectMemoryReference = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'references', 'memory-contracts.md'),
+    join(harnessDocs, 'references', 'memory-contracts.md'),
     'utf8',
   );
   const projectMemoryProtocol = [projectMemory, projectMemoryReference].join('\n');
-  const cliContracts = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'references', 'cli-contracts.md'),
-    'utf8',
-  );
-  const profile = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'standards', 'user-profile-memory.md'),
-    'utf8',
-  );
+  const cliContracts = readFileSync(join(harnessDocs, 'references', 'cli-contracts.md'), 'utf8');
+  const profile = readFileSync(join(harnessDocs, 'standards', 'user-profile-memory.md'), 'utf8');
   const profileReference = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'references', 'profile-contracts.md'),
+    join(harnessDocs, 'references', 'profile-contracts.md'),
     'utf8',
   );
   const profileProtocol = [profile, profileReference].join('\n');
-  const research = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'playbooks', 'research-and-design.md'),
-    'utf8',
-  );
-  const change = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'playbooks', 'change.md'),
-    'utf8',
-  );
+  const research = readFileSync(join(harnessDocs, 'playbooks', 'research-and-design.md'), 'utf8');
+  const change = readFileSync(join(harnessDocs, 'playbooks', 'change.md'), 'utf8');
   const architecture = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'core', 'harness-cli-architecture.md'),
+    join(harnessDocs, 'core', 'harness-cli-architecture.md'),
     'utf8',
   );
-  const manifest = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'manifest.yaml'),
-    'utf8',
-  );
-  const longRunning = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'core', 'long-running-tasks.md'),
-    'utf8',
-  );
+  const manifest = readFileSync(join(harnessDocs, 'manifest.yaml'), 'utf8');
+  const longRunning = readFileSync(join(harnessDocs, 'core', 'long-running-tasks.md'), 'utf8');
   const longRunningReference = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'references', 'task-and-replay-contracts.md'),
+    join(harnessDocs, 'references', 'task-and-replay-contracts.md'),
     'utf8',
   );
   const longRunningProtocol = [longRunning, longRunningReference].join('\n');
@@ -171,10 +152,7 @@ test('routed prompts keep Memory policy and command contracts with their designa
   assert.match(readme, /Memory Autopilot/);
   assert.match(english, /Memory Autopilot/);
   assert.match(
-    readFileSync(
-      join(root, 'template', 'agent-harness', 'docs', 'references', 'cli-contracts.md'),
-      'utf8',
-    ),
+    readFileSync(join(harnessDocs, 'references', 'cli-contracts.md'), 'utf8'),
     /--consume-payload-file/,
   );
   assert.match(cliContracts, /领域命令成功.*才删除文件/s);
@@ -224,8 +202,8 @@ test('release documentation describes the resumable immutable snapshot workflow'
 });
 
 test('distributed prompt entrypoints stay readable and use executable Harness commands', () => {
-  const agentsPath = join(root, 'template', 'AGENTS.md');
-  const docsIndexPath = join(root, 'template', 'agent-harness', 'docs', 'README.md');
+  const agentsPath = join(root, 'template', 'entry', 'AGENTS.md');
+  const docsIndexPath = join(harnessDocs, 'README.md');
   const pending = [join(root, 'template')];
   const markdown: string[] = [join(root, 'llms.txt')];
   while (pending.length > 0) {
@@ -260,13 +238,14 @@ test('distributed prompt entrypoints stay readable and use executable Harness co
 test('npm package publishes the Harness runtime without its TypeScript sources', () => {
   const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
   for (const path of [
-    'template/AGENTS.md',
-    'template/agent-harness/bin',
-    'template/agent-harness/dist',
-    'template/agent-harness/docs',
-    'template/agent-harness/manifest.json',
-    'template/agent-harness/schemas',
-    'template/agent-harness/templates',
+    'template/entry/AGENTS.md',
+    'template/skills/agent-harness/SKILL.md',
+    'template/skills/agent-harness/scripts',
+    'template/skills/agent-harness/dist',
+    'template/skills/agent-harness/docs',
+    'template/skills/agent-harness/manifest.json',
+    'template/skills/agent-harness/assets/schemas',
+    'template/skills/agent-harness/assets/templates',
   ])
     assert.ok(manifest.files.includes(path), `npm package is missing: ${path}`);
   assert.ok(!manifest.files.includes('template'));
@@ -295,19 +274,14 @@ test('distributed Harness template contains no host product identity', () => {
 });
 
 test('distributed rules define compact, user-only profile maintenance', () => {
-  const agents = readFileSync(join(root, 'template', 'AGENTS.md'), 'utf8');
-  const globalMemory = readFileSync(
-    join(root, 'template', 'agent-harness', 'templates', 'global-agent-docs', 'README.md'),
-    'utf8',
-  );
+  const agents = readFileSync(join(root, 'template', 'entry', 'AGENTS.md'), 'utf8');
+  const templates = join(harnessAssets, 'templates');
+  const globalMemory = readFileSync(join(templates, 'global-agent-docs', 'README.md'), 'utf8');
   const projectMemory = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'standards', 'project-agent-docs.md'),
+    join(harnessDocs, 'standards', 'project-agent-docs.md'),
     'utf8',
   );
-  const standard = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'standards', 'user-profile-memory.md'),
-    'utf8',
-  );
+  const standard = readFileSync(join(harnessDocs, 'standards', 'user-profile-memory.md'), 'utf8');
 
   assert.match(agents, /profile\.md/);
   assert.match(agents, /用户画像/);
@@ -324,21 +298,12 @@ test('distributed rules define compact, user-only profile maintenance', () => {
 });
 
 test('distributed rules keep trust and authorization boundaries non-waivable', () => {
-  const agents = readFileSync(join(root, 'template', 'AGENTS.md'), 'utf8');
-  const operatingModel = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'core', 'operating-model.md'),
-    'utf8',
-  );
-  const toolRouting = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'core', 'tool-routing.md'),
-    'utf8',
-  );
-  const projectAgents = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'standards', 'project-agents.md'),
-    'utf8',
-  );
+  const agents = readFileSync(join(root, 'template', 'entry', 'AGENTS.md'), 'utf8');
+  const operatingModel = readFileSync(join(harnessDocs, 'core', 'operating-model.md'), 'utf8');
+  const toolRouting = readFileSync(join(harnessDocs, 'core', 'tool-routing.md'), 'utf8');
+  const projectAgents = readFileSync(join(harnessDocs, 'standards', 'project-agents.md'), 'utf8');
   const projectTemplate = readFileSync(
-    join(root, 'template', 'agent-harness', 'templates', 'project-AGENTS.md'),
+    join(harnessAssets, 'templates', 'project-AGENTS.md'),
     'utf8',
   );
   const llms = readFileSync(join(root, 'llms.txt'), 'utf8');
@@ -355,22 +320,13 @@ test('distributed rules keep trust and authorization boundaries non-waivable', (
 });
 
 test('read-only requests allow only narrow local Autopilot and qualified repository-map maintenance', () => {
-  const operatingModel = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'core', 'operating-model.md'),
-    'utf8',
-  );
+  const operatingModel = readFileSync(join(harnessDocs, 'core', 'operating-model.md'), 'utf8');
   const projectMemory = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'standards', 'project-agent-docs.md'),
+    join(harnessDocs, 'standards', 'project-agent-docs.md'),
     'utf8',
   );
-  const profile = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'standards', 'user-profile-memory.md'),
-    'utf8',
-  );
-  const repositoryMap = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'projects', 'repository-map.md'),
-    'utf8',
-  );
+  const profile = readFileSync(join(harnessDocs, 'standards', 'user-profile-memory.md'), 'utf8');
+  const repositoryMap = readFileSync(join(harnessDocs, 'projects', 'repository-map.md'), 'utf8');
 
   assert.match(operatingModel, /任务是否只读.*不决定.*Memory 资格/s);
   assert.match(operatingModel, /用户任务对象.*Harness sidecar/s);
@@ -389,39 +345,15 @@ test('read-only requests allow only narrow local Autopilot and qualified reposit
 });
 
 test('cross-repository research closes the relationship-map writeback loop', () => {
-  const playbook = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'projects', 'repository-map.md'),
-    'utf8',
-  );
+  const playbook = readFileSync(join(harnessDocs, 'projects', 'repository-map.md'), 'utf8');
   const reference = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'references', 'repository-map-contracts.md'),
+    join(harnessDocs, 'references', 'repository-map-contracts.md'),
     'utf8',
   );
   const protocol = [playbook, reference].join('\n');
-  const personalMap = readFileSync(
-    join(
-      root,
-      'template',
-      'agent-harness',
-      'templates',
-      'personal',
-      'projects',
-      'repository-map.md',
-    ),
-    'utf8',
-  );
-  const canonicalMap = readFileSync(
-    join(
-      root,
-      'template',
-      'agent-harness',
-      'templates',
-      'personal',
-      'projects',
-      'repository-map.yaml',
-    ),
-    'utf8',
-  );
+  const projects = join(harnessAssets, 'templates', 'personal', 'projects');
+  const personalMap = readFileSync(join(projects, 'repository-map.md'), 'utf8');
+  const canonicalMap = readFileSync(join(projects, 'repository-map.yaml'), 'utf8');
 
   assert.match(playbook, /自动发现、校验与维护/);
   assert.match(playbook, /更新 personal\s+`repository-map\.md`.*`repository-map\.yaml`/);
@@ -435,18 +367,12 @@ test('cross-repository research closes the relationship-map writeback loop', () 
 });
 
 test('repository-map core delegates mechanical schema, command, and budget details', () => {
-  const core = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'projects', 'repository-map.md'),
-    'utf8',
-  );
+  const core = readFileSync(join(harnessDocs, 'projects', 'repository-map.md'), 'utf8');
   const reference = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'references', 'repository-map-contracts.md'),
+    join(harnessDocs, 'references', 'repository-map-contracts.md'),
     'utf8',
   );
-  const manifest = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'manifest.yaml'),
-    'utf8',
-  );
+  const manifest = readFileSync(join(harnessDocs, 'manifest.yaml'), 'utf8');
 
   assert.ok(core.trimEnd().split('\n').length <= 100);
   assert.match(core, /repository-map-contracts\.md/);
@@ -464,14 +390,8 @@ test('repository-map core delegates mechanical schema, command, and budget detai
 });
 
 test('distributed rules close project-memory recall, writeback, and promotion loops', () => {
-  const standard = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'standards', 'project-agent-docs.md'),
-    'utf8',
-  );
-  const reference = readFileSync(
-    join(root, 'template', 'agent-harness', 'docs', 'references', 'memory-contracts.md'),
-    'utf8',
-  );
+  const standard = readFileSync(join(harnessDocs, 'standards', 'project-agent-docs.md'), 'utf8');
+  const reference = readFileSync(join(harnessDocs, 'references', 'memory-contracts.md'), 'utf8');
   const protocol = [standard, reference].join('\n');
 
   assert.match(standard, /启动发现闭环/);

@@ -41,13 +41,14 @@ owner: operating-model
 
 ## 3. 启动顺序与发现层级
 
-物理启动顺序固定为 `profile.md → 个人 AGENTS.md/cwd/Git → bootstrap → route`，不要把它
+物理启动顺序固定为 `profile.md → 个人 AGENTS.md/cwd/Git → bootstrap(原文)`，不要把它
 与后续的证据优先级混为一谈：
 
 1. 每个新宿主 task/thread 的首个工具调用，只做一次有界读取 canonical `profile.md`；文件缺失则继续。
 2. 再读取个人 `AGENTS.md`，确认 cwd、Git 根、工作树和就近项目规则。
-3. 项目根有 `README.md` 时，在项目 Memory 命令前有界读取；然后运行只读 `bootstrap`，按推荐引用加载正文。
-4. 最后按当前原文调用 `route`；只有命中的 owner 文档需要进入上下文。
+3. 项目根有 `README.md` 时，在项目 Memory 命令前有界读取。
+4. 运行只读 `bootstrap`，把用户当前原文原样放在末尾：它同时返回推荐的 Memory 引用和 `route.load`；
+   按 `route.load` 顺序读取，只有命中的 owner 文档需要进入上下文，`route.ask` 非空时先提问。
 
 这是工具调用顺序，不是内容可信度排序。逻辑发现仍按以下范围收窄：用户目标和边界 → 当前代码、配置、
 测试与契约 → 命中的项目/个人文档 → 必要的远程事实。全局 Memory 只读元信息与命中正文，不递归读取历史。

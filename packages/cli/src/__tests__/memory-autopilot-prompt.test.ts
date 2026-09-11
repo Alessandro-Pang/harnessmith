@@ -4,64 +4,89 @@ import { join } from 'node:path';
 import { test } from 'vitest';
 
 const root = join(import.meta.dirname, '..', '..', '..', '..');
-const agents = readFileSync(join(root, 'template', 'AGENTS.md'), 'utf8');
+const agents = readFileSync(join(root, 'template', 'entry', 'AGENTS.md'), 'utf8');
+const skill = readFileSync(join(root, 'template', 'skills', 'agent-harness', 'SKILL.md'), 'utf8');
 const projectMemory = readFileSync(
-  join(root, 'template', 'agent-harness', 'docs', 'standards', 'project-agent-docs.md'),
+  join(root, 'template', 'skills', 'agent-harness', 'docs', 'standards', 'project-agent-docs.md'),
   'utf8',
 );
 const projectMemoryReference = readFileSync(
-  join(root, 'template', 'agent-harness', 'docs', 'references', 'memory-contracts.md'),
+  join(root, 'template', 'skills', 'agent-harness', 'docs', 'references', 'memory-contracts.md'),
   'utf8',
 );
 const projectMemoryProtocol = [projectMemory, projectMemoryReference].join('\n');
 const architecture = readFileSync(
-  join(root, 'template', 'agent-harness', 'docs', 'core', 'harness-cli-architecture.md'),
+  join(root, 'template', 'skills', 'agent-harness', 'docs', 'core', 'harness-cli-architecture.md'),
   'utf8',
 );
 const longRunning = readFileSync(
-  join(root, 'template', 'agent-harness', 'docs', 'core', 'long-running-tasks.md'),
+  join(root, 'template', 'skills', 'agent-harness', 'docs', 'core', 'long-running-tasks.md'),
   'utf8',
 );
 const longRunningReference = readFileSync(
-  join(root, 'template', 'agent-harness', 'docs', 'references', 'task-and-replay-contracts.md'),
+  join(
+    root,
+    'template',
+    'skills',
+    'agent-harness',
+    'docs',
+    'references',
+    'task-and-replay-contracts.md',
+  ),
   'utf8',
 );
 const longRunningProtocol = [longRunning, longRunningReference].join('\n');
 const operatingModel = readFileSync(
-  join(root, 'template', 'agent-harness', 'docs', 'core', 'operating-model.md'),
+  join(root, 'template', 'skills', 'agent-harness', 'docs', 'core', 'operating-model.md'),
   'utf8',
 );
 const executionLoop = readFileSync(
-  join(root, 'template', 'agent-harness', 'docs', 'core', 'execution-loop.md'),
+  join(root, 'template', 'skills', 'agent-harness', 'docs', 'core', 'execution-loop.md'),
   'utf8',
 );
 const docsIndex = readFileSync(
-  join(root, 'template', 'agent-harness', 'docs', 'README.md'),
+  join(root, 'template', 'skills', 'agent-harness', 'docs', 'README.md'),
   'utf8',
 );
 const userProfile = readFileSync(
-  join(root, 'template', 'agent-harness', 'docs', 'standards', 'user-profile-memory.md'),
+  join(root, 'template', 'skills', 'agent-harness', 'docs', 'standards', 'user-profile-memory.md'),
   'utf8',
 );
 const userProfileReference = readFileSync(
-  join(root, 'template', 'agent-harness', 'docs', 'references', 'profile-contracts.md'),
+  join(root, 'template', 'skills', 'agent-harness', 'docs', 'references', 'profile-contracts.md'),
   'utf8',
 );
 const userProfileProtocol = [userProfile, userProfileReference].join('\n');
 const gitConventions = readFileSync(
-  join(root, 'template', 'agent-harness', 'docs', 'core', 'git-conventions.md'),
+  join(root, 'template', 'skills', 'agent-harness', 'docs', 'core', 'git-conventions.md'),
   'utf8',
 );
 const gitConventionsReference = readFileSync(
-  join(root, 'template', 'agent-harness', 'docs', 'references', 'git-project-overrides.md'),
+  join(
+    root,
+    'template',
+    'skills',
+    'agent-harness',
+    'docs',
+    'references',
+    'git-project-overrides.md',
+  ),
   'utf8',
 );
 const cliContracts = readFileSync(
-  join(root, 'template', 'agent-harness', 'docs', 'references', 'cli-contracts.md'),
+  join(root, 'template', 'skills', 'agent-harness', 'docs', 'references', 'cli-contracts.md'),
   'utf8',
 );
 const searchReference = readFileSync(
-  join(root, 'template', 'agent-harness', 'docs', 'references', 'search-and-benchmarks.md'),
+  join(
+    root,
+    'template',
+    'skills',
+    'agent-harness',
+    'docs',
+    'references',
+    'search-and-benchmarks.md',
+  ),
   'utf8',
 );
 
@@ -77,7 +102,7 @@ test('top-level rules preserve only durable trust authorization and delivery bou
 
 test('top-level prompt is a compact bootstrap instead of a Memory CLI manual', () => {
   const lines = agents.trimEnd().split('\n');
-  assert.ok(lines.length <= 50, `template/AGENTS.md has ${lines.length} lines`);
+  assert.ok(lines.length <= 50, `template/entry/AGENTS.md has ${lines.length} lines`);
   assert.ok(Math.max(...lines.map((line) => line.length)) <= 160);
   assert.doesNotMatch(
     agents,
@@ -130,20 +155,41 @@ test('autopilot activation requires a bounded turn-end capture decision', () => 
   assert.match(executionLoop, /宿主没有 turn-end\/session-end hook.*自行调用\nHarness CLI/s);
 });
 
-test('top-level routing uses one primary playbook plus supporting topics without category exceptions', () => {
-  assert.match(agents, /route.*--intent.*用户当前原文/s);
-  assert.match(agents, /primaryPlaybook/);
-  assert.match(agents, /topics/);
-  assert.match(agents, /加载.*primaryPlaybook.*全部.*返回.*topics/s);
-  assert.match(agents, /歧义.*停止|停止.*歧义/s);
+test('the entry runs one unconditional startup command; the skill is the discovery layer', () => {
+  // No task-class judgement in the always-on layer: the same command every time, raw text at
+  // the end, and the command output (not the model) decides what to load.
+  assert.match(agents, /无论任务大小.*同一条命令.*用户当前原文.*不改写.*不省略/s);
   assert.match(
     agents,
+    /bootstrap --project <absolute-project-root> --detail brief --json "<用户当前原文>"/,
+  );
+  assert.match(agents, /route\.load.*顺序.*route\.ask.*提问.*不猜/s);
+  assert.doesNotMatch(agents, /先读 .*SKILL\.md.*再动手|primaryPlaybook|requiredTopics|--intent/s);
+  assert.match(agents, /SKILL\.md.*只在 bootstrap 不可用时/s);
+  assert.match(agents, /harness: bootstrap=.*route=/);
+
+  assert.match(skill, /## 唯一入口命令/);
+  assert.match(
+    skill,
+    /bootstrap --project <absolute-project-root> --detail brief --json "<用户当前原文>"/,
+  );
+  assert.match(skill, /route\.load.*execution loop.*primary playbook.*required topics/s);
+  assert.match(skill, /route.*--intent.*用户当前原文/s);
+  assert.match(skill, /primaryPlaybook/);
+  assert.match(skill, /topics/);
+  assert.match(skill, /先读.*primaryPlaybook.*全部.*返回.*requiredTopics.*topics/s);
+  assert.match(skill, /歧义.*停止|停止.*歧义/s);
+  assert.match(
+    skill,
     /路由查询.*用户当前原文.*不得.*改写.*遗漏.*验收.*未来默认.*仍有后续.*host-signal/s,
   );
   assert.match(
-    agents,
+    skill,
     /本地 Harness.*Memory.*画像控制.*不是.*宿主产品.*不加载.*产品文档.*skill.*web/s,
   );
+  assert.match(skill, /^description: .*修改.*bug.*评审.*发布.*commit.*Memory/m);
+  assert.match(skill, /^description: .*Use for change, diagnose/m);
+  assert.doesNotMatch(skill, /\{\{HARNESS_HOME\}\}\/skills\/agent-harness\/scripts/);
   assert.match(docsIndex, /primaryPlaybook/);
   assert.match(docsIndex, /topics/);
   assert.match(docsIndex, /显式.*intent.*唯一.*playbook/s);

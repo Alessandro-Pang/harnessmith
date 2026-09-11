@@ -9,7 +9,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..
 test('project declares the Node 22.12 runtime floor consistently across runtime and CI contracts', () => {
   const packageManifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
   const harnessManifest = JSON.parse(
-    readFileSync(join(root, 'template', 'agent-harness', 'manifest.json'), 'utf8'),
+    readFileSync(join(root, 'template', 'skills', 'agent-harness', 'manifest.json'), 'utf8'),
   );
   const workflow = readFileSync(join(root, '.github', 'workflows', 'ci.yml'), 'utf8');
   const buildConfig = readFileSync(join(root, 'config', 'tsup.config.ts'), 'utf8');

@@ -3,8 +3,8 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createAdapter } from '../../../packages/cli/src/adapters/adapters.js';
+import { describeLifecycle } from '../../../packages/cli/src/installation/hub-lifecycle.js';
 import { installAll } from '../../../packages/cli/src/installation/install.js';
-import { describeLifecycle } from '../../../packages/cli/src/installation/lifecycle-plan.js';
 import {
   createSetupGuide,
   setupVerificationPassed,

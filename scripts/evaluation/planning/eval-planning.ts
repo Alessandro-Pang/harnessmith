@@ -17,12 +17,12 @@ export type EvaluationPlan = {
 const behaviorPrefixes = [
   'packages/cli/src/',
   'packages/harness/src/',
-  'template/agent-harness/docs/',
-  'template/agent-harness/schemas/',
-  'template/agent-harness/templates/',
+  'template/skills/agent-harness/docs/',
+  'template/skills/agent-harness/assets/schemas/',
+  'template/skills/agent-harness/assets/templates/',
 ];
 const behaviorFiles = new Set([
-  'template/AGENTS.md',
+  'template/entry/AGENTS.md',
   'evals/scenarios.json',
   'evals/scenarios.schema.json',
   'evals/run.schema.json',

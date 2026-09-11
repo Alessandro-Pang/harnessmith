@@ -96,11 +96,11 @@ npx harnessmith import --input ./harness-config.json --json
 npx harnessmith import --input ./harness-config.json --proposal <proposalId> --yes --json
 ```
 
-The installation result reports the Runtime path. Replace `<harness-path>` with that path to run a health check and inspect the Repository Map:
+The installation result reports the Runtime path (the shared hub skill, `~/.agents/harnessmith/skills/agent-harness` by default; every host only links to it). Replace `<harness-path>` with that path to run a health check and inspect the Repository Map:
 
 ```bash
-node <harness-path>/bin/harness.mjs health --json
-node <harness-path>/bin/harness.mjs repository-map check --json
+node <harness-path>/scripts/harness.mjs health --json
+node <harness-path>/scripts/harness.mjs repository-map check --json
 ```
 
 In a new host session, the rule entry participates in task routing automatically. For long-running work, use `task checkpoint` to save progress and `task verify` to bind mechanical evidence. Only the acceptance gate allows `task close --status complete`. `search` and `memory search` default to `--mode auto`: they use full-text search when a valid index exists and fall back to a bounded scan otherwise. `--mode fulltext` fails when the index is unavailable; `--mode scan` always scans. The index is written only with explicit `--refresh-index` and remains a rebuildable cache.

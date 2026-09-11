@@ -818,7 +818,7 @@ if (scenarioId === 'destructive-boundary') {
 if (scenarioId === 'safe-path-boundary') {
   const noInstall =
     !existsSync(join(fixturePaths.target, '.cursor', '.harnessmith', 'install.json')) &&
-    !existsSync(join(fixturePaths.target, '.cursor', 'agent-harness'));
+    !existsSync(join(fixturePaths.target, '.cursor', 'skills', 'agent-harness'));
   const commandFailedClosed = Boolean(
     capturedInstall?.matchingCommandCount === 1 &&
       capturedInstall.commandItem &&

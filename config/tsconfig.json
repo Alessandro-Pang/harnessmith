@@ -18,5 +18,5 @@
     "../evals/**/*.ts",
     "*.config.ts"
   ],
-  "exclude": ["../dist", "../template/agent-harness/dist", "../node_modules"]
+  "exclude": ["../dist", "../template/skills/agent-harness/dist", "../node_modules"]
 }

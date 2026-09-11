@@ -1,15 +1,16 @@
 import { cpSync, existsSync, mkdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { removeExact } from '../shared/files.js';
-import { assertSafePath, ignoreRoot } from '../shared/safe-path.js';
-import type { Adapter } from '../shared/types.js';
+import { assertSafePath, ignoreRoot, outputRoot } from '../shared/safe-path.js';
+import type { ManagedScope } from '../shared/types.js';
 import { errorMessage } from '../shared/types.js';
 import {
   createTemporaryWorkspace,
   disposeTemporaryWorkspace,
   type TemporaryWorkspace,
 } from '../temporary-resources/temporary-resource.js';
-import type { RecordLayer } from './lifecycle-plan.js';
+import { migratedOutputs, migrationRoot, type RecordLayer } from './lifecycle-plan.js';
+import { outputSpec } from './records.js';
 
 interface PathSnapshot {
   root: string;
@@ -42,20 +43,24 @@ export class LifecycleRecoveryError extends Error {
   }
 }
 
-export function mutableLifecyclePaths(adapter: Adapter, layers: RecordLayer[]): MutablePath[] {
+export function mutableLifecyclePaths(scope: ManagedScope, layers: RecordLayer[]): MutablePath[] {
   const paths = new Map<string, MutablePath>();
   const add = (root: string, path: string): void => {
     paths.set(path, { root, path });
   };
-  add(adapter.home, adapter.record);
-  for (const ignore of adapter.localIgnoreFiles || [])
-    add(ignoreRoot(adapter, ignore), ignore.path);
+  add(scope.home, scope.record);
+  for (const ignore of scope.localIgnoreFiles || []) add(ignoreRoot(scope, ignore), ignore.path);
   for (const layer of layers) {
-    add(adapter.home, layer.path);
-    if (layer.record.recordBackup) add(adapter.home, layer.record.recordBackup);
+    add(scope.home, layer.path);
+    if (layer.record.recordBackup) add(scope.home, layer.record.recordBackup);
     for (const output of layer.record.outputs) {
-      add(adapter.home, output.path);
-      if (output.backup) add(adapter.home, output.backup);
+      const root = outputRoot(scope, outputSpec(scope, output.path));
+      add(root, output.path);
+      if (output.backup) add(root, output.backup);
+    }
+    for (const migrated of migratedOutputs(layer.record)) {
+      add(migrationRoot(scope), migrated.path);
+      add(migrationRoot(scope), migrated.backup);
     }
   }
   return [...paths.values()];
@@ -75,7 +80,7 @@ function snapshotPaths(paths: MutablePath[]): {
   const snapshots: PathSnapshot[] = [];
   try {
     for (const [index, { root: authorizedRoot, path }] of paths.entries()) {
-      assertSafePath(authorizedRoot, path);
+      assertSafePath(authorizedRoot, path, { allowSymlinkLeaf: true });
       if (!existsSync(path)) {
         snapshots.push({ root: authorizedRoot, path, copy: null });
         continue;
@@ -101,11 +106,11 @@ function snapshotPaths(paths: MutablePath[]): {
 
 function restorePathSnapshots(snapshots: PathSnapshot[]): void {
   for (const snapshot of snapshots) {
-    assertSafePath(snapshot.root, snapshot.path);
+    assertSafePath(snapshot.root, snapshot.path, { allowSymlinkLeaf: true });
     removeExact(snapshot.path);
     if (!snapshot.copy) continue;
     mkdirSync(dirname(snapshot.path), { recursive: true });
-    assertSafePath(snapshot.root, snapshot.path);
+    assertSafePath(snapshot.root, snapshot.path, { allowSymlinkLeaf: true });
     cpSync(snapshot.copy, snapshot.path, {
       recursive: true,
       dereference: false,
@@ -126,7 +131,7 @@ function recoveryContext(
       if (!authorizedRoots.has(authorizedRoot)) {
         throw new Error(`Recovery path root is not part of the lifecycle transaction: ${root}`);
       }
-      assertSafePath(authorizedRoot, recoveryPath);
+      assertSafePath(authorizedRoot, recoveryPath, { allowSymlinkLeaf: true });
       registered.set(recoveryPath, { root: authorizedRoot, path: recoveryPath });
       return () => {
         registered.delete(recoveryPath);
@@ -139,7 +144,7 @@ function cleanupRecoveryPaths(registered: Map<string, MutablePath>): string[] {
   const failures: string[] = [];
   for (const [key, recovery] of registered) {
     try {
-      assertSafePath(recovery.root, recovery.path);
+      assertSafePath(recovery.root, recovery.path, { allowSymlinkLeaf: true });
       removeExact(recovery.path);
       registered.delete(key);
     } catch (error) {

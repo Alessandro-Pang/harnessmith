@@ -21,7 +21,7 @@ owner: repository-map
 ├── repository-map.yaml     # canonical semantic map; user-owned
 └── repository-map.md       # generated view
 
-{{HARNESS_HOME}}/agent-harness/state/repository-map/
+{{HARNESS_HOME}}/skills/agent-harness/state/repository-map/
 └── verification.json       # mutable source fingerprints and freshness
 ```
 
@@ -38,13 +38,13 @@ remotes 和 1–6 个正式 source。直接关系固定为 `provider -> contract
 ## 命令与副作用
 
 ```bash
-node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs repository-map check --json
-node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs repository-map discover packages --apply --json
-node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs repository-map verify --record --json
-node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs repository-map maintain --max-age-days 30 --json
-node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs repository-map render --write
-node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs repository-map reconcile /absolute/observations.json --json
-node {{HARNESS_HOME}}/agent-harness/bin/harness.mjs repository-map migrate /absolute/candidate.yaml --json
+node {{HARNESS_HOME}}/skills/agent-harness/scripts/harness.mjs repository-map check --json
+node {{HARNESS_HOME}}/skills/agent-harness/scripts/harness.mjs repository-map discover packages --apply --json
+node {{HARNESS_HOME}}/skills/agent-harness/scripts/harness.mjs repository-map verify --record --json
+node {{HARNESS_HOME}}/skills/agent-harness/scripts/harness.mjs repository-map maintain --max-age-days 30 --json
+node {{HARNESS_HOME}}/skills/agent-harness/scripts/harness.mjs repository-map render --write
+node {{HARNESS_HOME}}/skills/agent-harness/scripts/harness.mjs repository-map reconcile /absolute/observations.json --json
+node {{HARNESS_HOME}}/skills/agent-harness/scripts/harness.mjs repository-map migrate /absolute/candidate.yaml --json
 ```
 
 | 命令 | 默认行为 | 写入条件 |

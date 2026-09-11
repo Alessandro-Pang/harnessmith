@@ -93,7 +93,7 @@ test('audit record rejects raw content fields and preserves the rejected payload
     /unknown key: prompt/i,
   );
   assert.equal(existsSync(input), true);
-  assert.equal(existsSync(join(runtime.installedHarness, 'state', 'audit')), false);
+  assert.equal(existsSync(join(runtime.stateRoot, 'audit')), false);
 });
 
 test('audit list filters by trace and summary aggregates outcomes, policy, cost, tokens, and latency', () => {
@@ -181,7 +181,7 @@ test('audit queries reject unbounded or non-canonical filters', () => {
 test('audit storage rejects a symlinked state boundary', () => {
   const { root, runtime } = fixture();
   const outside = join(root, 'outside');
-  const state = join(runtime.installedHarness, 'state');
+  const state = runtime.stateRoot;
   mkdirSync(runtime.installedHarness, { recursive: true });
   writeFileSync(join(root, 'sentinel'), 'unchanged\n');
   symlinkSync(outside, state, 'dir');
@@ -192,7 +192,7 @@ test('audit storage rejects a symlinked state boundary', () => {
     /symbolic link|safe path/i,
   );
   assert.equal(existsSync(outside), false);
-  assert.equal(dirname(state), runtime.installedHarness);
+  assert.equal(dirname(state), runtime.harnessHome);
 });
 
 test('health treats absent audit state as inactive and reports valid audit state', () => {
@@ -212,7 +212,7 @@ test('health treats absent audit state as inactive and reports valid audit state
 
 test('health fails closed when audit state is corrupt', () => {
   const { runtime } = fixture();
-  const root = join(runtime.installedHarness, 'state', 'audit');
+  const root = join(runtime.stateRoot, 'audit');
   mkdirSync(root, { recursive: true });
   writeFileSync(join(root, '2026-08-28.jsonl'), '{not-json}\n');
 
@@ -225,7 +225,7 @@ test('health fails closed when audit state is corrupt', () => {
 
 test('health rejects tampered audit events that add raw content', () => {
   const { runtime } = fixture();
-  const root = join(runtime.installedHarness, 'state', 'audit');
+  const root = join(runtime.stateRoot, 'audit');
   mkdirSync(root, { recursive: true });
   writeFileSync(
     join(root, '2026-08-28.jsonl'),
@@ -267,10 +267,7 @@ test('audit maintenance reports retention candidates and archive is proposal-fir
     0,
   );
   assert.equal(JSON.parse(proposal.logs[0]).action, 'proposed');
-  assert.equal(
-    existsSync(join(runtime.installedHarness, 'state', 'audit', '2026-01-01.jsonl')),
-    true,
-  );
+  assert.equal(existsSync(join(runtime.stateRoot, 'audit', '2026-01-01.jsonl')), true);
 
   const applied = capturedIo();
   assert.equal(
@@ -281,15 +278,45 @@ test('audit maintenance reports retention candidates and archive is proposal-fir
     0,
   );
   assert.deepEqual(JSON.parse(applied.logs[0]).archivedFiles, ['2026-01-01.jsonl']);
-  assert.equal(
-    existsSync(join(runtime.installedHarness, 'state', 'audit', '2026-01-01.jsonl')),
-    false,
-  );
-  assert.equal(
-    existsSync(join(runtime.installedHarness, 'state', 'audit', 'archive', '2026-01-01.jsonl')),
-    true,
-  );
+  assert.equal(existsSync(join(runtime.stateRoot, 'audit', '2026-01-01.jsonl')), false);
+  assert.equal(existsSync(join(runtime.stateRoot, 'audit', 'archive', '2026-01-01.jsonl')), true);
   const summary = capturedIo();
   runCli(['audit', 'summary', '--json'], { runtime, io: summary });
   assert.equal(JSON.parse(summary.logs[0]).eventCount, 0);
+});
+
+test('audit archive refuses a non-directory archive root and existing destinations', () => {
+  const { root, runtime } = fixture();
+  runCli(
+    [
+      'audit',
+      'record',
+      '--payload-file',
+      payload(root, 'old.json', event({ timestamp: '2026-01-01T00:00:00.000Z' })),
+    ],
+    { runtime, io: capturedIo() },
+  );
+  const archiveRoot = join(runtime.stateRoot, 'audit', 'archive');
+  writeFileSync(archiveRoot, '');
+  assert.throws(
+    () =>
+      runCli(['audit', 'archive', '--before', '2026-02-01', '--apply', '--json'], {
+        runtime,
+        io: capturedIo(),
+      }),
+    /regular non-symlink directory/,
+  );
+
+  rmSync(archiveRoot);
+  mkdirSync(archiveRoot, { recursive: true });
+  writeFileSync(join(archiveRoot, '2026-01-01.jsonl'), '');
+  assert.throws(
+    () =>
+      runCli(['audit', 'archive', '--before', '2026-02-01', '--apply', '--json'], {
+        runtime,
+        io: capturedIo(),
+      }),
+    /Audit archive destination exists/,
+  );
+  assert.equal(existsSync(join(runtime.stateRoot, 'audit', '2026-01-01.jsonl')), true);
 });

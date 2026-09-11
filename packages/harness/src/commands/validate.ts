@@ -11,7 +11,7 @@ import { errorMessage } from '../types.js';
 
 const addFormats = addFormatsModule as unknown as (ajv: Ajv2020) => Ajv2020;
 function validateStructure(runtime: Runtime, report: ValidationReport): void {
-  const entry = join(runtime.installedHarness, 'bin', 'harness.mjs');
+  const entry = join(runtime.installedHarness, 'scripts', 'harness.mjs');
   if (!existsSync(entry)) {
     check(report, 'cli-entry', 'failed', 'Missing CLI entry', entry);
     return;
@@ -120,7 +120,7 @@ function validateProject(runtime: Runtime, input: string, report: ValidationRepo
   const ajv = new Ajv2020({ allErrors: true, strict: true });
   addFormats(ajv);
   const taskSchema = JSON.parse(
-    readFileSync(join(runtime.installedHarness, 'schemas', 'task.schema.json'), 'utf8'),
+    readFileSync(join(runtime.installedHarness, 'assets', 'schemas', 'task.schema.json'), 'utf8'),
   );
   const validateTask = ajv.compile(taskSchema);
   for (const path of listFiles(working).filter((file) => file.endsWith(`${sep}task.json`))) {
