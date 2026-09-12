@@ -44,12 +44,13 @@ test('known fixture and oracle gaps are explicitly evaluator-inconclusive', () =
     readFileSync(join(root, 'evals', 'memory', 'scenarios.v1.json'), 'utf8'),
   ) as { scenarios: CatalogScenario[] };
   const scenarios = new Map(catalog.scenarios.map((scenario) => [scenario.id, scenario]));
+  for (const id of ['writer-failure-recovery', 'capture-finding', 'profile-autopilot']) {
+    assert.equal(scenarios.get(id)?.evaluationStatus, 'inconclusive', id);
+    assert.ok(scenarios.get(id)?.evaluationReason, id);
+  }
   for (const id of [
-    'writer-failure-recovery',
     'close-input',
-    'capture-finding',
     'capture-experience',
-    'profile-autopilot',
     'handoff',
     'close-handoff',
     'supersede',
@@ -60,8 +61,8 @@ test('known fixture and oracle gaps are explicitly evaluator-inconclusive', () =
     'curate',
     'curation-apply',
   ]) {
-    assert.equal(scenarios.get(id)?.evaluationStatus, 'inconclusive', id);
-    assert.ok(scenarios.get(id)?.evaluationReason, id);
+    assert.equal(scenarios.get(id)?.evaluationStatus, 'active', id);
+    assert.equal(scenarios.get(id)?.evaluationReason, undefined, id);
   }
 });
 

@@ -29,7 +29,7 @@
         "expectedAction": { "enum": ["created", "updated", "unchanged", "no-change", "proposed", "blocked", "none"] },
         "evaluationStatus": { "enum": ["active", "inconclusive"] },
         "operation": { "enum": ["none", "search", "capture-input", "close-input", "capture-finding", "capture-experience", "reconcile-profile", "forget-profile", "profile-autopilot", "handoff", "close-handoff", "supersede", "archive", "maintain", "repair", "migrate", "curate", "curation-apply"] },
-        "stateContract": { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "enum": ["profile-create", "profile-update", "profile-forget", "profile-control", "project-input-create", "project-input-idempotent", "no-write", "typed-operation"] }, "key": { "$ref": "#/$defs/text" }, "operation": { "$ref": "#/$defs/text" }, "expectedScopes": { "type": "array", "uniqueItems": true, "items": { "enum": ["global", "project"] } }, "deterministic": { "type": "boolean" } } },
+        "stateContract": { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "enum": ["profile-create", "profile-update", "profile-forget", "profile-control", "project-input-create", "project-input-idempotent", "no-write", "typed-operation", "typed-report"] }, "key": { "$ref": "#/$defs/text" }, "operation": { "$ref": "#/$defs/text" }, "trigger": { "$ref": "#/$defs/text" }, "expectedScopes": { "type": "array", "uniqueItems": true, "items": { "enum": ["global", "project"] } }, "deterministic": { "type": "boolean" } } },
         "evaluationReason": { "$ref": "#/$defs/text" },
         "promptVariants": { "type": "array", "minItems": 2, "maxItems": 16, "uniqueItems": true, "items": { "$ref": "#/$defs/text" } },
         "setup": {
@@ -38,7 +38,7 @@
           "required": ["globalMemory", "projectMemory", "taskCount"],
           "properties": {
             "globalMemory": { "enum": ["empty", "seeded"] },
-            "projectMemory": { "enum": ["empty", "seeded"] },
+            "projectMemory": { "enum": ["empty", "seeded", "closable-input", "experience-ready", "active-handoff", "supersede-pair", "archivable-closed", "maintenance-trigger", "repairable-missing-readme", "legacy-migrate", "curation-candidates"] },
             "taskCount": { "type": "integer", "minimum": 1, "maximum": 8 }
           }
         },
@@ -50,7 +50,7 @@
           "required": ["kind", "command", "operation"],
           "properties": {
             "kind": { "enum": ["filesystem", "memory-state", "cross-session"] },
-            "operation": { "enum": ["none", "typed-operation"] },
+            "operation": { "enum": ["none", "typed-operation", "typed-report"] },
             "command": { "$ref": "#/$defs/text" }
           }
         },

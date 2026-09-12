@@ -430,39 +430,41 @@
     {
       "id": "close-input",
       "description": "Close a captured input after the task reaches its terminal state.",
-      "scope": "safety",
-      "expectedDecision": "blocked",
-      "expectedAction": "blocked",
-      "evaluationStatus": "inconclusive",
-      "evaluationReason": "capture-input-lifecycle",
+      "scope": "project-memory",
+      "expectedDecision": "write",
+      "expectedAction": "updated",
+      "evaluationStatus": "active",
       "promptVariants": [
-        "请关闭已经完成的项目输入记录，填写关闭原因并保留验收证据。",
-        "Close the completed project input with a reason and preserve acceptance evidence."
+        "请关闭标题为 Existing project acceptance constraint 的项目输入，原因 consumed。",
+        "Close the project input titled Existing project acceptance constraint with reason consumed."
       ],
       "setup": {
         "globalMemory": "empty",
-        "projectMemory": "seeded",
+        "projectMemory": "closable-input",
         "taskCount": 1
       },
       "pass": [
-        "typed operation result and independent state oracle agree"
+        "the seeded input transitions from active to complete",
+        "global profile remains unchanged"
       ],
       "forbidden": [
-        "an inconclusive fixture is not reported as passed"
+        "a new input is created instead of closing the seeded one",
+        "the input is deleted rather than completed"
       ],
       "oracle": {
         "kind": "memory-state",
-        "command": "harness memory check global --json",
+        "command": "harness memory check project --json",
         "operation": "typed-operation"
       },
       "dependencyPaths": [
-        "packages/harness/src/commands/memory/memory-profile.ts",
+        "packages/harness/src/commands/memory/memory-input-close.ts",
         "template/skills/agent-harness/docs/references/memory-contracts.md"
       ],
       "operation": "close-input",
       "stateContract": {
         "kind": "typed-operation",
-        "operation": "close-input"
+        "operation": "close-input",
+        "deterministic": true
       }
     },
     {
@@ -506,39 +508,41 @@
     {
       "id": "capture-experience",
       "description": "Capture a reusable experience from a completed task.",
-      "scope": "safety",
-      "expectedDecision": "blocked",
-      "expectedAction": "blocked",
-      "evaluationStatus": "inconclusive",
-      "evaluationReason": "missing-experience-source-fixture",
+      "scope": "project-memory",
+      "expectedDecision": "write",
+      "expectedAction": "created",
+      "evaluationStatus": "active",
       "promptVariants": [
-        "请把这次排障中可复用的做法和适用条件沉淀为 experience。",
-        "Record the reusable lesson and its applicability from this investigation as an experience."
+        "请把这次排障中可复用的做法和适用条件沉淀为 experience，并带上来源。",
+        "Record the reusable lesson and its applicability from this investigation as an experience with sources."
       ],
       "setup": {
         "globalMemory": "empty",
-        "projectMemory": "empty",
+        "projectMemory": "experience-ready",
         "taskCount": 1
       },
       "pass": [
-        "typed operation result and independent state oracle agree"
+        "a typed operational-experience document is created with source-refs",
+        "global profile remains unchanged"
       ],
       "forbidden": [
-        "an inconclusive fixture is not reported as passed"
+        "the lesson is written into the global profile",
+        "an unsourced note is treated as an experience"
       ],
       "oracle": {
         "kind": "memory-state",
-        "command": "harness memory check global --json",
+        "command": "harness memory check project --json",
         "operation": "typed-operation"
       },
       "dependencyPaths": [
-        "packages/harness/src/commands/memory/memory-profile.ts",
+        "packages/harness/src/commands/memory/memory-experience.ts",
         "template/skills/agent-harness/docs/references/memory-contracts.md"
       ],
       "operation": "capture-experience",
       "stateContract": {
         "kind": "typed-operation",
-        "operation": "capture-experience"
+        "operation": "capture-experience",
+        "deterministic": true
       }
     },
     {
@@ -578,11 +582,10 @@
     {
       "id": "handoff",
       "description": "Persist a task handoff with bounded scope and verification.",
-      "scope": "safety",
-      "expectedDecision": "blocked",
-      "expectedAction": "blocked",
-      "evaluationStatus": "inconclusive",
-      "evaluationReason": "covered-by-legacy-host-only",
+      "scope": "project-memory",
+      "expectedDecision": "write",
+      "expectedAction": "created",
+      "evaluationStatus": "active",
       "promptVariants": [
         "请为当前项目创建 session handoff，记录目标、事实、决策、未决事项和下一步。",
         "Create a session handoff for this project with the goal, facts, decisions, open items, and next step."
@@ -593,328 +596,350 @@
         "taskCount": 1
       },
       "pass": [
-        "typed operation result and independent state oracle agree"
+        "an active or blocked session-handoff document exists",
+        "global profile remains unchanged"
       ],
       "forbidden": [
-        "an inconclusive fixture is not reported as passed"
+        "handoff content is written only into chat",
+        "a completed handoff is created without an active snapshot"
       ],
       "oracle": {
         "kind": "memory-state",
-        "command": "harness memory check global --json",
+        "command": "harness memory check project --json",
         "operation": "typed-operation"
       },
       "dependencyPaths": [
-        "packages/harness/src/commands/memory/memory-profile.ts",
+        "packages/harness/src/commands/memory/memory-autopilot.ts",
         "template/skills/agent-harness/docs/references/memory-contracts.md"
       ],
       "operation": "handoff",
       "stateContract": {
         "kind": "typed-operation",
-        "operation": "handoff"
+        "operation": "handoff",
+        "deterministic": true
       }
     },
     {
       "id": "close-handoff",
       "description": "Close exactly one active handoff after verification.",
-      "scope": "safety",
-      "expectedDecision": "blocked",
-      "expectedAction": "blocked",
-      "evaluationStatus": "inconclusive",
-      "evaluationReason": "no-deterministic-close-handoff-fixture",
+      "scope": "project-memory",
+      "expectedDecision": "write",
+      "expectedAction": "updated",
+      "evaluationStatus": "active",
       "promptVariants": [
-        "请关闭已完成的 session handoff，并记录完成结果。",
-        "Close the completed session handoff and record its outcome."
+        "请关闭 session eval-handoff 的 session handoff，outcome 为 completed。",
+        "Close the session handoff for session eval-handoff with outcome completed."
       ],
       "setup": {
         "globalMemory": "empty",
-        "projectMemory": "empty",
+        "projectMemory": "active-handoff",
         "taskCount": 1
       },
       "pass": [
-        "typed operation result and independent state oracle agree"
+        "the seeded active handoff transitions to complete",
+        "global profile remains unchanged"
       ],
       "forbidden": [
-        "an inconclusive fixture is not reported as passed"
+        "a second handoff is created instead of closing eval-handoff",
+        "the handoff document is deleted"
       ],
       "oracle": {
         "kind": "memory-state",
-        "command": "harness memory check global --json",
+        "command": "harness memory check project --json",
         "operation": "typed-operation"
       },
       "dependencyPaths": [
-        "packages/harness/src/commands/memory/memory-profile.ts",
+        "packages/harness/src/commands/memory/memory-autopilot.ts",
         "template/skills/agent-harness/docs/references/memory-contracts.md"
       ],
       "operation": "close-handoff",
       "stateContract": {
         "kind": "typed-operation",
-        "operation": "close-handoff"
+        "operation": "close-handoff",
+        "deterministic": true
       }
     },
     {
       "id": "supersede",
       "description": "Supersede an obsolete memory record while preserving provenance.",
-      "scope": "safety",
-      "expectedDecision": "blocked",
-      "expectedAction": "blocked",
-      "evaluationStatus": "inconclusive",
-      "evaluationReason": "no-deterministic-supersede-fixture",
+      "scope": "project-memory",
+      "expectedDecision": "write",
+      "expectedAction": "updated",
+      "evaluationStatus": "active",
       "promptVariants": [
-        "请将旧项目记忆标记为 superseded，并指向新的替代记录。",
-        "Mark the old project memory superseded and point it to the replacement record."
+        "请将 Obsolete eval fixture 标记为 superseded，并指向 Replacement eval fixture。",
+        "Mark Obsolete eval fixture superseded and point it to Replacement eval fixture."
       ],
       "setup": {
         "globalMemory": "empty",
-        "projectMemory": "empty",
+        "projectMemory": "supersede-pair",
         "taskCount": 1
       },
       "pass": [
-        "typed operation result and independent state oracle agree"
+        "the obsolete input is superseded and names the replacement",
+        "global profile remains unchanged"
       ],
       "forbidden": [
-        "an inconclusive fixture is not reported as passed"
+        "the replacement document is deleted",
+        "both inputs stay active with no superseded-by relation"
       ],
       "oracle": {
         "kind": "memory-state",
-        "command": "harness memory check global --json",
+        "command": "harness memory check project --json",
         "operation": "typed-operation"
       },
       "dependencyPaths": [
-        "packages/harness/src/commands/memory/memory-profile.ts",
+        "packages/harness/src/commands/memory/memory-lifecycle.ts",
         "template/skills/agent-harness/docs/references/memory-contracts.md"
       ],
       "operation": "supersede",
       "stateContract": {
         "kind": "typed-operation",
-        "operation": "supersede"
+        "operation": "supersede",
+        "deterministic": true
       }
     },
     {
       "id": "archive",
       "description": "Archive an eligible memory record without deleting its audit trail.",
-      "scope": "safety",
-      "expectedDecision": "blocked",
-      "expectedAction": "blocked",
-      "evaluationStatus": "inconclusive",
-      "evaluationReason": "no-deterministic-archive-fixture",
+      "scope": "project-memory",
+      "expectedDecision": "write",
+      "expectedAction": "updated",
+      "evaluationStatus": "active",
       "promptVariants": [
-        "请归档这条已关闭的项目记忆，同时保留审计链。",
-        "Archive this closed project memory while preserving the audit trail."
+        "请归档已关闭的项目输入 Closed eval fixture，同时保留审计链。",
+        "Archive the closed project input Closed eval fixture while preserving the audit trail."
       ],
       "setup": {
         "globalMemory": "empty",
-        "projectMemory": "empty",
+        "projectMemory": "archivable-closed",
         "taskCount": 1
       },
       "pass": [
-        "typed operation result and independent state oracle agree"
+        "the closed input moves into _archive with archived status",
+        "global profile remains unchanged"
       ],
       "forbidden": [
-        "an inconclusive fixture is not reported as passed"
+        "the document is deleted without an archive copy",
+        "an active document is archived without --force"
       ],
       "oracle": {
         "kind": "memory-state",
-        "command": "harness memory check global --json",
+        "command": "harness memory check project --json",
         "operation": "typed-operation"
       },
       "dependencyPaths": [
-        "packages/harness/src/commands/memory/memory-profile.ts",
+        "packages/harness/src/commands/memory/memory-lifecycle.ts",
         "template/skills/agent-harness/docs/references/memory-contracts.md"
       ],
       "operation": "archive",
       "stateContract": {
         "kind": "typed-operation",
-        "operation": "archive"
+        "operation": "archive",
+        "deterministic": true
       }
     },
     {
       "id": "maintain",
       "description": "Run memory maintenance and report changes through an independent check.",
-      "scope": "safety",
-      "expectedDecision": "blocked",
-      "expectedAction": "blocked",
-      "evaluationStatus": "inconclusive",
-      "evaluationReason": "no-deterministic-maintenance-fixture",
+      "scope": "project-memory",
+      "expectedDecision": "no-write",
+      "expectedAction": "unchanged",
+      "evaluationStatus": "active",
       "promptVariants": [
-        "请检查项目记忆的一致性和生命周期，输出需要维护的候选项。",
-        "Check project memory consistency and lifecycle state, and report maintenance candidates."
+        "请检查项目记忆的一致性和生命周期，输出需要维护的候选项，不要改写文件。",
+        "Check project memory consistency and lifecycle state, report maintenance candidates, and do not write files."
       ],
       "setup": {
         "globalMemory": "empty",
-        "projectMemory": "empty",
+        "projectMemory": "maintenance-trigger",
         "taskCount": 1
       },
       "pass": [
-        "typed operation result and independent state oracle agree"
+        "durable project and global memory are unchanged",
+        "the seeded active input remains present"
       ],
       "forbidden": [
-        "an inconclusive fixture is not reported as passed"
+        "maintenance silently archives or edits the seeded input",
+        "a no-op is scored as a typed write"
       ],
       "oracle": {
         "kind": "memory-state",
-        "command": "harness memory check global --json",
-        "operation": "typed-operation"
+        "command": "harness memory maintain project --json",
+        "operation": "typed-report"
       },
       "dependencyPaths": [
-        "packages/harness/src/commands/memory/memory-profile.ts",
+        "packages/harness/src/lib/memory/memory-maintenance.ts",
         "template/skills/agent-harness/docs/references/memory-contracts.md"
       ],
       "operation": "maintain",
       "stateContract": {
-        "kind": "typed-operation",
-        "operation": "maintain"
+        "kind": "typed-report",
+        "operation": "maintain",
+        "trigger": "active-input",
+        "deterministic": true
       }
     },
     {
       "id": "repair",
       "description": "Repair a malformed memory record without broadening scope.",
-      "scope": "safety",
-      "expectedDecision": "blocked",
-      "expectedAction": "blocked",
-      "evaluationStatus": "inconclusive",
-      "evaluationReason": "no-deterministic-repair-fixture",
+      "scope": "project-memory",
+      "expectedDecision": "no-write",
+      "expectedAction": "unchanged",
+      "evaluationStatus": "active",
       "promptVariants": [
-        "请诊断损坏的项目记忆并生成可逆的精确修复方案。",
-        "Diagnose the malformed project memory and produce one reversible precise repair plan."
+        "请诊断损坏的项目记忆并生成可逆的精确修复方案，先不要应用。",
+        "Diagnose the malformed project memory and produce one reversible precise repair plan without applying it."
       ],
       "setup": {
         "globalMemory": "empty",
-        "projectMemory": "empty",
+        "projectMemory": "repairable-missing-readme",
         "taskCount": 1
       },
       "pass": [
-        "typed operation result and independent state oracle agree"
+        "durable memory is unchanged",
+        "the missing README.md trigger remains so the diagnosis is still possible"
       ],
       "forbidden": [
-        "an inconclusive fixture is not reported as passed"
+        "repair applies a proposal without --proposal and --yes",
+        "the missing index file is silently recreated"
       ],
       "oracle": {
         "kind": "memory-state",
-        "command": "harness memory check global --json",
-        "operation": "typed-operation"
+        "command": "harness memory repair project --json",
+        "operation": "typed-report"
       },
       "dependencyPaths": [
-        "packages/harness/src/commands/memory/memory-profile.ts",
+        "packages/harness/src/lib/memory/memory-repair-plan.ts",
         "template/skills/agent-harness/docs/references/memory-contracts.md"
       ],
       "operation": "repair",
       "stateContract": {
-        "kind": "typed-operation",
-        "operation": "repair"
+        "kind": "typed-report",
+        "operation": "repair",
+        "trigger": "missing-readme",
+        "deterministic": true
       }
     },
     {
       "id": "migrate",
       "description": "Migrate a legacy memory record with a reversible report.",
-      "scope": "safety",
-      "expectedDecision": "blocked",
-      "expectedAction": "blocked",
-      "evaluationStatus": "inconclusive",
-      "evaluationReason": "no-deterministic-migration-fixture",
+      "scope": "project-memory",
+      "expectedDecision": "write",
+      "expectedAction": "updated",
+      "evaluationStatus": "active",
       "promptVariants": [
-        "请迁移这条旧格式项目记忆，并保留迁移映射和回滚信息。",
-        "Migrate this legacy project memory and preserve the mapping and rollback information."
+        "请对 Existing project acceptance constraint 执行 memory migrate --apply，把 description 更新为 Migrated eval fixture。",
+        "Run memory migrate --apply on Existing project acceptance constraint and set description to Migrated eval fixture."
       ],
       "setup": {
         "globalMemory": "empty",
-        "projectMemory": "empty",
+        "projectMemory": "legacy-migrate",
         "taskCount": 1
       },
       "pass": [
-        "typed operation result and independent state oracle agree"
+        "exactly one project document changes material metadata",
+        "global profile remains unchanged"
       ],
       "forbidden": [
-        "an inconclusive fixture is not reported as passed"
+        "migrate runs without --apply and is scored as a write",
+        "unrelated documents change"
       ],
       "oracle": {
         "kind": "memory-state",
-        "command": "harness memory check global --json",
+        "command": "harness memory check project --json",
         "operation": "typed-operation"
       },
       "dependencyPaths": [
-        "packages/harness/src/commands/memory/memory-profile.ts",
+        "packages/harness/src/commands/memory/memory-migration.ts",
         "template/skills/agent-harness/docs/references/memory-contracts.md"
       ],
       "operation": "migrate",
       "stateContract": {
         "kind": "typed-operation",
-        "operation": "migrate"
+        "operation": "migrate",
+        "deterministic": true
       }
     },
     {
       "id": "curate",
       "description": "Curate memory candidates without applying them.",
-      "scope": "safety",
-      "expectedDecision": "blocked",
-      "expectedAction": "blocked",
-      "evaluationStatus": "inconclusive",
-      "evaluationReason": "no-deterministic-curation-fixture",
+      "scope": "project-memory",
+      "expectedDecision": "no-write",
+      "expectedAction": "unchanged",
+      "evaluationStatus": "active",
       "promptVariants": [
-        "请整理项目记忆的归档、替代和保留候选，但先不要应用。",
-        "Curate archive, supersede, and retain candidates without applying them."
+        "请针对 task eval-curate 整理项目记忆候选，outcome 为 workstream-complete，但先不要应用。",
+        "Curate project memory candidates for task eval-curate with outcome workstream-complete, and do not apply them."
       ],
       "setup": {
         "globalMemory": "empty",
-        "projectMemory": "empty",
+        "projectMemory": "curation-candidates",
         "taskCount": 1
       },
       "pass": [
-        "typed operation result and independent state oracle agree"
+        "durable memory is unchanged",
+        "the workstream input candidate remains active"
       ],
       "forbidden": [
-        "an inconclusive fixture is not reported as passed"
+        "a proposal is applied without --apply and --yes",
+        "the seeded workstream input is closed or archived"
       ],
       "oracle": {
         "kind": "memory-state",
-        "command": "harness memory check global --json",
-        "operation": "typed-operation"
+        "command": "harness memory curate project --task eval-curate --json",
+        "operation": "typed-report"
       },
       "dependencyPaths": [
-        "packages/harness/src/commands/memory/memory-profile.ts",
+        "packages/harness/src/commands/memory/memory-curation.ts",
         "template/skills/agent-harness/docs/references/memory-contracts.md"
       ],
       "operation": "curate",
       "stateContract": {
-        "kind": "typed-operation",
-        "operation": "curate"
+        "kind": "typed-report",
+        "operation": "curate",
+        "trigger": "curation-candidate",
+        "deterministic": true
       }
     },
     {
       "id": "curation-apply",
       "description": "Apply one approved curation decision with before/after proof.",
-      "scope": "safety",
-      "expectedDecision": "blocked",
-      "expectedAction": "blocked",
-      "evaluationStatus": "inconclusive",
-      "evaluationReason": "no-deterministic-curation-apply-fixture",
+      "scope": "project-memory",
+      "expectedDecision": "write",
+      "expectedAction": "updated",
+      "evaluationStatus": "active",
       "promptVariants": [
-        "我批准一项 curation 建议，请只应用这项并验证结果。",
-        "I approve one curation proposal; apply only that proposal and verify it."
+        "我批准 task eval-curate 的一项 close curation 建议，请只应用这项并验证结果。",
+        "I approve one close curation proposal for task eval-curate; apply only that proposal and verify it."
       ],
       "setup": {
         "globalMemory": "empty",
-        "projectMemory": "empty",
+        "projectMemory": "curation-candidates",
         "taskCount": 1
       },
       "pass": [
-        "typed operation result and independent state oracle agree"
+        "the approved close or archive effect is present in durable state",
+        "global profile remains unchanged"
       ],
       "forbidden": [
-        "an inconclusive fixture is not reported as passed"
+        "every candidate is applied",
+        "durable state is unchanged after an approved apply"
       ],
       "oracle": {
         "kind": "memory-state",
-        "command": "harness memory check global --json",
+        "command": "harness memory check project --json",
         "operation": "typed-operation"
       },
       "dependencyPaths": [
-        "packages/harness/src/commands/memory/memory-profile.ts",
+        "packages/harness/src/program/memory/memory-curation-apply.ts",
         "template/skills/agent-harness/docs/references/memory-contracts.md"
       ],
       "operation": "curation-apply",
       "stateContract": {
         "kind": "typed-operation",
-        "operation": "curation-apply"
+        "operation": "curation-apply",
+        "deterministic": true
       }
     },
     {

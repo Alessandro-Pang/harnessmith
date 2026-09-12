@@ -90,6 +90,12 @@ The committed attestation is intentionally a small maintainer assertion, not raw
 transcripts remain outside Git history. The signed tag and candidate digest make the assertion tamper-evident,
 but they cannot independently prove that a third-party Host produced the reviewed artifacts.
 
+`--accept-eval-risk` is an explicit maintainer exception, not a silent skip. Pass a JSON file that names the
+authorized Host Eval gap, the artifact digest, and the package version. `release-attestation.json` then records
+`coverage.missing` with the still-unmeasured requirement ids (for example `memory-operation:close-input`) so the
+accepted gap is reviewable. The gate still requires `coverageCount === 0` for a risk-exception attestation; naming
+the missing cells does not loosen that rule.
+
 ## Local fallback
 
 If Trusted Publishing is unavailable, `pnpm run release:publish` still resumes the prepared local snapshot after

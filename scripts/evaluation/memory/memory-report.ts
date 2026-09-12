@@ -8,7 +8,7 @@ import {
 } from './memory-metrics.js';
 import type { MemoryFailureCategory } from './memory-state-verifier.js';
 
-export type MemoryReportGate = 'passed' | 'blocked' | 'inconclusive' | 'not-evaluated';
+type MemoryReportGate = 'passed' | 'blocked' | 'inconclusive' | 'not-evaluated';
 
 export interface MemoryEvaluationReport {
   version: 1;

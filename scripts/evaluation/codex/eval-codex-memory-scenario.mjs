@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -9,6 +9,7 @@ import { sanitizeAndBoundArtifact } from './support/artifacts.mjs';
 import { executeMemoryHostTurn, parseMemoryCheckOutput } from '../memory/memory-host-runtime.ts';
 import { verifyMemoryState } from '../memory/memory-state-verifier.ts';
 import { verifyMemoryContract } from '../memory/memory-contract-verifier.ts';
+import { applyMemoryFixtureSeeds } from '../memory/memory-fixture-seed.ts';
 
 const repository = dirname(dirname(dirname(dirname(fileURLToPath(import.meta.url)))));
 const scenarioId = process.argv[2];
@@ -28,7 +29,12 @@ const personal = join(root, 'personal-data', 'personal');
 const temp = join(repo, '.harness-eval-tmp');
 const packageRoot = join(root, 'candidate');
 const recordDir = join(outputRoot, runId);
-for (const path of [root, repo, home, memory, personal, temp, packageRoot, recordDir]) mkdirSync(path, { recursive: true });
+mkdirSync(root, { recursive: true, mode: 0o700 });
+chmodSync(root, 0o700);
+process.on('exit', () => {
+  rmSync(root, { recursive: true, force: true });
+});
+for (const path of [repo, home, memory, personal, temp, packageRoot, recordDir]) mkdirSync(path, { recursive: true });
 
 const digest = (value) => createHash('sha256').update(value).digest('hex');
 const run = (command, args, options = {}) => {
@@ -148,22 +154,14 @@ const env = { HARNESS_MEMORY_HOME: memory, HARNESS_PERSONAL_HOME: personal, HARN
 checked('git', ['init', '-b', 'main'], { cwd: repo, env });
 checked(nodeBin, [outerBin, 'install', '--agent', 'codex', '--project', repo, '--yes', '--json'], { env });
 const harnessBin = join(home, '.agents/skills/agent-harness/scripts/harness.mjs');
-if (scenario.setup.globalMemory !== 'empty') checked(nodeBin, [harnessBin, 'init', 'global'], { env });
-if (scenario.setup.projectMemory !== 'empty') checked(nodeBin, [harnessBin, 'init', 'project', repo], { env });
-// Every candidate starts with initialized memory so an empty state is observable, too.
 checked(nodeBin, [harnessBin, 'init', 'global'], { env });
 checked(nodeBin, [harnessBin, 'init', 'project', repo], { cwd: repo, env });
-
-if (scenario.setup.globalMemory === 'seeded') {
-  const payload = join(temp, 'seed-profile.json');
-  writeFileSync(payload, JSON.stringify({ key: 'communication.review-format', conclusion: 'Start reviews with the conclusion.', evidence: 'explicit', confidence: 'high' }));
-  checked(nodeBin, [harnessBin, 'memory', 'reconcile-profile', '--payload-file', payload, '--json'], { cwd: repo, env });
-}
-if (scenario.setup.projectMemory === 'seeded') {
-  const payload = join(temp, 'seed-input.json');
-  writeFileSync(payload, JSON.stringify({ title: 'Existing project acceptance constraint', content: 'Run focused tests before reporting a result.', source: 'chat', mode: 'summary', purpose: 'constraint', retention: 'durable', scope: ['.'] }));
-  checked(nodeBin, [harnessBin, 'memory', 'capture-input', repo, '--payload-file', payload, '--json'], { cwd: repo, env });
-}
+applyMemoryFixtureSeeds({
+  globalMemory: scenario.setup.globalMemory,
+  projectMemory: scenario.setup.projectMemory,
+  context: { repo, tempDir: temp },
+  run: (argv) => checked(nodeBin, [harnessBin, ...argv], { cwd: repo, env }),
+});
 
 const initial = snapshot(scope);
 const semanticInitial = semanticState();
@@ -177,7 +175,14 @@ const outputs = [];
 for (const prompt of prompts) {
   const capture = await executeMemoryHostTurn({ model, workspace: repo, memoryParent: dirname(memory), prompt, env, signal: scenarioSignal });
   const status = capture.kind === 'completed' ? 0 : 'exitCode' in capture ? capture.exitCode : null;
-  const output = { status, stdout: capture.stdout ?? '', stderr: capture.stderr ?? '', kind: capture.kind, reason: capture.reason ?? null, prompt };
+  const output = {
+    status,
+    stdout: 'stdout' in capture ? capture.stdout : '',
+    stderr: 'stderr' in capture ? capture.stderr : '',
+    kind: capture.kind,
+    reason: 'reason' in capture ? capture.reason : null,
+    prompt,
+  };
   outputs.push(output);
   writeFileSync(join(recordDir, `host-${outputs.length}.json`), sanitizeAndBoundArtifact(JSON.stringify(output, null, 2), 3 * 1024 * 1024).content);
   if (capture.kind !== 'completed') break;
@@ -246,7 +251,13 @@ const verifierStatus = parseMemoryCheckOutput(verifierResult.status, verifierRes
 const hostInconclusive = outputs.length === 0 || outputs.some((output) => output.kind === 'transport-failure');
 const hostEvaluatorFailed = outputs.some((output) => output.kind === 'evaluator-failure' || (output.status === 0 && !output.stdout.split(/\r?\n/u).some((line) => { try { return JSON.parse(line).type === 'turn.completed'; } catch { return false; } })));
 const expectedAction = scenario.expectedAction === 'none' ? 'no-change' : scenario.expectedAction;
-const verification = verifyMemoryState({ before: beforeState, after: afterState, expectedDecision: scenario.expectedDecision, expectedAction, actual: { action, reasonCode: String(typed?.reasonCode ?? 'typed-output-missing') }, verifier: { status: verifierStatus }, evidence: { complete: true }, semantic: contractResult, infrastructureInconclusive: hostInconclusive });
+// The state verifier gates on `semantic.status`; passing the contract result unmapped would make
+// every failed or inconclusive contract read as a silent pass.
+const semanticReview = {
+  status: contractResult.outcome,
+  ...(contractResult.reasons.length > 0 ? { message: contractResult.reasons.join('; ') } : {}),
+};
+const verification = verifyMemoryState({ before: beforeState, after: afterState, expectedDecision: scenario.expectedDecision, expectedAction, actual: { action, reasonCode: String(typed?.reasonCode ?? 'typed-output-missing') }, verifier: { status: verifierStatus }, evidence: { complete: true }, semantic: semanticReview, infrastructureInconclusive: hostInconclusive });
 const criticalForbidden = scenario.expectedDecision !== 'write' && changedPaths.length > 0;
 const finishedAt = new Date().toISOString();
 const record = {

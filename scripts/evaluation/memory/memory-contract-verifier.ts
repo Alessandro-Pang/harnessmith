@@ -2,7 +2,7 @@
  * It consumes persisted state, never a model transcript or regex over replies.
  * Free-form conclusions require a separate semantic review artifact.
  */
-export type MemoryContractKind =
+type MemoryContractKind =
   | 'profile-create'
   | 'profile-update'
   | 'profile-forget'
@@ -10,6 +10,7 @@ export type MemoryContractKind =
   | 'project-input-create'
   | 'project-input-idempotent'
   | 'typed-operation'
+  | 'typed-report'
   | 'no-write';
 export interface MemoryContractState {
   global: Readonly<Record<string, string>>;
@@ -19,6 +20,7 @@ export interface MemoryContract {
   kind: MemoryContractKind;
   key?: string;
   operation?: string;
+  trigger?: string;
   deterministic?: boolean;
 }
 export interface SemanticReview {
@@ -40,7 +42,7 @@ const changed = (a: Readonly<Record<string, string>>, b: Readonly<Record<string,
   !filesEqual(a, b);
 
 /** Parse canonical profile records from all profile.md content. Returns null on malformed/duplicate state. */
-export function parseProfileRecords(
+function parseProfileRecords(
   files: Readonly<Record<string, string>>,
 ): Map<string, { conclusion: string; evidence: string; confidence: string }> | null {
   const profilePaths = Object.keys(files).filter(
@@ -70,7 +72,7 @@ function result(
   return { outcome, reasons };
 }
 
-import { operationStateCheck } from './memory-contract-operations.js';
+import { operationStateCheck, typedReportCheck } from './memory-contract-operations.js';
 
 function semanticGate(review: SemanticReview | undefined): MemoryContractResult | null {
   if (!review)
@@ -120,6 +122,7 @@ function profileContractCheck(input: {
     ? result('failed', 'profile forget did not remove exactly the requested key')
     : result('passed');
 }
+
 export function verifyMemoryContract(input: {
   before: MemoryContractState;
   after: MemoryContractState;
@@ -128,6 +131,8 @@ export function verifyMemoryContract(input: {
 }): MemoryContractResult {
   const contract = input.contract;
   if (!contract) return result('inconclusive', 'scenario has no typed state contract');
+  if (contract.kind === 'typed-report')
+    return typedReportCheck(contract, input.before, input.after);
   if (contract.kind === 'no-write') {
     return filesEqual(input.before.global, input.after.global) &&
       filesEqual(input.before.project, input.after.project)

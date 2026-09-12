@@ -137,5 +137,78 @@ export function operationStateCheck(
   if (operation === 'supersede') return supersedeCheck(a);
   if (operation === 'handoff' || operation === 'close-handoff')
     return handoffCheck(operation, b, a);
+  if (operation === 'migrate') return migrateCheck(b, a);
+  if (operation === 'curation-apply') {
+    if (!closeInputCheck(b, a) || !archiveCheck(b, a)) return null;
+    return curationApplyFallback();
+  }
   return null;
+}
+
+function migrateCheck(
+  before: Array<[string, Map<string, string>]>,
+  after: Array<[string, Map<string, string>]>,
+): MemoryContractResult | null {
+  const beforeMap = new Map(before);
+  const afterMap = new Map(after);
+  if (beforeMap.size !== afterMap.size)
+    return result('failed', 'migrate changed the project document set');
+  const changedPaths = [...afterMap.keys()].filter((path) => {
+    const prior = beforeMap.get(path);
+    const next = afterMap.get(path);
+    if (!prior || !next) return true;
+    return [...next.entries()].some(([key, value]) => prior.get(key) !== value);
+  });
+  if (changedPaths.length !== 1)
+    return result('failed', 'migrate must change metadata on exactly one document');
+  const path = changedPaths[0];
+  const prior = beforeMap.get(path);
+  const next = afterMap.get(path);
+  if (!prior || !next) return result('failed', 'migrate target disappeared');
+  const material = [...next.entries()].some(
+    ([key, value]) => key !== 'updated' && prior.get(key) !== value,
+  );
+  return material ? null : result('failed', 'migrate did not change targeted metadata');
+}
+
+function curationApplyFallback(): MemoryContractResult {
+  return result('failed', 'curation-apply did not close an input or archive a memory');
+}
+
+function reportTriggerPresent(after: MemoryContractState, trigger: string | undefined): boolean {
+  if (trigger === 'active-input') {
+    return Object.values(after.project).some(
+      (content) => /memory-kind:\s*input/u.test(content) && /status:\s*active/u.test(content),
+    );
+  }
+  if (trigger === 'missing-readme') return after.project['README.md'] === undefined;
+  if (trigger === 'curation-candidate') {
+    return Object.values(after.project).some(
+      (content) =>
+        /memory-kind:\s*input/u.test(content) &&
+        /retention:\s*workstream/u.test(content) &&
+        /status:\s*active/u.test(content),
+    );
+  }
+  return false;
+}
+
+export function typedReportCheck(
+  contract: { operation?: string; trigger?: string },
+  before: MemoryContractState,
+  after: MemoryContractState,
+): MemoryContractResult {
+  if (!equal(before.global, after.global) || !equal(before.project, after.project)) {
+    return result(
+      'failed',
+      `report-only ${contract.operation ?? 'operation'} changed durable state`,
+    );
+  }
+  if (!reportTriggerPresent(after, contract.trigger)) {
+    return result(
+      'failed',
+      `report-only ${contract.operation ?? 'operation'} removed its seeded trigger`,
+    );
+  }
+  return result('passed');
 }

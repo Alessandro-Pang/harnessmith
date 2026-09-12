@@ -83,7 +83,8 @@
         "packages/cli/src/__tests__/memory-autopilot-prompt.test.ts#background sidecars stay quiet while explicit Memory requests remain auditable"
       ],
       "semanticReviewAssertions": [
-        "pass-2"
+        "pass-2",
+        "forbidden-2"
       ]
     },
     {
@@ -327,6 +328,7 @@
         "packages/cli/src/__tests__/memory-autopilot-prompt.test.ts#background sidecars stay quiet while explicit Memory requests remain auditable"
       ],
       "semanticReviewAssertions": [
+        "pass-3",
         "forbidden-1",
         "forbidden-2"
       ]

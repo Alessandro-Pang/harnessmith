@@ -1,5 +1,5 @@
 export type ExpectedMemoryDecision = 'write' | 'no-write' | 'proposed' | 'blocked';
-export type MemoryWriterAction =
+type MemoryWriterAction =
   | 'created'
   | 'updated'
   | 'unchanged'
@@ -22,7 +22,7 @@ export interface MemoryFileState {
   files: Readonly<Record<string, string>>;
 }
 
-export interface MemoryWriterEvent {
+interface MemoryWriterEvent {
   action: MemoryWriterAction;
   /** Stable machine-readable reason; `reason` is accepted for adapters that expose that name. */
   reasonCode?: string;
@@ -76,7 +76,7 @@ function hasFiles(state: MemoryFileState): boolean {
   return Object.keys(state.files).length > 0;
 }
 
-export function classifyMemoryStateTransition(
+function classifyMemoryStateTransition(
   before: MemoryFileState,
   after: MemoryFileState,
   action: MemoryWriterAction,

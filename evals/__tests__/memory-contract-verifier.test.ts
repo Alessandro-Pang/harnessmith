@@ -158,6 +158,61 @@ describe('operation-specific lifecycle relations', () => {
       }).outcome,
     ).toBe('passed');
   });
+  it('requires migrate to change exactly one document metadata set', async () => {
+    const { verifyMemoryContract } = await import(
+      '../../scripts/evaluation/memory/memory-contract-verifier.js'
+    );
+    const before = state(
+      {},
+      {
+        '/inputs/a.md': doc('memory-kind: input\nstatus: active\ndescription: old'),
+        '/inputs/b.md': doc('memory-kind: input\nstatus: active\ndescription: keep'),
+      },
+    );
+    const after = state(
+      {},
+      {
+        '/inputs/a.md': doc(
+          'memory-kind: input\nstatus: active\ndescription: Migrated eval fixture',
+        ),
+        '/inputs/b.md': doc('memory-kind: input\nstatus: active\ndescription: keep'),
+      },
+    );
+    expect(
+      verifyMemoryContract({
+        before,
+        after,
+        contract: { kind: 'typed-operation', operation: 'migrate', deterministic: true },
+      }).outcome,
+    ).toBe('passed');
+    expect(
+      verifyMemoryContract({
+        before,
+        after: before,
+        contract: { kind: 'typed-operation', operation: 'migrate', deterministic: true },
+      }).outcome,
+    ).toBe('failed');
+  });
+  it('typed-report rejects a quiet no-op that removes the seeded trigger', async () => {
+    const { verifyMemoryContract } = await import(
+      '../../scripts/evaluation/memory/memory-contract-verifier.js'
+    );
+    const seeded = state({}, { '/inputs/a.md': doc('memory-kind: input\nstatus: active') });
+    expect(
+      verifyMemoryContract({
+        before: seeded,
+        after: seeded,
+        contract: { kind: 'typed-report', operation: 'maintain', trigger: 'active-input' },
+      }).outcome,
+    ).toBe('passed');
+    expect(
+      verifyMemoryContract({
+        before: seeded,
+        after: state(),
+        contract: { kind: 'typed-report', operation: 'maintain', trigger: 'active-input' },
+      }).outcome,
+    ).toBe('failed');
+  });
 });
 
 it('requires finding and experience document types and provenance metadata', async () => {

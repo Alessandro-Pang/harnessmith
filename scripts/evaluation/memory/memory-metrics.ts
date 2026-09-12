@@ -22,7 +22,7 @@ export interface MemoryMetricRecord {
   idempotency?: { expectedUnchanged: boolean; actualUnchanged: boolean };
 }
 
-export interface MemoryRate {
+interface MemoryRate {
   precision: number | null;
   recall: number | null;
   truePositives: number;

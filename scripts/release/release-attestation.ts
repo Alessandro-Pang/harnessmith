@@ -2,6 +2,7 @@ import type {
   EvaluationEvidence,
   InheritedEvaluationSource,
 } from '../evaluation/contracts/eval-contract.js';
+import { evaluateCoverage } from '../evaluation/contracts/eval-coverage.js';
 import {
   evaluationMatrix,
   type ReleaseRiskAcceptance,
@@ -22,6 +23,7 @@ export interface ReleaseAttestation {
   scenarios: Record<string, string>;
   requiredHosts: string[];
   coverageCount: number;
+  coverage?: { missing: string[] };
   exactArtifactCoverageCount: number;
   inheritedBehaviorCoverageCount: number;
   inheritedFrom: InheritedEvaluationSource[];
@@ -43,6 +45,22 @@ export interface ReleaseSubject {
   requiredHosts: string[];
 }
 
+export function attestationCoverageMissing(
+  coverage: {
+    memory: { missing: string[]; unmeasured?: string[] };
+    scenarios: { missing: string[]; unmeasured?: string[] };
+  } = evaluateCoverage(),
+): string[] {
+  return [
+    ...new Set([
+      ...coverage.memory.missing,
+      ...(coverage.memory.unmeasured ?? []),
+      ...coverage.scenarios.missing,
+      ...(coverage.scenarios.unmeasured ?? []),
+    ]),
+  ];
+}
+
 export function createReleaseAttestation(
   packageName: string,
   state: ReleaseState,
@@ -60,6 +78,7 @@ export function createReleaseAttestation(
     scenarios: state.evaluation.scenarios,
     requiredHosts: state.evaluation.requiredHosts,
     coverageCount: state.evaluation.coverageCount,
+    coverage: { missing: attestationCoverageMissing() },
     exactArtifactCoverageCount: state.evaluation.exactArtifactCoverageCount,
     inheritedBehaviorCoverageCount: state.evaluation.inheritedBehaviorCoverageCount,
     inheritedFrom: state.evaluation.inheritedFrom,
