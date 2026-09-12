@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { lstatSync, mkdirSync, realpathSync, unlinkSync, writeFileSync } from 'node:fs';
 import { basename, dirname, isAbsolute, relative, resolve, sep } from 'node:path';
 import { jsonlEvents } from './transcript.mjs';
-import { exactCommandTokens } from './commands.mjs';
+import { exactCommandTokens, parseSingleJsonObject } from './commands.mjs';
 export function isCodeReviewProfileKey(key, existingKey) {
   const value = String(key ?? '');
   return Boolean(

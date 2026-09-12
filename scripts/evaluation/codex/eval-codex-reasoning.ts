@@ -5,10 +5,7 @@ import { runReasoningScenario } from './eval-codex-reasoning-run.js';
 import { getReasoningScenario } from './eval-codex-reasoning-scenarios.js';
 import type { ReasoningAttempt, ReasoningResult } from './eval-codex-reasoning-types.js';
 
-export {
-  getReasoningScenario,
-  reasoningScenarioManifest,
-} from './eval-codex-reasoning-scenarios.js';
+export { reasoningScenarioManifest } from './eval-codex-reasoning-scenarios.js';
 export type { ReasoningAttempt, ReasoningResult } from './eval-codex-reasoning-types.js';
 
 /** Execute one scenario; retry and ordering policy remain in the unified suite. */

@@ -14,13 +14,17 @@ export async function runReasoningScenario(
   attempt?: ReasoningAttempt,
 ): Promise<ReasoningResult> {
   const fixture = prepareReasoningFixture(options, scenario);
-  const started = await executeMemoryHostTurn({
-    workspace: fixture.repo,
-    memoryParent: fixture.memory,
-    model: options.model,
-    prompt: scenario.prompt,
-    env: fixture.env,
-    signal: attempt?.signal ?? AbortSignal.timeout(options.scenarioBudgetMs),
-  });
-  return buildReasoningResult(scenario, fixture.repo, started);
+  try {
+    const started = await executeMemoryHostTurn({
+      workspace: fixture.repo,
+      memoryParent: fixture.memory,
+      model: options.model,
+      prompt: scenario.prompt,
+      env: fixture.env,
+      signal: attempt?.signal ?? AbortSignal.timeout(options.scenarioBudgetMs),
+    });
+    return buildReasoningResult(scenario, fixture.repo, started);
+  } finally {
+    fixture.cleanup();
+  }
 }

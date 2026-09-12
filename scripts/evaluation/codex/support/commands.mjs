@@ -2,7 +2,7 @@ import { sameCanonicalPath } from './host.mjs';
 import { createHash } from 'node:crypto';
 import { lstatSync, mkdirSync, realpathSync, unlinkSync, writeFileSync } from 'node:fs';
 import { basename, dirname, isAbsolute, relative, resolve, sep } from 'node:path';
-function parseSingleJsonObject(value) {
+export function parseSingleJsonObject(value) {
   const trimmed = String(value ?? '').trim();
   if (!trimmed) return null;
   try {
@@ -13,7 +13,7 @@ function parseSingleJsonObject(value) {
   }
 }
 
-function tokenizeSingleCommand(command) {
+export function tokenizeSingleCommand(command) {
   const source = String(command ?? '').trim();
   if (!source) return null;
   const tokens = [];

@@ -4,7 +4,7 @@ import { dirname, join, relative } from 'node:path';
 import { runBoundedHostProcess } from '../eval-codex-transport.ts';
 import { buildCodexTurn } from '../support/host.mjs';
 import { sanitizeAndBoundArtifact } from '../support/artifacts.mjs';
-import { parseJsonlEvidence } from '../support/transcript.mjs';
+import { parseJsonlEvidence, visibleAgentMessages } from '../support/transcript.mjs';
 
 export function jsonEvents(stdout) {
   return parseJsonlEvidence(stdout).events;
@@ -12,7 +12,7 @@ export function jsonEvents(stdout) {
 
 export function createScenarioObservation(config) {
   const { repo, scenarioId, nodeBin, model, host, home, commonEnv, configHomePath, harnessBin, scenarioSignal, maxOutputBytes, evaluatorErrors, fixturePaths, memory, personal, temp, runtime } = config;
-  const { run, safeReadFile, markdownFiles, treeSnapshot, exactJsonObject } = runtime;
+  const { run, safeReadFile, markdownFiles, treeSnapshot, exactJsonObject, digest } = runtime;
 function status() {
   const state = run('git', ['status', '--porcelain=v1', '--untracked-files=all'], { cwd: repo });
   if (state.status !== 0) {

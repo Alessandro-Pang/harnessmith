@@ -14,8 +14,7 @@ export type SuiteCaseResult = HostEvalScenarioResult & {
   evidenceKinds?: string[];
   evidenceError?: string;
 };
-export const digest = (content: string | Buffer) =>
-  createHash('sha256').update(content).digest('hex');
+const digest = (content: string | Buffer) => createHash('sha256').update(content).digest('hex');
 
 export function readSuiteArtifact(root: string, path: string): Buffer {
   const target = resolve(root, path);

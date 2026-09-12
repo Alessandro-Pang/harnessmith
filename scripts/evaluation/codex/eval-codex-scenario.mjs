@@ -172,7 +172,7 @@ const {
   git,
   gitCommit,
   memoryDoc,
-} = createScenarioRuntime({ repo, repository, candidate, packageRoot });
+} = createScenarioRuntime({ repo, repository, candidate, packageRoot, evaluatorErrors });
 const commonRuntime = {
   run,
   checked,
@@ -253,7 +253,7 @@ const {
   memory,
   personal,
   temp,
-  runtime: { run, safeReadFile, markdownFiles, treeSnapshot, exactJsonObject },
+  runtime: { run, safeReadFile, markdownFiles, treeSnapshot, exactJsonObject, digest },
 });
 setupBase();
 assertCleanroomMatchesCandidate();
@@ -1677,6 +1677,8 @@ if (scenarioId === 'memory-autopilot-unprompted') {
     pausedPreferenceStayedEphemeral,
   };
   observationArtifact.invalidCheckpointReasonAttempts = invalidCheckpointReasonAttempts;
+  /** @type {boolean | null} */
+  const invalidCheckpointReasonAudit = null;
   setAssertions(
     [
       typedInputCaptureProven && exactInputIndexed && verifiersPassed('initial'),
@@ -1693,8 +1695,7 @@ if (scenarioId === 'memory-autopilot-unprompted') {
     ],
     [
       !asksRoutineMemoryPermission,
-      null &&
-        invalidCheckpointReasonAttempts.length === 0,
+      invalidCheckpointReasonAudit && invalidCheckpointReasonAttempts.length === 0,
       closeTimingProven,
       explicitProfileControlRoutingViolations.length === 0,
       !storedTranscriptOrSecret && pausedPreferenceStayedEphemeral,

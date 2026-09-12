@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { lstatSync, mkdirSync, realpathSync, unlinkSync, writeFileSync } from 'node:fs';
 import { basename, dirname, isAbsolute, relative, resolve, sep } from 'node:path';
 import { sameCanonicalPath } from './host.mjs';
+import { singleExactPayloadMutationAttempt } from './memory-commands.mjs';
 export function typedInputCaptureIsProven({
   invocations,
   invocation,

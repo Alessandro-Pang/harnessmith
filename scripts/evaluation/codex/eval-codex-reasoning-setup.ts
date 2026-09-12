@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { existsSync, mkdirSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -12,6 +12,7 @@ export type ReasoningFixture = {
   repo: string;
   memory: string;
   env: NodeJS.ProcessEnv;
+  cleanup: () => void;
 };
 
 function runSetup(command: string, args: string[], cwd: string, env: NodeJS.ProcessEnv): void {
@@ -33,6 +34,8 @@ export function prepareReasoningFixture(
   scenario: ReasoningScenario,
 ): ReasoningFixture {
   const root = join(tmpdir(), `harnessmith-codex-reasoning-${randomUUID()}`);
+  mkdirSync(root, { recursive: true, mode: 0o700 });
+  chmodSync(root, 0o700);
   const repo = join(root, 'repo');
   const home = join(root, 'home');
   const memory = join(root, 'memory');
@@ -82,5 +85,10 @@ export function prepareReasoningFixture(
     repo,
     env,
   );
-  return { repo, memory, env };
+  return {
+    repo,
+    memory,
+    env,
+    cleanup: () => rmSync(root, { recursive: true, force: true }),
+  };
 }

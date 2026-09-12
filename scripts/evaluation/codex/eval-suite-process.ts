@@ -16,7 +16,7 @@ export function attemptDirectory(
   return join(outputDir, entry.family, entry.id.replaceAll(':', '--'), `attempt-${attempt}`);
 }
 
-export function classifiedOutcome(outcome: unknown): HostEvalAttemptResult {
+function classifiedOutcome(outcome: unknown): HostEvalAttemptResult {
   if (outcome === 'passed' || outcome === 'behavior-failed')
     return { outcome, termination: 'completed' };
   if (outcome === 'infra-inconclusive') return { outcome, termination: 'transport-failure' };

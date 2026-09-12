@@ -1,5 +1,7 @@
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
-import { isAbsolute, join } from 'node:path';
+export {
+  createIsolatedSemanticJudgeEnvironment,
+  runSemanticReview,
+} from './eval-semantic-review-run.js';
 
 export type SemanticReviewCriterion = {
   criterionId: string;
@@ -56,7 +58,7 @@ export function buildSemanticJudgePrompt(
   ].join('\n');
 }
 
-function parseAgentJson(stdout: string): unknown {
+export function parseAgentJson(stdout: string): unknown {
   const messages = String(stdout)
     .split(/\r?\n/u)
     .flatMap((line) => {
@@ -164,79 +166,4 @@ export function validateSemanticJudgeOutput(
     if (!seen.has(criterion.criterionId))
       errors.push(`missing criterionId: ${criterion.criterionId}`);
   return { decisions, errors };
-}
-
-export async function runSemanticReview(options: {
-  criteria: SemanticReviewCriterion[];
-  evidence: SemanticReviewEvidence[];
-  workspace: string;
-  model?: string;
-  signal?: AbortSignal;
-  outputFile?: string;
-}): Promise<SemanticReviewResult> {
-  const errors: string[] = [];
-  if (!isAbsolute(options.workspace) || !existsSync(options.workspace)) {
-    return {
-      outcome: 'inconclusive',
-      decisions: [],
-      transport: 'inconclusive',
-      errors: ['semantic judge workspace is missing or not absolute'],
-    };
-  }
-  const prompt = buildSemanticJudgePrompt(options.criteria, options.evidence);
-  const { runBoundedHostProcess } = await import('./eval-codex-transport.js');
-  const capture = await runBoundedHostProcess({
-    invocation: {
-      executable: 'codex',
-      args: [
-        'exec',
-        '--model',
-        options.model ?? 'gpt-5.6-sol',
-        '--json',
-        '--ephemeral',
-        '--sandbox',
-        'read-only',
-        '--skip-git-repo-check',
-        '--cd',
-        options.workspace,
-        '-',
-      ],
-      cwd: options.workspace,
-    },
-    prompt,
-    signal: options.signal ?? AbortSignal.timeout(900_000),
-    maxOutputBytes: 1024 * 1024,
-  });
-  if (capture.kind !== 'completed') {
-    return {
-      outcome: 'inconclusive',
-      decisions: [],
-      transport: 'inconclusive',
-      errors: [`semantic judge transport: ${capture.kind}/${capture.reason}`],
-    };
-  }
-  const validated = validateSemanticJudgeOutput(
-    parseAgentJson(capture.stdout),
-    options.criteria,
-    options.evidence,
-  );
-  if (validated.errors.length) errors.push(...validated.errors);
-  const outcome: SemanticReviewResult['outcome'] = errors.length
-    ? 'inconclusive'
-    : validated.decisions.some((item) => item.status === 'failed')
-      ? 'failed'
-      : validated.decisions.every((item) => item.status === 'passed')
-        ? 'passed'
-        : 'inconclusive';
-  const result = {
-    outcome,
-    decisions: validated.decisions,
-    transport: 'completed' as const,
-    errors,
-  };
-  if (options.outputFile) {
-    mkdirSync(join(options.outputFile, '..'), { recursive: true });
-    writeFileSync(options.outputFile, `${JSON.stringify(result, null, 2)}\n`);
-  }
-  return result;
 }

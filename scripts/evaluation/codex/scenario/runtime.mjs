@@ -15,7 +15,7 @@ export function exactJsonObject(value) {
 }
 
 export function createScenarioRuntime(context) {
-  const { repo, repository, candidate, packageRoot } = context;
+  const { repo, repository, candidate, packageRoot, evaluatorErrors } = context;
   function fileDigest(path) {
     const state = safeReadFile(path, 8 * 1024 * 1024);
     return state.ok ? state.sha256 : null;

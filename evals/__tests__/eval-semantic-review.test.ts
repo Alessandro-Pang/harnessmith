@@ -1,7 +1,12 @@
 import { strict as assert } from 'node:assert';
+import { existsSync, mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { test } from 'vitest';
 import {
   buildSemanticJudgePrompt,
+  createIsolatedSemanticJudgeEnvironment,
+  runSemanticReview,
   validateSemanticJudgeOutput,
 } from '../../scripts/evaluation/codex/eval-semantic-review.js';
 
@@ -78,4 +83,59 @@ test('missing, duplicate, and unknown semantic decisions are inconclusive inputs
     evidence,
   );
   assert.ok(unknown.errors.some((error) => error.includes('unknown criterionId')));
+});
+
+test('semantic judge uses an isolated CODEX_HOME and removes it afterwards', async () => {
+  const workspace = mkdtempSync(join(tmpdir(), 'harness-semantic-workspace-'));
+  const original = process.env.CODEX_HOME;
+  process.env.CODEX_HOME = join(tmpdir(), 'developer-codex-home');
+  let seenHome: string | undefined;
+  try {
+    const result = await runSemanticReview({
+      criteria,
+      evidence,
+      workspace,
+      runProcess: async ({ invocation }) => {
+        seenHome = invocation.env?.CODEX_HOME;
+        assert.ok(seenHome);
+        assert.notEqual(seenHome, process.env.CODEX_HOME);
+        assert.ok(existsSync(seenHome));
+        return {
+          kind: 'completed',
+          exitCode: 0,
+          stdout: `${JSON.stringify({
+            type: 'item.completed',
+            item: {
+              type: 'agent_message',
+              text: JSON.stringify({
+                decisions: [
+                  {
+                    criterionId: 'pass-1',
+                    status: 'passed',
+                    evidence: [{ ref: 'state', excerpt: 'profile key=communication.ordering' }],
+                    rationale: 'isolated',
+                  },
+                ],
+              }),
+            },
+          })}\n`,
+          stderr: '',
+        };
+      },
+    });
+    assert.equal(result.outcome, 'passed');
+    assert.ok(seenHome);
+    assert.equal(existsSync(seenHome), false);
+  } finally {
+    if (original === undefined) delete process.env.CODEX_HOME;
+    else process.env.CODEX_HOME = original;
+  }
+});
+
+test('isolated semantic judge homes are mode 700 and cleaned up', () => {
+  const isolated = createIsolatedSemanticJudgeEnvironment();
+  assert.notEqual(isolated.env.CODEX_HOME, process.env.CODEX_HOME);
+  assert.ok(isolated.env.CODEX_HOME && existsSync(isolated.env.CODEX_HOME));
+  isolated.cleanup();
+  assert.equal(existsSync(isolated.env.CODEX_HOME as string), false);
 });

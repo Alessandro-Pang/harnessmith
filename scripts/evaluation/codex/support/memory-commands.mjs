@@ -1,5 +1,5 @@
 import { sameCanonicalPath } from './host.mjs';
-import { exactCommandTokens } from './commands.mjs';
+import { exactCommandTokens, tokenizeSingleCommand } from './commands.mjs';
 import { createHash } from 'node:crypto';
 import { lstatSync, mkdirSync, realpathSync, unlinkSync, writeFileSync } from 'node:fs';
 import { basename, dirname, isAbsolute, relative, resolve, sep } from 'node:path';
@@ -267,6 +267,10 @@ function exactCommandIsReadOnlyProfileInspection(tokens, profilePath) {
   );
 }
 
+/**
+ * @param {unknown} command
+ * @param {{ nodePath?: string, harnessPath?: string, profilePath?: string, allowLiteralNode?: boolean }} [options]
+ */
 export function commandHasReadOnlyHelp(
   command,
   { nodePath, harnessPath, profilePath, allowLiteralNode = false } = {},
