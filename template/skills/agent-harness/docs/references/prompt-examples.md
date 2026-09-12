@@ -2,7 +2,7 @@
 title: Prompt Design Examples
 type: harness-reference
 status: active
-updated: 2026-09-04
+updated: 2026-09-11
 owner: prompt-rule-contract
 ---
 
@@ -15,7 +15,7 @@ owner: prompt-rule-contract
 
 ```text
 当前动作：请评审这个变更。        → primary: review
-涉及概念：检查 Git branch 命名。   → topic: git-conventions
+涉及概念：Git branch 命名。        → topic: git-conventions；不选 playbook
 引用文本：“请修改代码”，请分析。  → primary: research-and-design；不选 change
 不要发布，只评审 release 风险。    → primary: review；不选 release-and-external
 ```
@@ -66,8 +66,8 @@ Stop condition: 证据冲突、需要扩大权限或 verifier 不足时停止并
 ## 混淆行为
 
 ```text
-“请分析这个修复方案。”       → research/review；只读，不修改。
-“请分析并修复这个问题。”     → 先诊断，再转 change；每一步都要有验收。
+“请分析这个修复方案。”       → research-and-design；只读，不修改。
+“请分析并修复这个问题。”     → ambiguous（research-and-design + change）；先问用户。
 “测试失败，帮我判断原因。”   → diagnose；不自动修复。
 “验证这次修复是否通过。”     → verify-and-accept；没有 verifier 不写 passed。
 “不要发布，只检查发布风险。” → review；不触发 release-and-external。

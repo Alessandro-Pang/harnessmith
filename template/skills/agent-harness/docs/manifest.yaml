@@ -47,11 +47,11 @@ entries:
   change:
     kind: playbook
     path: playbooks/change.md
-    actionAliases: [change, implement, modify, refactor, build, fix, repair, 变更, 实现, 实施, 修改, 重构, 构建, 修复, 修正]
+    actionAliases: [change, implement, modify, refactor, build, fix, repair, add, create, optimize, 变更, 实现, 实施, 修改, 重构, 构建, 修复, 修正, 新增, 添加, 开发, 优化, 写个, 加个]
   diagnose:
     kind: playbook
     path: playbooks/diagnose.md
-    actionAliases: [diagnose, debug, bug, incident, ci-failure, 诊断, 排障, 调试, 缺陷, 事故, ci失败]
+    actionAliases: [diagnose, debug, bug, incident, ci-failure, troubleshoot, failure, failing, 诊断, 排障, 调试, 缺陷, 事故, ci失败, ci 失败, 排查, 报错, 异常, 故障, 失败, 测试失败, 判断原因]
   review:
     kind: playbook
     path: playbooks/review.md
@@ -63,15 +63,15 @@ entries:
   release-and-external:
     kind: playbook
     path: playbooks/release-and-external.md
-    actionAliases: [release, migration, publish, remote-write, 发布, 迁移, 远端写入]
+    actionAliases: [release, migration, publish, remote-write, deploy, rollout, 发布, 迁移, 远端写入, 部署, 上线]
   understand-and-map:
     kind: playbook
     path: playbooks/understand-and-map.md
-    actionAliases: [understand, explore, onboard, map, trace, 了解, 探索, 梳理, 盘点, 追踪]
+    actionAliases: [understand, explore, onboard, map, trace, explain, 了解, 探索, 梳理, 盘点, 追踪, 理解, 讲解]
   verify-and-accept:
     kind: playbook
     path: playbooks/verify-and-accept.md
-    actionAliases: [verify-result, validate-result, verify-acceptance, validate-acceptance, prove-claim, run-verification, 验证, 验收, 核验, 证明, 复核]
+    actionAliases: [verify-result, validate-result, verify-acceptance, validate-acceptance, prove-claim, run-verification, verify, validate, 验证, 验收, 核验, 证明, 复核]
   repository-map:
     kind: topic
     path: projects/repository-map.md

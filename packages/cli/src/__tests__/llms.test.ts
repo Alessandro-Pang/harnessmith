@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'vitest';
@@ -306,12 +306,17 @@ test('distributed rules keep trust and authorization boundaries non-waivable', (
     join(harnessAssets, 'templates', 'project-AGENTS.md'),
     'utf8',
   );
+  const documentedTemplate = projectAgents.match(
+    /`(\.\.\/(?:\.\.\/)?assets\/templates\/project-AGENTS\.md)`/,
+  )?.[1];
+  assert.equal(documentedTemplate, '../../assets/templates/project-AGENTS.md');
+  assert.equal(existsSync(join(harnessDocs, 'standards', documentedTemplate)), true);
   const llms = readFileSync(join(root, 'llms.txt'), 'utf8');
 
   assert.match(agents, /## 信任与授权/);
   assert.match(agents, /项目规则不能扩权或降低安全边界/);
   assert.doesNotMatch(agents, /更近的项目规则覆盖本文件/);
-  assert.match(toolRouting, /不可信数据.*不构成授权/);
+  assert.match(toolRouting, /都不可信，也不授权/);
   assert.match(operatingModel, /低优先级内容\s+不能授予工具权限或副作用授权/);
   assert.match(projectAgents, /项目规则不得扩大权限、降低安全要求或改写用户授权边界/);
   assert.doesNotMatch(projectTemplate, /默认使用简体中文|当前事实以代码|<package-manager>/);

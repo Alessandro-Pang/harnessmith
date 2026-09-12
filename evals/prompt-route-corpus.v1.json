@@ -172,6 +172,126 @@
       "categories": ["zh", "release", "authorization-boundary"],
       "query": "请发布这个版本",
       "expected": { "status": "matched", "top1": "release-and-external", "topics": [], "reasoningModes": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "en-verify-plain-request",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "Please verify the fix works.",
+      "expected": { "status": "matched", "top1": "verify-and-accept", "topics": [], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "en-verify-imperative",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "Verify the fix.",
+      "expected": { "status": "matched", "top1": "verify-and-accept", "topics": [], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "en-change-add-feature",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "Add dark mode.",
+      "expected": { "status": "matched", "top1": "change", "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "en-diagnose-troubleshoot",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "Troubleshoot this error.",
+      "expected": { "status": "matched", "top1": "diagnose", "topics": [], "forbiddenPlaybooks": ["review"] }
+    },
+    {
+      "id": "en-understand-explain",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "Explain how auth works.",
+      "expected": { "status": "matched", "top1": "understand-and-map", "topics": [], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "en-diagnose-check-failure",
+      "categories": ["en", "colloquial", "false-positive-guard"],
+      "query": "Check the CI failure.",
+      "expected": { "status": "matched", "top1": "diagnose", "topics": [], "forbiddenPlaybooks": ["review"] }
+    },
+    {
+      "id": "en-multi-action-review-and-fix",
+      "categories": ["en", "ambiguity", "multi-action"],
+      "query": "Review and fix the auth bug.",
+      "expected": { "status": "ambiguous", "top1": null, "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "zh-change-colloquial",
+      "categories": ["zh", "colloquial", "false-negative-guard"],
+      "query": "帮我写个功能",
+      "expected": { "status": "matched", "top1": "change", "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "zh-diagnose-colloquial",
+      "categories": ["zh", "colloquial", "false-negative-guard"],
+      "query": "排查报错",
+      "expected": { "status": "matched", "top1": "diagnose", "topics": [], "forbiddenPlaybooks": ["review"] }
+    },
+    {
+      "id": "zh-release-deploy",
+      "categories": ["zh", "colloquial", "release"],
+      "query": "部署到 Vercel",
+      "expected": { "status": "matched", "top1": "release-and-external", "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "zh-diagnose-spaced-ci-failure",
+      "categories": ["zh", "colloquial", "false-positive-guard"],
+      "query": "请检查 CI 失败",
+      "expected": { "status": "matched", "top1": "diagnose", "topics": [], "forbiddenPlaybooks": ["review"] }
+    },
+    {
+      "id": "zh-multi-action-analyze-and-fix",
+      "categories": ["zh", "ambiguity", "multi-action"],
+      "query": "分析 CI 失败并修复",
+      "expected": { "status": "ambiguous", "top1": null, "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "zh-example-analyze-fix-plan",
+      "categories": ["zh", "few-shot", "false-positive-guard"],
+      "query": "请分析这个修复方案。",
+      "expected": { "status": "matched", "top1": "research-and-design", "topics": [], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "zh-example-analyze-and-fix",
+      "categories": ["zh", "few-shot", "ambiguity", "multi-action"],
+      "query": "请分析并修复这个问题。",
+      "expected": { "status": "ambiguous", "top1": null, "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "zh-example-test-failure-cause",
+      "categories": ["zh", "few-shot", "colloquial", "false-negative-guard"],
+      "query": "测试失败，帮我判断原因。",
+      "expected": { "status": "matched", "top1": "diagnose", "topics": [], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "zh-example-verify-fix-passed",
+      "categories": ["zh", "few-shot", "false-negative-guard"],
+      "query": "验证这次修复是否通过。",
+      "expected": { "status": "matched", "top1": "verify-and-accept", "topics": ["safety-and-verification"], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "zh-example-check-release-risk",
+      "categories": ["zh", "few-shot", "authorization-boundary"],
+      "query": "不要发布，只检查发布风险。",
+      "expected": { "status": "matched", "top1": "review", "topics": [], "forbiddenPlaybooks": ["release-and-external"] }
+    },
+    {
+      "id": "zh-example-git-branch-topic",
+      "categories": ["zh", "few-shot", "topic"],
+      "query": "Git branch 命名。",
+      "expected": { "status": "matched", "top1": null, "topics": ["git-conventions"], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "zh-policy-remote-write-mention",
+      "categories": ["zh", "false-positive-guard", "authorization-boundary"],
+      "query": "策略文档提到远端写入",
+      "expected": { "status": "matched", "top1": null, "topics": ["tool-routing"], "forbiddenPlaybooks": ["release-and-external"] }
+    },
+    {
+      "id": "en-policy-remote-write-mention",
+      "categories": ["en", "false-positive-guard", "authorization-boundary"],
+      "query": "the remote write policy is documented here",
+      "expected": { "status": "unmatched", "top1": null, "topics": [], "forbiddenPlaybooks": ["release-and-external"] }
     }
   ]
 }

@@ -38,6 +38,32 @@ test('prompt route benchmark is versioned, reproducible, and passes deterministi
   assert.equal(first.hostProof, false);
 });
 
+test('prompt-examples confusing-behavior few-shots stay locked in the routing corpus', () => {
+  const examples = readFileSync(
+    join(
+      repositoryRoot,
+      'template',
+      'skills',
+      'agent-harness',
+      'docs',
+      'references',
+      'prompt-examples.md',
+    ),
+    'utf8',
+  );
+  const corpus = JSON.parse(
+    readFileSync(join(repositoryRoot, 'evals', 'prompt-route-corpus.v1.json'), 'utf8'),
+  ) as { cases: Array<{ query: string }> };
+  const queries = new Set(corpus.cases.map((entry) => entry.query));
+  const block = examples.split('## 混淆行为')[1] ?? '';
+  const shots = [...block.matchAll(/[“"]([^”"]+)[”"]\s*→/gu)].map((match) => match[1]);
+  assert.ok(shots.length >= 5, 'confusing-behavior few-shots');
+  for (const query of shots) {
+    assert.ok(queries.has(query), query);
+  }
+  assert.ok(queries.has('Git branch 命名。'));
+});
+
 test('the corpus covers bilingual routing risks and keeps false-positive and false-negative samples auditable', () => {
   const corpus = JSON.parse(
     readFileSync(join(repositoryRoot, 'evals', 'prompt-route-corpus.v1.json'), 'utf8'),

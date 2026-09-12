@@ -29,9 +29,34 @@ function stringPaths(value: unknown): string[] {
   return Array.isArray(value) ? value.filter(nonEmptyString) : [];
 }
 
+/**
+ * Malformed list entries must surface as issues: dropping them silently would let a rule claim
+ * evidence it never provides and still satisfy the guarantee checks below.
+ */
+function stringListIssues(id: string, field: string, value: unknown): string[] {
+  if (value === undefined) return [];
+  if (!Array.isArray(value)) return [`prompt rule ${id} ${field} must be a list of strings`];
+  return value.flatMap((entry, index) =>
+    nonEmptyString(entry)
+      ? []
+      : [`prompt rule ${id} ${field}[${index}] must be a non-empty string`],
+  );
+}
+
 function evidencePaths(value: unknown, key: 'implementation' | 'verification'): string[] {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return [];
   return stringPaths((value as Record<string, unknown>)[key]);
+}
+
+function evidenceShapeIssues(id: string, value: unknown): string[] {
+  if (value === undefined) return [];
+  if (!value || typeof value !== 'object' || Array.isArray(value))
+    return [`prompt rule ${id} evidence must be an object`];
+  const evidence = value as Record<string, unknown>;
+  return [
+    ...stringListIssues(id, 'evidence.implementation', evidence.implementation),
+    ...stringListIssues(id, 'evidence.verification', evidence.verification),
+  ];
 }
 
 function pathIssues(root: string, id: string, kind: string, paths: string[]): string[] {
@@ -97,6 +122,8 @@ function guaranteeIssues(root: string, rule: PromptRule, index: number): string[
   const verification = evidencePaths(rule.evidence, 'verification');
   const boundary = stringPaths(rule.boundary);
   const issues = [
+    ...evidenceShapeIssues(id, rule.evidence),
+    ...stringListIssues(id, 'boundary', rule.boundary),
     ...pathIssues(root, id, 'implementation', implementation),
     ...pathIssues(root, id, 'verification', verification),
     ...pathIssues(root, id, 'boundary', boundary),
@@ -122,6 +149,8 @@ function confusingPairIssues(
   rulesById: Map<string, PromptRule>,
 ): string[] {
   const id = ruleId(rule, index);
+  const shape = stringListIssues(id, 'confusingWith', rule.confusingWith);
+  if (shape.length > 0) return shape;
   return stringPaths(rule.confusingWith).flatMap((otherId) => {
     if (otherId === id) return [`prompt rule ${id} cannot be confused with itself`];
     const other = rulesById.get(otherId);
@@ -132,13 +161,17 @@ function confusingPairIssues(
   });
 }
 
-function promptRules(value: unknown): PromptRule[] {
-  return Array.isArray(value)
-    ? value.filter(
-        (rule): rule is PromptRule =>
-          Boolean(rule) && typeof rule === 'object' && !Array.isArray(rule),
-      )
-    : [];
+function isPromptRule(rule: unknown): rule is PromptRule {
+  return Boolean(rule) && typeof rule === 'object' && !Array.isArray(rule);
+}
+
+function promptRules(value: unknown): { rules: PromptRule[]; issues: string[] } {
+  if (!Array.isArray(value))
+    return { rules: [], issues: ['prompt rule contract has no rule list'] };
+  const issues = value.flatMap((rule, index) =>
+    isPromptRule(rule) ? [] : [`prompt rule #${index + 1} must be an object`],
+  );
+  return { rules: value.filter(isPromptRule), issues };
 }
 
 function ownerIds(manifest: unknown): Set<string> {
@@ -158,9 +191,10 @@ export function promptRuleContractIssues(
     contract && typeof contract === 'object' && !Array.isArray(contract)
       ? (contract as PromptRuleContract)
       : {};
-  const rules = promptRules(document.rules);
+  const { rules, issues: ruleShapeIssues } = promptRules(document.rules);
   const owners = ownerIds(manifest);
   const issues = document.version === 1 ? [] : ['prompt rule contract version must be 1'];
+  issues.push(...ruleShapeIssues);
   const rulesById = new Map<string, PromptRule>();
   for (const rule of rules) {
     if (!nonEmptyString(rule.id)) continue;

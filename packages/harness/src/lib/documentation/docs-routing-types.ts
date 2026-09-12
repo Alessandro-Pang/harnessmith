@@ -63,4 +63,6 @@ export interface PlaybookRouteEvidence {
   mentioned: boolean;
   negated: boolean;
   requested: boolean;
+  /** A request carried by a compound domain alias rather than a generic verb. */
+  specific: boolean;
 }

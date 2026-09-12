@@ -4,10 +4,17 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { routeDocumentation } from '../lib/documentation/docs-routing.js';
+import { normalizeRoutingText } from '../lib/documentation/docs-routing-matching.js';
 import { resolveResponseLanguage } from '../lib/routing/response-language.js';
 import { sourceHarnessRoot } from './helpers/harness.js';
 
 const docsRoot = join(sourceHarnessRoot, 'docs');
+
+test('routing case-folding keeps ASCII i even when the Turkish locale would not', () => {
+  assert.equal(normalizeRoutingText('CI'), 'ci');
+  assert.equal(normalizeRoutingText('I'), 'i');
+  assert.notEqual(normalizeRoutingText('I'), 'I'.toLocaleLowerCase('tr-TR'));
+});
 
 test('repository-map mechanical details are reachable as a deferred reference', () => {
   const report = routeDocumentation(docsRoot, ['schema-contract']);
@@ -218,6 +225,56 @@ test('diagnostic routing ignores negated change intent and generic explanation w
   assert.deepEqual(report.topics, []);
   assert.ok(!report.routes.some(({ name }) => name === 'change'));
   assert.ok(!report.routes.some(({ name }) => name === 'harness-cli-architecture'));
+});
+
+test.each([
+  '策略文档提到远端写入',
+  '这里有一段关于远端写入的说明',
+  '请解释远端写入为什么需要授权',
+  'the remote write policy is documented here',
+])('a high-loss compound is mention-only outside a request position for %s', (query) => {
+  const report = routeDocumentation(docsRoot, [query]);
+
+  assert.equal(report.primaryPlaybook, null, query);
+  assert.notEqual(report.status, 'ambiguous', query);
+  assert.ok(report.intent.mentionedActions.includes('release-and-external'), query);
+});
+
+test.each([
+  ['请检查 CI 失败', 'diagnose'],
+  ['请检查这次上线的风险', 'review'],
+])('a compound domain signal outranks the generic verb sharing it for %s', (query, expected) => {
+  const report = routeDocumentation(docsRoot, [query]);
+
+  assert.equal(report.status, 'matched', query);
+  assert.equal(report.primaryPlaybook?.name, expected, query);
+});
+
+test.each([
+  ['请分析这个修复方案。', 'matched', 'research-and-design'],
+  ['请分析并修复这个问题。', 'ambiguous', null],
+  ['测试失败，帮我判断原因。', 'matched', 'diagnose'],
+  ['验证这次修复是否通过。', 'matched', 'verify-and-accept'],
+  ['不要发布，只检查发布风险。', 'matched', 'review'],
+  ['Git branch 命名。', 'matched', null],
+])('prompt-examples few-shot %s matches live routing', (query, status, top1) => {
+  const report = routeDocumentation(docsRoot, [query]);
+
+  assert.equal(report.status, status, query);
+  assert.equal(report.primaryPlaybook?.name ?? null, top1, query);
+});
+
+test('a possessive noun phrase names a subject instead of requesting the action', () => {
+  const report = routeDocumentation(docsRoot, ['结合这个 QA 来分析 Prompt 的优化']);
+
+  assert.equal(report.primaryPlaybook?.name, 'research-and-design');
+});
+
+test('an explanatory verb never turns a single request into a coordinated pair', () => {
+  const report = routeDocumentation(docsRoot, ['诊断这个失败并讲解原因']);
+
+  assert.equal(report.status, 'matched');
+  assert.equal(report.primaryPlaybook?.name, 'diagnose');
 });
 
 test('diagnostic routing ignores negated Chinese change intent', () => {

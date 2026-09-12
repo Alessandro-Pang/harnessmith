@@ -86,6 +86,7 @@ function matchPlaybook(
     mentioned: evidence.some(({ mentioned }) => mentioned),
     negated: evidence.some(({ negated }) => negated),
     requested: evidence.some(({ requested }) => requested),
+    specific: evidence.some(({ specific }) => specific),
   };
 }
 
