@@ -63,9 +63,9 @@ Memory 可能来自旧会话、摘要或自动提取。即使当时正确，也�
 | 位置 | 保存内容 | 边界 |
 | --- | --- | --- |
 | 宿主原生 memory | 宿主自动召回的历史线索 | 只作待核对输入 |
-| `~/.agent-harness` | 用户维护的个人规则与跨仓库关系 | personal overlay；升级和卸载不覆盖 |
-| `~/.agent-docs/profile.md` | 当前身份、工作方式与长期偏好 | Harness 内唯一 canonical 用户画像 |
-| `~/.agent-docs/core.md` 与其他全局 Memory | 跨项目主题与高价值提炼入口 | 不保存第二份当前画像 |
+| `~/.agents/harnessmith/rules` | 用户维护的个人规则与跨仓库关系 | personal overlay；升级和卸载不覆盖 |
+| `~/.agents/harnessmith/memory/profile.md` | 当前身份、工作方式与长期偏好 | Harness 内唯一 canonical 用户画像 |
+| `~/.agents/harnessmith/memory/core.md` 与其他全局 Memory | 跨项目主题与高价值提炼入口 | 不保存第二份当前画像 |
 | `<project>/.agent-docs` | 输入、会话、工作状态、证据与提炼发现 | 可审阅但非权威 |
 | `docs/`、代码、测试、schema、CI | 项目当前事实与可执行约束 | 权威层 |
 

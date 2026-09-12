@@ -87,6 +87,32 @@ test('export includes only allowlisted personal overlay files and excludes secre
   ]);
 });
 
+test('export and import target the hub overlay when no personal home is configured', () => {
+  const root = mkdtempSync(join(tmpdir(), 'harnessmith-portable-default-'));
+  onTestFinished(() => rmSync(root, { recursive: true, force: true }));
+  const env: NodeJS.ProcessEnv = { ...process.env, HOME: root };
+  delete env.HARNESS_PERSONAL_HOME;
+  delete env.HARNESS_HOME;
+  delete env.HARNESS_MEMORY_HOME;
+  const hubRules = join(root, '.agents', 'harnessmith', 'rules');
+  write(join(hubRules, 'AGENTS.md'), '# 默认 hub 规则\n');
+  write(join(root, '.agent-harness', 'AGENTS.md'), '# 迁移前布局\n');
+
+  const bundle = createPortableConfigBundle({ env });
+
+  assert.deepEqual(
+    bundle.resources.map(({ path, content }) => [path, content]),
+    [['AGENTS.md', '# 默认 hub 规则\n']],
+  );
+  const bundlePath = join(root, 'bundle.json');
+  writePortableConfigBundle(bundlePath, bundle);
+  rmSync(join(hubRules, 'AGENTS.md'));
+  const plan = planPortableConfigImport(bundlePath, { env });
+  applyPortableConfigImport(bundlePath, plan.proposalId, { env });
+
+  assert.equal(readFileSync(join(hubRules, 'AGENTS.md'), 'utf8'), '# 默认 hub 规则\n');
+});
+
 test('export and import round-trip allowed data through a proposal-bound transaction', () => {
   const source = fixture('harnessmith-portable-source-');
   const target = fixture('harnessmith-portable-target-');

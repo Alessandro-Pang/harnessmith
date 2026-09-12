@@ -69,3 +69,20 @@ test('architecture documents the mechanically checked ownership and write bounda
   assert.match(architecture, /Host identity.*外层 Adapter/s);
   assert.match(architecture, /capability claim.*唯一.*executable verification/s);
 });
+
+test('current-state docs name the hub overlay instead of the pre-hub personal path', () => {
+  const currentState = [
+    'AGENTS.md',
+    'apps/docs/site/en/concepts/memory-and-tasks.md',
+    'apps/docs/site/zh/concepts/memory-and-tasks.md',
+    'apps/docs/site/en/concepts/design-principles.md',
+    'apps/docs/site/zh/concepts/design-principles.md',
+    'apps/docs/site/en/maintain/contributing.md',
+    'apps/docs/site/zh/maintain/contributing.md',
+  ];
+  for (const path of currentState) {
+    const content = readFileSync(join(root, path), 'utf8');
+    assert.match(content, /~\/\.agents\/harnessmith\/(?:rules|memory)/, path);
+    assert.doesNotMatch(content, /~\/\.agent-harness/, path);
+  }
+});

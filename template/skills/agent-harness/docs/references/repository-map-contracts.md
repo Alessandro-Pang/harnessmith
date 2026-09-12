@@ -21,7 +21,7 @@ owner: repository-map
 ├── repository-map.yaml     # canonical semantic map; user-owned
 └── repository-map.md       # generated view
 
-{{HARNESS_HOME}}/skills/agent-harness/state/repository-map/
+{{HARNESS_HOME}}/state/repository-map/
 └── verification.json       # mutable source fingerprints and freshness
 ```
 

@@ -44,4 +44,4 @@ owner: project-agents
 - 不把唯一业务事实只写进某个产品专属目录；其他 Agent 无法读取时必须有共享索引。
 - 兼容入口应由安装 adapter 生成，避免手工维护多份规则导致漂移。
 
-模板见 `../../templates/project-AGENTS.md`。
+模板见 `../../assets/templates/project-AGENTS.md`。

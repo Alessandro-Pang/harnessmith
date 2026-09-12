@@ -1,11 +1,11 @@
 import { existsSync, lstatSync, readFileSync } from 'node:fs';
-import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { containsAdoptSecret } from '../adoption/adopt-secret.js';
+import { resolveHub } from '../installation/hub.js';
 import { restoreSnapshots, snapshotFiles } from '../installation/records.js';
 import { withUserDataCoordinationLocks } from '../installation/user-data-lock.js';
 import { atomicWrite } from '../shared/files.js';
-import { assertSafePath, canonicalPath } from '../shared/safe-path.js';
+import { assertSafePath } from '../shared/safe-path.js';
 import { errorMessage, HarnessmithError } from '../shared/types.js';
 import {
   type PortableConfigBundle,
@@ -36,8 +36,13 @@ export interface PortableConfigImportPlan {
   changes: PortableConfigImportChange[];
 }
 
+/**
+ * Personal overlay root as the runtime resolves it. Reading the hub keeps `export`/`import` on the
+ * same directory the installer writes, so an unset `HARNESS_PERSONAL_HOME` cannot silently target
+ * the pre-hub layout.
+ */
 function personalRoot(env: NodeJS.ProcessEnv): string {
-  return canonicalPath(env.HARNESS_PERSONAL_HOME || join(env.HOME || homedir(), '.agent-harness'));
+  return resolveHub(env).rules;
 }
 
 function regularFile(path: string, context: string) {

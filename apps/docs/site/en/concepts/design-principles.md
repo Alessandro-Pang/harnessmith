@@ -25,8 +25,8 @@ the data went. A practical scenario: you open Codex on a plane, wanting to conti
 If rules routing and Memory lived remotely, you could not even look up "where did I get to last time."
 
 **Decision.** The Harness, Memory, Task, and the bounded audit are stored on the local file system by default, managed
-with schema and CLI. Every piece of state is a file you can open and read, not a remote black box. `~/.agent-harness`
-is your personal rules and cross-repo relationships, `~/.agent-docs` is your cross-project Memory, and
+with schema and CLI. Every piece of state is a file you can open and read, not a remote black box. `~/.agents/harnessmith/rules`
+is your personal rules and cross-repo relationships, `~/.agents/harnessmith/memory` is your cross-project Memory, and
 `<project>/.agent-docs` is project work state — all local directories you can inspect directly with `ls`, `cat`, and
 `grep`, and pack up with `export`.
 

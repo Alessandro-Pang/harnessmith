@@ -16,10 +16,15 @@ commitlint 配置、hook 和 CI 为准，不能复制下面的 branch regex 或�
 新建分支匹配：
 
 ```text
-^(feature|hotfix|refactor)/[0-9]{8}_[a-z0-9]+(?:-[a-z0-9]+)*$
+^(?:feat|fix|docs|refactor|perf|test|build|ci|chore|revert)\/(\d+)-[a-z0-9][a-z0-9-]*$
 ```
 
-含义是 `<kind>/YYYYMMDD_<kebab-case-goal>`；`kind` 取 `feature`、`hotfix` 或 `refactor`。
+含义是 `<type>/<issue-number>-<kebab-case-goal>`；`type` 取 Conventional Commits 类型集合，`issue-number`
+是该分支要关闭的 GitHub Issue 编号。`main`、`master`、`develop` 与 `dependabot/` 前缀分支免检。
+
+机械事实源是 `scripts/preflight/branch-contract.ts` 的 `issueBranchPattern`，上面的正则由
+`packages/cli/src/__tests__/git-project-overrides-doc.test.ts` 断言与它逐字一致；正则以代码为准，不要只改文档。
+
 当前 `config/commitlint.config.mjs` 在共享 Conventional Commits 配置上增加：
 
 - header 最大 100 个字符；

@@ -65,7 +65,7 @@ brief 验证 Memory 并计算 metadata、core、maintenance 与推荐，但只�
 
 一次性“提交、发布、继续”授权、框架常识、容易重新搜索的事实、正式文档副本、无来源猜测和 secret 不写入 Important Inputs。禁止项与约束可持续限制未来行为，但必须保留来源和生命周期；一次性授权不能被记忆重新解释为未来授权。
 
-每次候选先执行 negative eligibility，再判断价值、来源、typed writer、授权和 root 状态：成功写入返回 `created`、`updated` 或 `unchanged`；未初始化或缺少 writer 的高价值候选只能 `proposed`，冲突、敏感信息、缺来源或校验失败为 `blocked`，未执行资格判断为 `not-evaluated`。所有结果带稳定 `reasonCode`，`not-evaluated` 不得伪装成 `unchanged`，失败不得被后续命令覆盖。
+每次候选先执行 negative eligibility，再判断价值、来源、typed writer、授权、root 状态和语义重复：成功写入返回 `created`、`updated` 或 `unchanged`；未初始化或缺少 writer 的高价值候选只能 `proposed`，冲突、敏感信息、缺来源或校验失败为 `blocked`，未执行资格判断为 `not-evaluated`。这些写入结果状态与维护报告的 `none`/`inconclusive` 分类不同。所有结果带稳定 `reasonCode`，`not-evaluated` 不得伪装成 `unchanged`，失败不得被后续命令覆盖。
 
 生命周期分为绑定工作流的 `workstream` 与跨任务的 `durable`。工作流结束后关闭前者；稳定结论进入正式 docs、ADR、测试、schema、lint 或 CI 后再 supersede 后者。`verbatim` 模式逐字保存用户原始字节；概括、补全和解释使用 `summary`，不得把摘要伪装成原话。精确字段和安全输入方式只在 reference 中加载。
 
@@ -73,7 +73,7 @@ brief 验证 Memory 并计算 metadata、core、maintenance 与推荐，但只�
 
 ## 自动沉淀触发
 
-每个用户回合在交付前都必须执行一次有界的沉淀判定：检查本回合是否产生跨回合仍有价值的约束、昂贵结论、未完成状态或恢复信息；命中时调用对应 typed writer（`capture-input`、`capture-finding`、`capture-experience` 或 `handoff`），并在写入后校验结果。宿主没有 session-end、turn-end 或 compaction hook 时，Agent 仍须在最终回复前自行调用 Harness CLI；没有匹配 writer、来源不足、未初始化或安全检查失败时保留 `proposed`/`blocked`，不得假装已沉淀。低价值、一次性、可廉价恢复的信息跳过。整个判定、写入、校验过程保持静默。
+每个用户回合在交付前都必须执行一次有界的沉淀判定：检查本回合是否产生跨回合仍有价值的用户约束、高价值分析、可复用经验或未完成交接；命中时调用对应 typed writer（`capture-input`、`capture-finding`、`capture-experience` 或 `handoff`），并在写入后校验结果。宿主没有 session-end、turn-end 或 compaction hook 时，Agent 仍须在最终回复前自行调用 Harness CLI；没有匹配 writer、来源不足、未初始化或安全检查失败时保留 `proposed`/`blocked`，不得假装已沉淀。低价值、一次性、可廉价恢复的信息跳过。整个判定、写入、校验过程保持静默。
 
 ## 输出可见性
 

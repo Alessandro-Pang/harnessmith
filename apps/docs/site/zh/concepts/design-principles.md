@@ -17,7 +17,7 @@ updated: 2026-09-05
 
 **问题。** 个人规则、任务历史和项目线索可能包含敏感路径或工作习惯；如果核心流程必须连接远端服务，离线、隐私和可迁移性都会变差，而且你无法审计数据去了哪里。举个实际的场景：你在飞机上打开 Codex，想继续昨天的跨仓库重构。如果规则路由和 Memory 在远端，你连「上次做到哪了」都查不到。
 
-**决策。** Harness、Memory、Task 与受限 audit 默认保存在本地文件系统，用 schema 和 CLI 管理。所有状态都是你能打开看的文件，不是远端黑盒。`~/.agent-harness` 是你的个人规则与跨仓库关系，`~/.agent-docs` 是你的跨项目 Memory，`<project>/.agent-docs` 是项目工作状态——全部是本地目录，你可以用 `ls`、`cat`、`grep` 直接查看，也可以用 `export` 打包带走。
+**决策。** Harness、Memory、Task 与受限 audit 默认保存在本地文件系统，用 schema 和 CLI 管理。所有状态都是你能打开看的文件，不是远端黑盒。`~/.agents/harnessmith/rules` 是你的个人规则与跨仓库关系，`~/.agents/harnessmith/memory` 是你的跨项目 Memory，`<project>/.agent-docs` 是项目工作状态——全部是本地目录，你可以用 `ls`、`cat`、`grep` 直接查看，也可以用 `export` 打包带走。
 
 **代价。** Harnessmith 不提供跨设备云同步、集中式团队策略或可信远程 attestation；这些能力如果需要，应由显式选择的外部系统承担，而不是悄悄内置。本地优先意味着你换机器时要做一次 `export` / `import`，而不是自动同步。这是有意为之，不是功能缺失。
 

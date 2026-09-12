@@ -59,7 +59,7 @@ in `evals/run.schema.json` is rewritten from the registry. Preflight runs `eval:
 plugin loader or a Pack Registry.
 
 Some invariants are not up for review trade-offs: managed distribution, mutable `state/`, the shared personal rules
-in `~/.agent-harness/`, and the non-authoritative memory in `.agent-docs/` must stay separate; file takeover denies
+in `~/.agents/harnessmith/rules/`, and the non-authoritative memory in `.agent-docs/` must stay separate; file takeover denies
 `unmanaged` / `modified` targets by default, and cross-adapter operations must fully preflight first and support
 rollback; a Task's `complete` can only pass through the acceptance gate, and concurrent writes must hold the task
 lock. Stable rules go in the compact instruction template while detailed workflows go in routed documents;

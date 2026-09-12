@@ -43,7 +43,7 @@ npm pack --dry-run
 
 新增内置 Adapter 的步骤：在 `packages/cli/src/adapters/adapter-registry.ts` 注册宿主身份（规范名、标签、别名、能力），在 `packages/cli/src/adapters/adapters.ts` 添加穷举路径解析器，markdown/mdc 等指令渲染形状放在 `packages/cli/src/adapters/instruction-formats.ts`；然后运行 `pnpm run eval:schema:generate`，让 `evals/run.schema.json` 的 `host.adapter.enum` 从注册表重新生成。preflight 会运行 `eval:schema:check` 拒绝漂移，共享生命周期覆盖由 `packages/cli/src/__tests__/adapter-conformance.test.ts` 提供。不要添加动态插件加载器或 Pack Registry。
 
-以下不变量不接受评审妥协：受管理分发、可变 `state/`、共享个人规则 `~/.agent-harness/` 和非权威记忆 `.agent-docs/` 必须彼此分离；文件接管默认拒绝 `unmanaged` / `modified` 目标，跨 Adapter 操作必须先完整预检并支持回滚；Task 的 `complete` 只能通过 acceptance gate，并发写入必须持有任务锁。稳定规则放在紧凑指令模板，详细工作流放在按需路由的文档；`.agent-docs` 是非权威记忆，永远不能成为项目事实或规则的唯一来源；个人 overlay 归用户所有，位于受管安装产物之外。
+以下不变量不接受评审妥协：受管理分发、可变 `state/`、共享个人规则 `~/.agents/harnessmith/rules/` 和非权威记忆 `.agent-docs/` 必须彼此分离；文件接管默认拒绝 `unmanaged` / `modified` 目标，跨 Adapter 操作必须先完整预检并支持回滚；Task 的 `complete` 只能通过 acceptance gate，并发写入必须持有任务锁。稳定规则放在紧凑指令模板，详细工作流放在按需路由的文档；`.agent-docs` 是非权威记忆，永远不能成为项目事实或规则的唯一来源；个人 overlay 归用户所有，位于受管安装产物之外。
 
 质量工具各司其职：Knip 拒绝不可达文件与导出；Secretlint 扫描源码、prompt 与文档面中的已知凭据格式；Markdownlint 检查仓库文档；`scripts/preflight/preflight.ts` 检查包与 CLI 契约、Harness 文档路由、frontmatter、相对链接、模板 token 与宿主中立性；Vitest 的 V8 gate 覆盖被导入的运行时与发布辅助模块，c8 合并 preflight 和 eval CLI 子进程的覆盖率。通用基础设施优先使用维护中的库，但 Harness 领域规则保持本地实现；仅被嵌入式 Runtime 使用的依赖放在 `devDependencies` 并打包进产物——Agent home 不允许二次安装依赖。
 

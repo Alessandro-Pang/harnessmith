@@ -1,6 +1,7 @@
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { withExclusiveDirectoryLock } from '../lib/filesystem/exclusive-lock.js';
-import { writeIfMissing } from '../lib/filesystem/files.js';
+import { atomicWrite, writeIfMissing } from '../lib/filesystem/files.js';
 import { readTemplate, render } from '../lib/filesystem/templates.js';
 import { withUserDataCoordinationLocks } from '../lib/filesystem/user-data-lock.js';
 import { initializeGlobalMemory } from '../lib/memory/global-memory.js';
@@ -25,6 +26,20 @@ export function initGlobal(
   }
 }
 
+const stalePersonalMapPointer = /(?:~|\$HOME)\/\.agent-harness\/projects\/repository-map\.md/g;
+
+function migrateStalePersonalOverlay(destination: string, rendered: string): boolean {
+  if (!existsSync(destination)) return false;
+  const current = readFileSync(destination, 'utf8');
+  if (!current.includes('.agent-harness/projects/repository-map.md')) return false;
+  const nextPointer = rendered.match(/`([^`]+\/projects\/repository-map\.md)`/)?.[1];
+  if (!nextPointer) return false;
+  const migrated = current.replace(stalePersonalMapPointer, nextPointer);
+  if (migrated === current) return false;
+  atomicWrite(destination, migrated);
+  return true;
+}
+
 export function initPersonal(
   runtime: Runtime,
   io: Io = console,
@@ -40,14 +55,19 @@ export function initPersonal(
   withUserDataCoordinationLocks([runtime.personalHome], inheritedLockKeys, () => {
     withExclusiveDirectoryLock(runtime.personalHome, 'Personal overlay', () => {
       const created: string[] = [];
+      const migrated: string[] = [];
       for (const [destinationName, templateName] of templates) {
         const destination = join(runtime.personalHome, destinationName);
         const content = render(runtime, readTemplate(runtime, templateName));
         if (writeIfMissing(destination, content)) created.push(destination);
+        else if (migrateStalePersonalOverlay(destination, content)) migrated.push(destination);
       }
       if (created.length > 0) {
         io.log(`Initialized personal Harness overlay: ${runtime.personalHome}`);
         for (const path of created) io.log(`  created ${path}`);
+      } else if (migrated.length > 0) {
+        io.log(`Migrated stale personal Harness overlay pointers: ${runtime.personalHome}`);
+        for (const path of migrated) io.log(`  migrated ${path}`);
       } else {
         io.log(`Personal Harness overlay already initialized: ${runtime.personalHome}`);
       }
