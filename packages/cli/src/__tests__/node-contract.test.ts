@@ -37,7 +37,7 @@ test('Knip owns the dependency and dead-code contract for every TypeScript sourc
     scripts: Record<string, string>;
   };
   const knip = JSON.parse(readFileSync(join(root, 'config', 'knip.json'), 'utf8')) as {
-    project: string[];
+    workspaces: Record<string, { project?: string[] }>;
   };
 
   assert.equal(
@@ -45,12 +45,17 @@ test('Knip owns the dependency and dead-code contract for every TypeScript sourc
     'knip --config config/knip.json --reporter compact',
   );
   assert.match(packageManifest.scripts.check, /pnpm run quality:dead-code/);
-  for (const source of [
-    '../packages/cli/src/**/*.ts',
-    '../scripts/**/*.ts',
-    '../packages/harness/src/**/*.ts',
-  ]) {
-    assert.ok(knip.project.includes(source), `Knip omits ${source}`);
+  // pnpm workspace packages own their own patterns; root-relative patterns pointing into them match
+  // nothing, which is how the gate once analysed an empty file set.
+  for (const [workspace, source] of [
+    ['.', 'scripts/**/*.ts'],
+    ['packages/cli', 'src/**/*.ts'],
+    ['packages/harness', 'src/**/*.ts'],
+  ] as const) {
+    assert.ok(
+      knip.workspaces[workspace]?.project?.includes(source),
+      `Knip omits ${workspace} -> ${source}`,
+    );
   }
 });
 

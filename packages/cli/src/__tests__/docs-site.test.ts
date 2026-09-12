@@ -42,7 +42,7 @@ test('documentation site has reproducible local build, search, links, and Pages 
   assert.match(config, /dark:\s*['"]github-dark-high-contrast['"]/);
 
   const deadCodeConfig = read('config/knip.json');
-  assert.match(deadCodeConfig, /apps\/docs\/site\/\.vitepress\/config\.ts/);
+  assert.match(deadCodeConfig, /site\/\.vitepress\/config\.ts/);
   assert.match(deadCodeConfig, /"mermaid"/);
 
   assert.match(read('apps/docs/site/.vitepress/theme/custom.css'), /:focus-visible/);

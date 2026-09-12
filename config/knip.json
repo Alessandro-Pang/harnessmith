@@ -1,16 +1,5 @@
 {
   "$schema": "../node_modules/knip/schema.json",
-  "entry": [
-    "../bin/harnessmith.mjs",
-    "../apps/docs/site/.vitepress/config.ts",
-    "../scripts/evaluation/records/eval-gate.ts",
-    "../scripts/evaluation/contracts/eval-run-schema.ts",
-    "../scripts/preflight/preflight.ts",
-    "../scripts/release/release-publish.ts",
-    "../template/skills/agent-harness/scripts/harness.mjs",
-    "config/*.config.{ts,mjs}",
-    "config/.markdownlint-cli2.mjs"
-  ],
   "ignoreDependencies": [
     "@braintree/sanitize-url",
     "@secretlint/secretlint-rule-preset-recommend",
@@ -23,14 +12,56 @@
     "tar",
     "vitepress-plugin-mermaid"
   ],
-  "project": [
-    "../packages/cli/src/**/*.ts",
-    "../scripts/**/*.ts",
-    "../evals/__tests__/**/*.ts",
-    "../packages/harness/src/**/*.ts"
-  ],
+  "workspaces": {
+    ".": {
+      "entry": [
+        "bin/harnessmith.mjs",
+        "scripts/evaluation/records/eval-gate.ts",
+        "scripts/evaluation/contracts/eval-run-schema.ts",
+        "scripts/evaluation/codex/eval-reasoning-process.ts",
+        "scripts/benchmarks/prompt-route/prompt-route-benchmark.ts",
+        "scripts/preflight/preflight.ts",
+        "scripts/release/release-publish.ts",
+        "evals/__tests__/eval-host-capability-matrix-coverage.ts",
+        "scripts/evaluation/codex/eval-codex-memory-scenario.mjs",
+        "template/skills/agent-harness/scripts/harness.mjs",
+        "config/*.config.{ts,mjs}",
+        "config/.markdownlint-cli2.mjs"
+      ],
+      "project": [
+        "scripts/**/*.ts",
+        "evals/__tests__/**/*.ts",
+        "scripts/**/*.mjs"
+      ]
+    },
+    "packages/cli": {
+      "entry": [
+        "src/cli.ts"
+      ],
+      "project": [
+        "src/**/*.ts"
+      ]
+    },
+    "packages/harness": {
+      "entry": [
+        "src/cli.ts",
+        "src/runtime.ts"
+      ],
+      "project": [
+        "src/**/*.ts"
+      ]
+    },
+    "apps/docs": {
+      "entry": [
+        "site/.vitepress/config.ts",
+        "site/.vitepress/theme/index.ts"
+      ],
+      "project": [
+        "site/.vitepress/**/*.ts"
+      ]
+    }
+  },
   "ignore": [
-    "apps/docs/site/.vitepress/**",
     "template/skills/agent-harness/dist/**"
   ]
 }

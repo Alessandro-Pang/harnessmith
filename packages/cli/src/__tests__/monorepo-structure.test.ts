@@ -40,13 +40,21 @@ describe('Monorepo structure', () => {
     expect(manifest).toMatchObject({ name: '@harnessmith/harness', private: true });
   });
 
-  test('keeps the public CLI as the publishable workspace package', () => {
-    const manifest = JSON.parse(readFileSync(join(root, 'packages/cli/package.json'), 'utf8')) as {
+  test('publishes only the repository root and keeps workspace packages private', () => {
+    const workspaceManifest = JSON.parse(
+      readFileSync(join(root, 'packages/cli/package.json'), 'utf8'),
+    ) as { name?: string; private?: boolean };
+    const publishedManifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as {
       name?: string;
       private?: boolean;
     };
 
-    expect(manifest).toMatchObject({ name: 'harnessmith', private: false });
+    // `release-publish.ts` publishes the tarball packed from the root manifest, so a second
+    // manifest claiming the same public name can only mispublish a hollow package.
+    expect(publishedManifest.name).toBe('harnessmith');
+    expect(publishedManifest.private).not.toBe(true);
+    expect(workspaceManifest).toMatchObject({ name: '@harnessmith/cli', private: true });
+    expect(workspaceManifest.name).not.toBe(publishedManifest.name);
   });
 });
 
