@@ -149,7 +149,7 @@ function migrationReport(
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       const expectedValidationFailure =
-        errors.length > 0 && /^Memory check failed: \d+ issue\(s\)$/.test(message);
+        errors.length > 0 && /^Memory check failed: \d+ issue\(s\)/.test(message);
       if (!expectedValidationFailure) {
         executionIssues.push(`Memory validation could not complete: ${message}`);
       }

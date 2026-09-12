@@ -34,7 +34,7 @@ function postWriteIssues(
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    const expected = rootErrors.length > 0 && /^Memory check failed: \d+ issue\(s\)$/.test(message);
+    const expected = rootErrors.length > 0 && /^Memory check failed: \d+ issue\(s\)/.test(message);
     if (!expected) executionIssues.push(message);
   }
   try {

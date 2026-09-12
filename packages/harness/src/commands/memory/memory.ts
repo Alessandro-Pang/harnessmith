@@ -1,6 +1,7 @@
 import { existsSync, lstatSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { parseFrontmatter } from '../../lib/documentation/frontmatter.js';
+import { toPosixPath } from '../../lib/filesystem/posix-path.js';
 import { assertSafePath } from '../../lib/filesystem/safe-path.js';
 import { memoryMaintenanceReport } from '../../lib/memory/memory-maintenance.js';
 import {
@@ -42,7 +43,7 @@ export function memoryList(
   const documents = markdownFiles(root, { archive: false }).map((path) => {
     const metadata = parseFrontmatter(readMemoryDocument(path));
     return {
-      path: relative(root, path).replaceAll('\\', '/'),
+      path: toPosixPath(relative(root, path)),
       kind: String(metadata.get('memory-kind') || metadata.get('type') || 'unknown'),
       status: String(metadata.get('status') || 'unknown'),
       updated: String(metadata.get('updated') || 'unknown'),
@@ -137,7 +138,11 @@ export function memoryCheck(
     for (const { name, reason } of invalid) {
       io.error(`Required memory entry is ${reason}: ${name}`);
     }
-    if (invalid.length > 0) throw new Error(`Memory check failed: ${invalid.length} issue(s)`);
+    if (invalid.length > 0) {
+      throw new Error(
+        `Memory check failed: ${invalid.length} issue(s); typed writers are closed until the listed documents are repaired (harness memory check)`,
+      );
+    }
   }
   const report = memoryMaintenanceReport(root, calendarDate(runtime));
   if (indexed) {
@@ -145,7 +150,9 @@ export function memoryCheck(
       io.error(`Active memory is not reachable from an index: ${path}`);
     }
     if (report.unindexed.length > 0) {
-      throw new Error(`Memory check failed: ${report.unindexed.length} issue(s)`);
+      throw new Error(
+        `Memory check failed: ${report.unindexed.length} issue(s); typed writers are closed until the listed documents are repaired (harness memory check)`,
+      );
     }
   }
   const result = {

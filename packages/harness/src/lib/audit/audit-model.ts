@@ -22,6 +22,19 @@ const storedEventKeys = new Set([
   'costUsd',
   'errorCode',
 ]);
+const requiredStoredEventKeys = new Set([
+  'schemaVersion',
+  'traceId',
+  'timestamp',
+  'adapter',
+  'operation',
+  'action',
+  'policyDecision',
+  'policyVersion',
+  'durationMs',
+  'outcome',
+  'artifactDigests',
+]);
 
 export interface AuditEventInput {
   traceId: string;
@@ -44,8 +57,10 @@ export interface AuditEvent extends AuditEventInput {
   adapter: string;
 }
 
-function assertIdentifier(value: string, name: string): void {
-  if (!safeIdentifier.test(value)) throw new Error(`Audit ${name} is invalid`);
+// `RegExp.test` coerces its argument, so a missing field would validate as the literal "undefined".
+function assertIdentifier(value: unknown, name: string): asserts value is string {
+  if (typeof value !== 'string' || !safeIdentifier.test(value))
+    throw new Error(`Audit ${name} is invalid`);
 }
 
 export function validateAuditTraceId(value: string): string {
@@ -58,8 +73,12 @@ function assertBoundedNumber(
   name: string,
   maximum: number,
   integer = false,
+  required = false,
 ): void {
-  if (value === undefined) return;
+  if (value === undefined) {
+    if (required) throw new Error(`Audit ${name} is invalid`);
+    return;
+  }
   if (
     !Number.isFinite(value) ||
     value < 0 ||
@@ -86,7 +105,7 @@ export function validateAuditEvent(input: AuditEventInput, adapter: string): Aud
   const timestamp = Date.parse(input.timestamp);
   if (!Number.isFinite(timestamp) || new Date(timestamp).toISOString() !== input.timestamp)
     throw new Error('Audit timestamp must be canonical ISO-8601 UTC');
-  assertBoundedNumber(input.durationMs, 'durationMs', 7 * 24 * 60 * 60 * 1000);
+  assertBoundedNumber(input.durationMs, 'durationMs', 7 * 24 * 60 * 60 * 1000, false, true);
   assertBoundedNumber(input.inputTokens, 'inputTokens', 1_000_000_000, true);
   assertBoundedNumber(input.outputTokens, 'outputTokens', 1_000_000_000, true);
   assertBoundedNumber(input.costUsd, 'costUsd', 1_000_000);
@@ -127,6 +146,8 @@ export function validateStoredAuditEvent(value: unknown): AuditEvent {
   }
   const unknown = Object.keys(candidate).find((key) => !storedEventKeys.has(key));
   if (unknown) throw new Error(`stored audit event has unknown key: ${unknown}`);
+  const missing = [...requiredStoredEventKeys].find((key) => !Object.hasOwn(candidate, key));
+  if (missing) throw new Error(`stored audit event is missing key: ${missing}`);
   if (candidate.schemaVersion !== 1) throw new Error('unsupported schemaVersion');
   return validateAuditEvent(candidate as unknown as AuditEventInput, candidate.adapter as string);
 }

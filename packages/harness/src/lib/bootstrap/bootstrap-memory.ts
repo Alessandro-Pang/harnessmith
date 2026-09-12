@@ -2,6 +2,7 @@ import { join, relative } from 'node:path';
 import { calendarDate } from '../../runtime.js';
 import type { Io, ProjectSnapshot, Runtime } from '../../types.js';
 import { parseFrontmatterDocument } from '../documentation/frontmatter.js';
+import { toPosixPath } from '../filesystem/posix-path.js';
 import { type MemoryCoreBudgetReport, memoryCoreBudget } from '../memory/memory-core-budget.js';
 import {
   classifyMemoryFact,
@@ -103,7 +104,7 @@ function readBootstrapMetadata(memoryRoot: string, reasons: string[]) {
       const parsed = parseFrontmatterDocument(readMemoryDocument(path));
       const semantics = classifyMemoryFact(parsed.metadata);
       return {
-        path: relative(memoryRoot, path).replaceAll('\\', '/'),
+        path: toPosixPath(relative(memoryRoot, path)),
         type: String(parsed.metadata.get('type') || 'unknown'),
         kind: String(parsed.metadata.get('memory-kind') || 'unknown'),
         status: String(parsed.metadata.get('status') || 'unknown'),

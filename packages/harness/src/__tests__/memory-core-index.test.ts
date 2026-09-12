@@ -7,7 +7,8 @@ import { onTestFinished, test } from 'vitest';
 import { memoryCheck } from '../commands/memory/memory.js';
 import { captureHandoff, closeHandoff } from '../commands/memory/memory-autopilot.js';
 import { captureInput } from '../commands/memory/memory-input.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { parseFrontmatter } from '../lib/documentation/frontmatter.js';
+import { capturedIo, harnessRuntime, sourceHarnessRoot } from './helpers/harness.js';
 
 function projectFixture(): { project: string; runtime: ReturnType<typeof harnessRuntime> } {
   const root = mkdtempSync(join(tmpdir(), 'harness-memory-core-index-'));
@@ -129,6 +130,23 @@ test('updating a handoff rejects a core line that contains another reference', (
     /exactly one canonical pointer/i,
   );
   assert.equal(readFileSync(corePath, 'utf8'), malformed);
+});
+
+test('capture-input emits every frontmatter key declared by the project-agent-docs input template', () => {
+  const template = readFileSync(
+    join(sourceHarnessRoot, 'assets', 'templates', 'project-agent-docs', 'input.md'),
+    'utf8',
+  );
+  const keys = [...template.matchAll(/^([a-z0-9-]+):/gmu)].map((match) => match[1]);
+  const { project, runtime } = projectFixture();
+  const result = captureInput(
+    runtime,
+    project,
+    { title: 'Template contract', content: 'Exact input bytes.', source: 'chat' },
+    capturedIo(),
+  );
+  const metadata = parseFrontmatter(readFileSync(result.path, 'utf8'));
+  for (const key of keys) assert.ok(metadata.has(key), key);
 });
 
 test('capturing an input removes the generated section placeholder', () => {

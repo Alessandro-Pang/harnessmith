@@ -79,7 +79,7 @@ export function isCheckpointStatus(value: TaskStatus): boolean {
 function slug(value: string): string {
   return (
     value
-      .toLocaleLowerCase()
+      .toLocaleLowerCase('und')
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-|-$/g, '')
       .slice(0, 48) || 'task'

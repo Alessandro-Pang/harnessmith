@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs';
 import { basename, dirname, isAbsolute, relative, resolve } from 'node:path';
 import { parseFrontmatterDocument } from '../documentation/frontmatter.js';
+import { toPosixPath } from '../filesystem/posix-path.js';
 import {
   buildWorkflowRelationReport,
   type WorkflowRelationReport,
@@ -59,7 +60,7 @@ export interface MemoryMaintenanceReport {
 }
 
 function portablePath(root: string, path: string): string {
-  return relative(root, path).replaceAll('\\', '/');
+  return toPosixPath(relative(root, path));
 }
 
 function referenceIdentity(value: string): string {

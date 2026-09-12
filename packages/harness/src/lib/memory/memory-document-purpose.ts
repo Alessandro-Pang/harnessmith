@@ -37,7 +37,7 @@ const genericLabels = new Set([
 ]);
 
 function normalizeDocumentPurpose(value: string): string {
-  return value.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase();
+  return value.normalize('NFKC').trim().replace(/\s+/g, ' ').toLocaleLowerCase('und');
 }
 
 function isGeneric(value: unknown): boolean {

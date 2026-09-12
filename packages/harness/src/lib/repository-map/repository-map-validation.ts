@@ -1,4 +1,5 @@
 import { isAbsolute } from 'node:path';
+import { toPosixPath } from '../filesystem/posix-path.js';
 import {
   type RepositoryMap,
   type RepositoryMapValidation,
@@ -46,7 +47,7 @@ function isStringArray(value: unknown, maximum: number): value is string[] {
 
 function safeRelativePath(path: unknown): path is string {
   if (!isNonEmptyString(path, 500) || isAbsolute(path)) return false;
-  const normalized = path.replaceAll('\\', '/');
+  const normalized = toPosixPath(path);
   return !normalized.split('/').includes('..') && normalized !== '.';
 }
 

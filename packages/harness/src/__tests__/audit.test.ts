@@ -27,6 +27,15 @@ function payload(root: string, name: string, value: Record<string, unknown>): st
   return path;
 }
 
+function storedEvent(overrides: Record<string, unknown> = {}) {
+  return { ...event(), schemaVersion: 1, adapter: 'test', ...overrides };
+}
+
+function omit(value: Record<string, unknown>, key: string): Record<string, unknown> {
+  const { [key]: _removed, ...rest } = value;
+  return rest;
+}
+
 function event(overrides: Record<string, unknown> = {}) {
   return {
     traceId: 'trace-20260828-001',
@@ -235,6 +244,29 @@ test('health rejects tampered audit events that add raw content', () => {
   const audit = createHealthReport(runtime).checks.find(({ id }) => id === 'audit');
   assert.equal(audit?.status, 'failed');
   assert.match(audit?.message ?? '', /unknown key: prompt/i);
+});
+
+test('health rejects stored audit events whose required fields are missing or mistyped', () => {
+  const cases: Array<[string, Record<string, unknown>, RegExp]> = [
+    ['omits traceId', omit(storedEvent(), 'traceId'), /missing key: traceId/i],
+    ['omits durationMs', omit(storedEvent(), 'durationMs'), /missing key: durationMs/i],
+    ['omits policyVersion', omit(storedEvent(), 'policyVersion'), /missing key: policyVersion/i],
+    ['nullifies traceId', storedEvent({ traceId: null }), /traceId is invalid/i],
+    ['numbers the action', storedEvent({ action: 42 }), /action is invalid/i],
+    ['nullifies the adapter', storedEvent({ adapter: null }), /adapter is invalid/i],
+    ['nullifies durationMs', storedEvent({ durationMs: null }), /durationMs is invalid/i],
+  ];
+
+  for (const [label, stored, expected] of cases) {
+    const { runtime } = fixture();
+    const root = join(runtime.stateRoot, 'audit');
+    mkdirSync(root, { recursive: true });
+    writeFileSync(join(root, '2026-08-28.jsonl'), `${JSON.stringify(stored)}\n`);
+
+    const audit = createHealthReport(runtime).checks.find(({ id }) => id === 'audit');
+    assert.equal(audit?.status, 'failed', label);
+    assert.match(audit?.message ?? '', expected, label);
+  }
 });
 
 test('audit maintenance reports retention candidates and archive is proposal-first', () => {

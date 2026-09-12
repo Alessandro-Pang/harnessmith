@@ -121,9 +121,12 @@ function discoveredMemoryFiles(
         ? `Invalid memory reference or managed memory entry: ${message}`
         : `Invalid managed memory tree: ${message}`,
     );
-    throw new Error('Memory check failed: 1 issue(s)', {
-      cause: error instanceof Error ? error : undefined,
-    });
+    throw new Error(
+      'Memory check failed: 1 issue(s); typed writers are closed until the listed documents are repaired (harness memory check)',
+      {
+        cause: error instanceof Error ? error : undefined,
+      },
+    );
   }
 }
 
@@ -224,13 +227,19 @@ export function validateMemoryRoot(
     });
   } catch (error) {
     safeIo.error(`Memory secret scan failed: ${String(error)}`);
-    throw new Error(`Memory check failed: ${failures + 1} issue(s)`);
+    throw new Error(
+      `Memory check failed: ${failures + 1} issue(s); typed writers are closed until the listed documents are repaired (harness memory check)`,
+    );
   }
   for (const path of secretFiles) {
     safeIo.error(`Memory contains high-confidence secret material: ${path}`);
     failures += 1;
   }
   failures += validateMemoryReferences(root, state.references, entries, safeIo);
-  if (failures > 0) throw new Error(`Memory check failed: ${failures} issue(s)`);
+  if (failures > 0) {
+    throw new Error(
+      `Memory check failed: ${failures} issue(s); typed writers are closed until the listed documents are repaired (harness memory check)`,
+    );
+  }
   if (!quietSuccess) safeIo.log(`Memory check passed: ${root}`);
 }

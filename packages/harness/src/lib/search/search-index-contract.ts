@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { lstatSync } from 'node:fs';
 import { basename, dirname, join, relative, resolve } from 'node:path';
 import type { Runtime } from '../../types.js';
+import { toPosixPath } from '../filesystem/posix-path.js';
 import { assertSafePath, canonicalPath } from '../filesystem/safe-path.js';
 import type { SearchOptions, SearchSource } from './search.js';
 import type { SearchBackend } from './search-backend.js';
@@ -110,7 +111,7 @@ export function searchIndexPath(runtime: Runtime, sources: SearchSource[]): stri
 
 function candidateRelativePath(source: SearchSource, path: string): string {
   const route = relative(resolve(source.root), resolve(path));
-  return (route || basename(path)).replaceAll('\\', '/');
+  return toPosixPath(route || basename(path));
 }
 
 function currentFiles(sources: SearchSource[], discovery: SearchDiscovery): CurrentFile[] {

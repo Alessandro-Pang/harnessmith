@@ -158,7 +158,7 @@ export function searchText(
     'Search line limit',
   );
   const discovery = discoverSearchableFiles(sources, options);
-  const needle = query.toLocaleLowerCase();
+  const needle = query.toLocaleLowerCase('und');
   const matches: SearchMatch[] = [];
   let truncated = false;
   let scanExpired = searchDeadlineExceeded(
@@ -179,7 +179,7 @@ export function searchText(
     if (searchDeadlineExceeded(discovery, candidate.source, candidate.path)) break;
     for (const [index, line] of lines.entries()) {
       if (searchDeadlineExceeded(discovery, candidate.source, candidate.path)) break candidateLoop;
-      const matchesNeedle = line.toLocaleLowerCase().includes(needle);
+      const matchesNeedle = line.toLocaleLowerCase('und').includes(needle);
       if (searchDeadlineExceeded(discovery, candidate.source, candidate.path)) break candidateLoop;
       if (!matchesNeedle) continue;
       if (matches.length === resultLimit) {

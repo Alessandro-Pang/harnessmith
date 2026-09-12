@@ -117,6 +117,29 @@ test('global memory initializes a compact user profile and routes to it from cor
   memoryCheck(runtime, 'global', capturedIo());
 });
 
+test('personal overlay initialization migrates a stale repository-map pointer', () => {
+  const root = temporaryRoot();
+  const runtime = harnessRuntime(root);
+  initPersonal(runtime, capturedIo());
+  const rules = join(runtime.personalHome, 'AGENTS.md');
+  writeFileSync(
+    rules,
+    readFileSync(rules, 'utf8').replace(
+      `${runtime.personalHome}/projects/repository-map.md`,
+      '~/.agent-harness/projects/repository-map.md',
+    ),
+  );
+
+  const io = capturedIo();
+  initPersonal(runtime, io);
+
+  assert.match(io.logs[0], /Migrated stale personal Harness overlay pointers/);
+  assert.ok(
+    readFileSync(rules, 'utf8').includes(`${runtime.personalHome}/projects/repository-map.md`),
+  );
+  assert.doesNotMatch(readFileSync(rules, 'utf8'), /\.agent-harness\/projects\/repository-map\.md/);
+});
+
 test('personal overlay initialization is idempotent and preserves user rules', () => {
   const root = temporaryRoot();
   const runtime = harnessRuntime(root);
@@ -259,7 +282,10 @@ test('memory list, search, and reference validation handle archive and broken re
 
   writeFileSync(note, `${readFileSync(note, 'utf8')}\nmemory:missing-note\n`);
   const invalid = capturedIo();
-  assert.throws(() => memoryCheck(runtime, 'global', invalid), /1 issue/);
+  assert.throws(
+    () => memoryCheck(runtime, 'global', invalid),
+    /1 issue\(s\); typed writers are closed.*harness memory check/,
+  );
   assert.match(invalid.errors[0], /Broken memory reference/);
 });
 
