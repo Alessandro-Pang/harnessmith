@@ -1,6 +1,7 @@
 import { dirname } from 'node:path';
 import { execaSync } from 'execa';
 import { whichCommandSync } from 'which-command';
+import { sanitizeGitEnvironment } from '../shared/git-environment.js';
 
 type GitFailureKind = 'not-repository' | 'unavailable' | 'timeout' | 'permission' | 'failed';
 
@@ -55,27 +56,7 @@ function gitFailure(result: GitFailureResult): Exclude<GitInspection, { ok: true
 }
 
 function gitEnvironment(): NodeJS.ProcessEnv {
-  const env = { ...process.env };
-  for (const key of [
-    'GIT_ALTERNATE_OBJECT_DIRECTORIES',
-    'GIT_CEILING_DIRECTORIES',
-    'GIT_COMMON_DIR',
-    'GIT_DIR',
-    'GIT_DISCOVERY_ACROSS_FILESYSTEM',
-    'GIT_INDEX_FILE',
-    'GIT_OBJECT_DIRECTORY',
-    'GIT_WORK_TREE',
-  ]) {
-    delete env[key];
-  }
-  return {
-    ...env,
-    GCM_INTERACTIVE: 'Never',
-    GIT_TERMINAL_PROMPT: '0',
-    LANG: 'C',
-    LC_ALL: 'C',
-    NODEFAULTCURRENTDIRECTORYINEXEPATH: '1',
-  };
+  return sanitizeGitEnvironment();
 }
 
 type GitExecutableResolver = (command: string, options: { cwd: string }) => string | undefined;

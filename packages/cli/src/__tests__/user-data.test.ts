@@ -82,3 +82,24 @@ test('user-data initialization locks, snapshots, and writes through one canonica
   assert.equal(readFileSync(record, 'utf8'), realpathSync.native(personalHome));
   assert.equal(existsSync(join(personalHome, 'README.md')), true);
 });
+
+test('user-data initialization terminates a hung init child instead of waiting out the lock', () => {
+  const root = mkdtempSync(join(tmpdir(), 'harnessmith-user-data-timeout-'));
+  onTestFinished(() => rmSync(root, { recursive: true, force: true }));
+  const home = join(root, 'hub');
+  const script = join(home, 'skills', 'agent-harness', 'scripts', 'harness.mjs');
+  mkdirSync(dirname(script), { recursive: true });
+  writeFileSync(script, 'await new Promise(() => {});\n');
+  const started = Date.now();
+
+  assert.throws(
+    () =>
+      initializeUserData(
+        resolveHub({ HOME: root, HARNESS_HOME: home }),
+        { HOME: root, HARNESS_USER_DATA_INIT_TIMEOUT_MS: '400' },
+        { global: false },
+      ),
+    /timed? ?out|ETIMEDOUT|Timeout/i,
+  );
+  assert.ok(Date.now() - started < 8_000);
+});

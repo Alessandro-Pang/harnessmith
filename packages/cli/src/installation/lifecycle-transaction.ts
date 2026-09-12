@@ -1,7 +1,7 @@
-import { cpSync, existsSync, mkdirSync } from 'node:fs';
+import { cpSync, mkdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { removeExact } from '../shared/files.js';
-import { assertSafePath, ignoreRoot, outputRoot } from '../shared/safe-path.js';
+import { assertSafePath, entryExists, ignoreRoot, outputRoot } from '../shared/safe-path.js';
 import type { ManagedScope } from '../shared/types.js';
 import { errorMessage } from '../shared/types.js';
 import {
@@ -81,7 +81,9 @@ function snapshotPaths(paths: MutablePath[]): {
   try {
     for (const [index, { root: authorizedRoot, path }] of paths.entries()) {
       assertSafePath(authorizedRoot, path, { allowSymlinkLeaf: true });
-      if (!existsSync(path)) {
+      // A managed link whose target is missing still has to be snapshotted; `existsSync` follows
+      // the link and would report nothing to restore, so rollback would delete it for good.
+      if (!entryExists(path)) {
         snapshots.push({ root: authorizedRoot, path, copy: null });
         continue;
       }

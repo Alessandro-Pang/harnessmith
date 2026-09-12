@@ -94,6 +94,20 @@ test('a later install adds an owner and a hub layer that restore unwinds togethe
   assert.equal(statusAll([codex])[0].installed, true);
 });
 
+test('a departed co-installed host no longer blocks restoring the host that stayed', () => {
+  const { env, codex, claude, hub } = fixture();
+  installAll([codex, claude], { env, noInitGlobal: true });
+  uninstallAll([claude]);
+  assert.deepEqual(readInstallRecord(hub)?.owners, ['codex']);
+  assert.deepEqual(readInstallRecord(hub)?.installed, ['codex', 'claude']);
+
+  const restored = restoreAll([codex]);
+
+  assert.equal(restored[0].hub, 'unwind');
+  assert.equal(existsSync(codex.record), false);
+  assert.equal(readInstallRecord(hub), null);
+});
+
 test('restore refuses to split a hub layer shared by hosts installed in one transaction', () => {
   const { env, codex, claude, hub } = fixture();
   installAll([codex, claude], { env, noInitGlobal: true });

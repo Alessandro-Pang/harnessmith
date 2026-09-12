@@ -55,6 +55,25 @@ test('rolls back every committed output when a later destination fails', () => {
   assert.equal(existsSync(hub.discoveryLink), false);
 });
 
+test('rollback restores a dangling managed symlink that existsSync would skip', () => {
+  const { home, hub, env } = fixture('harnessmith-dangling-snapshot-');
+  mkdirSync(join(home, 'skills', 'agent-harness'), { recursive: true });
+  writeFileSync(join(home, 'skills', 'agent-harness', 'old.txt'), 'old harness');
+  symlinkSync(join(home, 'missing-agents'), join(home, 'AGENTS.md'));
+  writeFileSync(join(home, 'blocked'), 'not a directory');
+  const adapter: Adapter = hostAdapter('codex', home, hub, {
+    instructionFiles: ['AGENTS.md', join('blocked', 'AGENTS.md')],
+    skillLink: true,
+  });
+
+  assert.throws(() => installAll([adapter], { env, force: true, noInitGlobal: true }));
+  assert.equal(lstatSync(join(home, 'AGENTS.md')).isSymbolicLink(), true);
+  assert.equal(
+    readFileSync(join(home, 'skills', 'agent-harness', 'old.txt'), 'utf8'),
+    'old harness',
+  );
+});
+
 test('commit rechecks staged destinations when a parent becomes a symlink', () => {
   const { root, home, hub, env } = fixture('harnessmith-race-');
   const outside = join(root, 'outside');

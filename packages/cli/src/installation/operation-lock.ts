@@ -1,12 +1,12 @@
 import { existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import lockfile from 'proper-lockfile';
+import { lockStaleMilliseconds } from '../shared/lock-stale.js';
 import { assertSafePath, assertSafeScopePaths } from '../shared/safe-path.js';
 import type { ManagedScope } from '../shared/types.js';
 import { errorMessage, HarnessmithError } from '../shared/types.js';
 
 const operationLockName = '.harnessmith-operation.lock';
-const lockStaleMilliseconds = 15 * 60_000;
 
 export function operationLockPath(scope: ManagedScope): string {
   return join(scope.home, operationLockName);

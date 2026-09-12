@@ -1,4 +1,4 @@
-import { lstatSync, realpathSync, type Stats } from 'node:fs';
+import { existsSync, lstatSync, realpathSync, type Stats } from 'node:fs';
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 
 export function isPathInside(root: string, target: string): boolean {
@@ -10,7 +10,8 @@ function entryIfPresent(path: string): Stats | undefined {
   try {
     return lstatSync(path);
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
+    const { code } = error as NodeJS.ErrnoException;
+    if (code === 'ENOENT' || code === 'ENOTDIR') return undefined;
     throw error;
   }
 }
@@ -18,15 +19,13 @@ function entryIfPresent(path: string): Stats | undefined {
 export function canonicalPath(input: string): string {
   let current = resolve(input);
   const suffix: string[] = [];
-  let entry = entryIfPresent(current);
-  while (!entry) {
+  while (!existsSync(current)) {
     const parent = dirname(current);
     if (parent === current) break;
     suffix.unshift(basename(current));
     current = parent;
-    entry = entryIfPresent(current);
   }
-  const canonical = entry ? realpathSync.native(current) : current;
+  const canonical = existsSync(current) ? realpathSync.native(current) : current;
   return resolve(canonical, ...suffix);
 }
 

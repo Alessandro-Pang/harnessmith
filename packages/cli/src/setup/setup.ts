@@ -17,6 +17,9 @@ const stateDefinitions = {
     'Model behavior, tool permissions, authentication, and runtime events remain owned by the Host.',
 } as const;
 
+/** Health is a probe, not a long-running Host session. */
+export const setupHealthTimeoutMs = 15_000;
+
 export function createSetupGuide(adapters: Adapter[], options: CliOptions) {
   const plans = adapters.map((adapter) => ({
     ...describeInstall(adapter),
@@ -97,6 +100,7 @@ export function verifySetup(adapters: Adapter[], options: CliOptions, env: NodeJ
         env,
         maxBuffer: 1024 * 1024,
         reject: false,
+        timeout: setupHealthTimeoutMs,
       },
     );
     const health = parseHealth(result.stdout);

@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { onTestFinished, test } from 'vitest';
+import { setupHealthTimeoutMs } from '../setup/setup.js';
 
 const packageRoot = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const cli = join(packageRoot, 'bin', 'harnessmith.mjs');
@@ -191,4 +192,12 @@ test('setup reports recovery guidance and rolls back an initialization failure',
   assert.equal(existsSync(join(root, 'codex-home', '.harnessmith', 'install.json')), false);
   assert.equal(existsSync(join(root, 'codex-home', 'AGENTS.md')), false);
   assert.equal(readFileSync(blockedMemoryHome, 'utf8'), 'not a directory\n');
+});
+
+test('setup health probe has a timeout shorter than the stale operation lock', () => {
+  assert.equal(setupHealthTimeoutMs, 15_000);
+  assert.match(
+    readFileSync(join(packageRoot, 'src', 'setup', 'setup.ts'), 'utf8'),
+    /timeout:\s*setupHealthTimeoutMs/,
+  );
 });

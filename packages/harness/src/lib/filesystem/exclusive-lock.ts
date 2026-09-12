@@ -1,7 +1,6 @@
 import { existsSync, lstatSync, mkdirSync, realpathSync, rmdirSync } from 'node:fs';
 import lockfile from 'proper-lockfile';
-
-const lockStaleMilliseconds = 15 * 60_000;
+import { lockStaleMilliseconds } from './lock-stale.js';
 
 interface DirectoryIdentity {
   dev: number;

@@ -3,6 +3,7 @@ import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Command } from 'commander';
 import { execaSync } from 'execa';
+import { sanitizeGitEnvironment } from '../../packages/harness/src/lib/filesystem/git-environment.js';
 import { repositoryRoot } from '../evaluation/records/eval-fingerprint.js';
 import {
   finalizeReleaseVersion,
@@ -30,7 +31,7 @@ export type ReleaseCommandRunner = (
 const defaultRunner: ReleaseCommandRunner = (executable, args, options) => {
   const result = execaSync(executable, args, {
     cwd: options.cwd,
-    env: options.env,
+    env: sanitizeGitEnvironment(options.env),
     reject: false,
   });
   return {
@@ -53,7 +54,7 @@ function checked(
   root: string,
   runner: ReleaseCommandRunner,
 ): string {
-  const result = runner(executable, args, { cwd: root });
+  const result = runner(executable, args, { cwd: root, env: sanitizeGitEnvironment() });
   if (result.status !== 0) {
     throw new Error(`${label} failed: ${result.stderr || `exit ${String(result.status)}`}`);
   }

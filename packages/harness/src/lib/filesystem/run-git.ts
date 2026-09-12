@@ -1,6 +1,7 @@
 import { dirname } from 'node:path';
 import { execaSync } from 'execa';
 import { whichCommandSync } from 'which-command';
+import { sanitizeGitEnvironment } from './git-environment.js';
 
 export const DEFAULT_GIT_TIMEOUT_MS = 5_000;
 const GIT_MAX_BUFFER = 20 * 1024 * 1024;
@@ -105,27 +106,7 @@ function failedRun(result: GitFailureResult): Exclude<GitRunResult, { ok: true }
 type GitExecutableResolver = (command: string, options: { cwd: string }) => string | undefined;
 
 function gitEnvironment(): NodeJS.ProcessEnv {
-  const env = { ...process.env };
-  for (const key of [
-    'GIT_ALTERNATE_OBJECT_DIRECTORIES',
-    'GIT_CEILING_DIRECTORIES',
-    'GIT_COMMON_DIR',
-    'GIT_DIR',
-    'GIT_DISCOVERY_ACROSS_FILESYSTEM',
-    'GIT_INDEX_FILE',
-    'GIT_OBJECT_DIRECTORY',
-    'GIT_WORK_TREE',
-  ]) {
-    delete env[key];
-  }
-  return {
-    ...env,
-    GCM_INTERACTIVE: 'Never',
-    GIT_TERMINAL_PROMPT: '0',
-    LANG: 'C',
-    LC_ALL: 'C',
-    NODEFAULTCURRENTDIRECTORYINEXEPATH: '1',
-  };
+  return sanitizeGitEnvironment();
 }
 
 /** @public */

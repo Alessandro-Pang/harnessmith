@@ -12,9 +12,8 @@ import {
 import { homedir, userInfo } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import lockfile from 'proper-lockfile';
+import { lockStaleMilliseconds } from '../shared/lock-stale.js';
 import { errorMessage, HarnessmithError } from '../shared/types.js';
-
-const lockStaleMilliseconds = 15 * 60_000;
 
 function handoffPath(target: string, nonce: string): string {
   return `${target}.handoff-${nonce}.json`;

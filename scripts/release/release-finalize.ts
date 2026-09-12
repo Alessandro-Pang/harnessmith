@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { execaSync } from 'execa';
 import writeFileAtomic from 'write-file-atomic';
+import { sanitizeGitEnvironment } from '../../packages/harness/src/lib/filesystem/git-environment.js';
 import {
   evaluationFingerprint,
   repositoryRoot,
@@ -28,7 +29,11 @@ export type FinalizeRunner = (
 ) => CommandResult;
 
 const defaultRunner: FinalizeRunner = (executable, args, options) => {
-  const result = execaSync(executable, args, { cwd: options.cwd, reject: false });
+  const result = execaSync(executable, args, {
+    cwd: options.cwd,
+    env: sanitizeGitEnvironment(),
+    reject: false,
+  });
   return {
     status: result.exitCode ?? null,
     stdout: result.stdout,

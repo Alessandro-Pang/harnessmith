@@ -5,6 +5,9 @@ import type { Hub } from '../shared/types.js';
 import { restoreSnapshots, snapshotFiles } from './records.js';
 import { withUserDataCoordinationLocks } from './user-data-lock.js';
 
+/** Init must finish before the 15-minute operation lock is treated as stale. */
+export const userDataInitTimeoutMs = 60_000;
+
 /**
  * Initialize the shared personal rules (`hub.rules`) and, unless disabled, the global
  * memory (`hub.memory`) through the installed Harness CLI. Both live beside the hub but are
@@ -42,6 +45,7 @@ export function initializeUserData(
         encoding: 'utf8',
         env: childEnv,
         extendEnv: false,
+        timeout: Number(env.HARNESS_USER_DATA_INIT_TIMEOUT_MS) || userDataInitTimeoutMs,
       }).stdout.trim();
     try {
       const output = [run('personal')];

@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { execaSync } from 'execa';
+import { sanitizeGitEnvironment } from '../../packages/harness/src/lib/filesystem/git-environment.js';
 import { readNpmPackageTarball } from './npm-tarball.js';
 import {
   officialRegistry,
@@ -15,7 +16,7 @@ import {
 export const defaultRegistryRunner: RegistryVerificationRunner = (executable, args, options) => {
   const result = execaSync(executable, args, {
     cwd: options.cwd,
-    env: options.env,
+    env: sanitizeGitEnvironment(options.env),
     reject: false,
   });
   return {

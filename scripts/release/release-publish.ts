@@ -2,6 +2,7 @@ import { chmodSync, constants, copyFileSync, existsSync, rmSync } from 'node:fs'
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execaSync } from 'execa';
+import { sanitizeGitEnvironment } from '../../packages/harness/src/lib/filesystem/git-environment.js';
 import {
   type EvaluationGateResult,
   gateEvaluationRecords,
@@ -45,7 +46,7 @@ export type ReleaseEvaluator = (artifact: string) => EvaluationGateResult;
 
 const defaultRunner: ReleaseRunner = (executable, args, options) => {
   const result = execaSync(executable, args, {
-    env: options.env,
+    env: sanitizeGitEnvironment(options.env),
     reject: false,
     stdio: options.stdio,
   });

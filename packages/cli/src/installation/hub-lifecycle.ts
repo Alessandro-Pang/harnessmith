@@ -72,7 +72,12 @@ export function planHubLifecycle(
     ({ stamp }) => stamp !== undefined && stamp === top.record.stamp,
   );
   if (sameTransaction) {
-    const missing = (top.record.installed ?? []).filter((owner) => !selected.includes(owner));
+    // `installed` is the historical transaction roster and is never pruned, so a host that has
+    // since uninstalled would otherwise be demanded here and could never be supplied again.
+    const owners = hubOwners(top.record);
+    const missing = (top.record.installed ?? []).filter(
+      (owner) => !selected.includes(owner) && owners.includes(owner),
+    );
     if (missing.length > 0) {
       const agents = [...new Set([...selected, ...missing].map(ownerAgentName))];
       throw new HarnessmithError(

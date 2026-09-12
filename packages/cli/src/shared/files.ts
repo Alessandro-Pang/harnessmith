@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import {
   closeSync,
+  constants,
   existsSync,
   lstatSync,
   mkdirSync,
@@ -82,13 +83,14 @@ interface DigestBudget {
   bytes: number;
 }
 
-const digestDefaults = {
+export const digestBudgetDefaults = {
   maxEntries: 100_000,
   maxBytes: 512 * 1024 * 1024,
   maxFileBytes: 128 * 1024 * 1024,
   maxDepth: 64,
   maxDurationMs: 30_000,
 };
+const digestDefaults = digestBudgetDefaults;
 
 function positive(value: number | undefined, fallback: number, name: string): number {
   const resolved = value ?? fallback;
@@ -117,7 +119,7 @@ function reserveDigestEntry(budget: DigestBudget, path: string, depth: number): 
 }
 
 function hashFile(path: string, hash: ReturnType<typeof createHash>, budget: DigestBudget): number {
-  const descriptor = openSync(path, 'r');
+  const descriptor = openSync(path, constants.O_RDONLY | (constants.O_NOFOLLOW || 0));
   const buffer = Buffer.allocUnsafe(64 * 1024);
   let bytes = 0;
   try {

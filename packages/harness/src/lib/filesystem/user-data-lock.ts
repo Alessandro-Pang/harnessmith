@@ -11,8 +11,7 @@ import {
 import { homedir, userInfo } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import lockfile from 'proper-lockfile';
-
-const lockStaleMilliseconds = 15 * 60_000;
+import { lockStaleMilliseconds } from './lock-stale.js';
 
 function handoffPath(target: string, nonce: string): string {
   return `${target}.handoff-${nonce}.json`;

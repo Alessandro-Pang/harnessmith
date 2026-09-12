@@ -215,3 +215,44 @@ test('release finalization rejects changelog edits because release notes live on
   );
   assert.equal(existsSync(join(fixture, 'release-attestation.json')), false);
 });
+
+test('release version git calls strip ambient GIT_DIR redirection', async () => {
+  const { prepareReleaseVersion } = await import('../../scripts/release/release-version.js');
+  const fixture = temporaryDirectory();
+  mkdirSync(join(fixture, '.release'));
+  writeFileSync(join(fixture, 'package.json'), '{"name":"fixture","version":"1.2.3"}\n');
+  writeFileSync(join(fixture, 'pnpm-lock.yaml'), 'lockfileVersion: 9\n');
+  const seen: Array<NodeJS.ProcessEnv | undefined> = [];
+  const runner = (
+    _executable: string,
+    args: string[],
+    options: { cwd: string; env?: NodeJS.ProcessEnv },
+  ) => {
+    seen.push(options.env);
+    if (args[0] === 'status') return { status: 0, stdout: '', stderr: '' };
+    if (args[0] === 'branch') return { status: 0, stdout: 'main\n', stderr: '' };
+    if (args[0] === 'version') {
+      writeFileSync(join(fixture, 'package.json'), '{"name":"fixture","version":"1.2.4"}\n');
+      return { status: 0, stdout: 'v1.2.4\n', stderr: '' };
+    }
+    if (args[0] === 'pack') {
+      writeFileSync(join(fixture, '.release', 'fixture-1.2.4.tgz'), 'candidate');
+      return {
+        status: 0,
+        stdout: JSON.stringify([{ filename: 'fixture-1.2.4.tgz' }]),
+        stderr: '',
+      };
+    }
+    return { status: 0, stdout: '', stderr: '' };
+  };
+
+  prepareReleaseVersion(['patch'], runner, { root: fixture });
+
+  assert.ok(seen.length > 0);
+  for (const env of seen) {
+    assert.ok(env);
+    assert.equal(env.GIT_DIR, undefined);
+    assert.equal(env.GIT_WORK_TREE, undefined);
+    assert.equal(env.GIT_TERMINAL_PROMPT, '0');
+  }
+});
