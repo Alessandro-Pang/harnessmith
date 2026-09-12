@@ -1,5 +1,9 @@
 import { existsSync } from 'node:fs';
 import { basename, dirname, extname, join, resolve } from 'node:path';
+import { Ajv2020 } from 'ajv/dist/2020.js';
+import workflowRelationsSchema from '../../../../../template/skills/agent-harness/assets/schemas/workflow-relations.schema.json' with {
+  type: 'json',
+};
 import type { TaskStatus } from '../../types.js';
 import { parseFrontmatter } from '../documentation/frontmatter.js';
 import { listFiles } from '../filesystem/file-discovery.js';
@@ -27,10 +31,10 @@ export interface MemoryRelationInput {
   sourceRefs: string[];
 }
 
-type WorkflowRelationConflictCode =
-  | 'orphan-task-reference'
-  | 'cross-workstream-binding'
-  | 'session-task-conflict';
+const relationsAjv = new Ajv2020({ allErrors: true, strict: true });
+const validateWorkflowRelationsSchema = relationsAjv.compile(workflowRelationsSchema);
+
+type WorkflowRelationConflictCode = 'orphan-task-reference' | 'cross-workstream-binding';
 
 export interface WorkflowRelationReport {
   version: 1;
@@ -163,7 +167,7 @@ export function buildWorkflowRelationReport(
       phase: `${id}:phase:current`,
       status,
     }));
-  return {
+  const report: WorkflowRelationReport = {
     version: 1,
     schema: 'urn:agent-harness:schema:workflow-relations:v1',
     mode: 'report-only',
@@ -173,6 +177,14 @@ export function buildWorkflowRelationReport(
     conflicts,
     summary: { tasks: taskRelations.length, memory: memory.length, conflicts: conflicts.length },
   };
+  // The published schema only constrains consumers; validating here keeps the producer from
+  // shipping a report shape that its own schema rejects.
+  if (!validateWorkflowRelationsSchema(report)) {
+    throw new Error(
+      `Invalid workflow relation report: ${relationsAjv.errorsText(validateWorkflowRelationsSchema.errors, { separator: '; ' })}`,
+    );
+  }
+  return report;
 }
 
 function relationDocument(document: CurationDocument): MemoryRelationInput {

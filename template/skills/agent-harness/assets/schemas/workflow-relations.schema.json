@@ -47,7 +47,7 @@
         "additionalProperties": false,
         "required": ["code", "reference", "evidence", "risk"],
         "properties": {
-          "code": { "enum": ["orphan-task-reference", "cross-workstream-binding", "session-task-conflict"] },
+          "code": { "enum": ["orphan-task-reference", "cross-workstream-binding"] },
           "reference": { "type": "string", "pattern": "^memory:" },
           "evidence": { "type": "array", "items": { "type": "string", "minLength": 1 }, "minItems": 1 },
           "risk": { "enum": ["medium", "high"] }

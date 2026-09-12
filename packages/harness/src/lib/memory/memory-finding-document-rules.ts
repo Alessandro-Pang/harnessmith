@@ -69,7 +69,12 @@ export function validateFindingDocument(
   const retention = metadata.get('retention');
   const sourceRefs = metadata.get('source-refs');
   const schemaVersion = metadata.get('finding-schema-version');
-  if (metadata.get('type') !== 'analytical-finding' || ![1, 2].includes(Number(schemaVersion))) {
+  // The v2 fact-class rule below compares strictly, so a coercing check here would let
+  // `finding-schema-version: "2"` claim v2 identity while skipping v2 enforcement.
+  if (
+    metadata.get('type') !== 'analytical-finding' ||
+    (schemaVersion !== 1 && schemaVersion !== 2)
+  ) {
     io.error(`Invalid typed finding identity or schema: ${path}`);
     failures += 1;
   }

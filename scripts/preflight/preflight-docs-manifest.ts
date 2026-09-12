@@ -20,7 +20,7 @@ export interface DocsManifest {
   entries?: unknown;
 }
 
-export const CANONICAL_ROUTE_IDS = [
+const CANONICAL_ROUTE_IDS = [
   'operating-model',
   'execution-loop',
   'tool-routing',

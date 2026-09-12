@@ -3,7 +3,11 @@ import { fileURLToPath } from 'node:url';
 import { Argument, Command } from 'commander';
 import { execaSync } from 'execa';
 import { checkBuiltCliAdapters } from './preflight-adapters.js';
-import { checkArchitectureImports } from './preflight-architecture.js';
+import {
+  checkArchitectureImports,
+  checkAreaImportEdges,
+  declaredCliAreaImports,
+} from './preflight-architecture.js';
 import { checkDocs } from './preflight-docs.js';
 import { checkBranch } from './preflight-git.js';
 import { checkPackage } from './preflight-package.js';
@@ -75,7 +79,9 @@ function checkCliHelp(outerCli: string, harnessCli: string): void {
 }
 
 function checkCli(): void {
-  checkArchitectureImports(join(harnessRoot, 'src'), check);
+  // The Harness runtime lives in packages/harness/src; the distributed skill only carries dist.
+  checkArchitectureImports(join(root, 'packages', 'harness', 'src'), check);
+  checkAreaImportEdges(join(root, 'packages', 'cli', 'src'), declaredCliAreaImports, check);
   checkBranch(root, check);
   checkPackage(root, harnessRoot, check);
   const outerCli = join(root, 'bin', 'harnessmith.mjs');

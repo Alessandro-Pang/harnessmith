@@ -95,25 +95,126 @@ test('architecture preflight rejects direct filesystem mutation in typed work-st
   assert.ok(failures.every((message) => message.includes('direct filesystem mutation')));
 });
 
-test('architecture preflight requires the acceptance gate on the task completion path', async () => {
+function architectureFailures(
+  check: (sourceRoot: string, check: (condition: unknown, message: string) => void) => void,
+  fixtures: Record<string, string>,
+  prefix: string,
+): string[] {
+  const sourceRoot = mkdtempSync(join(tmpdir(), prefix));
+  onTestFinished(() => rmSync(sourceRoot, { recursive: true, force: true }));
+  for (const [path, content] of Object.entries(fixtures)) {
+    const target = join(sourceRoot, path);
+    mkdirSync(dirname(target), { recursive: true });
+    writeFileSync(target, content);
+  }
+  const failures: string[] = [];
+  check(sourceRoot, (condition, message) => {
+    if (!condition) failures.push(message);
+  });
+  return failures;
+}
+
+test('architecture preflight requires the acceptance gate wherever the completion path lives', async () => {
   const { checkArchitectureImports } = await import(
     '../../../../scripts/preflight/preflight-architecture.js'
   );
-  const sourceRoot = mkdtempSync(join(tmpdir(), 'harness-task-gate-architecture-'));
-  onTestFinished(() => rmSync(sourceRoot, { recursive: true, force: true }));
-  const taskCommand = join(sourceRoot, 'commands', 'task.ts');
-  mkdirSync(dirname(taskCommand), { recursive: true });
-  writeFileSync(
-    taskCommand,
-    "export function close(status: string) { if (status === 'complete') return writeTask(status); }\n",
-  );
-  const failures: string[] = [];
 
-  checkArchitectureImports(sourceRoot, (condition, message) => {
-    if (!condition) failures.push(message);
-  });
+  const failures = architectureFailures(
+    checkArchitectureImports,
+    {
+      // A nested, renamed completion path must still be checked, and `==` with double quotes must
+      // not read as a different comparison than the spelling the previous checker pinned.
+      'commands/task/task.ts':
+        "export function close(status: string) { if (status === 'complete') { assertTaskCanComplete(); } return checkpointTaskAtRoot(status); }\n",
+      'commands/task/close.ts':
+        'export function close(status: string) { if (status == "complete") return writeTask(status); }\n',
+    },
+    'harness-task-gate-architecture-',
+  );
 
   assert.deepEqual(failures, [
-    'commands/task.ts: task completion must call assertTaskCanComplete before persistence',
+    'commands/task/close.ts: task completion must call assertTaskCanComplete before persistence',
+  ]);
+});
+
+test('architecture preflight fails closed when the source root has no sources', async () => {
+  const { checkArchitectureImports } = await import(
+    '../../../../scripts/preflight/preflight-architecture.js'
+  );
+
+  let root = '';
+  const failures = architectureFailures(
+    (sourceRoot, check) => {
+      root = sourceRoot;
+      checkArchitectureImports(sourceRoot, check);
+    },
+    {},
+    'harness-empty-architecture-',
+  );
+
+  assert.deepEqual(failures, [`${root}: architecture check found no lib or commands sources`]);
+});
+
+test('a command may import its own modules but not another command directory', async () => {
+  const { checkArchitectureImports } = await import(
+    '../../../../scripts/preflight/preflight-architecture.js'
+  );
+
+  const failures = architectureFailures(
+    checkArchitectureImports,
+    {
+      'commands/bootstrap/bootstrap.ts':
+        "import { route } from './bootstrap-route.js';\nexport const run = route;\n",
+      'commands/bootstrap/bootstrap-route.ts': 'export const route = 1;\n',
+      'commands/task/task.ts':
+        "import { route } from '../bootstrap/bootstrap-route.js';\nexport function close(status: string) { if (status === 'complete') { assertTaskCanComplete(); } return checkpointTaskAtRoot(route); }\n",
+    },
+    'harness-command-unit-architecture-',
+  );
+
+  assert.deepEqual(failures, [
+    'commands/task/task.ts: commands must not import sibling commands: ../bootstrap/bootstrap-route.js',
+  ]);
+});
+
+test('area boundary check freezes the cross-area import graph', async () => {
+  const { checkAreaImportEdges } = await import(
+    '../../../../scripts/preflight/preflight-architecture.js'
+  );
+
+  const failures = architectureFailures(
+    (sourceRoot, check) => checkAreaImportEdges(sourceRoot, ['status -> shared'], check),
+    {
+      'installation/install.ts':
+        "import { note } from '../status/status.js';\nexport const a = note;\n",
+      'status/status.ts': 'export const note = 1;\n',
+    },
+    'harness-area-edges-',
+  );
+
+  assert.deepEqual(
+    failures.map((message) => message.split(': ').slice(1).join(': ')),
+    [
+      'undeclared cross-area import: installation -> status',
+      'declared cross-area import no longer exists: status -> shared',
+    ],
+  );
+});
+
+test('architecture preflight fails when no command calls the completion gate at all', async () => {
+  const { checkArchitectureImports } = await import(
+    '../../../../scripts/preflight/preflight-architecture.js'
+  );
+
+  const failures = architectureFailures(
+    checkArchitectureImports,
+    {
+      'commands/report.ts': 'export function close(status: string) { return writeTask(status); }\n',
+    },
+    'harness-task-gate-missing-',
+  );
+
+  assert.deepEqual(failures, [
+    'commands: no command calls the task completion gate assertTaskCanComplete',
   ]);
 });

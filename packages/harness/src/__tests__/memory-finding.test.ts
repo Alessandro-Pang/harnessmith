@@ -330,6 +330,24 @@ test('finding document validation explains malformed identity, content, and rete
   assert.match(authorityIo.errors.join('\n'), /cannot declare formal fact authority/i);
 });
 
+test('finding document validation rejects a quoted schema version instead of downgrading v2 rules', () => {
+  const conclusion = 'A reusable conclusion.';
+  const body = `# 结论\n\n${conclusion}\n\n# 理由\n\nStable rationale.\n\n# 应用\n\nStable application.\n\n# 证据\n\n- Stable evidence.\n`;
+  const metadata = new Map<string, unknown>([
+    ['type', 'analytical-finding'],
+    ['finding-schema-version', '2'],
+    ['finding-kind', 'analysis'],
+    ['finding-digest', `sha256:${findingDigest('analysis', conclusion)}`],
+    ['source-refs', ['docs/source.md']],
+    ['retention', 'durable'],
+    ['memory-kind', 'distilled'],
+  ]);
+  const io = capturedIo();
+
+  assert.equal(validateFindingDocument('finding.md', body, metadata, io), 1);
+  assert.match(io.errors.join('\n'), /identity or schema/);
+});
+
 test('finding document validation rejects drifted durable metadata and digest', () => {
   const conclusion = 'A reusable conclusion.';
   const body = `# 结论\n\n${conclusion}\n\n# 理由\n\nStable rationale.\n\n# 应用\n\nStable application.\n\n# 证据\n\n- Stable evidence.\n`;

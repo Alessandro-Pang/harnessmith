@@ -105,4 +105,27 @@ test('workflow relation schema is packaged with the CLI contract', () => {
     ),
   );
   assert.equal(schema.$id, 'urn:agent-harness:schema:workflow-relations:v1');
+  assert.deepEqual(schema.properties.conflicts.items.properties.code.enum, [
+    'orphan-task-reference',
+    'cross-workstream-binding',
+  ]);
+});
+
+test('the relation producer validates its own output against the published schema', () => {
+  assert.throws(
+    () =>
+      buildWorkflowRelationReport(
+        [{ id: 'task-a', status: 'in_progress' }],
+        [
+          {
+            reference: 'not-a-memory-reference',
+            type: 'working-note',
+            kind: 'working',
+            status: 'active',
+            sourceRefs: ['task:task-a'],
+          },
+        ],
+      ),
+    /Invalid workflow relation report/,
+  );
 });

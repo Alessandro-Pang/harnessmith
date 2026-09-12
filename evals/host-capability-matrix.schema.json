@@ -88,7 +88,8 @@
             "cursor": { "$ref": "#/$defs/support" },
             "claude": { "$ref": "#/$defs/support" },
             "opencode": { "$ref": "#/$defs/support" },
-            "kimi": { "$ref": "#/$defs/support" }
+            "kimi": { "$ref": "#/$defs/support" },
+            "zed": { "$ref": "#/$defs/support" }
           }
         }
       }

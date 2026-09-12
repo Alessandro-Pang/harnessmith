@@ -34,7 +34,12 @@ function validateContract(matrix: HostCapabilityMatrix): HostCapabilityMatrix {
     throw new Error(`Host capability matrix violates schema: ${JSON.stringify(validate.errors)}`);
   }
   const expectedHosts: AgentName[] = [...supportedAgentNames];
-  if (matrix.hosts.some(({ id }, index) => id !== expectedHosts[index])) {
+  // Positional comparison alone accepts a truncated list, so a host dropped from the tail would
+  // silently lose its whole column.
+  if (
+    matrix.hosts.length !== expectedHosts.length ||
+    matrix.hosts.some(({ id }, index) => id !== expectedHosts[index])
+  ) {
     throw new Error('Host capability matrix must contain the canonical ordered Host list');
   }
   const capabilityIds = matrix.capabilities.map(({ id }) => id);

@@ -3,6 +3,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import { test } from 'vitest';
+import { supportedAgentNames } from '../../packages/cli/src/adapters/adapter-registry.js';
 import {
   buildHostCapabilityMatrixReport,
   readHostCapabilityMatrix,
@@ -53,6 +54,26 @@ test('host capability matrix is complete, unique, and backed by repository evide
       for (const path of support.evidence) assert.equal(existsSync(join(root, path)), true, path);
     }
   }
+});
+
+test('matrix schema derives its host list from the adapter registry', () => {
+  const schema = JSON.parse(
+    readFileSync(join(root, 'evals', 'host-capability-matrix.schema.json'), 'utf8'),
+  );
+  const hosts = [...supportedAgentNames];
+
+  assert.deepEqual(schema.$defs.host.properties.id.enum, hosts);
+  assert.deepEqual(Object.keys(schema.$defs.capability.properties.supportOverrides.properties), [
+    ...hosts,
+  ]);
+  assert.equal(schema.properties.hosts.minItems, hosts.length);
+  assert.equal(schema.properties.hosts.maxItems, hosts.length);
+});
+
+test('matrix contract rejects a host list truncated at the tail', () => {
+  const truncated = structuredClone(readHostCapabilityMatrix());
+  truncated.hosts = truncated.hosts.slice(0, -1);
+  assert.throws(() => readHostCapabilityMatrix(truncated), /canonical ordered Host list|schema/);
 });
 
 test('matrix report binds every cell to one candidate and preserves real outcome classes', () => {
