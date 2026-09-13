@@ -4,6 +4,7 @@ import { compareHostEvaluationEvidence } from '../eval-comparison.js';
 import { planEvaluation } from '../planning/eval-planning.js';
 import { EvaluationGateError } from '../records/eval-gate-failure.js';
 import { evaluationFingerprint, releaseArtifactPath } from './eval-fingerprint.js';
+import { normalizeEvalGateArgs } from './eval-gate-args.js';
 
 function positiveNumber(value: string): number {
   const parsed = Number(value);
@@ -117,7 +118,11 @@ function main(): void {
       },
     );
 
-  program.parse();
+  program.parse([
+    process.argv[0],
+    process.argv[1],
+    ...normalizeEvalGateArgs(process.argv.slice(2)),
+  ]);
 }
 
 try {
