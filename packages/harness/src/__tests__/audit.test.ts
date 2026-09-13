@@ -137,6 +137,40 @@ test('audit record rebuilds stale accounting metadata before appending', () => {
   assert.equal(repaired.eventCount, 2);
 });
 
+test('audit append recovers only a verifiable prefix after a torn final record', () => {
+  const { root, runtime } = fixture();
+  const auditRoot = join(runtime.stateRoot, 'audit');
+  mkdirSync(auditRoot, { recursive: true });
+  const auditPath = join(auditRoot, '2026-08-28.jsonl');
+  writeFileSync(auditPath, `${JSON.stringify(storedEvent())}\n{"traceId":"torn`);
+  const second = payload(root, 'second-event.json', event({ traceId: 'trace-20260828-002' }));
+
+  runCli(['audit', 'record', '--payload-file', second], { runtime, io: capturedIo() });
+
+  const records = readFileSync(auditPath, 'utf8')
+    .trim()
+    .split('\n')
+    .map((line) => JSON.parse(line));
+  assert.equal(records.length, 2);
+  assert.equal(records[0].traceId, 'trace-20260828-001');
+  assert.equal(records[1].traceId, 'trace-20260828-002');
+});
+
+test('audit readers fail closed when the final record is not newline-delimited', () => {
+  const { runtime } = fixture();
+  const auditRoot = join(runtime.stateRoot, 'audit');
+  mkdirSync(auditRoot, { recursive: true });
+  writeFileSync(
+    join(auditRoot, '2026-08-28.jsonl'),
+    `${JSON.stringify(storedEvent())}\n{"traceId":"torn`,
+  );
+
+  const report = createHealthReport(runtime);
+  const audit = report.checks.find(({ id }) => id === 'audit');
+  assert.equal(audit?.status, 'failed');
+  assert.match(audit?.message ?? '', /incomplete final record/i);
+});
+
 test('audit record rejects raw content fields and preserves the rejected payload', () => {
   const { root, runtime } = fixture();
   const input = payload(root, 'unsafe-event.json', {

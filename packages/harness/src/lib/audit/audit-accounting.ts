@@ -47,6 +47,9 @@ export function buildAuditIndex(
       maxBytes: Math.min(maximumAuditFileBytes, remaining),
       subject: 'Audit log file',
     });
+    if (file.content.length > 0 && !file.content.endsWith('\n')) {
+      throw new Error(`Audit log contains incomplete final record: ${path}`);
+    }
     const eventCount = file.content
       .split('\n')
       .filter(Boolean)

@@ -1,5 +1,4 @@
 import {
-  appendFileSync,
   chmodSync,
   existsSync,
   lstatSync,
@@ -14,6 +13,7 @@ import { readBoundedRegularFile } from '../filesystem/bounded-file.js';
 import { withExclusiveDirectoryLock } from '../filesystem/exclusive-lock.js';
 import { assertSafePath } from '../filesystem/safe-path.js';
 import { buildAuditIndex, loadAuditIndex, saveAuditIndex } from './audit-accounting.js';
+import { appendAuditLine, recoverIncompleteAuditTails } from './audit-durability.js';
 import { type AuditEvent, validateStoredAuditEvent } from './audit-model.js';
 
 const maximumAuditFileBytes = 4 * 1024 * 1024;
@@ -37,6 +37,7 @@ export function appendAuditEvent(runtime: Runtime, event: AuditEvent): string {
   return withExclusiveDirectoryLock(root, 'Audit log', () => {
     assertSafePath(dirname(runtime.stateRoot), root);
     assertSafePath(root, path);
+    recoverIncompleteAuditTails(auditFiles(runtime));
     const files = auditFiles(runtime);
     const index = loadAuditIndex(runtime, files, auditFiles, parseAuditLine);
     const name = basename(path);
@@ -52,7 +53,7 @@ export function appendAuditEvent(runtime: Runtime, event: AuditEvent): string {
     if (index.eventCount >= maximumAuditEvents) {
       throw new Error(`Audit event budget exceeds ${maximumAuditEvents}`);
     }
-    appendFileSync(path, line, { encoding: 'utf8', mode: 0o600 });
+    appendAuditLine(path, line);
     chmodSync(path, 0o600);
     saveAuditIndex(runtime, {
       version: 1,
@@ -195,6 +196,9 @@ export function readAuditEvents(runtime: Runtime): AuditEvent[] {
       subject: 'Audit log file',
     });
     aggregateBytes += file.bytes;
+    if (file.content.length > 0 && !file.content.endsWith('\n')) {
+      throw new Error(`Audit log contains incomplete final record: ${path}`);
+    }
     for (const line of file.content.split('\n').filter(Boolean)) {
       events.push(parseAuditLine(path, line));
       if (events.length > maximumAuditEvents)
