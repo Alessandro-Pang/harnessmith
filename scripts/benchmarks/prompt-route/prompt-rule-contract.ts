@@ -128,6 +128,8 @@ function guaranteeIssues(root: string, rule: PromptRule, index: number): string[
     ...pathIssues(root, id, 'verification', verification),
     ...pathIssues(root, id, 'boundary', boundary),
   ];
+  if (rule.guarantee === 'guided' && implementation.length > 0)
+    issues.unshift(`guided prompt rule ${id} cannot claim runtime implementation evidence`);
   if (rule.guarantee === 'enforced') {
     if (implementation.length === 0)
       issues.unshift(`enforced prompt rule ${id} has no implementation evidence`);

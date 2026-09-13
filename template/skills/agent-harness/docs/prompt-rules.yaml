@@ -130,8 +130,8 @@ rules:
 
   - id: action-intent-routing
     owner: operating-model
-    principle: Primary playbooks match requested actions while topics match involved concepts.
-    rationale: Examples, quotations, and historical descriptions can contain action words without requesting those actions.
+    principle: Runtime returns no primary playbook without a requested action, and returns ambiguity when multiple requested actions remain.
+    rationale: Examples, quotations, and historical descriptions can contain action words without requesting those actions. Recall of colloquial phrasing is guided, not machine-enforced.
     action: Preserve the raw request and return no primary playbook when no action intent matches.
     fallback: Return explicit ambiguity instead of selecting by keyword priority.
     guarantee: enforced
@@ -204,10 +204,6 @@ rules:
       - template/skills/agent-harness/docs/core/operating-model.md
       - apps/docs/site/zh/concepts/boundaries.md
     evidence:
-      implementation:
-        - packages/harness/src/lib/documentation/docs-routing.ts
-        - packages/harness/src/lib/routing/response-language.ts
-        - template/skills/agent-harness/docs/manifest.yaml
       verification:
         - packages/harness/src/__tests__/docs-routing.test.ts
         - packages/cli/src/__tests__/multilingual-prompt.test.ts

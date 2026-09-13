@@ -55,8 +55,8 @@ metadata:
 
 ## Memory 与长任务
 
-- 跨回合仍有价值的约束、昂贵结论、未完成状态或交接，在交付前通过 typed writer 静默沉淀
-  （`memory capture-*`、`handoff`、`task checkpoint`）；Memory 是待核对线索而非事实源。
+- 跨回合仍有价值的约束、昂贵结论、可复用或失败经验、未完成交接，在交付前通过
+  `capture-input` / `capture-finding` / `capture-experience` / `handoff` 静默沉淀；Memory 是待核对线索而非事实源。
 - 长任务的 `task close --status complete` 只能通过 acceptance gate；并发写入必须持有任务锁。
 - 命令、参数、退出码和 payload 以 `<harness> --help` 及子命令 `--help` 为准；契约细节按 owner 读取
   `docs/references/cli-contracts.md`。

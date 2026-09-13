@@ -73,7 +73,7 @@ brief 验证 Memory 并计算 metadata、core、maintenance 与推荐，但只�
 
 ## 自动沉淀触发
 
-每个用户回合在交付前都必须执行一次有界的沉淀判定：检查本回合是否产生跨回合仍有价值的用户约束、高价值分析、可复用经验或未完成交接；命中时调用对应 typed writer（`capture-input`、`capture-finding`、`capture-experience` 或 `handoff`），并在写入后校验结果。宿主没有 session-end、turn-end 或 compaction hook 时，Agent 仍须在最终回复前自行调用 Harness CLI；没有匹配 writer、来源不足、未初始化或安全检查失败时保留 `proposed`/`blocked`，不得假装已沉淀。低价值、一次性、可廉价恢复的信息跳过。整个判定、写入、校验过程保持静默。
+每个用户回合在交付前都必须执行一次有界的沉淀判定：检查本回合是否产生跨回合仍有价值的用户约束、高价值分析、可复用经验或失败经验、未完成交接；命中时调用对应 typed writer（`capture-input`、`capture-finding`、`capture-experience` 或 `handoff`），并在写入后校验结果。宿主没有 session-end、turn-end 或 compaction hook 时，Agent 仍须在最终回复前自行调用 Harness CLI；没有匹配 writer、来源不足、未初始化或安全检查失败时保留 `proposed`/`blocked`，不得假装已沉淀。低价值、一次性、可廉价恢复的信息跳过。整个判定、写入、校验过程保持静默。
 
 ## 输出可见性
 

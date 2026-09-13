@@ -8,7 +8,7 @@ owner: review
 
 # 评审
 
-触发：code review、PR/diff 审查、架构/安全/性能/文档评审。
+触发：code review、PR/diff 审查、架构/安全/性能/文档评审。根因排查、故障定位和“为什么失败”走 diagnose；方案对比与选型走 research-and-design。
 
 ## 执行状态
 

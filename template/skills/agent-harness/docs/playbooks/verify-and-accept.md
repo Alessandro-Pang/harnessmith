@@ -17,7 +17,7 @@ owner: verify-and-accept
 1. `claim`：把要证明的内容改写成可判定的 criterion，并明确版本、HEAD、workspace、scope 和环境边界。
 2. `verifier`：为每个 criterion 选择最小且直接的 verifier；优先使用现有测试、schema、CLI、hook 或 CI。
 3. `run`：运行验证并保留命令、退出码、时间、输入范围和关键输出；不要用相邻检查代替目标 verifier。
-4. `classify`：分别报告 `passed`、`failed`、`blocked` 和 `inconclusive`；截断、权限不足或 Host 证据缺失不能算通过。
+4. `classify`：分别报告 `passed`、`failed`、`blocked`、`not-run` 和 `inconclusive`。未执行用 `not-run`，授权或环境挡住用 `blocked`；截断、权限不足或 Host 证据缺失不能算通过。
 5. `accept`：检查验证是否覆盖真实风险；测试通过只证明测试覆盖的行为，不自动证明语义目标、生产状态或真实 Host 行为。
 
 验证失败时分类为实现缺陷、范围错误、证据不足、环境阻塞或 verifier 缺陷；只有修复原因后才重跑原 verifier。

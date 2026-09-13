@@ -2,7 +2,7 @@
 title: Agent Execution Loop
 type: harness-core
 status: active
-updated: 2026-09-05
+updated: 2026-09-13
 owner: operating-model
 ---
 
@@ -58,6 +58,22 @@ stopCondition: 何时停止、阻塞或请求授权
 2. 将失败归类为实现缺陷、范围错误、证据不足、环境阻塞、verifier 缺陷或授权阻塞。
 3. 只有根因和最小修复已明确时才重试；重试必须重新执行原 verifier。
 4. 连续失败、证据互相冲突或需要扩大权限时进入 `blocked` 或 `inconclusive`，不要无限循环。
+
+## Playbook 状态机映射
+
+Playbook 用自己的阶段名描述同一循环，不另建控制器。缺阶段时停在当前阶段，不把计划写成已完成。
+
+| Playbook | 阶段 | 对应 execution-loop |
+| --- | --- | --- |
+| change | `frame → inspect → implement → verify → deliver` | `frame`；`observe`；`act`；`verify`；`deliver` |
+| diagnose | `observe → hypothesize → discriminate → verify → explain` | `observe`；`decide`；`act`；`verify`；`deliver` |
+| review | `scope → inspect → challenge → findings → deliver` | `frame`；`observe`；`decide`；`act`；`deliver` |
+| research-and-design | `frame → evidence → candidates → prune → recommend` | `frame`；`observe`；`decide`；`act`；`deliver` |
+| understand-and-map | `frame → map → trace → validate → explain` | `frame`；`observe`；`act`；`verify`；`deliver` |
+| verify-and-accept | `claim → criterion → verifier → run → classify → accept` | `frame`；`decide`；`act`；`verify`；`deliver` |
+| release-and-external | `authorize → preflight → plan → execute → verify → recover` | `frame`；`observe`；`decide`；`act`；`verify`；`recover` |
+
+获准从 diagnose 转入 change 时，先回到 `frame` 确认修复授权和 acceptance，再进入 `inspect`。
 
 ## 组合边界
 

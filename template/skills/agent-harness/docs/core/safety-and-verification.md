@@ -39,6 +39,7 @@ owner: safety-and-verification
 
 - `passed`：命令实际运行且成功；
 - `failed`：可归因的真实失败；
+- `blocked`：授权、权限或环境挡住，当前不能执行；
 - `not-run`：未执行；
 - `inconclusive`：沙箱、网络、凭据、平台或环境使结果不足以下结论。
 

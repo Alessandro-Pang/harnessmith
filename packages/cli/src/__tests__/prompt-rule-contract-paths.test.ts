@@ -71,6 +71,36 @@ test('prompt rule contract reports malformed entries instead of dropping them', 
   );
 });
 
+test('guided prompt rules cannot claim runtime implementation evidence', () => {
+  const root = mkdtempSync(join(tmpdir(), 'harness-prompt-rule-guided-'));
+  onTestFinished(() => rmSync(root, { recursive: true, force: true }));
+  writeFileSync(join(root, 'rules.md'), '# Rules\n');
+  const issues = promptRuleContractIssues(
+    root,
+    { entries: { operating: { kind: 'topic' } } },
+    {
+      version: 1,
+      rules: [
+        {
+          id: 'guided-impl',
+          owner: 'operating',
+          principle: 'Keep the boundary.',
+          rationale: 'Guided rules are agent-owned.',
+          action: 'Follow the owner document.',
+          fallback: 'Stop when the owner is unclear.',
+          guarantee: 'guided',
+          enforcedBy: 'agent',
+          boundary: ['rules.md'],
+          evidence: { implementation: ['rules.md'] },
+        },
+      ],
+    },
+  );
+  assert.ok(
+    issues.includes('guided prompt rule guided-impl cannot claim runtime implementation evidence'),
+  );
+});
+
 test('prompt-rules.yaml registers the drifted trust and capture owners', () => {
   const repository = join(import.meta.dirname, '..', '..', '..', '..');
   const contract = parseYaml(
