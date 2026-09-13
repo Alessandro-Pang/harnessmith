@@ -29,7 +29,8 @@ type SearchSkipReason =
   | 'max-total-bytes'
   | 'max-duration'
   | 'stat-error'
-  | 'read-error';
+  | 'read-error'
+  | 'symlink';
 
 export interface SearchSkip {
   source: string;
@@ -140,6 +141,7 @@ export function emptySearchScanStats(): SearchScanStats {
       'max-duration': 0,
       'stat-error': 0,
       'read-error': 0,
+      symlink: 0,
     },
   };
 }
