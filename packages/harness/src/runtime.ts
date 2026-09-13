@@ -1,8 +1,8 @@
-import { existsSync, readFileSync, realpathSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { homedir, userInfo } from 'node:os';
 import { basename, dirname, isAbsolute, join, relative, resolve, sep, win32 } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { canonicalPath, isPathInside } from './lib/filesystem/safe-path.js';
+import { canonicalPath, isPathInside, sameCanonicalPath } from './lib/filesystem/safe-path.js';
 import type { InstallationContext, Runtime } from './types.js';
 
 const sourceDirectory = dirname(fileURLToPath(import.meta.url));
@@ -22,14 +22,6 @@ export type RuntimeIdentity =
   | { kind: 'managed'; context: ManagedInstallationContext }
   | { kind: 'standalone'; source: 'source-tree' }
   | { kind: 'invalid'; reason: string };
-
-function sameExistingPath(left: string, right: string): boolean {
-  try {
-    return realpathSync.native(left) === realpathSync.native(right);
-  } catch {
-    return false;
-  }
-}
 
 function validContext(value: unknown, harnessRoot: string): value is ManagedInstallationContext {
   if (!value || typeof value !== 'object') return false;
@@ -52,8 +44,11 @@ function validContext(value: unknown, harnessRoot: string): value is ManagedInst
     return false;
   }
   const harnessHome = context.harnessHome as string;
-  if (!sameExistingPath(installedHarnessPath(harnessHome), resolve(harnessRoot))) return false;
-  return context.instructionFiles.every((path) => isPathInside(harnessHome, path));
+  if (!sameCanonicalPath(installedHarnessPath(harnessHome), harnessRoot)) return false;
+  const canonicalHarnessHome = canonicalPath(harnessHome);
+  return context.instructionFiles.every((path) =>
+    isPathInside(canonicalHarnessHome, canonicalPath(path)),
+  );
 }
 
 /** Installed Harness location inside the hub home: the `agent-harness` skill under `skills/`. */
@@ -149,8 +144,8 @@ export function verifyRuntimeIdentity(
     };
   }
   const context = identity.context;
-  const expectedInstructions = runtime.instructionFiles.map((path) => resolve(path)).sort();
-  const contextInstructions = context.instructionFiles.map((path) => resolve(path)).sort();
+  const expectedInstructions = runtime.instructionFiles.map((path) => canonicalPath(path)).sort();
+  const contextInstructions = context.instructionFiles.map((path) => canonicalPath(path)).sort();
   const matches =
     runtime.hostAdapter === managedHostAdapter &&
     resolve(context.harnessHome) === resolve(runtime.harnessHome) &&

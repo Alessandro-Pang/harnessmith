@@ -1,5 +1,13 @@
 import assert from 'node:assert/strict';
-import { existsSync, mkdirSync, mkdtempSync, rmSync, truncateSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  symlinkSync,
+  truncateSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
@@ -119,6 +127,36 @@ test('runtime identity accepts only an explicit source tree or valid managed con
   const identity = resolveRuntimeIdentity(harnessRoot);
   assert.equal(identity.kind, 'managed');
   assert.equal(identity.context.harnessHome, harnessHome);
+});
+
+test('runtime identity rejects instruction files that resolve outside the managed home', () => {
+  const root = temporaryRoot();
+  const harnessHome = join(root, 'host');
+  const harnessRoot = join(harnessHome, 'skills', 'agent-harness');
+  const outsideInstruction = join(root, 'outside', 'AGENTS.md');
+  const linkedInstruction = join(harnessHome, 'entry', 'AGENTS.md');
+  mkdirSync(harnessRoot, { recursive: true });
+  mkdirSync(dirname(outsideInstruction), { recursive: true });
+  mkdirSync(dirname(linkedInstruction), { recursive: true });
+  writeFileSync(outsideInstruction, '# outside\n');
+  symlinkSync(outsideInstruction, linkedInstruction);
+  writeFileSync(
+    join(harnessRoot, 'install-context.json'),
+    JSON.stringify({
+      version: 2,
+      harnessHome,
+      agentsHome: join(root, 'agents'),
+      instructionFiles: [linkedInstruction],
+      stateHome: join(harnessHome, 'state'),
+      memoryHome: join(root, 'memory'),
+      personalHome: join(root, 'personal'),
+      repositoryRoot: join(root, 'repositories'),
+      owner: 'test-owner',
+    }),
+  );
+
+  const identity = resolveRuntimeIdentity(harnessRoot);
+  assert.equal(identity.kind, 'invalid');
 });
 
 test('runtime identity does not trust a copied source marker in a managed layout', () => {
