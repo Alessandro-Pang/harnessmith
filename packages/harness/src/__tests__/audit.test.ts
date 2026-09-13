@@ -156,6 +156,19 @@ test('audit append recovers only a verifiable prefix after a torn final record',
   assert.equal(records[1].traceId, 'trace-20260828-002');
 });
 
+test('audit append fails closed when no complete record survives a torn file', () => {
+  const { root, runtime } = fixture();
+  const auditRoot = join(runtime.stateRoot, 'audit');
+  mkdirSync(auditRoot, { recursive: true });
+  writeFileSync(join(auditRoot, '2026-08-28.jsonl'), '{"traceId":"torn');
+  const second = payload(root, 'second-event.json', event({ traceId: 'trace-20260828-002' }));
+
+  assert.throws(
+    () => runCli(['audit', 'record', '--payload-file', second], { runtime, io: capturedIo() }),
+    /contains no complete record/i,
+  );
+});
+
 test('audit readers fail closed when the final record is not newline-delimited', () => {
   const { runtime } = fixture();
   const auditRoot = join(runtime.stateRoot, 'audit');
