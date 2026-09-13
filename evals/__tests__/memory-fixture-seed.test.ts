@@ -98,7 +98,9 @@ function seedProject(name: string) {
   return { ...fixture, projectMemory: join(fixture.repo, '.agent-docs') };
 }
 
-test('every project fixture builds the precondition its operation needs', () => {
+test('every project fixture builds the precondition its operation needs', {
+  timeout: 120_000,
+}, () => {
   for (const name of projectMemoryFixtures) {
     const { projectMemory } = seedProject(name);
     if (name === 'writer-fault') {

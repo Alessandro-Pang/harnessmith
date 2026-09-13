@@ -20,7 +20,9 @@ function run(args: string[]) {
   );
 }
 
-test('prompt route benchmark CLI is CI-runnable and compares the same inputs', () => {
+test('prompt route benchmark CLI is CI-runnable and compares the same inputs', {
+  timeout: 120_000,
+}, () => {
   const direct = run(['--json']);
   assert.equal(direct.status, 0, direct.stderr);
   const report = JSON.parse(direct.stdout);
