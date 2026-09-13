@@ -138,6 +138,21 @@ test('audit record rebuilds stale accounting metadata before appending', () => {
   assert.equal(repaired.eventCount, 2);
 });
 
+test('audit record rebuilds malformed accounting metadata before appending', () => {
+  const { root, runtime } = fixture();
+  const first = payload(root, 'first-event.json', event());
+  const second = payload(root, 'second-event.json', event({ traceId: 'trace-20260828-002' }));
+
+  runCli(['audit', 'record', '--payload-file', first], { runtime, io: capturedIo() });
+  writeFileSync(join(runtime.stateRoot, 'audit', '.index.json'), '{');
+  runCli(['audit', 'record', '--payload-file', second], { runtime, io: capturedIo() });
+
+  const repaired = JSON.parse(
+    readFileSync(join(runtime.stateRoot, 'audit', '.index.json'), 'utf8'),
+  ) as { eventCount: number };
+  assert.equal(repaired.eventCount, 2);
+});
+
 test('audit append recovers only a verifiable prefix after a torn final record', () => {
   const { root, runtime } = fixture();
   const auditRoot = join(runtime.stateRoot, 'audit');
