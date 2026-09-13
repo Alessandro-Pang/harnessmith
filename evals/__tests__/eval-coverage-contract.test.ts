@@ -100,3 +100,11 @@ test('coverage report cannot call registered scenarios or deterministic routing 
   assert.equal(report.reasoning.required.length, 15);
   assert.ok(report.promptInventory.rules.length >= 15);
 });
+
+test('coverage report measures every Prompt Rule independently from deterministic inventory', () => {
+  const report = evaluateCoverage();
+  assert.equal(report.promptRules.required.length, report.promptInventory.rules.length);
+  assert.equal(report.promptRules.measured.length, 0);
+  assert.deepEqual(report.promptRules.unmeasured, report.promptRules.required);
+  assert.ok(report.promptRules.unmeasured.includes('prompt-rule:host-event-delivery'));
+});

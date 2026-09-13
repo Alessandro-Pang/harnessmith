@@ -47,6 +47,44 @@ function cells(
   };
 }
 
+type PromptRuleCoverage = {
+  required: string[];
+  executable: string[];
+  measured: string[];
+  missing: string[];
+  unmeasured: string[];
+};
+
+function promptRuleCoverage(
+  rules: { id: string; evidence?: { verification?: string[] } }[],
+  results: SuiteCaseResult[],
+): PromptRuleCoverage {
+  const required = rules.map((rule) => `prompt-rule:${rule.id}`);
+  const executable = rules
+    .filter((rule) => {
+      const verification =
+        rule.evidence && !Array.isArray(rule.evidence) ? rule.evidence.verification : [];
+      return Array.isArray(verification) && verification.length > 0;
+    })
+    .map((rule) => `prompt-rule:${rule.id}`);
+  const measured = required.filter((id) =>
+    results.some(
+      (result) =>
+        result.outcome === 'passed' &&
+        result.recordRef &&
+        result.recordSha256 &&
+        result.evidenceKinds?.includes(id),
+    ),
+  );
+  return {
+    required,
+    executable,
+    measured,
+    missing: required.filter((id) => !executable.includes(id)),
+    unmeasured: required.filter((id) => !measured.includes(id)),
+  };
+}
+
 function promptInventory(
   manifest: { entries: Record<string, { kind: string }> },
   rules: {
@@ -168,6 +206,7 @@ export function evaluateCoverage(results: SuiteCaseResult[] = [], entries = eval
   );
   const hostEvidence = hostEvidenceCoverage(contract.requiredHostEvidence, results);
   const scenarios = scenarioCoverage(entries, results);
+  const promptRules = promptRuleCoverage(rules.rules, results);
   return {
     version: 2 as const,
     result:
@@ -177,6 +216,7 @@ export function evaluateCoverage(results: SuiteCaseResult[] = [], entries = eval
         ...profile.unmeasured,
         ...playbooks.unmeasured,
         ...scenarios.unmeasured,
+        ...promptRules.unmeasured,
         ...Object.entries(hostEvidence)
           .filter(([, value]) => !value.measured)
           .map(([kind]) => `host-evidence:${kind}`),
@@ -189,6 +229,7 @@ export function evaluateCoverage(results: SuiteCaseResult[] = [], entries = eval
     playbooks,
     hostEvidence,
     scenarios,
+    promptRules,
     promptInventory: promptInventory(manifest, rules),
   };
 }
