@@ -111,6 +111,7 @@
     "release:quality": "pnpm run check && pnpm run build:emit && pnpm run test:coverage:unit && pnpm run test:scripts-coverage",
     "release:check": "pnpm run release:quality && pnpm run eval:gate",
     "release:verify-registry": "node --import tsx scripts/release/registry-verify.ts",
+    "release:package-smoke": "node --import tsx scripts/release/package-smoke.ts",
     "release": "node --import tsx scripts/release/release-version.ts",
     "release:prepare": "node --import tsx scripts/release/release-publish.ts --prepare-only",
     "release:publish": "node --import tsx scripts/release/release-publish.ts",

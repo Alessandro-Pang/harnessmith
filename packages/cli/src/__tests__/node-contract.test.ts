@@ -83,7 +83,12 @@ test('release verification reuses one quality build and one covered unit-test ru
     'pnpm run check && pnpm run build:emit && pnpm run test:coverage:unit && pnpm run test:scripts-coverage',
   );
   assert.equal(scripts['release:check'], 'pnpm run release:quality && pnpm run eval:gate');
+  assert.equal(
+    scripts['release:package-smoke'],
+    'node --import tsx scripts/release/package-smoke.ts',
+  );
   assert.match(workflow, /pnpm run release:quality/);
+  assert.match(workflow, /scripts\/release\/package-smoke\.ts/);
   assert.doesNotMatch(workflow, /- run: pnpm run preflight\n/);
   assert.doesNotMatch(workflow, /- run: pnpm run test:coverage\n/);
 });
