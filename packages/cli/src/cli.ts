@@ -1,3 +1,4 @@
+import { Writable } from 'node:stream';
 import { createProgram } from './app/program.js';
 import { executeCommand } from './application/command-executor.js';
 import type { RunContext } from './shared/types.js';
@@ -22,7 +23,9 @@ export async function run(
     },
     {
       output: promptOutput,
-      error: jsonRequested ? ({ write: () => true } as unknown as NodeJS.WritableStream) : error,
+      error: jsonRequested
+        ? new Writable({ write: (_chunk, _encoding, callback) => callback() })
+        : error,
     },
   );
   try {
