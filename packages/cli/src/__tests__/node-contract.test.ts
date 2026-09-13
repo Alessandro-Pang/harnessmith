@@ -59,6 +59,12 @@ test('Knip owns the dependency and dead-code contract for every TypeScript sourc
   }
 });
 
+test('publish workflow pins npm CLI without mutating the runner globally', () => {
+  const workflow = readFileSync(join(root, '.github', 'workflows', 'publish.yml'), 'utf8');
+  assert.doesNotMatch(workflow, /npm install --global npm@/);
+  assert.match(workflow, /npx --yes npm@11\.6\.2 publish/);
+});
+
 test('release verification reuses one quality build and one covered unit-test run', () => {
   const packageManifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as {
     scripts: Record<string, string>;

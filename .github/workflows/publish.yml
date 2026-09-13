@@ -27,8 +27,8 @@ jobs:
           node-version: 24.12.0
           registry-url: https://registry.npmjs.org/
           package-manager-cache: false
-      - name: Use an OIDC-capable npm CLI
-        run: npm install --global npm@11.6.2
+      - name: Use a pinned OIDC-capable npm CLI
+        run: npx --yes npm@11.6.2 --version
       - name: Verify signed tag and main ancestry
         env:
           GH_TOKEN: ${{ github.token }}
@@ -47,7 +47,7 @@ jobs:
       - name: Publish through npm Trusted Publishing
         env:
           HARNESS_RELEASE_WORKFLOW: '1'
-        run: npm publish .release-ci/harnessmith-*.tgz --access public --registry=https://registry.npmjs.org/
+        run: npx --yes npm@11.6.2 publish .release-ci/harnessmith-*.tgz --access public --registry=https://registry.npmjs.org/
       - name: Verify npm registry package
         run: >-
           node --import tsx scripts/release/registry-verify.ts
