@@ -139,3 +139,21 @@ test('isolated semantic judge homes are mode 700 and cleaned up', () => {
   isolated.cleanup();
   assert.equal(existsSync(isolated.env.CODEX_HOME as string), false);
 });
+
+test('isolated semantic judge environment does not inherit host secrets or git overrides', () => {
+  const originalDir = process.env.GIT_DIR;
+  const originalKey = process.env.OPENAI_API_KEY;
+  process.env.GIT_DIR = '/tmp/harness-judge-git-dir';
+  process.env.OPENAI_API_KEY = 'sk-test-must-not-forward';
+  try {
+    const isolated = createIsolatedSemanticJudgeEnvironment();
+    assert.equal(isolated.env.GIT_DIR, undefined);
+    assert.equal(isolated.env.OPENAI_API_KEY, undefined);
+    isolated.cleanup();
+  } finally {
+    if (originalDir === undefined) delete process.env.GIT_DIR;
+    else process.env.GIT_DIR = originalDir;
+    if (originalKey === undefined) delete process.env.OPENAI_API_KEY;
+    else process.env.OPENAI_API_KEY = originalKey;
+  }
+});

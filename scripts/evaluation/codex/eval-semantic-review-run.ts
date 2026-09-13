@@ -32,13 +32,24 @@ export function createIsolatedSemanticJudgeEnvironment(): {
   const sourceCodexHome = process.env.CODEX_HOME ?? join(process.env.HOME ?? '', '.codex');
   const authPath = join(sourceCodexHome, 'auth.json');
   if (existsSync(authPath)) symlinkSync(authPath, join(codexHome, 'auth.json'));
+  const forwarded = [
+    'PATH',
+    'PATHEXT',
+    'LANG',
+    'LC_ALL',
+    'LC_CTYPE',
+    'TERM',
+    'USER',
+    'LOGNAME',
+    'SHELL',
+  ] as const;
+  const env: NodeJS.ProcessEnv = { HOME: home, CODEX_HOME: codexHome, TMPDIR: temp };
+  for (const key of forwarded) {
+    const value = process.env[key];
+    if (value !== undefined) env[key] = value;
+  }
   return {
-    env: {
-      ...process.env,
-      HOME: home,
-      CODEX_HOME: codexHome,
-      TMPDIR: temp,
-    },
+    env,
     cleanup: () => rmSync(root, { recursive: true, force: true }),
   };
 }
