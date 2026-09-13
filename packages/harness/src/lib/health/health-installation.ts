@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { managedOutputWithinHome } from '../../runtime.js';
+import { managedOutputWithinHome, validateInstructionPath } from '../../runtime.js';
 import { errorMessage, type Runtime } from '../../types.js';
 import { digestPath } from '../filesystem/files.js';
 import {
@@ -103,13 +103,21 @@ export function installationHealth(runtime: Runtime): HealthCheck {
     manifestPath,
     join(runtime.personalHome, 'AGENTS.md'),
   ];
-  const missing = required.filter((path) => !existsSync(path));
-  if (missing.length > 0)
+  const unsafeInstructions = runtime.instructionFiles
+    .map((path) => ({ path, check: validateInstructionPath(runtime.harnessHome, path) }))
+    .filter(({ check }) => !check.valid);
+  const unsafePaths = unsafeInstructions.map(
+    ({ path, check }) => `${path}: ${check.valid ? '' : check.reason}`,
+  );
+  const unsafeSet = new Set(unsafeInstructions.map(({ path }) => path));
+  const missing = required.filter((path) => !unsafeSet.has(path) && !existsSync(path));
+  const invalidPaths = [...unsafePaths, ...missing];
+  if (invalidPaths.length > 0)
     return {
       id: 'installation',
       status: 'failed',
-      message: `Installation is missing ${missing.length} required path(s)`,
-      details: missing,
+      message: `Installation has ${invalidPaths.length} invalid required path(s)`,
+      details: invalidPaths,
     };
   try {
     const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as {

@@ -6,6 +6,7 @@ import { validateDocs } from '../lib/documentation/docs-validation.js';
 import { listFiles } from '../lib/filesystem/files.js';
 import { addCheck as check } from '../lib/filesystem/validation-report.js';
 import { projectSnapshot } from '../lib/project/project.js';
+import { validateInstructionPath } from '../runtime.js';
 import type { Io, Runtime, ValidationReport, ValidationSummary } from '../types.js';
 import { errorMessage } from '../types.js';
 
@@ -37,6 +38,11 @@ function validateStructure(runtime: Runtime, report: ValidationReport): void {
 
 function validateInstructions(runtime: Runtime, report: ValidationReport): void {
   for (const path of runtime.instructionFiles) {
+    const pathCheck = validateInstructionPath(runtime.harnessHome, path);
+    if (!pathCheck.valid) {
+      check(report, 'instructions', 'failed', pathCheck.reason, path);
+      continue;
+    }
     if (!existsSync(path)) {
       check(report, 'instructions', 'failed', 'Missing instruction file', path);
       continue;

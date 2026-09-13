@@ -2,11 +2,11 @@ import { existsSync, readFileSync } from 'node:fs';
 import { homedir, userInfo } from 'node:os';
 import { basename, dirname, isAbsolute, join, relative, resolve, sep, win32 } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { validateInstructionPath } from './lib/filesystem/instruction-path.js';
 import { canonicalPath, isPathInside, sameCanonicalPath } from './lib/filesystem/safe-path.js';
 import type { InstallationContext, Runtime } from './types.js';
 
 const sourceDirectory = dirname(fileURLToPath(import.meta.url));
-
 interface ManagedInstallationContext extends InstallationContext {
   harnessHome: string;
   agentsHome: string;
@@ -17,11 +17,12 @@ interface ManagedInstallationContext extends InstallationContext {
   repositoryRoot: string;
   owner: string;
 }
-
 export type RuntimeIdentity =
   | { kind: 'managed'; context: ManagedInstallationContext }
   | { kind: 'standalone'; source: 'source-tree' }
   | { kind: 'invalid'; reason: string };
+export type { InstructionPathCheck } from './lib/filesystem/instruction-path.js';
+export { validateInstructionPath } from './lib/filesystem/instruction-path.js';
 
 function validContext(value: unknown, harnessRoot: string): value is ManagedInstallationContext {
   if (!value || typeof value !== 'object') return false;
@@ -46,12 +47,12 @@ function validContext(value: unknown, harnessRoot: string): value is ManagedInst
   const harnessHome = context.harnessHome as string;
   if (!sameCanonicalPath(installedHarnessPath(harnessHome), harnessRoot)) return false;
   const canonicalHarnessHome = canonicalPath(harnessHome);
-  return context.instructionFiles.every((path) =>
-    isPathInside(canonicalHarnessHome, canonicalPath(path)),
-  );
+  return context.instructionFiles.every((path) => {
+    const check = validateInstructionPath(harnessHome, path);
+    return check.valid && isPathInside(canonicalHarnessHome, canonicalPath(path));
+  });
 }
 
-/** Installed Harness location inside the hub home: the `agent-harness` skill under `skills/`. */
 function installedHarnessPath(harnessHome: string): string {
   return join(harnessHome, 'skills', 'agent-harness');
 }
@@ -144,6 +145,16 @@ export function verifyRuntimeIdentity(
     };
   }
   const context = identity.context;
+  const unsafeInstruction = runtime.instructionFiles
+    .map((path) => validateInstructionPath(runtime.harnessHome, path))
+    .find((check) => !check.valid);
+  if (unsafeInstruction && !unsafeInstruction.valid) {
+    return {
+      valid: false,
+      message: 'Managed instruction path is unsafe',
+      details: [unsafeInstruction.reason],
+    };
+  }
   const expectedInstructions = runtime.instructionFiles.map((path) => canonicalPath(path)).sort();
   const contextInstructions = context.instructionFiles.map((path) => canonicalPath(path)).sort();
   const matches =
@@ -176,7 +187,6 @@ function username(home: string): string {
   }
 }
 
-/** Managed installs are shared by every host through the hub; no single host owns them. */
 const managedHostAdapter = 'hub';
 
 export function createRuntime(env: NodeJS.ProcessEnv = process.env): Runtime {
@@ -188,9 +198,6 @@ export function createRuntime(env: NodeJS.ProcessEnv = process.env): Runtime {
   const identity = resolveRuntimeIdentity(harnessRoot);
   const context = identity.kind === 'managed' ? identity.context : null;
   const explicitHome = env.HARNESS_HOME || context?.harnessHome;
-  // A managed install resolves the hub home from install-context.json (or an explicit
-  // HARNESS_HOME) and serves `<hub>/skills/agent-harness`. A standalone source tree has no
-  // hub; `template/` mirrors the hub layout (`entry/` + `skills/`), so it plays that role.
   const harnessHome = resolve(explicitHome || resolve(harnessRoot, '..', '..'));
   const installedHarness = explicitHome ? installedHarnessPath(harnessHome) : harnessRoot;
   const userDataHome = explicitHome ? harnessHome : join(home, '.agents', 'harnessmith');
@@ -238,7 +245,6 @@ export function calendarDate(runtime: Runtime, date = new Date()): string {
   const values = Object.fromEntries(parts.map(({ type, value }) => [type, value]));
   return `${values.year}-${values.month}-${values.day}`;
 }
-
 export function timestamp(date = new Date()): string {
   return date.toISOString().replaceAll(':', '').replaceAll('.', '-');
 }
