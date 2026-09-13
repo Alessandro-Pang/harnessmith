@@ -1,17 +1,24 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'vitest';
 
 const root = fileURLToPath(new URL('../../../../', import.meta.url));
 
+function workflowFiles(): string[] {
+  return readdirSync(join(root, '.github', 'workflows'))
+    .filter((name) => /\.ya?ml$/u.test(name))
+    .sort();
+}
+
 function readWorkflow(name: string): string {
   return readFileSync(join(root, '.github', 'workflows', name), 'utf8');
 }
 
 test('workflows pin third-party actions to immutable commits', () => {
-  const files = ['ci.yml', 'docs.yml', 'publish.yml', 'pr-contract.yml'];
+  const files = workflowFiles();
+  assert.ok(files.length > 0, 'repository must have at least one workflow');
   for (const file of files) {
     const workflow = readWorkflow(file);
     for (const line of workflow.split(/\r?\n/).filter((value) => value.includes('uses:'))) {
