@@ -218,6 +218,43 @@ test('area boundary check freezes the cross-area import graph', async () => {
   );
 });
 
+test('area boundary rejects a newly introduced cycle between independent areas', async () => {
+  const { checkAreaImportCycles } = await import(
+    '../../../../scripts/preflight/preflight-architecture-cycles.js'
+  );
+  const failures = architectureFailures(
+    (sourceRoot, check) => checkAreaImportCycles(sourceRoot, [], check),
+    {
+      'alpha/alpha.ts': "import { beta } from '../beta/beta.js'; export const value = beta;\n",
+      'beta/beta.ts': "import { alpha } from '../alpha/alpha.js'; export const value = alpha;\n",
+    },
+    'harness-area-cycle-architecture-',
+  );
+
+  assert.equal(failures.length, 1);
+  assert.ok(failures[0]?.endsWith('new cross-area cycle: alpha -> beta'));
+});
+
+test('area boundary rejects merging a new area into the legacy cycle baseline', async () => {
+  const { checkAreaImportCycles } = await import(
+    '../../../../scripts/preflight/preflight-architecture-cycles.js'
+  );
+  const failures = architectureFailures(
+    (sourceRoot, check) => checkAreaImportCycles(sourceRoot, [['alpha', 'beta']], check),
+    {
+      'alpha/alpha.ts': "import { beta } from '../beta/beta.js'; export const value = beta;\n",
+      'beta/beta.ts': "import { alpha } from '../alpha/alpha.js'; export const value = alpha;\n",
+      'gamma/gamma.ts': "import { alpha } from '../alpha/alpha.js'; export const value = alpha;\n",
+      'alpha/bridge.ts': "import { gamma } from '../gamma/gamma.js'; export const value = gamma;\n",
+    },
+    'harness-area-cycle-merge-architecture-',
+  );
+
+  assert.equal(failures.length, 2);
+  assert.ok(failures[0]?.endsWith('new cross-area cycle: alpha -> beta -> gamma'));
+  assert.ok(failures[1]?.endsWith('declared cross-area cycle no longer exists: alpha -> beta'));
+});
+
 test('architecture preflight fails when no command calls the completion gate at all', async () => {
   const { checkArchitectureImports } = await import(
     '../../../../scripts/preflight/preflight-architecture.js'

@@ -6,8 +6,10 @@ import { checkBuiltCliAdapters } from './preflight-adapters.js';
 import {
   checkArchitectureImports,
   checkAreaImportEdges,
+  declaredCliAreaCycles,
   declaredCliAreaImports,
 } from './preflight-architecture.js';
+import { checkAreaImportCycles } from './preflight-architecture-cycles.js';
 import { checkDocs } from './preflight-docs.js';
 import { checkBranch } from './preflight-git.js';
 import { checkPackage } from './preflight-package.js';
@@ -82,6 +84,7 @@ function checkCli(): void {
   // The Harness runtime lives in packages/harness/src; the distributed skill only carries dist.
   checkArchitectureImports(join(root, 'packages', 'harness', 'src'), check);
   checkAreaImportEdges(join(root, 'packages', 'cli', 'src'), declaredCliAreaImports, check);
+  checkAreaImportCycles(join(root, 'packages', 'cli', 'src'), declaredCliAreaCycles, check);
   checkBranch(root, check);
   checkPackage(root, harnessRoot, check);
   const outerCli = join(root, 'bin', 'harnessmith.mjs');

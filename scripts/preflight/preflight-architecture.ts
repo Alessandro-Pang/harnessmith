@@ -20,8 +20,9 @@ type Check = (condition: unknown, message: string) => void;
 export { normalizeArchitecturePath } from './preflight-architecture-ast.js';
 
 /**
- * Frozen cross-area import graph of `packages/cli/src`. Adding an edge requires editing this list,
- * which is where the layering question belongs; removing one is expected as the graph is untangled.
+ * Declared cross-area import graph of `packages/cli/src`. Adding an edge requires editing this
+ * list, which is where the layering question belongs; removing one is expected as the graph is
+ * untangled.
  */
 export const declaredCliAreaImports: readonly string[] = [
   '(root) -> app',
@@ -67,6 +68,27 @@ export const declaredCliAreaImports: readonly string[] = [
   'temporary-resources -> shared',
 ];
 
+/**
+ * The CLI still has one historical strongly connected component. It is recorded separately from
+ * the edge contract so adding an edge cannot silently merge an otherwise independent area into
+ * that component (or introduce a cycle between independent areas).
+ *
+ * This is intentionally a cycle baseline, not an allow-list for arbitrary new edges: the edge
+ * contract above still requires every direct dependency to be reviewed explicitly.
+ */
+export const declaredCliAreaCycles: readonly (readonly string[])[] = [
+  [
+    'adapters',
+    'adoption',
+    'installation',
+    'presentation',
+    'setup',
+    'shared',
+    'status',
+    'temporary-resources',
+  ],
+];
+
 interface OpenedSources {
   relativePaths: string[];
   sources: Map<string, SourceFile | undefined>;
@@ -97,10 +119,10 @@ function openSources(sourceRoot: string, patterns: string[]): OpenedSources {
 
 /**
  * The cross-area import graph of a package, as `area -> area` edges. Reported rather than ranked:
- * `packages/cli/src` has mutual dependencies today, so the contract freezes the current graph and
+ * `packages/cli/src` has mutual dependencies today, so the contract declares the current graph and
  * fails on any new edge instead of asserting a layer order the code does not yet satisfy.
  */
-function areaImportEdges(sourceRoot: string): string[] {
+export function areaImportEdges(sourceRoot: string): string[] {
   const { relativePaths, sources } = openSources(sourceRoot, ['**/*.ts']);
   const edges = new Set<string>();
   for (const relativePath of relativePaths) {
