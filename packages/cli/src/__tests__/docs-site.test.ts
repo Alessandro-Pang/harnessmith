@@ -51,7 +51,7 @@ test('documentation site has reproducible local build, search, links, and Pages 
   assert.match(workflow, /pull_request:/);
   assert.match(workflow, /branches:\s*\[main\]/);
   assert.match(workflow, /pnpm run docs:build/);
-  assert.match(workflow, /actions\/deploy-pages@v4/);
+  assert.match(workflow, /actions\/deploy-pages@[0-9a-f]{40} # v4/);
 });
 
 test('articles rely on theme prev-next navigation instead of handwritten reading footers', () => {
