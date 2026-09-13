@@ -7,20 +7,25 @@ export type HarnessmithErrorCode =
   | 'STATE_CONFLICT'
   | 'INTERNAL_ERROR';
 
+export type HarnessmithErrorOptions = ErrorOptions & { reason?: string };
+
 export class HarnessmithError extends Error {
   readonly code: HarnessmithErrorCode;
   readonly exitCode: number;
+  readonly reason?: string;
 
   constructor(
     code: HarnessmithErrorCode,
     message: string,
     exitCode: number,
-    options: ErrorOptions = {},
+    options: HarnessmithErrorOptions = {},
   ) {
-    super(message, options);
+    const { reason, ...errorOptions } = options;
+    super(message, errorOptions);
     this.name = 'HarnessmithError';
     this.code = code;
     this.exitCode = exitCode;
+    this.reason = reason;
   }
 }
 

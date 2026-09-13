@@ -77,7 +77,9 @@ export function createAdapter(
 ): Adapter {
   const resolver = adapterResolvers[name];
   if (!resolver) {
-    throw new HarnessmithError('CLI_USAGE', `Unsupported agent: ${name}`, 2);
+    throw new HarnessmithError('CLI_USAGE', `Unsupported agent: ${name}`, 2, {
+      reason: 'unsupported-agent',
+    });
   }
   return resolver({
     env,

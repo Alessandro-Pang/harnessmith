@@ -212,7 +212,7 @@ export async function executeCommand(
       options.explain &&
       error instanceof HarnessmithError &&
       error.code === 'CLI_USAGE' &&
-      error.message.startsWith('Unsupported agent:')
+      error.reason === 'unsupported-agent'
     ) {
       const explanation = explainUnsupportedStatus(options.agent);
       if (options.json) context.io.log(JSON.stringify(explanation));

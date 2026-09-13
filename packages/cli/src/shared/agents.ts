@@ -40,6 +40,8 @@ export function normalizeAgents(values: string[]): AgentName[] {
   const known = new Set<string>(supportedAgentNames);
   const invalid = agents.filter((value) => !known.has(value));
   if (invalid.length > 0)
-    throw new HarnessmithError('CLI_USAGE', `Unsupported agent: ${invalid.join(', ')}`, 2);
+    throw new HarnessmithError('CLI_USAGE', `Unsupported agent: ${invalid.join(', ')}`, 2, {
+      reason: 'unsupported-agent',
+    });
   return agents as AgentName[];
 }
