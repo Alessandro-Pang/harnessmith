@@ -52,11 +52,9 @@ function validContext(value: unknown, harnessRoot: string): value is ManagedInst
     return check.valid && isPathInside(canonicalHarnessHome, canonicalPath(path));
   });
 }
-
 function installedHarnessPath(harnessHome: string): string {
   return join(harnessHome, 'skills', 'agent-harness');
 }
-
 function isStandaloneSourceTree(harnessRoot: string): boolean {
   const normalized = resolve(harnessRoot);
   const packageRoot = normalized.endsWith(`${sep}packages${sep}harness`)
@@ -79,7 +77,6 @@ function isStandaloneSourceTree(harnessRoot: string): boolean {
     return false;
   }
 }
-
 export function resolveRuntimeIdentity(harnessRoot: string): RuntimeIdentity {
   const path = join(harnessRoot, 'install-context.json');
   if (!existsSync(path)) {
@@ -102,11 +99,9 @@ export function resolveRuntimeIdentity(harnessRoot: string): RuntimeIdentity {
     };
   }
 }
-
 function safeRoute(route: string, separator: string, absolute: (path: string) => boolean): boolean {
   return route !== '..' && !route.startsWith(`..${separator}`) && !absolute(route);
 }
-
 export function managedOutputWithinHome(harnessHome: string, output: string): boolean {
   const windowsPath = win32.isAbsolute(harnessHome) || win32.isAbsolute(output);
   if (windowsPath) {
@@ -117,7 +112,6 @@ export function managedOutputWithinHome(harnessHome: string, output: string): bo
   if (!isAbsolute(harnessHome) || !isAbsolute(output)) return false;
   return safeRoute(relative(resolve(harnessHome), resolve(output)), sep, isAbsolute);
 }
-
 export function verifyRuntimeIdentity(
   runtime: Runtime,
 ): { valid: true } | { valid: false; message: string; details?: string[] } {
