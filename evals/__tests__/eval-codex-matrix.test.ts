@@ -285,7 +285,7 @@ test.skipIf(coverageInstrumentation)(
       assert.equal(result.status, 0, `${scenarioId}: ${result.stderr}`);
       assert.equal(JSON.parse(result.stdout).scenarioId, scenarioId);
     }
-    assert.equal(scenarioIds.length, 15);
+    assert.equal(scenarioIds.length, 18);
   },
   120_000,
 );
