@@ -8,11 +8,12 @@ import {
   renameSync,
   statSync,
 } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 import type { Runtime } from '../../types.js';
 import { readBoundedRegularFile } from '../filesystem/bounded-file.js';
 import { withExclusiveDirectoryLock } from '../filesystem/exclusive-lock.js';
 import { assertSafePath } from '../filesystem/safe-path.js';
+import { buildAuditIndex, loadAuditIndex, saveAuditIndex } from './audit-accounting.js';
 import { type AuditEvent, validateStoredAuditEvent } from './audit-model.js';
 
 const maximumAuditFileBytes = 4 * 1024 * 1024;
@@ -36,22 +37,32 @@ export function appendAuditEvent(runtime: Runtime, event: AuditEvent): string {
   return withExclusiveDirectoryLock(root, 'Audit log', () => {
     assertSafePath(dirname(runtime.stateRoot), root);
     assertSafePath(root, path);
-    const existingBytes = existsSync(path) ? statSync(path).size : 0;
+    const files = auditFiles(runtime);
+    const index = loadAuditIndex(runtime, files, auditFiles, parseAuditLine);
+    const name = basename(path);
+    const existing = index.files[name] ?? { bytes: 0, eventCount: 0 };
     const line = `${JSON.stringify(event)}\n`;
     const lineBytes = Buffer.byteLength(line);
-    if (existingBytes + lineBytes > maximumAuditFileBytes) {
+    if (existing.bytes + lineBytes > maximumAuditFileBytes) {
       throw new Error(`Audit log file exceeds ${maximumAuditFileBytes} bytes: ${path}`);
     }
-    const files = auditFiles(runtime);
-    const aggregateBytes = files.reduce((sum, file) => sum + statSync(file).size, 0);
-    if (aggregateBytes + lineBytes > maximumAuditAggregateBytes) {
+    if (index.totalBytes + lineBytes > maximumAuditAggregateBytes) {
       throw new Error(`Audit aggregate byte budget exceeds ${maximumAuditAggregateBytes}`);
     }
-    if (readAuditEvents(runtime).length >= maximumAuditEvents) {
+    if (index.eventCount >= maximumAuditEvents) {
       throw new Error(`Audit event budget exceeds ${maximumAuditEvents}`);
     }
     appendFileSync(path, line, { encoding: 'utf8', mode: 0o600 });
     chmodSync(path, 0o600);
+    saveAuditIndex(runtime, {
+      version: 1,
+      files: {
+        ...index.files,
+        [name]: { bytes: existing.bytes + lineBytes, eventCount: existing.eventCount + 1 },
+      },
+      totalBytes: index.totalBytes + lineBytes,
+      eventCount: index.eventCount + 1,
+    });
     return path;
   });
 }
@@ -155,6 +166,7 @@ export function archiveAuditEvents(
       assertSafePath(root, destinations[index]);
       renameSync(path, destinations[index]);
     }
+    saveAuditIndex(runtime, buildAuditIndex(runtime, auditFiles, parseAuditLine));
     return {
       version: 1,
       action: 'archived',

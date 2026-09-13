@@ -101,6 +101,42 @@ test('audit record appends to an existing daily file without replacing it', () =
   assert.equal(readFileSync(auditPath, 'utf8').trim().split('\n').length, 2);
 });
 
+test('audit record maintains an atomic accounting index instead of rescanning history', () => {
+  const { root, runtime } = fixture();
+  const first = payload(root, 'first-event.json', event());
+  const second = payload(root, 'second-event.json', event({ traceId: 'trace-20260828-002' }));
+
+  runCli(['audit', 'record', '--payload-file', first], { runtime, io: capturedIo() });
+  runCli(['audit', 'record', '--payload-file', second], { runtime, io: capturedIo() });
+
+  const index = JSON.parse(
+    readFileSync(join(runtime.stateRoot, 'audit', '.index.json'), 'utf8'),
+  ) as { version: number; eventCount: number; totalBytes: number; files: Record<string, unknown> };
+  assert.equal(index.version, 1);
+  assert.equal(index.eventCount, 2);
+  assert.equal(Object.keys(index.files).length, 1);
+  assert.equal(
+    index.totalBytes,
+    statSync(join(runtime.stateRoot, 'audit', '2026-08-28.jsonl')).size,
+  );
+});
+
+test('audit record rebuilds stale accounting metadata before appending', () => {
+  const { root, runtime } = fixture();
+  const first = payload(root, 'first-event.json', event());
+  const second = payload(root, 'second-event.json', event({ traceId: 'trace-20260828-002' }));
+
+  runCli(['audit', 'record', '--payload-file', first], { runtime, io: capturedIo() });
+  const indexPath = join(runtime.stateRoot, 'audit', '.index.json');
+  const index = JSON.parse(readFileSync(indexPath, 'utf8')) as Record<string, unknown>;
+  writeFileSync(indexPath, JSON.stringify({ ...index, eventCount: 0 }));
+
+  runCli(['audit', 'record', '--payload-file', second], { runtime, io: capturedIo() });
+
+  const repaired = JSON.parse(readFileSync(indexPath, 'utf8')) as { eventCount: number };
+  assert.equal(repaired.eventCount, 2);
+});
+
 test('audit record rejects raw content fields and preserves the rejected payload', () => {
   const { root, runtime } = fixture();
   const input = payload(root, 'unsafe-event.json', {
