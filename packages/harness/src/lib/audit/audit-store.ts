@@ -1,9 +1,17 @@
-import { existsSync, lstatSync, mkdirSync, readdirSync, renameSync, statSync } from 'node:fs';
+import {
+  appendFileSync,
+  chmodSync,
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  readdirSync,
+  renameSync,
+  statSync,
+} from 'node:fs';
 import { dirname, join } from 'node:path';
 import type { Runtime } from '../../types.js';
 import { readBoundedRegularFile } from '../filesystem/bounded-file.js';
 import { withExclusiveDirectoryLock } from '../filesystem/exclusive-lock.js';
-import { atomicWrite } from '../filesystem/files.js';
 import { assertSafePath } from '../filesystem/safe-path.js';
 import { type AuditEvent, validateStoredAuditEvent } from './audit-model.js';
 
@@ -28,15 +36,10 @@ export function appendAuditEvent(runtime: Runtime, event: AuditEvent): string {
   return withExclusiveDirectoryLock(root, 'Audit log', () => {
     assertSafePath(dirname(runtime.stateRoot), root);
     assertSafePath(root, path);
-    const existing = existsSync(path)
-      ? readBoundedRegularFile(path, {
-          maxBytes: maximumAuditFileBytes,
-          subject: 'Audit log file',
-        }).content
-      : '';
+    const existingBytes = existsSync(path) ? statSync(path).size : 0;
     const line = `${JSON.stringify(event)}\n`;
     const lineBytes = Buffer.byteLength(line);
-    if (Buffer.byteLength(existing) + lineBytes > maximumAuditFileBytes) {
+    if (existingBytes + lineBytes > maximumAuditFileBytes) {
       throw new Error(`Audit log file exceeds ${maximumAuditFileBytes} bytes: ${path}`);
     }
     const files = auditFiles(runtime);
@@ -47,7 +50,8 @@ export function appendAuditEvent(runtime: Runtime, event: AuditEvent): string {
     if (readAuditEvents(runtime).length >= maximumAuditEvents) {
       throw new Error(`Audit event budget exceeds ${maximumAuditEvents}`);
     }
-    atomicWrite(path, `${existing}${line}`, 0o600);
+    appendFileSync(path, line, { encoding: 'utf8', mode: 0o600 });
+    chmodSync(path, 0o600);
     return path;
   });
 }

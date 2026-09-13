@@ -5,6 +5,7 @@ import {
   mkdtempSync,
   readFileSync,
   rmSync,
+  statSync,
   symlinkSync,
   writeFileSync,
 } from 'node:fs';
@@ -84,6 +85,20 @@ test('audit record stores a bounded privacy-safe event without prompts or tool a
     },
   ]);
   assert.equal(readFileSync(input, 'utf8').includes('prompt'), false);
+});
+
+test('audit record appends to an existing daily file without replacing it', () => {
+  const { root, runtime } = fixture();
+  const first = payload(root, 'first-event.json', event());
+  const second = payload(root, 'second-event.json', event({ traceId: 'trace-20260828-002' }));
+
+  runCli(['audit', 'record', '--payload-file', first], { runtime, io: capturedIo() });
+  const auditPath = join(runtime.stateRoot, 'audit', '2026-08-28.jsonl');
+  const inode = statSync(auditPath).ino;
+  runCli(['audit', 'record', '--payload-file', second], { runtime, io: capturedIo() });
+
+  assert.equal(statSync(auditPath).ino, inode);
+  assert.equal(readFileSync(auditPath, 'utf8').trim().split('\n').length, 2);
 });
 
 test('audit record rejects raw content fields and preserves the rejected payload', () => {
