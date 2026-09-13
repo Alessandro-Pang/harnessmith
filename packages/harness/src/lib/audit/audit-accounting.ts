@@ -5,13 +5,13 @@ import { readBoundedRegularFile } from '../filesystem/bounded-file.js';
 import { atomicWrite } from '../filesystem/files.js';
 import { assertSafePath } from '../filesystem/safe-path.js';
 
-export const auditIndexFileName = '.index.json';
+const auditIndexFileName = '.index.json';
 const maximumAuditIndexBytes = 1024 * 1024;
 const maximumAuditFileBytes = 4 * 1024 * 1024;
 const maximumAuditAggregateBytes = 64 * 1024 * 1024;
 const maximumAuditEvents = 50_000;
 
-export interface AuditIndexFile {
+interface AuditIndexFile {
   bytes: number;
   eventCount: number;
 }
