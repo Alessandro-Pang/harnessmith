@@ -11,6 +11,7 @@
       "packages/cli/src/**/*.ts",
       "packages/harness/src/**/*.ts",
       "scripts/**/*.ts",
+      "scripts/**/*.mjs",
       "evals/**/*.ts",
       "bin/**/*.mjs",
       "packages/cli/bin/**/*.mjs",
@@ -59,6 +60,20 @@
     }
   },
   "overrides": [
+    {
+      "includes": [
+        "scripts/**/*.mjs"
+      ],
+      "formatter": {
+        "enabled": false
+      },
+      "linter": {
+        "enabled": false
+      },
+      "assist": {
+        "enabled": false
+      }
+    },
     {
       "includes": [
         "**/__tests__/**/*.ts",

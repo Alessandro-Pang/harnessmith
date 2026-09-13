@@ -63,7 +63,7 @@ entries:
   release-and-external:
     kind: playbook
     path: playbooks/release-and-external.md
-    actionAliases: [release, migration, publish, remote-write, deploy, rollout, 发布, 迁移, 远端写入, 部署, 上线]
+    actionAliases: [release, migration, publish, remote-write, deploy, rollout, tag, approve, approval, 发布, 迁移, 远端写入, 部署, 上线, 审批]
   understand-and-map:
     kind: playbook
     path: playbooks/understand-and-map.md

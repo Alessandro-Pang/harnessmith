@@ -106,10 +106,24 @@ function selectPlaybook(
   // coordinated second action ("…并修复") is still part of the request.
   const specific = inferred.filter((candidate) => candidate.specific);
   const coordinated = inferred.filter((candidate) => candidate.coordinated);
-  const narrowed = specific.length > 0 ? [...new Set([...specific, ...coordinated])] : inferred;
+  const narrowed =
+    specific.length > 0
+      ? [...new Set([...specific, ...coordinated])]
+      : coordinated.length === 1 && coordinated[0]?.route.name === 'diagnose'
+        ? [coordinated[0]]
+        : inferred;
   const selected = explicit ? [explicit] : narrowed;
+  const oneLeadCompound =
+    !explicit &&
+    selected.length > 1 &&
+    ((specific.length === 1 &&
+      ['diagnose', 'review'].includes(specific[0].route.name) &&
+      selected.every((candidate) => candidate === specific[0] || candidate.coordinated)) ||
+      (specific.length === 0 &&
+        coordinated.length === 1 &&
+        selected.every((candidate) => candidate === coordinated[0])));
   const ambiguity =
-    !explicit && selected.length > 1
+    !explicit && selected.length > 1 && !oneLeadCompound
       ? selected.map(({ route }) => route.name).sort((left, right) => left.localeCompare(right))
       : [];
   return {

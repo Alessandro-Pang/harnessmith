@@ -1,4 +1,4 @@
-import { type Dirent, lstatSync, opendirSync, realpathSync, type Stats } from 'node:fs';
+import { type Dirent, lstatSync, opendirSync, type Stats } from 'node:fs';
 import { extname, join } from 'node:path';
 import {
   recordSearchSkip,
@@ -22,10 +22,7 @@ function resolvedSearchRoot(path: string): string | null {
   try {
     const stat = lstatSync(path);
     if (stat.isDirectory() || stat.isFile()) return path;
-    if (!stat.isSymbolicLink()) return null;
-    const real = realpathSync(path);
-    const target = lstatSync(real);
-    return target.isDirectory() || target.isFile() ? real : null;
+    return null;
   } catch {
     return null;
   }
@@ -101,6 +98,14 @@ function scanSource(
   discovery: SearchDiscovery,
   seenFiles: Set<string>,
 ): boolean {
+  try {
+    if (lstatSync(source.root).isSymbolicLink()) {
+      skipSymlink(discovery, source, source.root);
+      return false;
+    }
+  } catch {
+    return false;
+  }
   const root = resolvedSearchRoot(source.root);
   if (!root) return false;
   const excluded = new Set((source.excludeDirectories || []).map((name) => name.toLowerCase()));

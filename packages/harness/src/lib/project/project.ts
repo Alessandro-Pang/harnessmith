@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import {
   closeSync,
+  constants,
   existsSync,
   lstatSync,
   openSync,
@@ -62,7 +63,7 @@ const workspaceBudget = {
 function hashFile(path: string, hash: ReturnType<typeof createHash>, deadline: number): number {
   const stat = lstatSync(path);
   if (stat.size > workspaceBudget.maxFileBytes) throw new Error('Workspace file budget exceeded');
-  const descriptor = openSync(path, 'r');
+  const descriptor = openSync(path, constants.O_RDONLY | (constants.O_NOFOLLOW || 0));
   const buffer = Buffer.allocUnsafe(64 * 1024);
   let bytes = 0;
   try {

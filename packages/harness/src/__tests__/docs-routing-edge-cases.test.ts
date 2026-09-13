@@ -272,7 +272,19 @@ test('validating assumptions is not a result-acceptance request', () => {
 test.each([
   ['请检查 CI 失败', 'diagnose'],
   ['请检查这次上线的风险', 'review'],
+  ['检查代码并诊断为什么慢', 'diagnose'],
+  ['分析 CI 失败并修复', 'diagnose'],
 ])('a compound domain signal outranks the generic verb sharing it for %s', (query, expected) => {
+  const report = routeDocumentation(docsRoot, [query]);
+
+  assert.equal(report.status, 'matched', query);
+  assert.equal(report.primaryPlaybook?.name, expected, query);
+});
+
+test.each([
+  ['tag this release', 'release-and-external'],
+  ['please approve this deployment', 'release-and-external'],
+])('release trigger aliases route explicit external actions for %s', (query, expected) => {
   const report = routeDocumentation(docsRoot, [query]);
 
   assert.equal(report.status, 'matched', query);

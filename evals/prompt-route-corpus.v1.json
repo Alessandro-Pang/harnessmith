@@ -241,9 +241,9 @@
     },
     {
       "id": "zh-multi-action-analyze-and-fix",
-      "categories": ["zh", "ambiguity", "multi-action"],
+      "categories": ["zh", "multi-action", "symptom-compound"],
       "query": "分析 CI 失败并修复",
-      "expected": { "status": "ambiguous", "top1": null, "topics": [], "forbiddenPlaybooks": [] }
+      "expected": { "status": "matched", "top1": "diagnose", "topics": [], "forbiddenPlaybooks": [] }
     },
     {
       "id": "zh-example-analyze-fix-plan",

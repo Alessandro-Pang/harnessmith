@@ -137,6 +137,23 @@ test('architecture preflight requires the acceptance gate wherever the completio
   ]);
 });
 
+test('architecture preflight recognizes completion constants in comparisons', async () => {
+  const { checkArchitectureImports } = await import(
+    '../../../../scripts/preflight/preflight-architecture.js'
+  );
+  const failures = architectureFailures(
+    checkArchitectureImports,
+    {
+      'commands/task.ts':
+        "const COMPLETE = 'complete'; export function close(status: string) { if (status === COMPLETE) return writeTask(status); } export function guarded() { assertTaskCanComplete(); }\n",
+    },
+    'harness-task-gate-constant-architecture-',
+  );
+  assert.deepEqual(failures, [
+    'commands/task.ts: task completion must call assertTaskCanComplete before persistence',
+  ]);
+});
+
 test('architecture preflight fails closed when the source root has no sources', async () => {
   const { checkArchitectureImports } = await import(
     '../../../../scripts/preflight/preflight-architecture.js'

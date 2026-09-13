@@ -32,3 +32,18 @@ test('search scan does not follow directory or file symlinks outside the source 
   );
   assert.ok(report.matches.some((match) => match.text.includes('inside')));
 });
+
+test('search scan rejects a symlink used as the source root', () => {
+  const root = mkdtempSync(join(tmpdir(), 'harness-search-root-symlink-'));
+  onTestFinished(() => rmSync(root, { recursive: true, force: true }));
+  const outside = join(root, 'outside');
+  const alias = join(root, 'alias');
+  mkdirSync(outside);
+  writeFileSync(join(outside, 'secret.md'), 'NEEDLE secret\n');
+  symlinkSync(outside, alias);
+
+  const discovery = discoverSearchableFiles([{ root: alias, label: 'root' }]);
+
+  assert.deepEqual(discovery.candidates, []);
+  assert.ok(discovery.stats.skippedByReason.symlink >= 1);
+});

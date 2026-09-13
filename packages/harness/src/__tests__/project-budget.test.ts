@@ -118,6 +118,14 @@ test('project snapshot applies one finite deadline to Git probes and fails close
   assert.equal(Date.now() - startedAt < 500, true);
 });
 
+test('workspace digest opens changed files without following a symlink', () => {
+  const source = readFileSync(
+    join(process.cwd(), 'packages/harness/src/lib/project/project.ts'),
+    'utf8',
+  );
+  assert.match(source, /openSync\(path, constants\.O_RDONLY \| \(constants\.O_NOFOLLOW \|\| 0\)\)/);
+});
+
 test('project Git budgets reject invalid limits and fail closed once exhausted', () => {
   assert.throws(() => createProjectGitBudget({ gitTimeoutMs: 0 }), /Invalid Git timeout/);
 

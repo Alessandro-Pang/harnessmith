@@ -20,6 +20,11 @@ import { archiveMemory } from '../commands/memory/memory-lifecycle.js';
 import { reconcileProfile, removeProfileEntry } from '../commands/memory/memory-profile.js';
 import { parseFrontmatterDocument } from '../lib/documentation/frontmatter.js';
 import { parseInputBody } from '../lib/memory/memory-input.js';
+import {
+  inputPurposes as documentPurposes,
+  inputRetentions as documentRetentions,
+} from '../lib/memory/memory-input-document-rules.js';
+import { inputPurposes, inputRetentions } from '../lib/memory/memory-input-policy.js';
 import { withProjectMemoryTransaction } from '../lib/project/project-memory.js';
 import { assertMode, capturedIo, harnessRuntime } from './helpers/harness.js';
 
@@ -31,6 +36,13 @@ function fixture(prefix: string) {
   execFileSync('git', ['-C', project, 'init', '-q']);
   return { root, project, runtime: harnessRuntime(root) };
 }
+
+test('input document validation reuses the canonical purpose and retention sets', () => {
+  assert.ok(inputPurposes instanceof Set);
+  assert.ok(inputRetentions instanceof Set);
+  assert.strictEqual(documentPurposes, inputPurposes);
+  assert.strictEqual(documentRetentions, inputRetentions);
+});
 
 test('verbatim input preserves whitespace and compatibility Unicode in identity and storage', () => {
   const { project, runtime } = fixture('harness-input-verbatim-fidelity-');

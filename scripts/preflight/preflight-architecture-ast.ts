@@ -11,6 +11,7 @@ import {
   isPropertyAccessExpression,
   isStringLiteral,
   isStringLiteralLikeNode,
+  isVariableDeclaration,
   type Node,
   type SourceFile,
   SyntaxKind,
@@ -108,12 +109,33 @@ function calledName(node: Node): string | undefined {
     : undefined;
 }
 
-function comparesTaskCompletion(node: Node): boolean {
+function comparesTaskCompletion(node: Node, completionConstants: ReadonlySet<string>): boolean {
   if (!isBinaryExpression(node)) return false;
   const operator = node.operatorToken.kind;
   if (operator !== SyntaxKind.EqualsEqualsEqualsToken && operator !== SyntaxKind.EqualsEqualsToken)
     return false;
-  return [node.left, node.right].some((side) => isStringLiteral(side) && side.text === 'complete');
+  return [node.left, node.right].some(
+    (side) =>
+      (isStringLiteral(side) && side.text === 'complete') ||
+      (isIdentifier(side) && completionConstants.has(side.text)),
+  );
+}
+
+function completionConstants(source: SourceFile): Set<string> {
+  const constants = new Set<string>();
+  function visit(node: Node): void {
+    if (
+      isVariableDeclaration(node) &&
+      isIdentifier(node.name) &&
+      node.initializer &&
+      isStringLiteral(node.initializer) &&
+      node.initializer.text === 'complete'
+    )
+      constants.add(node.name.text);
+    node.forEachChild(visit);
+  }
+  visit(source);
+  return constants;
 }
 
 /**
@@ -122,6 +144,7 @@ function comparesTaskCompletion(node: Node): boolean {
  */
 export function callScopes(source: SourceFile): CallScope[] {
   const scopes: CallScope[] = [];
+  const completeConstants = completionConstants(source);
   function visit(node: Node, scope: CallScope): void {
     let current = scope;
     if (isFunctionLikeDeclaration(node)) {
@@ -134,7 +157,7 @@ export function callScopes(source: SourceFile): CallScope[] {
     }
     const call = calledName(node);
     if (call) current.calls.push(call);
-    if (comparesTaskCompletion(node)) current.comparesCompletion = true;
+    if (comparesTaskCompletion(node, completeConstants)) current.comparesCompletion = true;
     node.forEachChild((child) => visit(child, current));
   }
   const module: CallScope = { calls: [], comparesCompletion: false, gateInScopeChain: false };

@@ -1,7 +1,9 @@
+import { inputRetentionValues } from './memory-input-policy.js';
+
 export const captureEligibilityValues = {
   evaluation: ['complete', 'not-run'],
   candidateKind: ['input', 'experience', 'finding', 'handoff', 'profile'],
-  retention: ['workstream', 'durable'],
+  retention: inputRetentionValues,
   typedWriter: [
     'capture-input',
     'capture-experience',

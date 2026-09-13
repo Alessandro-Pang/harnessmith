@@ -1,8 +1,16 @@
 import { readBoundedRegularFile } from '../filesystem/bounded-file.js';
 
 type InputMode = 'verbatim' | 'summary';
-type InputPurpose = 'constraint' | 'acceptance' | 'source' | 'risk-decision' | 'explicit-retain';
-type InputRetention = 'workstream' | 'durable';
+const inputPurposeValues = [
+  'constraint',
+  'acceptance',
+  'source',
+  'risk-decision',
+  'explicit-retain',
+] as const;
+type InputPurpose = (typeof inputPurposeValues)[number];
+export const inputRetentionValues = ['workstream', 'durable'] as const;
+type InputRetention = (typeof inputRetentionValues)[number];
 
 export interface InputOptions {
   title: string;
@@ -29,14 +37,8 @@ export interface ResolvedInputPolicy {
 
 export const maximumInputContentBytes = 1024 * 1024;
 const inputModes = new Set<InputMode>(['verbatim', 'summary']);
-const inputPurposes = new Set<InputPurpose>([
-  'constraint',
-  'acceptance',
-  'source',
-  'risk-decision',
-  'explicit-retain',
-]);
-const inputRetentions = new Set<InputRetention>(['workstream', 'durable']);
+export const inputPurposes = new Set<string>(inputPurposeValues);
+export const inputRetentions = new Set<string>(inputRetentionValues);
 
 export function singleLine(value: string | undefined, subject: string): string | undefined {
   if (value === undefined) return undefined;

@@ -1,17 +1,12 @@
 import type { Io } from '../../types.js';
 import { isValidCalendarDate } from '../filesystem/calendar-date.js';
 import { memoryInputSources } from './memory-input.js';
+import { inputPurposes, inputRetentions } from './memory-input-policy.js';
 import { containsUnsafeDisplayCharacters } from './memory-root-path-rules.js';
 
-const inputPurposes = new Set([
-  'constraint',
-  'acceptance',
-  'source',
-  'risk-decision',
-  'explicit-retain',
-]);
-const inputRetentions = new Set(['workstream', 'durable']);
 const inputCloseReasons = new Set(['consumed', 'workstream-complete', 'promoted', 'invalid']);
+
+export { inputPurposes, inputRetentions };
 
 function validatePolicy(path: string, metadata: Map<string, unknown>, io: Io): number {
   let failures = 0;
