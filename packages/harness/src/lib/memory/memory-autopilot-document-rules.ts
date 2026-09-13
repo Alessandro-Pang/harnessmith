@@ -8,11 +8,14 @@ import {
   validateFindingDocument,
 } from './memory-finding-document-rules.js';
 import { validateTypedHandoff } from './memory-handoff-document-rules.js';
-import { type InputSource, inputContentDigest, parseInputBody } from './memory-input.js';
+import {
+  type InputSource,
+  inputContentDigest,
+  memoryInputSources,
+  parseInputBody,
+} from './memory-input.js';
 
 export type MemoryRootKind = 'auto' | 'global' | 'project';
-
-const inputSources = new Set(['chat', 'file', 'meeting', 'link', 'other']);
 
 function validateInputDigest(
   path: string,
@@ -41,7 +44,7 @@ function validateInputDigest(
   if (
     typeof stored !== 'string' ||
     !/^sha256:[a-f0-9]{64}$/.test(stored) ||
-    !inputSources.has(String(source)) ||
+    !memoryInputSources.has(String(source)) ||
     typeof verbatim !== 'boolean' ||
     !parsed ||
     parsed.verbatim !== verbatim ||

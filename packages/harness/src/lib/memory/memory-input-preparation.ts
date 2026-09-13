@@ -1,4 +1,4 @@
-import { normalizedInputContent } from '../../lib/memory/memory-input.js';
+import { memoryInputSources, normalizedInputContent } from '../../lib/memory/memory-input.js';
 import {
   type InputOptions,
   inputPayload,
@@ -45,7 +45,7 @@ export function prepareInput(project: string, options: InputOptions): PreparedIn
     if (/[\r\n]/.test(title)) throw new Error('Input title must be a single line');
     throw new Error('Input title and content are required');
   }
-  if (!['chat', 'file', 'meeting', 'link', 'other'].includes(options.source))
+  if (!memoryInputSources.has(options.source))
     throw new Error(`Invalid input source: ${options.source}`);
   const summary = policy.mode === 'summary';
   return {

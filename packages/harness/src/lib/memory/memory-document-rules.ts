@@ -1,5 +1,6 @@
 import { resolve } from 'node:path';
 import type { Io } from '../../types.js';
+import { isValidCalendarDate } from '../filesystem/calendar-date.js';
 import {
   isCanonicalUserProfileRecord,
   maximumUserProfileRecords,
@@ -61,12 +62,6 @@ function validateLifecycleReference(
   return 1;
 }
 
-function validCalendarDate(value: unknown): value is string {
-  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  const date = new Date(`${value}T00:00:00Z`);
-  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
-}
-
 function validateMetadata(path: string, metadata: Map<string, unknown>, io: Io): number {
   let failures = 0;
   for (const field of requiredMetadata) {
@@ -119,14 +114,14 @@ function validateMetadata(path: string, metadata: Map<string, unknown>, io: Io):
 function validateLifecycle(path: string, metadata: Map<string, unknown>, io: Io): number {
   let failures = 0;
   for (const field of ['created', 'updated'] as const) {
-    if (!validCalendarDate(metadata.get(field))) {
+    if (!isValidCalendarDate(metadata.get(field))) {
       io.error(`Invalid ${field} date: ${path}`);
       failures += 1;
     }
   }
   const created = metadata.get('created');
   const updated = metadata.get('updated');
-  if (validCalendarDate(created) && validCalendarDate(updated) && updated < created) {
+  if (isValidCalendarDate(created) && isValidCalendarDate(updated) && updated < created) {
     io.error(`Memory updated date precedes created date: ${path}`);
     failures += 1;
   }
@@ -143,7 +138,7 @@ function validateLifecycle(path: string, metadata: Map<string, unknown>, io: Io)
   if (metadata.get('memory-kind') === 'working' && !metadata.has('expires')) {
     io.error(`WARNING Working memory should declare expires: ${path}`);
   }
-  if (metadata.has('expires') && !validCalendarDate(metadata.get('expires'))) {
+  if (metadata.has('expires') && !isValidCalendarDate(metadata.get('expires'))) {
     io.error(`Invalid expires date: ${path}`);
     failures += 1;
   }

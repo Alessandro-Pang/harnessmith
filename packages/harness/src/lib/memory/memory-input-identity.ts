@@ -5,6 +5,7 @@ import { escapeCoreLabel, upsertCoreReference } from '../../lib/memory/memory-co
 import {
   type InputSource,
   inputContentDigest,
+  memoryInputSources,
   parseInputBody,
 } from '../../lib/memory/memory-input.js';
 import {
@@ -36,7 +37,7 @@ export function findExistingInput(memoryRoot: string, digest: string): ExistingI
     if (
       parsedBody !== undefined &&
       typeof source === 'string' &&
-      ['chat', 'file', 'meeting', 'link', 'other'].includes(source) &&
+      memoryInputSources.has(source) &&
       typeof verbatim === 'boolean' &&
       parsedBody.verbatim === verbatim
     ) {

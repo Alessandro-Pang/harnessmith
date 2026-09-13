@@ -1,3 +1,5 @@
+import { isValidCalendarDate } from './calendar-date.js';
+
 export const userProfileKeyPattern = /^[a-z0-9]+(?:[.-][a-z0-9]+)*$/;
 export const maximumUserProfileKeyLength = 100;
 export const maximumUserProfileRecords = 32;
@@ -52,18 +54,12 @@ export function parseUserProfileRecords(content: string): UserProfileRecord[] {
   return records;
 }
 
-function validCalendarDate(value: string | undefined): boolean {
-  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  const date = new Date(`${value}T00:00:00Z`);
-  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
-}
-
 export function isCanonicalUserProfileRecord(record: UserProfileRecord): boolean {
   return (
     record.canonicalMarker &&
     record.semanticEntry !== undefined &&
     record.key !== undefined &&
     record.key.length <= maximumUserProfileKeyLength &&
-    validCalendarDate(record.date)
+    isValidCalendarDate(record.date)
   );
 }

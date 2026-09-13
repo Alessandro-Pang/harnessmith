@@ -1,6 +1,8 @@
 import { createHash } from 'node:crypto';
 
-export type InputSource = 'chat' | 'file' | 'meeting' | 'link' | 'other';
+const memoryInputSourceValues = ['chat', 'file', 'meeting', 'link', 'other'] as const;
+export type InputSource = (typeof memoryInputSourceValues)[number];
+export const memoryInputSources = new Set<string>(memoryInputSourceValues);
 
 export interface ParsedInputBody {
   content: string;

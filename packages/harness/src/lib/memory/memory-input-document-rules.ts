@@ -1,7 +1,8 @@
 import type { Io } from '../../types.js';
+import { isValidCalendarDate } from '../filesystem/calendar-date.js';
+import { memoryInputSources } from './memory-input.js';
 import { containsUnsafeDisplayCharacters } from './memory-root-path-rules.js';
 
-const inputSources = new Set(['chat', 'file', 'meeting', 'link', 'other']);
 const inputPurposes = new Set([
   'constraint',
   'acceptance',
@@ -11,12 +12,6 @@ const inputPurposes = new Set([
 ]);
 const inputRetentions = new Set(['workstream', 'durable']);
 const inputCloseReasons = new Set(['consumed', 'workstream-complete', 'promoted', 'invalid']);
-
-function validCalendarDate(value: unknown): boolean {
-  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  const date = new Date(`${value}T00:00:00Z`);
-  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
-}
 
 function validatePolicy(path: string, metadata: Map<string, unknown>, io: Io): number {
   let failures = 0;
@@ -49,7 +44,7 @@ function validatePolicy(path: string, metadata: Map<string, unknown>, io: Io): n
 function validateClosure(path: string, metadata: Map<string, unknown>, io: Io): number {
   if (metadata.get('status') !== 'complete') return 0;
   let failures = 0;
-  if (!validCalendarDate(metadata.get('closed'))) {
+  if (!isValidCalendarDate(metadata.get('closed'))) {
     io.error(`Completed input schema v2 requires a closed date: ${path}`);
     failures += 1;
   }
@@ -67,7 +62,7 @@ export function validateInputDocumentRules(
 ): number {
   if (metadata.get('memory-kind') !== 'input') return 0;
   let failures = 0;
-  if (!inputSources.has(String(metadata.get('input-source')))) {
+  if (!memoryInputSources.has(String(metadata.get('input-source')))) {
     io.error(`Input memory requires a valid input-source: ${path}`);
     failures += 1;
   }
