@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { withEphemeralJsonPayload } from '../support/host.mjs';
@@ -155,6 +155,33 @@ function setupScenario() {
 
   if (scenarioId === 'bootstrap-global-memory') {
     initGlobalMemory();
+  }
+  if (scenarioId === 'no-typed-writer') {
+    fixturePaths.removedTypedWriter = harnessBin();
+    rmSync(fixturePaths.removedTypedWriter, { force: true });
+    context.push(
+      '',
+      `Typed Memory writer intentionally unavailable at ${fixturePaths.removedTypedWriter}.`,
+      'Do not create project Memory or write Markdown directly; return a bounded proposal or blocked result.',
+    );
+  }
+  if (scenarioId === 'uninitialized-project') {
+    fixturePaths.projectMemory = join(repo, '.agent-docs');
+    context.push(
+      '',
+      'Project Memory is intentionally uninitialized for this read-only turn.',
+      `Project Memory must remain absent at ${fixturePaths.projectMemory}.`,
+    );
+  }
+  if (scenarioId === 'sidecar-failure') {
+    initProjectMemory();
+    fixturePaths.memoryLock = join(repo, '.agent-docs', '.lock');
+    mkdirSync(fixturePaths.memoryLock, { recursive: false });
+    context.push(
+      '',
+      `The managed project-memory lock is intentionally held at ${fixturePaths.memoryLock}; sidecar writes must fail closed.`,
+      'Report blocked or inconclusive and preserve existing project Memory and source files.',
+    );
   }
   if (scenarioId === 'memory-autopilot-unprompted') {
     setupVerifier('verify-autopilot.mjs', ['apps/docs/site/status.txt', 'apps/docs/site/follow-up.txt']);

@@ -51,24 +51,24 @@
     },
     {
       "id": "no-typed-writer",
+      "scenarioIds": ["no-typed-writer"],
       "description": "When no typed writer is available, the Host fails closed instead of directly writing Memory Markdown.",
-      "scenarioIds": [],
       "supportOverrides": {
         "codex": {
           "state": "inconclusive",
-          "reason": "No dedicated real-Host scenario and independent verifier currently remove the typed writer from the fixture.",
+          "reason": "A dedicated fixture and deterministic filesystem verifier now remove the typed writer; no maintainer-attested real-Host record is present.",
           "evidence": ["evals/scenarios.json", "scripts/evaluation/codex/eval-codex-scenario.mjs"]
         }
       }
     },
     {
       "id": "uninitialized-project",
+      "scenarioIds": ["uninitialized-project"],
       "description": "An uninitialized project remains usable without silently creating project Memory during read-only work.",
-      "scenarioIds": [],
       "supportOverrides": {
         "codex": {
           "state": "inconclusive",
-          "reason": "No dedicated real-Host scenario currently exercises read-only work in an uninitialized project.",
+          "reason": "A dedicated uninitialized-project fixture and deterministic filesystem verifier now exist; no maintainer-attested real-Host record is present.",
           "evidence": ["evals/scenarios.json", "scripts/evaluation/codex/eval-codex-scenario.mjs"]
         }
       }
@@ -85,12 +85,12 @@
     },
     {
       "id": "sidecar-failure",
+      "scenarioIds": ["sidecar-failure"],
       "description": "A sidecar failure does not corrupt project state or become a false behavior success.",
-      "scenarioIds": [],
       "supportOverrides": {
         "codex": {
           "state": "inconclusive",
-          "reason": "No dedicated real-Host scenario currently injects a sidecar failure with an independent project-state verifier.",
+          "reason": "A dedicated lock-failure fixture and deterministic project-state verifier now exist; no maintainer-attested real-Host record is present.",
           "evidence": ["evals/scenarios.json", "scripts/evaluation/codex/eval-codex-scenario.mjs"]
         }
       }

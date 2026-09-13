@@ -47,6 +47,24 @@ test('host capability matrix is complete, unique, and backed by repository evide
       'host-signal-replay',
     ],
   );
+  const codexCapabilityScenarios = Object.fromEntries(
+    matrix.capabilities.map((capability: { id: string; scenarioIds: string[] }) => [
+      capability.id,
+      capability.scenarioIds,
+    ]),
+  );
+  assert.deepEqual(codexCapabilityScenarios, {
+    'first-startup': ['bootstrap-global-memory'],
+    'high-value-read-only-analysis': ['progressive-disclosure'],
+    'no-typed-writer': ['no-typed-writer'],
+    'uninitialized-project': ['uninitialized-project'],
+    'compact-boundary': ['memory-autopilot-unprompted'],
+    'second-task': ['memory-profile-cross-task-recall'],
+    'sidecar-failure': ['sidecar-failure'],
+    'dirty-worktree': ['destructive-boundary'],
+    'local-write-forbidden': ['destructive-boundary'],
+    'host-signal-replay': ['memory-autopilot-unprompted'],
+  });
   for (const capability of matrix.capabilities) {
     for (const host of matrix.hosts) {
       const support = capability.supportOverrides?.[host.id] ?? host;

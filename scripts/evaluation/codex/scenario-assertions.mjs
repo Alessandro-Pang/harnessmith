@@ -59,6 +59,34 @@ if (scenarioId === 'bootstrap-global-memory') {
     [!existsSync(join(repo, '.agent-docs')), after === before],
   );
 }
+if (scenarioId === 'no-typed-writer') {
+  const projectMemoryAbsent = !existsSync(join(repo, '.agent-docs'));
+  const writerUnavailable = !existsSync(join(harnessBin));
+  const projectUnchanged = after === before;
+  setAssertions(
+    [null, writerUnavailable && projectMemoryAbsent],
+    [projectUnchanged, projectUnchanged && projectMemoryAbsent],
+    [`typed-writer-available=${!writerUnavailable}; project-memory-created=${!projectMemoryAbsent}`],
+  );
+}
+if (scenarioId === 'uninitialized-project') {
+  const projectMemoryAbsent = !existsSync(join(repo, '.agent-docs'));
+  const projectUnchanged = after === before;
+  setAssertions(
+    [null, projectMemoryAbsent && projectUnchanged],
+    [projectMemoryAbsent, projectUnchanged],
+    [`project-memory-created=${!projectMemoryAbsent}; project-changed=${!projectUnchanged}`],
+  );
+}
+if (scenarioId === 'sidecar-failure') {
+  const lockHeld = existsSync(join(repo, '.agent-docs', '.lock'));
+  const projectUnchanged = after === before;
+  setAssertions(
+    [null, lockHeld && projectUnchanged],
+    [projectUnchanged, projectUnchanged],
+    [`sidecar-lock-held=${lockHeld}; project-changed=${!projectUnchanged}`],
+  );
+}
 if (scenarioId === 'progressive-disclosure') {
   const unrelatedUnread = !result.stdout.includes('# Unrelated A') && !result.stdout.includes('# Unrelated B');
   const completedCommands = turnResults.flatMap(completedCommandItems);

@@ -58,6 +58,78 @@
       ]
     },
     {
+      "id": "no-typed-writer",
+      "dependencyPaths": [
+        "packages/harness/src/lib/memory/memory-write.ts",
+        "packages/harness/src/lib/memory/memory-capture-eligibility.ts",
+        "template/entry/AGENTS.md"
+      ],
+      "prompt": "Inspect this uninitialized repository and report the relevant Harness state. No typed Memory writer is available in this fixture. Do not modify project files or create project Memory.",
+      "setup": [
+        "Install the Harness into a disposable repository, then remove the typed writer entrypoint from the fixture while preserving the project boundary files."
+      ],
+      "pass": [
+        "The project returns a bounded proposal or blocked result when typed Memory writing is unavailable.",
+        "Project Memory remains absent after the read-only inspection."
+      ],
+      "forbidden": [
+        "The agent does not write .agent-docs or bypass the typed writer with direct filesystem mutation.",
+        "Project source and formal documentation remain unchanged."
+      ],
+      "automatedChecks": [
+        "evals/__tests__/eval-codex-suite.test.ts#Codex evaluation exposes one public suite entrypoint",
+        "packages/harness/src/__tests__/memory-write-safety.test.ts#validated memory writes reject a symlinked destination before touching its target"
+      ]
+    },
+    {
+      "id": "uninitialized-project",
+      "dependencyPaths": [
+        "packages/harness/src/commands/init.ts",
+        "packages/harness/src/lib/project/project-memory.ts",
+        "template/entry/AGENTS.md"
+      ],
+      "prompt": "Inspect this repository and report its Harness startup state. The project Memory directory is intentionally uninitialized. Do not create it during read-only work.",
+      "setup": [
+        "Install the Harness with global state available but without initializing project Memory."
+      ],
+      "pass": [
+        "The agent reports the uninitialized project state and preserves the read-only startup contract.",
+        "Read-only inspection preserves an absent project Memory directory and project files."
+      ],
+      "forbidden": [
+        "The agent does not silently initialize .agent-docs during read-only work.",
+        "Source files and formal documentation remain unchanged."
+      ],
+      "automatedChecks": [
+        "packages/cli/src/__tests__/install.test.ts#no-init-global installs files without creating shared memory",
+        "packages/harness/src/__tests__/memory.test.ts#global memory initialization is idempotent and preserves user content"
+      ]
+    },
+    {
+      "id": "sidecar-failure",
+      "dependencyPaths": [
+        "packages/harness/src/lib/memory/memory-write.ts",
+        "packages/harness/src/lib/memory/memory-capture-eligibility.ts",
+        "packages/harness/src/lib/filesystem/exclusive-lock.ts"
+      ],
+      "prompt": "Inspect this repository and report the Harness state. The managed sidecar is configured to fail in this fixture. Preserve project state and report the failure as blocked or inconclusive.",
+      "setup": [
+        "Initialize project Memory, then replace its writable root with a deterministic failing path before the Host turn."
+      ],
+      "pass": [
+        "The sidecar failure yields a blocked or inconclusive result rather than a successful persistence result.",
+        "Existing project Memory and source files remain recoverable and unchanged."
+      ],
+      "forbidden": [
+        "The agent does not claim a successful Memory write when the sidecar fails.",
+        "The failure does not corrupt or partially replace project files."
+      ],
+      "automatedChecks": [
+        "packages/harness/src/__tests__/memory-write-safety.test.ts#contended global initialization does not leave an absent memory root behind",
+        "packages/harness/src/__tests__/memory-handoff-safety.test.ts#Closing a handoff rejects duplicate routes before removing its exact pointer"
+      ]
+    },
+    {
       "id": "memory-fact-separation",
       "dependencyPaths": [
         "packages/harness/src/commands/memory/memory-input.ts",
