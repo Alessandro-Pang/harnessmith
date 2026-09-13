@@ -39,16 +39,15 @@ test('memory evaluation catalog has explicit positive and negative state cases',
   }
 });
 
-test('known fixture and oracle gaps are explicitly evaluator-inconclusive', () => {
+test('seeded memory operations stay active with independent oracles', () => {
   const catalog = JSON.parse(
     readFileSync(join(root, 'evals', 'memory', 'scenarios.v1.json'), 'utf8'),
   ) as { scenarios: CatalogScenario[] };
   const scenarios = new Map(catalog.scenarios.map((scenario) => [scenario.id, scenario]));
-  for (const id of ['writer-failure-recovery', 'capture-finding', 'profile-autopilot']) {
-    assert.equal(scenarios.get(id)?.evaluationStatus, 'inconclusive', id);
-    assert.ok(scenarios.get(id)?.evaluationReason, id);
-  }
   for (const id of [
+    'writer-failure-recovery',
+    'capture-finding',
+    'profile-autopilot',
     'close-input',
     'capture-experience',
     'handoff',

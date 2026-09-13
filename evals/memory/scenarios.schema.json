@@ -38,7 +38,7 @@
           "required": ["globalMemory", "projectMemory", "taskCount"],
           "properties": {
             "globalMemory": { "enum": ["empty", "seeded"] },
-            "projectMemory": { "enum": ["empty", "seeded", "closable-input", "experience-ready", "active-handoff", "supersede-pair", "archivable-closed", "maintenance-trigger", "repairable-missing-readme", "legacy-migrate", "curation-candidates"] },
+            "projectMemory": { "enum": ["empty", "seeded", "closable-input", "experience-ready", "active-handoff", "supersede-pair", "archivable-closed", "maintenance-trigger", "repairable-missing-readme", "legacy-migrate", "curation-candidates", "writer-fault"] },
             "taskCount": { "type": "integer", "minimum": 1, "maximum": 8 }
           }
         },

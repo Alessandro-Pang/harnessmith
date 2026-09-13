@@ -1,6 +1,14 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import {
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
@@ -93,6 +101,13 @@ function seedProject(name: string) {
 test('every project fixture builds the precondition its operation needs', () => {
   for (const name of projectMemoryFixtures) {
     const { projectMemory } = seedProject(name);
+    if (name === 'writer-fault') {
+      assert.ok(
+        lstatSync(join(projectMemory, 'working', 'blocked-link.md')).isSymbolicLink(),
+        name,
+      );
+      continue;
+    }
     const docs = markdownUnder(projectMemory);
     if (name === 'empty' || name === 'experience-ready') {
       assert.ok(existsSync(join(projectMemory, 'core.md')), name);

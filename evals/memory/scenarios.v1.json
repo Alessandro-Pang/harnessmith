@@ -397,15 +397,14 @@
       "scope": "safety",
       "expectedDecision": "blocked",
       "expectedAction": "blocked",
-      "evaluationStatus": "inconclusive",
-      "evaluationReason": "no-deterministic-writer-fault-injection",
+      "evaluationStatus": "active",
       "promptVariants": [
         "模拟 Memory writer 在校验阶段失败。",
         "Simulate a Memory writer failure during postcondition validation."
       ],
       "setup": {
         "globalMemory": "empty",
-        "projectMemory": "empty",
+        "projectMemory": "writer-fault",
         "taskCount": 1
       },
       "pass": [
@@ -425,7 +424,12 @@
         "packages/harness/src/lib/memory/memory-write.ts",
         "scripts/evaluation/planning/eval-runner.ts"
       ],
-      "operation": "reconcile-profile"
+      "operation": "reconcile-profile",
+      "stateContract": {
+        "kind": "typed-report",
+        "trigger": "symbolic-link",
+        "deterministic": true
+      }
     },
     {
       "id": "close-input",
@@ -470,11 +474,10 @@
     {
       "id": "capture-finding",
       "description": "Capture a sourced finding after an expensive diagnosis.",
-      "scope": "safety",
-      "expectedDecision": "blocked",
-      "expectedAction": "blocked",
-      "evaluationStatus": "inconclusive",
-      "evaluationReason": "missing-verified-source-fixture",
+      "scope": "project-memory",
+      "expectedDecision": "write",
+      "expectedAction": "created",
+      "evaluationStatus": "active",
       "promptVariants": [
         "请把已由证据确认的根因、结论和来源沉淀为项目 finding。",
         "Record the evidence-confirmed root cause, conclusion, and sources as a project finding."
@@ -485,24 +488,27 @@
         "taskCount": 1
       },
       "pass": [
-        "typed operation result and independent state oracle agree"
+        "finding contains conclusion, reason, application and source",
+        "memory check validates the written document"
       ],
       "forbidden": [
-        "an inconclusive fixture is not reported as passed"
+        "an unsupported inference is not written as a finding",
+        "the finding is not claimed as an authoritative project fact"
       ],
       "oracle": {
         "kind": "memory-state",
-        "command": "harness memory check global --json",
+        "command": "harness memory check project --json",
         "operation": "typed-operation"
       },
       "dependencyPaths": [
-        "packages/harness/src/commands/memory/memory-profile.ts",
-        "template/skills/agent-harness/docs/references/memory-contracts.md"
+        "packages/harness/src/lib/memory/memory-finding.ts",
+        "template/skills/agent-harness/docs/standards/project-agent-docs.md"
       ],
       "operation": "capture-finding",
       "stateContract": {
         "kind": "typed-operation",
-        "operation": "capture-finding"
+        "operation": "capture-finding",
+        "deterministic": true
       }
     },
     {
@@ -548,25 +554,24 @@
     {
       "id": "profile-autopilot",
       "description": "Pause and resume ordinary profile autopilot with explicit controls.",
-      "scope": "safety",
-      "expectedDecision": "blocked",
-      "expectedAction": "blocked",
-      "evaluationStatus": "inconclusive",
-      "evaluationReason": "no-deterministic-profile-autopilot-fixture",
+      "scope": "global-profile",
+      "expectedDecision": "write",
+      "expectedAction": "updated",
+      "evaluationStatus": "active",
       "promptVariants": [
         "请暂停用户画像自动记录，只有我明确要求时才允许写入。",
         "Pause automatic profile recording; write to the profile only when I explicitly request it."
       ],
       "setup": {
-        "globalMemory": "empty",
+        "globalMemory": "seeded",
         "projectMemory": "empty",
         "taskCount": 1
       },
       "pass": [
-        "typed operation result and independent state oracle agree"
+        "profile state and decision are verified independently"
       ],
       "forbidden": [
-        "an inconclusive fixture is not reported as passed"
+        "a final response or keyword match is not treated as a profile write"
       ],
       "oracle": {
         "kind": "memory-state",
@@ -575,9 +580,13 @@
       },
       "dependencyPaths": [
         "packages/harness/src/commands/memory/memory-profile.ts",
-        "template/skills/agent-harness/docs/references/memory-contracts.md"
+        "template/skills/agent-harness/docs/standards/user-profile-memory.md"
       ],
-      "operation": "profile-autopilot"
+      "operation": "profile-autopilot",
+      "stateContract": {
+        "kind": "profile-control",
+        "deterministic": true
+      }
     },
     {
       "id": "handoff",

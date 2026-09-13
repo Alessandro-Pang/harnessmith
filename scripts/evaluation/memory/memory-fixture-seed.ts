@@ -1,5 +1,5 @@
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { mkdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 
 export const projectMemoryFixtures = [
   'empty',
@@ -13,6 +13,7 @@ export const projectMemoryFixtures = [
   'repairable-missing-readme',
   'legacy-migrate',
   'curation-candidates',
+  'writer-fault',
 ] as const;
 
 export interface MemorySeedContext {
@@ -25,6 +26,7 @@ interface MemorySeedStep {
   payload?: unknown;
   capture?: 'reference';
   removeFromProjectMemory?: string;
+  plantProjectMemorySymlink?: string;
 }
 
 export type MemorySeedRunner = (argv: string[]) => { stdout: string };
@@ -125,6 +127,8 @@ function memoryFixtureSteps(scope: 'global' | 'project', name: string): MemorySe
       ];
     case 'repairable-missing-readme':
       return [{ argv: [], removeFromProjectMemory: 'README.md' }];
+    case 'writer-fault':
+      return [{ argv: [], plantProjectMemorySymlink: 'working/blocked-link.md' }];
     case 'curation-candidates':
       return [
         {
@@ -186,6 +190,12 @@ export function applyMemoryFixtureSeeds(input: {
         rmSync(join(input.context.repo, '.agent-docs', step.removeFromProjectMemory), {
           force: true,
         });
+        continue;
+      }
+      if (step.plantProjectMemorySymlink) {
+        const target = join(input.context.repo, '.agent-docs', step.plantProjectMemorySymlink);
+        mkdirSync(dirname(target), { recursive: true });
+        symlinkSync('missing-target.md', target);
         continue;
       }
       if (step.argv.length === 0) continue;

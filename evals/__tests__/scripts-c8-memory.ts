@@ -147,7 +147,7 @@ export function coverMemoryFixtures(): void {
       context: { repo, tempDir },
       run,
     });
-    for (const name of projectMemoryFixtures) {
+    for (const name of projectMemoryFixtures.filter((fixture) => fixture !== 'writer-fault')) {
       applyMemoryFixtureSeeds({
         globalMemory: 'empty',
         projectMemory: name,
@@ -155,6 +155,12 @@ export function coverMemoryFixtures(): void {
         run,
       });
     }
+    applyMemoryFixtureSeeds({
+      globalMemory: 'empty',
+      projectMemory: 'writer-fault',
+      context: { repo, tempDir },
+      run,
+    });
     assert.throws(
       () =>
         applyMemoryFixtureSeeds({
