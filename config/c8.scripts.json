@@ -16,7 +16,6 @@
     "scripts/evaluation/codex/eval-suite-evidence.ts",
     "scripts/evaluation/codex/eval-suite-process.ts",
     "scripts/evaluation/codex/eval-suite-scheduler.ts",
-    "scripts/evaluation/contracts/eval-suite-gate.ts",
     "scripts/evaluation/memory/memory-host-runtime.ts",
     "scripts/release/release-attestation.ts",
     "scripts/release/release-finalize.ts",

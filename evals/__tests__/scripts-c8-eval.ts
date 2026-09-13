@@ -7,6 +7,7 @@ import {
 import type { SuiteCaseResult } from '../../scripts/evaluation/codex/eval-suite-evidence.js';
 import { evaluationRegistry } from '../../scripts/evaluation/codex/eval-suite-registry.js';
 import { evaluateCoverage } from '../../scripts/evaluation/contracts/eval-coverage.js';
+import { verifySuiteEvidence } from '../../scripts/evaluation/contracts/eval-suite-gate.js';
 import { suiteGateResult } from '../../scripts/evaluation/contracts/eval-suite-result.js';
 import { validatePullRequest } from '../../scripts/evaluation/contracts/pr-contract.js';
 import { coverMemoryFixtures, coverMemoryReport, coverMemoryState } from './scripts-c8-memory.js';
@@ -84,6 +85,15 @@ function coverCoverageAndSuite(): void {
   );
   assert.equal(gate.valid, true);
   assert.deepEqual(gate.evidence.infraBlocked, ['codex/blocked-host']);
+  assert.throws(
+    () =>
+      verifySuiteEvidence({
+        directory: '/tmp/harnessmith-missing-suite',
+        candidateSha256: 'a'.repeat(64),
+        maxAgeDays: 7,
+      }),
+    /complete unified evaluation suite record is required/i,
+  );
 }
 
 function coverSemanticReview(): void {
