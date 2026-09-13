@@ -1,5 +1,9 @@
 import { isAbsolute } from 'node:path';
+import repositoryMapSchema from '../../../../../template/skills/agent-harness/assets/schemas/repository-map.schema.json' with {
+  type: 'json',
+};
 import { toPosixPath } from '../filesystem/posix-path.js';
+import { compileJsonSchema, schemaErrorsText } from '../schema/assert-json-schema.js';
 import {
   type RepositoryMap,
   type RepositoryMapValidation,
@@ -7,6 +11,8 @@ import {
   type RepositoryRelationType,
   repositoryRelationTypes,
 } from './repository-map-types.js';
+
+const validateRepositoryMapSchema = compileJsonSchema(repositoryMapSchema);
 
 export const repositoryFields = [
   'id',
@@ -185,6 +191,9 @@ function validateRelation(
 export function validateRepositoryMap(value: unknown): RepositoryMapValidation {
   const issues: string[] = [];
   if (!isRecord(value)) return { valid: false, issues: ['Repository map must be an object'] };
+  if (!validateRepositoryMapSchema(value)) {
+    issues.push(`Schema: ${schemaErrorsText(validateRepositoryMapSchema)}`);
+  }
   for (const field of objectUnknownFields(value, topLevelFields))
     issues.push(`Unknown top-level field: ${field}`);
   if (value.schemaVersion !== 1) issues.push('schemaVersion must be 1');

@@ -1,9 +1,15 @@
+import replayReportSchema from '../../../../../template/skills/agent-harness/assets/schemas/replay-report.schema.json' with {
+  type: 'json',
+};
+import { assertMatchesSchema, compileJsonSchema } from '../schema/assert-json-schema.js';
 import type {
   ReplayContractInput,
   ReplayContractReport,
   ReplayDecision,
   ReplayResult,
 } from './replay-contract-types.js';
+
+const validateReplayReport = compileJsonSchema(replayReportSchema);
 
 export type { ReplayContractInput, ReplayContractReport } from './replay-contract-types.js';
 
@@ -123,7 +129,7 @@ function report(
   reasonCode: ReplayContractReport['reasonCode'],
   checks: ReplayContractReport['checks'],
 ): ReplayContractReport {
-  return {
+  const payload = {
     version: 1,
     schema: 'urn:agent-harness:schema:replay-report:v1',
     mode: 'verify-only',
@@ -132,7 +138,9 @@ function report(
     decision,
     reasonCode,
     checks,
-  };
+  } as const;
+  assertMatchesSchema('replay report', validateReplayReport, payload);
+  return payload;
 }
 
 export function evaluateReplayContract(input: ReplayContractInput): ReplayContractReport {

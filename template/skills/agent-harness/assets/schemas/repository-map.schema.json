@@ -87,10 +87,18 @@
           "items": { "$ref": "#/$defs/evidence" },
           "allOf": [
             {
-              "contains": { "properties": { "side": { "const": "provider" } }, "required": ["side"] }
+              "contains": {
+                "type": "object",
+                "properties": { "side": { "const": "provider" } },
+                "required": ["side"]
+              }
             },
             {
-              "contains": { "properties": { "side": { "const": "consumer" } }, "required": ["side"] }
+              "contains": {
+                "type": "object",
+                "properties": { "side": { "const": "consumer" } },
+                "required": ["side"]
+              }
             }
           ]
         }

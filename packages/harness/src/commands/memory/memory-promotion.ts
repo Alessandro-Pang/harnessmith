@@ -1,5 +1,8 @@
 import { existsSync } from 'node:fs';
 import { dirname, relative, resolve, sep } from 'node:path';
+import memoryPromotionSchema from '../../../../../template/skills/agent-harness/assets/schemas/memory-promotion.schema.json' with {
+  type: 'json',
+};
 import { parseFrontmatterDocument } from '../../lib/documentation/frontmatter.js';
 import { assertSafePath, sameCanonicalPath } from '../../lib/filesystem/safe-path.js';
 import {
@@ -19,8 +22,11 @@ import {
 } from '../../lib/memory/memory-promotion-contract.js';
 import { resolveProjectRoot } from '../../lib/project/project.js';
 import { createProjectGitBudget, projectGit } from '../../lib/project/project-git.js';
+import { assertMatchesSchema, compileJsonSchema } from '../../lib/schema/assert-json-schema.js';
 import { assertNoHighConfidenceSecret } from '../../lib/security/secret-hygiene.js';
 import type { Io, Runtime } from '../../types.js';
+
+const validateMemoryPromotion = compileJsonSchema(memoryPromotionSchema);
 
 export type {
   MemoryPromotionOptions,
@@ -167,6 +173,7 @@ export function memoryPromotionProposal(
         : null,
     sourceOfTruth: false,
   };
+  assertMatchesSchema('memory promotion proposal', validateMemoryPromotion, proposal);
   io.log(JSON.stringify(proposal, null, 2));
   return proposal;
 }
