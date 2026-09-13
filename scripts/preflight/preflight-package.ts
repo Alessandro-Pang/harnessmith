@@ -36,6 +36,19 @@ function checkEvalAdapterEnum(root: string, check: Check): void {
   );
 }
 
+function checkCiWorkflow(root: string, check: Check): void {
+  const workflow = read(join(root, '.github', 'workflows', 'ci.yml'));
+  check(
+    /pnpm\/action-setup@[0-9a-f]{40} # v6/.test(workflow),
+    'CI must set up pnpm with the supported pinned action',
+  );
+  check(
+    workflow.includes('pnpm install --frozen-lockfile --ignore-scripts'),
+    'CI must install the frozen pnpm lockfile without lifecycle scripts',
+  );
+  check(!workflow.includes('npm ci'), 'CI must not install dependencies with npm');
+}
+
 export function checkPackage(root: string, harnessRoot: string, check: Check): void {
   const manifest = JSON.parse(read(join(root, 'package.json'))) as {
     name?: string;
@@ -112,13 +125,7 @@ export function checkPackage(root: string, harnessRoot: string, check: Check): v
     'Harness bundle is missing; run pnpm run build',
   );
 
-  const workflow = read(join(root, '.github', 'workflows', 'ci.yml'));
-  check(workflow.includes('pnpm/action-setup@v6'), 'CI must set up pnpm with the supported action');
-  check(
-    workflow.includes('pnpm install --frozen-lockfile --ignore-scripts'),
-    'CI must install the frozen pnpm lockfile without lifecycle scripts',
-  );
-  check(!workflow.includes('npm ci'), 'CI must not install dependencies with npm');
+  checkCiWorkflow(root, check);
   checkPublicGuidance(root, manifest.version || '', check);
   checkEvalAdapterEnum(root, check);
 }

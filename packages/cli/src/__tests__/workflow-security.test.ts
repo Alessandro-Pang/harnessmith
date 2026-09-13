@@ -22,9 +22,9 @@ test('workflows pin third-party actions to immutable commits', () => {
 
 test('docs build has read-only permissions and deploy owns Pages write access', () => {
   const workflow = readWorkflow('docs.yml');
-  assert.match(workflow, /^permissions:\n  contents: read\n/m);
-  assert.doesNotMatch(workflow, /^  pages: write$/m);
-  assert.doesNotMatch(workflow, /^  id-token: write$/m);
+  assert.match(workflow, /^permissions:\n {2}contents: read\n/m);
+  assert.doesNotMatch(workflow, /^ {2}pages: write$/m);
+  assert.doesNotMatch(workflow, /^ {2}id-token: write$/m);
   assert.match(workflow, /deploy:[\s\S]*?permissions:\n\s+pages: write/u);
   assert.match(workflow, /deploy:[\s\S]*?permissions:[\s\S]*?id-token: write/u);
 });
