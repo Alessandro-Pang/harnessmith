@@ -9,10 +9,19 @@ export const isInside = isPathInside;
 export const maximumMemoryDocumentBytes = 2 * 1024 * 1024;
 const maximumMemoryRootBytes = 64 * 1024 * 1024;
 
+export type MemoryPathErrorCode =
+  | 'non-canonical-reference'
+  | 'symbolic-link'
+  | 'special-file'
+  | 'depth-budget'
+  | 'entry-budget'
+  | 'time-budget'
+  | 'byte-budget';
+
 export class MemoryPathError extends Error {
   constructor(
     message: string,
-    readonly code: 'non-canonical-reference',
+    readonly code: MemoryPathErrorCode,
   ) {
     super(message);
   }
@@ -53,10 +62,16 @@ export function managedMemoryEntries(root: string): ManagedMemoryEntry[] {
     const item = pending.pop();
     if (!item) continue;
     if (Date.now() > deadline) {
-      throw new Error(`Memory tree validation time budget exceeded: ${item.path}`);
+      throw new MemoryPathError(
+        `Memory tree validation time budget exceeded: ${item.path}`,
+        'time-budget',
+      );
     }
     if (item.depth > managedTreeLimits.maxDepth) {
-      throw new Error(`Memory tree validation depth budget exceeded: ${item.path}`);
+      throw new MemoryPathError(
+        `Memory tree validation depth budget exceeded: ${item.path}`,
+        'depth-budget',
+      );
     }
     assertSafePath(root, item.path);
     const directory = opendirSync(item.path);
@@ -70,18 +85,27 @@ export function managedMemoryEntries(root: string): ManagedMemoryEntry[] {
         }
         entries += 1;
         if (entries > managedTreeLimits.maxEntries) {
-          throw new Error(`Memory tree validation entry budget exceeded: ${path}`);
+          throw new MemoryPathError(
+            `Memory tree validation entry budget exceeded: ${path}`,
+            'entry-budget',
+          );
         }
         const stat = lstatSync(path);
         if (stat.isSymbolicLink()) {
-          throw new Error(`Managed memory tree contains a symbolic link: ${path}`);
+          throw new MemoryPathError(
+            `Managed memory tree contains a symbolic link: ${path}`,
+            'symbolic-link',
+          );
         }
         if (stat.isDirectory()) {
           managed.push({ path, kind: 'directory' });
           pending.push({ path, depth: item.depth + 1 });
         } else if (stat.isFile()) managed.push({ path, kind: 'file' });
         else {
-          throw new Error(`Managed memory tree contains a special file: ${path}`);
+          throw new MemoryPathError(
+            `Managed memory tree contains a special file: ${path}`,
+            'special-file',
+          );
         }
         entry = directory.readSync();
       }
@@ -118,14 +142,17 @@ export function markdownFiles(
     assertSafePath(root, path);
     const entry = lstatSync(path);
     if (!entry.isFile() || entry.isSymbolicLink()) {
-      throw new Error(`Memory document must be a regular non-symlink file: ${path}`);
+      throw new MemoryPathError(
+        `Memory document must be a regular non-symlink file: ${path}`,
+        'symbolic-link',
+      );
     }
     if (entry.size > maximumMemoryDocumentBytes) {
-      throw new Error(`Memory document byte budget exceeded: ${path}`);
+      throw new MemoryPathError(`Memory document byte budget exceeded: ${path}`, 'byte-budget');
     }
     totalBytes += entry.size;
     if (totalBytes > maximumMemoryRootBytes) {
-      throw new Error(`Memory root byte budget exceeded: ${root}`);
+      throw new MemoryPathError(`Memory root byte budget exceeded: ${root}`, 'byte-budget');
     }
   }
   return files;

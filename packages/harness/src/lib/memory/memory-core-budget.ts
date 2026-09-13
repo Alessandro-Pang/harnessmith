@@ -5,6 +5,7 @@ const memoryCoreHardLineLimit = 240;
 export const memoryCoreSoftByteLimit = 24 * 1024;
 export const memoryCoreHardByteLimit = 48 * 1024;
 export const memoryCoreMaxEntryBytes = 512;
+export const memoryHardBudgetPrefix = 'Memory core exceeds its hard context budget';
 
 export interface MemoryCoreBudgetReport {
   lines: number;
@@ -74,9 +75,7 @@ export function validateMemoryCoreContract(
   let failures = 0;
   const budget = memoryCoreBudget(content);
   if (budget.status === 'hard-limit') {
-    io.error(
-      `Memory core exceeds its hard context budget (${budget.lines} lines, ${budget.bytes} bytes): ${path}`,
-    );
+    io.error(`${memoryHardBudgetPrefix} (${budget.lines} lines, ${budget.bytes} bytes): ${path}`);
     failures += 1;
   } else if (budget.status === 'soft-limit') {
     io.error(

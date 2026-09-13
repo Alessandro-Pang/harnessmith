@@ -203,7 +203,10 @@ export function bootstrapProject(
         recommendationRead.discovered - recommendationRead.recommendations.length,
       ),
     },
-    truncated: reasons.some((reason) => /truncated/i.test(reason)),
+    truncated:
+      Math.max(0, tasks.discovered - activeTasks.length) > 0 ||
+      Math.max(0, recommendationRead.discovered - recommendationRead.recommendations.length) > 0 ||
+      memory.discoveredMetadata > bootstrapMetadataLimit,
     reasons,
   };
   const report: BootstrapReport =

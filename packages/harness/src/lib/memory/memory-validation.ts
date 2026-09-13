@@ -13,6 +13,7 @@ import {
 import {
   isExcludedMemoryArtifact,
   type ManagedMemoryEntry,
+  MemoryPathError,
   managedMemoryEntries,
   markdownFiles,
   maximumMemoryDocumentBytes,
@@ -117,7 +118,7 @@ function discoveredMemoryFiles(
   } catch (error) {
     const message = String(error);
     io.error(
-      message.toLowerCase().includes('symbolic link')
+      error instanceof MemoryPathError && error.code === 'symbolic-link'
         ? `Invalid memory reference or managed memory entry: ${message}`
         : `Invalid managed memory tree: ${message}`,
     );

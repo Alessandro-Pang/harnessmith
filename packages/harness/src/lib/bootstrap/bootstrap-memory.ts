@@ -3,7 +3,11 @@ import { calendarDate } from '../../runtime.js';
 import type { Io, ProjectSnapshot, Runtime } from '../../types.js';
 import { parseFrontmatterDocument } from '../documentation/frontmatter.js';
 import { toPosixPath } from '../filesystem/posix-path.js';
-import { type MemoryCoreBudgetReport, memoryCoreBudget } from '../memory/memory-core-budget.js';
+import {
+  type MemoryCoreBudgetReport,
+  memoryCoreBudget,
+  memoryHardBudgetPrefix,
+} from '../memory/memory-core-budget.js';
 import {
   classifyMemoryFact,
   type MemoryFactClass,
@@ -13,7 +17,7 @@ import {
   type MemoryMaintenanceReport,
   memoryMaintenanceReport,
 } from '../memory/memory-maintenance.js';
-import { markdownFiles, readMemoryDocument } from '../memory/memory-path.js';
+import { MemoryPathError, markdownFiles, readMemoryDocument } from '../memory/memory-path.js';
 import { validateMemoryRoot } from '../memory/memory-validation.js';
 
 export {
@@ -54,8 +58,14 @@ function diagnosticIo(errors: string[]): Io {
   };
 }
 
-function stateForFailure(messages: string[]): 'invalid' | 'inconclusive' {
-  return messages.some((message) => /budget|timeout|deadline|unavailable/i.test(message))
+const capacityCodes = new Set(['time-budget', 'entry-budget', 'depth-budget', 'byte-budget']);
+
+function stateForFailure(messages: string[], error?: unknown): 'invalid' | 'inconclusive' {
+  if (error instanceof MemoryPathError && capacityCodes.has(error.code)) return 'inconclusive';
+  return messages.some(
+    (message) =>
+      message.startsWith(memoryHardBudgetPrefix) || /timeout|deadline|unavailable/i.test(message),
+  )
     ? 'inconclusive'
     : 'invalid';
 }
@@ -78,7 +88,7 @@ function validateBootstrapMemory(memoryRoot: string, reasons: string[]): Bootstr
     return 'valid';
   } catch (error) {
     const messages = [...validationErrors, error instanceof Error ? error.message : String(error)];
-    const state = stateForFailure(messages);
+    const state = stateForFailure(messages, error);
     reasons.push(`Memory ${state}: ${messages.join('; ')}`);
     return state;
   }
@@ -93,7 +103,7 @@ function readBootstrapCore(memoryRoot: string, reasons: string[]) {
     };
   } catch (error) {
     reasons.push(`Core skipped: ${String(error)}`);
-    return { core: null, failure: stateForFailure([String(error)]) };
+    return { core: null, failure: stateForFailure([String(error)], error) };
   }
 }
 
@@ -121,7 +131,7 @@ function readBootstrapMetadata(memoryRoot: string, reasons: string[]) {
     return { metadata, discovered: files.length, failure: undefined };
   } catch (error) {
     reasons.push(`Memory metadata skipped: ${String(error)}`);
-    return { metadata: [], discovered: 0, failure: stateForFailure([String(error)]) };
+    return { metadata: [], discovered: 0, failure: stateForFailure([String(error)], error) };
   }
 }
 
@@ -148,7 +158,7 @@ export function readBootstrapMemory(
     maintenance = memoryMaintenanceReport(memoryRoot, calendarDate(runtime));
   } catch (error) {
     reasons.push(`Memory maintenance skipped: ${String(error)}`);
-    if (state === 'valid') state = stateForFailure([String(error)]);
+    if (state === 'valid') state = stateForFailure([String(error)], error);
   }
   return {
     state,

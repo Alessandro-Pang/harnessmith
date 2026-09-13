@@ -1,3 +1,4 @@
+import { memoryHardBudgetPrefix } from '../../lib/memory/memory-core-budget.js';
 import type { MemoryMaintenanceReport } from '../../lib/memory/memory-maintenance.js';
 import { memoryMaintenanceReport } from '../../lib/memory/memory-maintenance.js';
 import { resolveMemoryRoot } from '../../lib/memory/memory-path.js';
@@ -27,7 +28,7 @@ function validateRoot(root: string, rootKind: 'global' | 'project', io: Io): voi
     const reportable = (message: string) =>
       message.startsWith('WARNING ') ||
       message.startsWith('Broken memory reference:') ||
-      message.startsWith('Memory core exceeds its hard context budget');
+      message.startsWith(memoryHardBudgetPrefix);
     const blocking = errors.filter((message) => !reportable(message));
     if (blocking.length === 0 && errors.some((message) => !message.startsWith('WARNING '))) {
       return;
