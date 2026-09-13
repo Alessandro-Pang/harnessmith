@@ -239,7 +239,7 @@ test('project uses one pinned pnpm toolchain across manifests, CI, scripts, and 
   assert.equal(packageManifest.packageManager, 'pnpm@10.13.0');
   assert.equal(existsSync(join(root, 'pnpm-lock.yaml')), true);
   assert.equal(existsSync(join(root, 'package-lock.json')), false);
-  assert.match(workflow, /pnpm\/action-setup@v6/);
+  assert.match(workflow, /pnpm\/action-setup@[0-9a-f]{40} # v6/);
   assert.match(workflow, /pnpm install --frozen-lockfile --ignore-scripts/);
   assert.doesNotMatch(workflow, /npm ci/);
   assert.equal(
