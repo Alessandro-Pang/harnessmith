@@ -13,6 +13,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { runCli } from '../cli.js';
+import { buildAuditIndex } from '../lib/audit/audit-accounting.js';
 import { createHealthReport } from '../lib/health/health.js';
 import { capturedIo, harnessRuntime } from './helpers/harness.js';
 
@@ -166,6 +167,24 @@ test('audit append fails closed when no complete record survives a torn file', (
   assert.throws(
     () => runCli(['audit', 'record', '--payload-file', second], { runtime, io: capturedIo() }),
     /contains no complete record/i,
+  );
+});
+
+test('audit index rebuild fails closed on an unterminated record', () => {
+  const { runtime } = fixture();
+  const auditRoot = join(runtime.stateRoot, 'audit');
+  mkdirSync(auditRoot, { recursive: true });
+  const auditPath = join(auditRoot, '2026-08-28.jsonl');
+  writeFileSync(auditPath, '{"traceId":"torn');
+
+  assert.throws(
+    () =>
+      buildAuditIndex(
+        runtime,
+        () => [auditPath],
+        () => ({}),
+      ),
+    /incomplete final record/i,
   );
 });
 
