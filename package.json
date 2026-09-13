@@ -13,6 +13,11 @@
   "bin": {
     "harnessmith": "bin/harnessmith.mjs"
   },
+  "main": "./dist/cli.js",
+  "exports": {
+    ".": "./dist/cli.js",
+    "./package.json": "./package.json"
+  },
   "files": [
     "bin",
     "dist",

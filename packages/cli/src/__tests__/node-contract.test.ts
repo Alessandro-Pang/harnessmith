@@ -94,6 +94,18 @@ test('eval checks build their fingerprint inputs in a clean checkout', () => {
   );
 });
 
+test('npm package exposes only the stable CLI entry and package metadata', () => {
+  const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as {
+    main?: string;
+    exports?: Record<string, string>;
+  };
+  assert.equal(manifest.main, './dist/cli.js');
+  assert.deepEqual(manifest.exports, {
+    '.': './dist/cli.js',
+    './package.json': './package.json',
+  });
+});
+
 test('npm package includes runtime guidance and eval contracts without source-only material', () => {
   const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as {
     files: string[];
