@@ -78,7 +78,13 @@ function routingTerms(query: string[]): { terms: string[]; phrase: string } {
 function selectPlaybook(
   evidence: Map<
     string,
-    { route: DocumentationRoute; requested: boolean; negated: boolean; specific: boolean }
+    {
+      route: DocumentationRoute;
+      requested: boolean;
+      negated: boolean;
+      specific: boolean;
+      coordinated: boolean;
+    }
   >,
   intent: DocumentationIntent | undefined,
 ): {
@@ -96,10 +102,12 @@ function selectPlaybook(
     };
   }
   const inferred = [...evidence.values()].filter(({ requested }) => requested);
-  // A compound domain signal ("the CI failure") outranks the generic verbs around it, so only
-  // conflicts at the same specificity are worth asking the user about.
+  // A compound domain signal ("the CI failure") outranks the generic verbs around it, but a
+  // coordinated second action ("…并修复") is still part of the request.
   const specific = inferred.filter((candidate) => candidate.specific);
-  const selected = explicit ? [explicit] : specific.length > 0 ? specific : inferred;
+  const coordinated = inferred.filter((candidate) => candidate.coordinated);
+  const narrowed = specific.length > 0 ? [...new Set([...specific, ...coordinated])] : inferred;
+  const selected = explicit ? [explicit] : narrowed;
   const ambiguity =
     !explicit && selected.length > 1
       ? selected.map(({ route }) => route.name).sort((left, right) => left.localeCompare(right))

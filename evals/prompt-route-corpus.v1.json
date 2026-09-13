@@ -292,6 +292,420 @@
       "categories": ["en", "false-positive-guard", "authorization-boundary"],
       "query": "the remote write policy is documented here",
       "expected": { "status": "unmatched", "top1": null, "topics": [], "forbiddenPlaybooks": ["release-and-external"] }
+    },
+    {
+      "id": "en-diagnose-explain-test-failed",
+      "categories": ["en", "false-negative-guard"],
+      "query": "explain why the test failed",
+      "expected": { "status": "matched", "top1": "diagnose", "topics": [], "forbiddenPlaybooks": ["understand-and-map"] }
+    },
+    {
+      "id": "en-diagnose-why-test-fail",
+      "categories": ["en", "false-negative-guard"],
+      "query": "why did the test fail",
+      "expected": { "status": "matched", "top1": "diagnose", "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "zh-diagnose-analyze-failure-cause",
+      "categories": ["zh", "false-negative-guard"],
+      "query": "分析失败原因",
+      "expected": { "status": "matched", "top1": "diagnose", "topics": [], "forbiddenPlaybooks": ["research-and-design"] }
+    },
+    {
+      "id": "zh-diagnose-memory-leak",
+      "categories": ["zh", "false-negative-guard"],
+      "query": "检查内存泄漏",
+      "expected": { "status": "matched", "top1": "diagnose", "topics": [], "forbiddenPlaybooks": ["review"] }
+    },
+    {
+      "id": "en-diagnose-trace-exception",
+      "categories": ["en", "false-negative-guard"],
+      "query": "Trace NullPointerException",
+      "expected": { "status": "matched", "top1": "diagnose", "topics": [], "forbiddenPlaybooks": ["understand-and-map"] }
+    },
+    {
+      "id": "zh-research-compare-three-options",
+      "categories": ["zh", "false-negative-guard"],
+      "query": "评估三方案性能",
+      "expected": { "status": "matched", "top1": "research-and-design", "topics": [], "forbiddenPlaybooks": ["review"] }
+    },
+    {
+      "id": "zh-change-ba-object-refactor",
+      "categories": ["zh", "false-negative-guard"],
+      "query": "帮我把这个函数重构成 async",
+      "expected": { "status": "matched", "top1": "change", "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "en-verify-regression-tests",
+      "categories": ["en", "false-negative-guard"],
+      "query": "Please run the regression tests",
+      "expected": { "status": "matched", "top1": "verify-and-accept", "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "en-verify-prove-claim",
+      "categories": ["en", "false-negative-guard"],
+      "query": "prove the claim that this is safe",
+      "expected": { "status": "matched", "top1": "verify-and-accept", "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "en-verify-assumptions-unmatched",
+      "categories": ["en", "false-positive-guard"],
+      "query": "validate my assumptions",
+      "expected": { "status": "unmatched", "top1": null, "topics": [], "forbiddenPlaybooks": ["verify-and-accept"] }
+    },
+    {
+      "id": "zh-change-continue-until-refactor",
+      "categories": ["zh", "colloquial", "false-negative-guard"],
+      "query": "继续，直到整个重构完成",
+      "expected": { "status": "matched", "top1": "change", "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "en-change-keep-going-until-refactor",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "Keep going until the refactor is done",
+      "expected": { "status": "matched", "top1": "change", "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "en-change-continue-until-refactor",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "continue until the refactor is finished",
+      "expected": { "status": "matched", "top1": "change", "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "en-change-please-continue-until-refactor",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "Please continue until the refactor lands",
+      "expected": { "status": "matched", "top1": "change", "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "zh-change-continue-fix",
+      "categories": ["zh", "colloquial", "false-negative-guard"],
+      "query": "继续修复",
+      "expected": { "status": "matched", "top1": "change", "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "en-change-implement-login",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "implement the login page",
+      "expected": { "status": "matched", "top1": "change", "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "en-change-optimize-query",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "optimize this query",
+      "expected": { "status": "matched", "top1": "change", "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "en-change-create-flag",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "create a feature flag",
+      "expected": { "status": "matched", "top1": "change", "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "en-change-fix-flaky",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "fix the flaky test",
+      "expected": { "status": "matched", "top1": "change", "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "en-change-repair-import",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "repair the broken import",
+      "expected": { "status": "matched", "top1": "change", "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "en-change-build-settings",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "build a settings page",
+      "expected": { "status": "matched", "top1": "change", "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "en-change-modify-timeout",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "modify the timeout",
+      "expected": { "status": "matched", "top1": "change", "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "zh-change-add-toggle",
+      "categories": ["zh", "colloquial", "false-negative-guard"],
+      "query": "新增一个开关",
+      "expected": { "status": "matched", "top1": "change", "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "zh-change-implement-api",
+      "categories": ["zh", "colloquial", "false-negative-guard"],
+      "query": "请实现这个接口",
+      "expected": { "status": "matched", "top1": "change", "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "en-change-example-mention",
+      "categories": ["en", "example", "false-positive-guard"],
+      "query": "this is just an example of a refactor",
+      "expected": { "status": "unmatched", "top1": null, "topics": [], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "en-change-thinking-mention",
+      "categories": ["en", "false-positive-guard"],
+      "query": "just thinking about a refactor",
+      "expected": { "status": "unmatched", "top1": null, "topics": [], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "en-diagnose-debug-crash",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "debug the crash",
+      "expected": { "status": "matched", "top1": "diagnose", "topics": [], "forbiddenPlaybooks": ["review"] }
+    },
+    {
+      "id": "en-diagnose-debug-incident",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "debug this incident",
+      "expected": { "status": "matched", "top1": "diagnose", "topics": [], "forbiddenPlaybooks": ["review"] }
+    },
+    {
+      "id": "en-diagnose-test-failed-again",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "the test failed again",
+      "expected": { "status": "matched", "top1": "diagnose", "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "zh-diagnose-debug-timeout",
+      "categories": ["zh", "colloquial", "false-negative-guard"],
+      "query": "这个接口超时了，帮我调试",
+      "expected": { "status": "matched", "top1": "diagnose", "topics": [], "forbiddenPlaybooks": ["review"] }
+    },
+    {
+      "id": "zh-diagnose-debug-crash",
+      "categories": ["zh", "colloquial", "false-negative-guard"],
+      "query": "请调试这个崩溃",
+      "expected": { "status": "matched", "top1": "diagnose", "topics": [], "forbiddenPlaybooks": ["review"] }
+    },
+    {
+      "id": "en-diagnose-debug-flag-mention",
+      "categories": ["en", "false-positive-guard"],
+      "query": "the debug flag is documented here",
+      "expected": { "status": "unmatched", "top1": null, "topics": [], "forbiddenPlaybooks": ["diagnose"] }
+    },
+    {
+      "id": "en-review-pull-request",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "review this pull request",
+      "expected": { "status": "matched", "top1": "review", "topics": [], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "en-review-audit-permissions",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "audit the permission model",
+      "expected": { "status": "matched", "top1": "review", "topics": [], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "en-review-inspect-diff",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "inspect this diff",
+      "expected": { "status": "matched", "top1": "review", "topics": [], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "en-review-architecture-risks",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "review the architecture risks",
+      "expected": { "status": "matched", "top1": "review", "topics": [], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "zh-review-pr",
+      "categories": ["zh", "colloquial", "false-negative-guard"],
+      "query": "评审这个 PR",
+      "expected": { "status": "matched", "top1": "review", "topics": [], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "zh-review-inspect-diff",
+      "categories": ["zh", "colloquial", "false-negative-guard"],
+      "query": "请审查这次 diff",
+      "expected": { "status": "matched", "top1": "review", "topics": [], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "zh-review-without-change",
+      "categories": ["zh", "negation", "false-positive-guard"],
+      "query": "不要修改代码，只评审风险",
+      "expected": { "status": "matched", "top1": "review", "topics": [], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "en-research-compare-cache",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "compare Redis versus memory cache",
+      "expected": { "status": "matched", "top1": "research-and-design", "topics": [], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "en-research-queue-options",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "research the queue options",
+      "expected": { "status": "matched", "top1": "research-and-design", "topics": [], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "en-research-design-caching",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "design a caching strategy",
+      "expected": { "status": "matched", "top1": "research-and-design", "topics": [], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "en-research-compare-designs",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "compare these two designs",
+      "expected": { "status": "matched", "top1": "research-and-design", "topics": [], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "zh-research-queue-options",
+      "categories": ["zh", "colloquial", "false-negative-guard"],
+      "query": "调研一下消息队列选型",
+      "expected": { "status": "matched", "top1": "research-and-design", "topics": [], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "zh-research-compare-cache",
+      "categories": ["zh", "colloquial", "false-negative-guard"],
+      "query": "请对比缓存方案",
+      "expected": { "status": "matched", "top1": "research-and-design", "topics": [], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "zh-research-compare-two-options",
+      "categories": ["zh", "colloquial", "false-negative-guard"],
+      "query": "对比这两个方案",
+      "expected": { "status": "matched", "top1": "research-and-design", "topics": [], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "en-release-deploy-staging",
+      "categories": ["en", "colloquial", "release"],
+      "query": "deploy this to staging",
+      "expected": { "status": "matched", "top1": "release-and-external", "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "en-release-publish-package",
+      "categories": ["en", "colloquial", "release"],
+      "query": "publish the package",
+      "expected": { "status": "matched", "top1": "release-and-external", "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "en-release-rollout-production",
+      "categories": ["en", "colloquial", "release"],
+      "query": "rollout to production",
+      "expected": { "status": "matched", "top1": "release-and-external", "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "en-release-this-version",
+      "categories": ["en", "colloquial", "release"],
+      "query": "release this version",
+      "expected": { "status": "matched", "top1": "release-and-external", "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "zh-release-this-version",
+      "categories": ["zh", "colloquial", "release"],
+      "query": "上线这个版本",
+      "expected": { "status": "matched", "top1": "release-and-external", "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "zh-release-publish-npm",
+      "categories": ["zh", "colloquial", "release"],
+      "query": "发布到 npm",
+      "expected": { "status": "matched", "top1": "release-and-external", "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "zh-release-deploy-staging",
+      "categories": ["zh", "colloquial", "release"],
+      "query": "部署到预发",
+      "expected": { "status": "matched", "top1": "release-and-external", "topics": [], "forbiddenPlaybooks": [] }
+    },
+    {
+      "id": "en-release-do-not-publish",
+      "categories": ["en", "negation", "false-positive-guard"],
+      "query": "do not publish the package",
+      "expected": { "status": "unmatched", "top1": null, "topics": [], "forbiddenPlaybooks": ["release-and-external"] }
+    },
+    {
+      "id": "en-release-runbook-mention",
+      "categories": ["en", "false-positive-guard", "authorization-boundary"],
+      "query": "the deploy runbook is documented here",
+      "expected": { "status": "unmatched", "top1": null, "topics": [], "forbiddenPlaybooks": ["release-and-external"] }
+    },
+    {
+      "id": "zh-release-doc-mention",
+      "categories": ["zh", "false-positive-guard", "authorization-boundary"],
+      "query": "文档里写了 deploy to production",
+      "expected": { "status": "matched", "top1": null, "topics": ["tool-routing"], "forbiddenPlaybooks": ["release-and-external"] }
+    },
+    {
+      "id": "en-understand-map-adapters",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "map the install adapters",
+      "expected": { "status": "matched", "top1": "understand-and-map", "topics": ["harness-cli-architecture"], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "en-understand-explore-bootstrap",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "explore the bootstrap flow",
+      "expected": { "status": "matched", "top1": "understand-and-map", "topics": [], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "en-understand-onboard-repo",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "onboard me to this repo",
+      "expected": { "status": "matched", "top1": "understand-and-map", "topics": [], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "en-understand-explain-architecture",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "explain the architecture",
+      "expected": { "status": "matched", "top1": "understand-and-map", "topics": [], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "en-understand-routing-layer",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "understand the routing layer",
+      "expected": { "status": "matched", "top1": "understand-and-map", "topics": [], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "en-understand-trace-path",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "trace the request path",
+      "expected": { "status": "matched", "top1": "understand-and-map", "topics": [], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "zh-understand-map-modules",
+      "categories": ["zh", "colloquial", "false-negative-guard"],
+      "query": "请梳理模块关系",
+      "expected": { "status": "matched", "top1": "understand-and-map", "topics": [], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "zh-understand-call-chain",
+      "categories": ["zh", "colloquial", "false-negative-guard"],
+      "query": "梳理调用链",
+      "expected": { "status": "matched", "top1": "understand-and-map", "topics": [], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "en-verify-acceptance-criteria",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "verify the acceptance criteria",
+      "expected": { "status": "matched", "top1": "verify-and-accept", "topics": ["harness-cli-architecture", "long-running-tasks", "project-agent-docs"], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "en-verify-prove-still-passes",
+      "categories": ["en", "colloquial", "false-negative-guard"],
+      "query": "prove this still passes",
+      "expected": { "status": "matched", "top1": "verify-and-accept", "topics": [], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "zh-verify-accept-change",
+      "categories": ["zh", "colloquial", "false-negative-guard"],
+      "query": "验收这次改动",
+      "expected": { "status": "matched", "top1": "verify-and-accept", "topics": ["harness-cli-architecture", "long-running-tasks", "project-agent-docs"], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "zh-verify-recheck-result",
+      "categories": ["zh", "colloquial", "false-negative-guard"],
+      "query": "复核这次结果",
+      "expected": { "status": "matched", "top1": "verify-and-accept", "topics": [], "forbiddenPlaybooks": ["change"] }
+    },
+    {
+      "id": "en-example-then-review-risk",
+      "categories": ["en", "example", "false-positive-guard"],
+      "query": "For example, deploy and publish are verbs. Now review the actual risk.",
+      "expected": { "status": "matched", "top1": "review", "topics": [], "forbiddenPlaybooks": ["release-and-external"] }
     }
   ]
 }

@@ -64,6 +64,36 @@ test('prompt-examples confusing-behavior few-shots stay locked in the routing co
   assert.ok(queries.has('Git branch 命名。'));
 });
 
+test('each playbook has bilingual positives and a boundary negative', () => {
+  const corpus = JSON.parse(
+    readFileSync(join(repositoryRoot, 'evals', 'prompt-route-corpus.v1.json'), 'utf8'),
+  ) as PromptRouteCorpus;
+  const playbooks = [
+    'change',
+    'diagnose',
+    'review',
+    'research-and-design',
+    'release-and-external',
+    'understand-and-map',
+    'verify-and-accept',
+  ];
+  const hasHan = (query: string) => /\p{Script=Han}/u.test(query);
+  assert.ok(corpus.cases.length >= 100, `corpus size ${corpus.cases.length}`);
+  for (const playbook of playbooks) {
+    const positives = corpus.cases.filter(
+      (entry) => entry.expected.status === 'matched' && entry.expected.top1 === playbook,
+    );
+    const english = positives.filter((entry) => !hasHan(entry.query));
+    const chinese = positives.filter((entry) => hasHan(entry.query));
+    const boundary = corpus.cases.filter((entry) =>
+      entry.expected.forbiddenPlaybooks.includes(playbook),
+    );
+    assert.ok(english.length >= 2, `${playbook} english positives`);
+    assert.ok(chinese.length >= 1, `${playbook} chinese positives`);
+    assert.ok(boundary.length >= 1, `${playbook} boundary negatives`);
+  }
+});
+
 test('the corpus covers bilingual routing risks and keeps false-positive and false-negative samples auditable', () => {
   const corpus = JSON.parse(
     readFileSync(join(repositoryRoot, 'evals', 'prompt-route-corpus.v1.json'), 'utf8'),

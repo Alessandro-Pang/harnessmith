@@ -4,6 +4,8 @@ export interface PlaybookAliasEvidence {
   requested: boolean;
   /** A request carried by a compound domain alias rather than a generic verb. */
   specific: boolean;
+  /** A second action after and/then/并, which must survive specificity filtering. */
+  coordinated: boolean;
 }
 
 /** Explaining is a byproduct of any other action, so it never adds a second coordinated request. */
@@ -63,19 +65,14 @@ function routingMatchIsRequestedAction(candidate: string, term: string, position
   const prefix = clause.trim();
   if (prefix === '') return true;
   if (
-    /^(?:please|can you|could you|would you|i want you to|i need you to|i(?:'d)?\s+(?:want|need|would like)\s+to|we\s+(?:need|want)\s+to|please\s+help\s+me|(?:can|could|would) you please|let(?:'s| us)|now|then|also)$/u.test(
+    /^(?:please|can you|could you|would you|i want you to|i need you to|i(?:'d)?\s+(?:want|need|would like)\s+to|we\s+(?:need|want)\s+to|please\s+help\s+me|(?:can|could|would) you please|please\s+run(?:\s+the)?|run the|let(?:'s| us)|now|then|also|(?:please\s+)?(?:keep going|continue)(?:\s+until(?:\s+\p{L}+){0,6})?|until(?:\s+\p{L}+){0,6})$/u.test(
       prefix,
     )
   ) {
     return true;
   }
-  // A second action after a coordinator is still requested: "review and fix" asks for both, and
-  // collapsing it to the first verb silently drops half of the request.
-  if (!explanatoryAliases.has(candidate)) {
-    if (/(?:^|[^\p{L}\p{N}])(?:and(?:\s+then)?|then|plus|also)$/u.test(prefix)) return true;
-    if (/(?:并且?|然后|接着|再|顺便)$/u.test(prefix)) return true;
-  }
-  return /^(?:(?:(?:请你?|请帮忙|请协助|帮我|给我|我想(?:要)?|我需要|我希望|希望你?|现在|继续|重新|开始|进行|执行|来|需要|要求|想要|逐个|并|只)\s*)+|(?:结合|基于|根据)[\p{L}\p{N} ._-]{0,40}(?:来)?)$/u.test(
+  if (routingMatchIsCoordinated(candidate, prefix)) return true;
+  return /^(?:(?:(?:请你?|请帮忙|请协助|帮我|给我|我想(?:要)?|我需要|我希望|希望你?|现在|继续|重新|开始|进行|执行|来|需要|要求|想要|逐个|并|只)\s*)+(?:[把将给][\p{Script=Han}\p{L}\p{N} ._-]{0,24})?|(?:结合|基于|根据)[\p{L}\p{N} ._-]{0,40}(?:来)?|(?:直到|直至)[\p{Script=Han}\p{L}\p{N} ._-]{0,16})$/u.test(
     prefix,
   );
 }
@@ -85,13 +82,45 @@ function routingMatchIsRequestedAction(candidate: string, term: string, position
  * outrank a generic verb in the same clause. High-loss aliases such as
  * remote-write stay mention-only unless they sit in a request position.
  */
+function routingMatchIsCoordinated(candidate: string, prefix: string): boolean {
+  if (explanatoryAliases.has(candidate)) return false;
+  if (/(?:^|[^\p{L}\p{N}])(?:and(?:\s+then)?|then|plus|also)$/u.test(prefix)) return true;
+  return /(?:并且?|然后|接着|再|顺便)$/u.test(prefix);
+}
+
 function routingAliasIsSpecific(candidate: string): boolean {
   if (candidate.includes(' ')) return true;
-  return /\p{Script=Han}/u.test(candidate) && [...candidate].length >= 3;
+  if (/\p{Script=Han}/u.test(candidate) && [...candidate].length >= 3) return true;
+  return /exception|leak|crash|failure|failed|failing/u.test(candidate);
 }
 
 function routingAliasIsSymptomCompound(candidate: string): boolean {
-  return /失败|故障|缺陷|事故|报错|异常|failure|failing|incident/u.test(candidate);
+  return /失败|故障|缺陷|事故|报错|异常|泄漏|崩溃|fail|incident|exception|leak|crash/u.test(
+    candidate,
+  );
+}
+
+function routingVerifyIsAssumption(candidate: string, after: string): boolean {
+  if (!/^(?:verify|validate|prove|验证|验收|核验|证明|复核)$/u.test(candidate)) return false;
+  return /^(?:my\s+)?(?:assumptions?|hypothes[ei]s|前提|假设)\b/u.test(after);
+}
+
+function routingReviewIsDesignComparison(candidate: string, after: string): boolean {
+  if (!/^(?:assess|评估)$/u.test(candidate)) return false;
+  return /^(?:[0-9一二两三四五六七八九十]+)?(?:方案|候选|选项|alternatives?|candidates?|options?)/u.test(
+    after,
+  );
+}
+
+function routingResearchIsRequestedByComparisonVerb(candidate: string, prefix: string): boolean {
+  if (
+    !/^(?:方案|候选|选项|alternative|alternatives|candidate|candidates|option|options)$/u.test(
+      candidate,
+    )
+  ) {
+    return false;
+  }
+  return /(?:评估|assess|compare|对比)[0-9一二两三四五六七八九十]*\s*$/u.test(prefix);
 }
 
 // Everything between the example marker and the alias stays illustrative until a sentence ends, so
@@ -187,7 +216,13 @@ export function matchesReasoningTerm(trigger: string, term: string): boolean {
 
 export function playbookAliasEvidence(trigger: string, term: string): PlaybookAliasEvidence {
   const candidate = normalizeRoutingText(trigger);
-  const evidence = { mentioned: false, negated: false, requested: false, specific: false };
+  const evidence = {
+    mentioned: false,
+    negated: false,
+    requested: false,
+    specific: false,
+    coordinated: false,
+  };
   if (!candidate) return evidence;
   for (const position of routingMatchPositions(candidate, term)) {
     if (routingMatchIsQuoted(term, position) || routingMatchIsIllustrative(term, position))
@@ -197,18 +232,30 @@ export function playbookAliasEvidence(trigger: string, term: string): PlaybookAl
       evidence.negated = true;
       continue;
     }
+    const after = term.slice(position + candidate.length).trimStart();
     if (
-      routingMatchIsNominalReference(candidate, term, position) ||
-      routingActionIsPossessiveNoun(term, position)
+      (routingMatchIsNominalReference(candidate, term, position) &&
+        !routingAliasIsSymptomCompound(candidate)) ||
+      routingActionIsPossessiveNoun(term, position) ||
+      routingVerifyIsAssumption(candidate, after) ||
+      routingReviewIsDesignComparison(candidate, after)
     )
       continue;
     const specific = routingAliasIsSpecific(candidate);
+    const prefix =
+      term
+        .slice(0, position)
+        .split(/[,.!?;，。！？；]/u)
+        .at(-1)
+        ?.trim() ?? '';
     if (
       routingMatchIsRequestedAction(candidate, term, position) ||
+      routingResearchIsRequestedByComparisonVerb(candidate, prefix) ||
       (specific && routingAliasIsSymptomCompound(candidate))
     ) {
       evidence.requested = true;
       evidence.specific = evidence.specific || specific;
+      evidence.coordinated = evidence.coordinated || routingMatchIsCoordinated(candidate, prefix);
     }
   }
   return evidence;

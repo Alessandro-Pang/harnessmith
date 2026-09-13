@@ -241,6 +241,35 @@ test.each([
 });
 
 test.each([
+  ['explain why the test failed', 'diagnose'],
+  ['why did the test fail', 'diagnose'],
+  ['分析失败原因', 'diagnose'],
+  ['检查内存泄漏', 'diagnose'],
+  ['Trace NullPointerException', 'diagnose'],
+  ['评估三方案性能', 'research-and-design'],
+  ['帮我把这个函数重构成 async', 'change'],
+  ['Please run the regression tests', 'verify-and-accept'],
+  ['prove the claim that this is safe', 'verify-and-accept'],
+  ['继续，直到整个重构完成', 'change'],
+  ['Keep going until the refactor is done', 'change'],
+  ['Please continue until the refactor lands', 'change'],
+])('residual review phrases keep their intended playbook for %s', (query, expected) => {
+  const report = routeDocumentation(docsRoot, [query]);
+
+  assert.equal(report.status, 'matched', query);
+  assert.equal(report.primaryPlaybook?.name, expected, query);
+});
+
+test('validating assumptions is not a result-acceptance request', () => {
+  const report = routeDocumentation(docsRoot, ['validate my assumptions']);
+
+  assert.notEqual(report.primaryPlaybook?.name, 'verify-and-accept');
+  assert.ok(
+    report.primaryPlaybook === null || report.primaryPlaybook.name === 'research-and-design',
+  );
+});
+
+test.each([
   ['请检查 CI 失败', 'diagnose'],
   ['请检查这次上线的风险', 'review'],
 ])('a compound domain signal outranks the generic verb sharing it for %s', (query, expected) => {
