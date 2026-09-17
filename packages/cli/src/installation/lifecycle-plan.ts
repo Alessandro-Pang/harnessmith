@@ -10,6 +10,7 @@ import type {
   LifecycleLayerPlan,
   ManagedScope,
   MigratedOutput,
+  RecordOutput,
 } from '../shared/types.js';
 import { HarnessmithError } from '../shared/types.js';
 import { digestManagedOutput, isHub, outputSpec, readInstallRecordAt } from './records.js';
@@ -49,10 +50,32 @@ export function migratedOutputs(record: InstallRecord): MigratedOutput[] {
   return record.migratedOutputs ?? [];
 }
 
+/**
+ * True when unwinding `output`'s layer must leave the current on-disk content in place
+ * for the previous layer to adopt: the layer replaced its predecessor without keeping a
+ * sibling backup, which only happens for content that exists in a single latest copy —
+ * distribution trees and links, or any output whose content the previous record already
+ * describes byte-for-byte (an identical rewrite is skipped without a backup).
+ */
+export function retainsLatestContent(
+  scope: ManagedScope,
+  output: RecordOutput,
+  previous: InstallRecord,
+): boolean {
+  if (output.backup) return false;
+  const prior = previous.outputs.find(({ path }) => path === output.path);
+  if (!prior) return false;
+  if (prior.checksum === output.checksum) return true;
+  return outputSpec(scope, output.path).kind !== 'file';
+}
+
 export function assertRestorable(scope: ManagedScope, record: InstallRecord, force: boolean): void {
-  const modified = record.outputs.filter(
-    ({ path, checksum }) => entryExists(path) && digestManagedOutput(scope, path) !== checksum,
-  );
+  const modified = record.outputs.filter(({ path, checksum }) => {
+    // Trees and links are volatile distribution content that only exists in its latest
+    // copy; drift there is expected after a keep-latest unwind and never blocks restore.
+    if (outputSpec(scope, path).kind !== 'file') return false;
+    return entryExists(path) && digestManagedOutput(scope, path) !== checksum;
+  });
   if (modified.length > 0 && !force) {
     throw new HarnessmithError(
       'SAFETY_CONFLICT',
@@ -110,6 +133,7 @@ export function assertUninstallable(
   let activePaths = new Map(layers[0]?.record.outputs.map(({ path }) => [path, path]) || []);
   for (const [index, layer] of layers.entries()) {
     const modified = layer.record.outputs.filter(({ path, checksum }) => {
+      if (outputSpec(scope, path).kind !== 'file') return false;
       const activePath = activePaths.get(path);
       return Boolean(
         activePath &&
@@ -144,8 +168,13 @@ export function assertUninstallable(
         continue;
       }
       // A path the previous layer did not own has nothing to restore; a path it did own
-      // must either carry a backup or have been retired through migratedOutputs.
+      // must either carry a backup, have been retired through migratedOutputs, or hold
+      // single-copy distribution content that unwinding keeps in place (keep-latest).
       if (previous.record.outputs.some(({ path }) => path === output.path)) {
+        if (retainsLatestContent(scope, output, previous.record)) {
+          next.set(output.path, output.path);
+          continue;
+        }
         throw new HarnessmithError(
           'INTEGRITY_ERROR',
           `Installation layer is missing its previous output: ${output.path}`,
@@ -157,10 +186,20 @@ export function assertUninstallable(
   }
 }
 
-export function describeLayer(scope: ManagedScope, layer: RecordLayer): LifecycleLayerPlan {
-  const changes: LifecycleChange[] = layer.record.outputs.map(({ path, backup }) =>
-    backup ? { path, action: 'restore-backup', source: backup } : { path, action: 'remove' },
-  );
+export function describeLayer(
+  scope: ManagedScope,
+  layer: RecordLayer,
+  previousRecord: InstallRecord | null,
+): LifecycleLayerPlan {
+  const changes: LifecycleChange[] = layer.record.outputs.map((output): LifecycleChange => {
+    if (output.backup) {
+      return { path: output.path, action: 'restore-backup', source: output.backup };
+    }
+    if (previousRecord && retainsLatestContent(scope, output, previousRecord)) {
+      return { path: output.path, action: 'keep-latest' };
+    }
+    return { path: output.path, action: 'remove' };
+  });
   changes.push(
     ...migratedOutputs(layer.record).map(
       ({ path, backup }): LifecycleChange => ({ path, action: 'restore-migrated', source: backup }),

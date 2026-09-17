@@ -1,6 +1,12 @@
-import { existsSync, mkdirSync, renameSync } from 'node:fs';
-import { dirname } from 'node:path';
-import { atomicWrite, removeExact, replaceManagedBlock, timestamp } from '../shared/files.js';
+import { existsSync, lstatSync, mkdirSync, renameSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import {
+  atomicWrite,
+  digestPath,
+  removeExact,
+  replaceManagedBlock,
+  timestamp,
+} from '../shared/files.js';
 import {
   assertSafeOutputPath,
   assertSafePath,
@@ -62,8 +68,11 @@ function assertCommitPaths(prepared: PreparedInstall, stamp: string): void {
 }
 
 /**
- * Move staged outputs into place with sibling backups, retire migrated paths, update ignore
- * blocks and write this layer's record. Every step is undone by `rollbackInstall`.
+ * Move staged outputs into place, retire migrated paths, update ignore blocks and write
+ * this layer's record. Managed destinations are replaced in place: identical content is
+ * skipped and changed trees/links evacuate into the stage root, so scanned directories
+ * only ever hold the latest copy; unmanaged destinations and rendered files keep sibling
+ * `.backup-<stamp>` backups. Every step is undone by `rollbackInstall`.
  */
 export function commitInstall(
   prepared: PreparedInstall,
@@ -73,13 +82,28 @@ export function commitInstall(
   const { scope } = prepared;
   assertCommitPaths(prepared, stamp);
   if (isHub(scope)) commitSeeds(prepared, scope);
-  for (const output of prepared.outputs) {
+  for (const [index, output] of prepared.outputs.entries()) {
     mkdirSync(dirname(output.destination), { recursive: true });
     assertSafeOutputPath(scope, output, output.destination);
     if (entryExists(output.destination)) {
-      const backup = `${output.destination}.backup-${stamp}`;
-      renameSync(output.destination, backup);
-      prepared.backups.push({ original: output.destination, backup });
+      const stagedDigest = digestPath(output.staged);
+      const unchanged =
+        output.managed &&
+        stagedDigest !== null &&
+        stagedDigest === digestManagedOutput(scope, output.destination);
+      if (unchanged) continue;
+      // A regular file at a tree/link destination is pre-hub content needing a backup.
+      if (!output.managed || output.kind === 'file' || lstatSync(output.destination).isFile()) {
+        const backup = `${output.destination}.backup-${stamp}`;
+        renameSync(output.destination, backup);
+        prepared.backups.push({ original: output.destination, backup });
+      } else {
+        const aside = join(prepared.stageRoot, 'asides', String(index));
+        mkdirSync(dirname(aside), { recursive: true });
+        assertSafePath(prepared.stageRoot, aside);
+        renameSync(output.destination, aside);
+        prepared.asides.push({ original: output.destination, backup: aside });
+      }
     }
     renameSync(output.staged, output.destination);
     prepared.installed.push(output.destination);
@@ -145,6 +169,13 @@ export function rollbackInstall(prepared: PreparedInstall): void {
     assertSafePath(root, backup, { allowSymlinkLeaf: true });
     if (entryExists(backup)) renameSync(backup, original);
   }
+  for (const { original, backup } of [...prepared.asides].reverse()) {
+    const output = prepared.outputs.find(({ destination }) => destination === original);
+    if (!output) continue;
+    assertSafePath(output.root, original, { allowSymlinkLeaf: true });
+    assertSafePath(prepared.stageRoot, backup, { allowSymlinkLeaf: true });
+    if (entryExists(backup)) renameSync(backup, original);
+  }
   for (const seeded of [...prepared.seeded].reverse()) removeExact(seeded);
   for (let index = 0; index < prepared.ignoreWritten; index += 1) {
     const ignore = scope.localIgnoreFiles?.[index];
@@ -159,7 +190,9 @@ export function rollbackInstall(prepared: PreparedInstall): void {
     pruneEmptyDirectories([
       ...prepared.outputs
         .filter(
-          ({ destination }) => !prepared.backups.some(({ original }) => original === destination),
+          ({ destination }) =>
+            !prepared.backups.some(({ original }) => original === destination) &&
+            !prepared.asides.some(({ original }) => original === destination),
         )
         .map(({ destination, root }) => ({ path: dirname(destination), root })),
       { path: dirname(scope.record), root: scope.home },

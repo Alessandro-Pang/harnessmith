@@ -1,0 +1,16 @@
+{
+  "kind": "lesson",
+  "title": "Zed 沙箱禁写 /tmp 导致 memory 写入误报锁竞争",
+  "conclusion": "在只允许写 $TMPDIR 与项目目录的宿主沙箱终端里，harness 的 memory typed writer 会在 /tmp/harnessmith-user-data-locks-<userscope>/ 下 mkdir 失败，错误被统一包装为 “User data is being initialized by another process”，并非真实锁竞争，重试无效。",
+  "rationale": "packages/harness/src/lib/filesystem/user-data-lock.ts 的 lockNamespace() 固定以 /tmp 为锁命名空间，lockSync 的任何失败都被包装成同一句锁竞争错误且不展示 cause；沙箱 /tmp 不可写时该 mkdir 必然失败。本会话 capture-finding 连续失败两次，授权该命名空间后一次成功。",
+  "application": "沙箱宿主中执行 memory 写入前，先用 mkdir 探测 /tmp 可写性；被拒时用 ls -d /tmp/harnessmith-user-data-locks-* 取得命名空间，并为该目录申请宿主写权限（如 Zed terminal 的 fs_write_paths）后再执行 typed writer，不要按锁竞争反复重试。",
+  "evidence": [
+    "2026-09-17 本会话：capture-finding 两次报 “User data is being initialized by another process: /volumes/…/.agent-docs”，同时探测 mkdir /tmp/harnessmith-user-data-locks-probe 报 Operation not permitted，而项目目录可写",
+    "授权 fs_write_paths=/tmp/harnessmith-user-data-locks-052398ccdd4fbe34 后 capture-finding 返回 created（memory:distilled/2026-09-17-lorimer-harnesssmith-0658e25a1f22fb06），memory check valid=true",
+    "--consume-payload-file 在 schema 校验后即消费 payload 文件（即使后续加锁/写入失败），重试前必须重写 payload；同一 payload 并行调用两个 writer 会产生 ENOENT 竞争，应串行"
+  ],
+  "sourceRefs": [
+    "packages/harness/src/lib/filesystem/user-data-lock.ts",
+    "memory:distilled/2026-09-17-lorimer-harnesssmith-0658e25a1f22fb06"
+  ]
+}

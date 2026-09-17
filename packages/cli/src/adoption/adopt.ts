@@ -96,8 +96,14 @@ export function createAdoptPlan(adapters: Adapter[], env: NodeJS.ProcessEnv) {
     ? appendBlock(target.expectedAfterInit, proposalId, collected.imports)
     : target.expectedAfterInit;
   const stamp = `adopt-${proposalHash.slice(0, 12)}`;
+  // Managed outputs whose recorded checksum still matches are skipped or replaced in
+  // place by the installer (distribution never keeps sibling backups, identical files
+  // are not rewritten), so the proposal must not promise sibling backups for them.
+  const replacedInPlace = new Set(
+    collected.inventory.filter(({ proposal }) => proposal === 'no-change').map(({ path }) => path),
+  );
   const backups = Object.entries(collected.expectedOutputChecksums)
-    .filter(([, checksum]) => checksum !== null)
+    .filter(([source, checksum]) => checksum !== null && !replacedInPlace.has(source))
     .map(([source]) => ({ source, path: `${source}.backup-${stamp}` }));
   const requiresWrite =
     blocked.length === 0 &&

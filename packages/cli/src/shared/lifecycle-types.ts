@@ -6,7 +6,8 @@ export type LifecycleChangeAction =
   | 'remove'
   | 'restore-backup'
   | 'restore-migrated'
-  | 'remove-managed-block';
+  | 'remove-managed-block'
+  | 'keep-latest';
 
 export interface LifecycleChange {
   path: string;

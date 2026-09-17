@@ -21,12 +21,14 @@ import {
   assertRestorable,
   migratedOutputs,
   migrationRoot,
+  retainsLatestContent,
 } from './lifecycle-plan.js';
 import type { LifecycleTransactionContext } from './lifecycle-transaction.js';
 import {
   managedBlockMarker,
   outputSpec,
   readInstallRecord,
+  readInstallRecordAt,
   restoreSnapshots,
   snapshotFiles,
 } from './records.js';
@@ -85,9 +87,13 @@ function rollbackRestore(scope: ManagedScope, record: InstallRecord, state: Rest
 }
 
 function unwindOutputs(scope: ManagedScope, record: InstallRecord, state: RestoreState): void {
+  const previous = record.recordBackup ? readInstallRecordAt(scope, record.recordBackup) : null;
   for (const [index, output] of [...record.outputs].reverse().entries()) {
     const spec = outputSpec(scope, output.path);
     assertSafeOutputPath(scope, spec, output.path);
+    // Single-copy content this layer replaced without a backup stays in place; the
+    // previous layer adopts whatever is on disk as its active output.
+    if (previous && retainsLatestContent(scope, output, previous)) continue;
     if (entryExists(output.path)) {
       const staged = join(state.stageRoot, 'outputs', String(index));
       mkdirSync(dirname(staged), { recursive: true });

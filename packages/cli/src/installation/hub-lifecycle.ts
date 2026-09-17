@@ -126,18 +126,24 @@ export function describeLifecycle(
     assertUninstallable(adapter, layers, force);
   }
   const decision = planHubLifecycle(command, selected, force);
+  // `describeLayer` needs the record below each unwound layer to know which outputs keep
+  // their latest on-disk copy instead of restoring a backup; the hub chain is re-read so
+  // hub layers can be matched with their predecessors by position.
+  const hubChain = decision.action === 'unwind' ? installationLayers(decision.hub) : [];
   return {
     command,
     adapter: adapter.name,
     capabilities: adapter.capabilities,
     home: adapter.home,
-    layers: (command === 'restore' ? layers.slice(0, 1) : layers).map((layer) =>
-      describeLayer(adapter, layer),
+    layers: (command === 'restore' ? layers.slice(0, 1) : layers).map((layer, index) =>
+      describeLayer(adapter, layer, layers[index + 1]?.record ?? null),
     ),
     hub: {
       home: decision.hub.home,
       action: decision.action,
-      layers: decision.layers.map((layer) => describeLayer(decision.hub, layer)),
+      layers: decision.layers.map((layer, index) =>
+        describeLayer(decision.hub, layer, hubChain[index + 1]?.record ?? null),
+      ),
     },
   };
 }

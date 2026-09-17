@@ -142,6 +142,8 @@ export interface StagedOutput {
   destination: string;
   kind: OutputKind;
   root: string;
+  /** True when the current installation record already owns the destination. */
+  managed: boolean;
   link?: string;
   linkMode?: 'symlink' | 'copy';
 }
@@ -156,6 +158,13 @@ export interface PreparedInstall {
   seeds: Array<{ source: string; destination: string }>;
   seeded: string[];
   backups: Backup[];
+  /**
+   * Managed tree/link destinations evacuated into the stage root during commit. They are
+   * rollback material only: distribution content keeps a single latest copy, so agents
+   * never see `.backup-*` siblings in scanned directories, and the asides disappear with
+   * the stage root on success.
+   */
+  asides: Backup[];
   installed: string[];
   recordBackup: string | null;
   recordWritten: boolean;

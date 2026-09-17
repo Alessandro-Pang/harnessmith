@@ -154,10 +154,15 @@ function outputState(
   assertSafeOutputPath(scope, output, output.path);
   if (!entryExists(output.path)) return { action: 'create', state: 'missing' };
   const managed = record?.outputs.find((item) => item.path === output.path);
-  if (managed && managed.checksum === digestManagedOutput(scope, output.path)) {
+  if (!managed) return { action: 'conflict', state: 'unmanaged' };
+  if (managed.checksum === digestManagedOutput(scope, output.path)) {
     return { action: 'replace-managed', state: 'managed' };
   }
-  return { action: 'conflict', state: managed ? 'modified' : 'unmanaged' };
+  // Distribution trees and links are volatile and only exist in their latest copy (an
+  // update evacuates the old one without a sibling backup), so drift against an older
+  // record layer must not demand `--force`; rendered files stay strictly gated.
+  if (output.kind !== 'file') return { action: 'replace-managed', state: 'modified' };
+  return { action: 'conflict', state: 'modified' };
 }
 
 export function plannedOutputs(scope: ManagedScope, record: InstallRecord | null): PlannedOutput[] {

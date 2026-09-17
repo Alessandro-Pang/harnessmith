@@ -98,6 +98,7 @@ function prepared(
     seeds,
     seeded: [],
     backups: [],
+    asides: [],
     installed: [],
     recordBackup: null,
     recordWritten: false,
@@ -111,6 +112,11 @@ export function renderedEntry(hub: Hub, env: NodeJS.ProcessEnv): string {
   return render(readFileSync(join(templateRoot, 'template', 'entry', 'AGENTS.md'), 'utf8'));
 }
 
+/** True when the scope's current installation record already owns `path`. */
+function managesPath(record: InstallRecord | null, path: string): boolean {
+  return Boolean(record?.outputs.some((output) => output.path === path));
+}
+
 /**
  * Stage the hub: the rendered skill, the shared always-on entry and the
  * `~/.agents/skills/agent-harness` discovery link. Hosts whose pre-hub Harness copies are
@@ -122,7 +128,7 @@ export function prepareHub(
   options: InstallOptions = {},
 ): PreparedInstall {
   const env = options.env ?? process.env;
-  const { stageRoot } = openStage(hub, options);
+  const { record, stageRoot } = openStage(hub, options);
   try {
     const render = installationRenderer(hub, env);
     const stagedHarness = join(stageRoot, 'agent-harness');
@@ -141,13 +147,26 @@ export function prepareHub(
       .filter((adapter) => plannedAdapterMigrations(adapter, readInstallRecord(adapter)).length > 0)
       .map((adapter) => adapter.legacyHarness);
     const outputs: StagedOutput[] = [
-      { staged: stagedHarness, destination: hub.harness, kind: 'tree', root: hub.home },
-      { staged: stagedEntry, destination: hub.entry, kind: 'file', root: hub.home },
+      {
+        staged: stagedHarness,
+        destination: hub.harness,
+        kind: 'tree',
+        root: hub.home,
+        managed: managesPath(record, hub.harness),
+      },
+      {
+        staged: stagedEntry,
+        destination: hub.entry,
+        kind: 'file',
+        root: hub.home,
+        managed: managesPath(record, hub.entry),
+      },
       {
         staged: stagedDiscovery,
         destination: hub.discoveryLink,
         kind: 'link',
         root: hub.agentsHome,
+        managed: managesPath(record, hub.discoveryLink),
         ...link,
       },
     ];
@@ -178,14 +197,27 @@ export function prepareInstall(
       mkdirSync(join(stageRoot, 'outputs'), { recursive: true });
       if (output.kind === 'link' && output.target) {
         const link = stageLink(staged, output.target, sourceFor(output.target));
-        return { staged, destination: output.path, kind: 'link', root: adapter.home, ...link };
+        return {
+          staged,
+          destination: output.path,
+          kind: 'link',
+          root: adapter.home,
+          managed: managesPath(record, output.path),
+          ...link,
+        };
       }
       const instruction = adapter.instructions.find(({ path }) => path === output.path);
       if (instruction?.mode !== 'render') {
         throw new Error(`No renderer for host output: ${output.path}`);
       }
       atomicWrite(staged, instruction.render(entry));
-      return { staged, destination: output.path, kind: 'file', root: adapter.home };
+      return {
+        staged,
+        destination: output.path,
+        kind: 'file',
+        root: adapter.home,
+        managed: managesPath(record, output.path),
+      };
     });
     return prepared(adapter, stageRoot, outputs, plannedAdapterMigrations(adapter, record));
   } catch (error) {

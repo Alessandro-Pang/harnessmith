@@ -46,7 +46,9 @@ earlier stage fails, the later stages do not run:
 4. **Acquire the operation lock and re-check.** A cross-process operation lock is acquired to prevent two
    `npx harnessmith install` runs at the same time. All target states are re-checked. If targets changed between steps
    1-3 (for example another process created a file with the same name), this step detects it and refuses. Existing
-   managed files move into a timestamped backup layer instead of being overwritten directly.
+   managed content is never overwritten directly: rendered rule files move into a timestamped backup layer, the
+   skill distribution tree and links evacuate into this transaction's staging area so scanned directories keep only
+   the latest copy, and content byte-identical to what is already on disk is skipped without creating any backup.
 
 5. **Commit and record.** The rules entry point, the embedded Runtime, and the install record are written. If any step
    fails, rollback follows only the exact paths recorded for this run — it does not roll back to before the previous
