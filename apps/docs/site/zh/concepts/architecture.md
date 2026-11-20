@@ -29,7 +29,7 @@ flowchart BT
 
 ## 为什么分成两层
 
-外层 `packages/cli/src/` 必须知道 Codex Home、Cursor 项目目录、Claude 配置目录这些宿主事实，也必须处理安装事务；内层 `packages/harness/` 则必须保持宿主中立，才能在不同 Agent 中复用同一套文档、Memory 和 Task 契约。
+外层 `packages/cli/src/` 必须知道 Codex Home、Cursor 项目目录、Claude 配置目录这些宿主事实，也必须处理安装事务；内层 `packages/harness/` 则必须保持宿主中立，才能在不同 Agent 中复用同一套文档、Memory 和 Task 契约。发布后的全局 `harnessmith` 是两者的统一命令入口：安装器命令由外层执行，Runtime 子命令动态分派到 npm 包根目录中与 CLI 同版本的 `dist/harness.mjs`，而不是把两层源码合并，也不把 Runtime 复制到任何用户目录。
 
 两个反面假设可以说明为什么不能混：如果把宿主路径写进模板，每增加一个宿主都会污染核心；如果让每个 Adapter 复制一整套业务逻辑，不同宿主又会迅速漂移。因此项目规则明确要求：**宿主身份、路径和环境变量留在 Adapter，通用 Harness 能力留在分发模板。**
 
@@ -37,13 +37,13 @@ flowchart BT
 
 ### 1. Distribution：把 Harness 安全送到目标位置
 
-外层 `packages/cli/src/` 包含 CLI、Adapter、安全路径、操作锁、staging、备份、安装记录以及 restore/uninstall 事务。一次多宿主操作会先完整预检所有 Adapter，再开始写入；中途失败时按已提交步骤逆序回滚，避免出现半完成状态。你在[快速开始](/guide/getting-started)看到的 dry-run 预览，就是这层的产物。
+外层 `packages/cli/src/` 包含 CLI、Adapter、安全路径、操作锁、staging、备份、当前安装记录以及 restore/uninstall 事务。一次多宿主 Host 文件操作先完整预检所有 Adapter，再开始写入；中途失败按已提交步骤逆序回滚。只处理 schema 3 当前记录，不读取或迁移旧记录。你在[快速开始](/guide/getting-started)看到的 dry-run 预览，就是这层的产物。
 
 ### 2. Guidance & Context：让 Agent 找到合适信息
 
 `template/entry/AGENTS.md` 是短入口，只保留高损失边界和发现顺序；详细内容位于 `template/skills/agent-harness/docs/`，由 manifest、route 和 search 按任务发现。项目内更具体的规则、skill、代码和测试仍优先于通用个人规则——离现场更近的信息永远赢。
 
-`template/skills/agent-harness/` 本身按 [Agent Skills](https://agentskills.io/specification) 约定打包成一个名为 `agent-harness` 的 skill：`SKILL.md` 是宿主可发现的入口，`scripts/harness.mjs` 是 Runtime CLI，`docs/` 是路由语料，`assets/` 放模板与 schema。安装器把它只渲染一份到共享 hub `~/.agents/harnessmith/skills/agent-harness/`（`HARNESS_HOME` 可覆盖 hub 位置），把 always-on 入口只渲染一份为 `~/.agents/harnessmith/entry/AGENTS.md`，各宿主只拿到符号链接：instruction file 指向 hub 入口，不扫描 `~/.agents/skills` 的宿主（Claude Code、Cursor）另获得 `skills/agent-harness` 链接；Cursor 的 `.mdc` 规则是唯一按宿主渲染的副本。这是一种混合布局，而不是「全部改成 skill」：skill 的加载由模型按需决定，无法承载授权边界、启动时的 bootstrap/route 和回合结束前的 Memory 沉淀，这些仍由 always-on 的规则入口负责；skill 提供的是宿主原生的发现渠道和统一的目录边界，hub 提供的是单一事实源——升级一次覆盖所有宿主，宿主之间不会漂移到不同的 Harness 版本。
+`template/skills/agent-harness/` 本身按 [Agent Skills](https://agentskills.io/specification) 约定打包成一个名为 `agent-harness` 的 skill：`SKILL.md` 是宿主可发现的入口，`docs/` 是路由语料，`assets/` 放模板与 schema。skill 内没有脚本或 Runtime 副本——全局 `harnessmith` 是唯一公开 Runtime 入口，直接执行 npm 包根目录中同版本的 `dist/harness.mjs`。安装时，外层 Adapter 只向宿主渲染普通的 always-on 指令文件（`AGENTS.md`，Claude Code 另加 `CLAUDE.md`，Cursor 另加 `.mdc` 规则），不是符号链接；skill 的安装与卸载完全交给固定版本的生产依赖 `skills@1.7.6`：安装器把包内模板渲染成临时 skill 源后调用 `skills add`，卸载时调用 `skills remove`，skill 的规范副本与宿主链接由 `skills` 拥有和维护（全局规范副本在 `~/.agents/skills/agent-harness`，Claude Code 的 `~/.claude/skills/agent-harness` 等宿主目录由 `skills` 管理）。这是一种混合布局，而不是「全部改成 skill」：skill 的加载由模型按需决定，无法承载授权边界、启动时的 bootstrap/route 和回合结束前的 Memory 沉淀，这些仍由 always-on 的规则入口负责；skill 提供的是宿主原生的发现渠道。单一事实源是 npm 包本身：所有宿主共用同一个包版本，升级一次覆盖所有宿主，宿主之间不会漂移到不同的 Harness 版本；Harnessmith 不创建也不依赖 `~/.agents/harnessmith` 共享目录。
 
 用户所有的 Personal overlay 还维护 Repository Map：以有类型的直接关系连接 provider、contract 和 consumer，并用两侧权威来源约束写入。它帮助跨仓任务定位 owner 与影响面，但不替代项目架构文档、实时拓扑或部署状态。
 
@@ -90,9 +90,9 @@ tests、schema、preflight、覆盖率与包检查验证仓库内确定性契约
 4. 按稳定路径顺序获取跨进程 operation lock；
 5. 在授权根内 staging payload，校验生成结果；
 6. commit 前全量复检，每次 mkdir、rename 或 write 前再检查直接目标；
-7. 失败时只回滚本次记录的精确路径。
+7. 失败时只回滚本次记录的精确路径；install/restore/uninstall 各自只有一个文件回滚事务。
 
-七步是实现层的安全骨架，不是用户要记住的七条命令。用户指南把同一过程压缩为“预览 → 写入 → 核对”三个动作；[工作原理](/concepts/how-it-works)按五个可观察阶段解释数据流。三种说法的粒度不同，安全顺序相同。
+七步是实现层的安全骨架，不是用户要记住的七条命令。Host 文件与 `skills` 管理的 skill 是两个事务：后者在 Host 提交后失败时按部分完成报告，不虚称整体回滚；卸载先完成 Host 文件再移除 skill。用户指南把同一过程压缩为“预览 → 写入 → 核对”三个动作；[工作原理](/concepts/how-it-works)按五个可观察阶段解释数据流。三种说法的粒度不同，安全顺序相同。
 
 有一个诚实的工程说明：Node.js 不能在所有平台上提供等同于 `openat(O_NOFOLLOW)` 的原子语义，所以 TOCTOU 防护是「锁 + 反复复检」的 best effort，而不是绝对安全声明。检测到路径替换时会 fail closed。宁可拒绝，不放行可疑写入。
 
@@ -113,7 +113,7 @@ tests、schema、preflight、覆盖率与包检查验证仓库内确定性契约
 
 ## 数据与信任边界
 
-- 个人 overlay（`~/.agents/harnessmith/rules/`）、可变 `state/`、跨项目 Memory（`memory/`）、受管理 skill 和项目 `.agent-docs/` 分开存放，避免升级覆盖用户内容。
+- 个人 overlay（默认 `~/.harnessmith/rules/`）、可变 `state/`、跨项目 Memory（`memory/`）、受管理分发和项目 `.agent-docs/` 分开存放，避免升级覆盖用户内容。用户数据根目录默认 `~/.harnessmith`，可用 `HARNESS_HOME` 覆盖；分发内容留在 npm 包内，skill 位置由 `skills` 管理。
 - audit record 只接受 trace、操作、策略决定、耗时、结果和 artifact digest 等限界元数据；schema 拒绝原始 prompt、模型输出、tool arguments 和未知字段。
 - 网页、仓库、日志、Memory 和工具输出不传递授权。一次安装许可也不自动包含 commit、push、merge 或发布。
 - 临时 workspace、payload、release/eval 证据由创建者负责清理，且不通过宽泛 wildcard 删除。

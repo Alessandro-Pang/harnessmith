@@ -78,8 +78,6 @@ export function checkPackage(root: string, harnessRoot: string, check: Check): v
     'dist',
     'template/entry/AGENTS.md',
     'template/skills/agent-harness/SKILL.md',
-    'template/skills/agent-harness/scripts',
-    'template/skills/agent-harness/dist',
     'template/skills/agent-harness/docs',
     'template/skills/agent-harness/manifest.json',
     'template/skills/agent-harness/assets/schemas',
@@ -118,11 +116,18 @@ export function checkPackage(root: string, harnessRoot: string, check: Check): v
     'npm package files must not publish TypeScript sources or test directories',
   );
   check(existsSync(join(root, 'bin', 'harnessmith.mjs')), 'outer CLI launcher is missing');
-  check(existsSync(join(harnessRoot, 'scripts', 'harness.mjs')), 'Harness CLI launcher is missing');
   check(existsSync(join(harnessRoot, 'SKILL.md')), 'Harness skill entry point is missing');
   check(
-    existsSync(join(harnessRoot, 'dist', 'harness.mjs')),
+    existsSync(join(root, 'dist', 'harness.mjs')),
     'Harness bundle is missing; run pnpm run build',
+  );
+  check(
+    !existsSync(join(harnessRoot, 'scripts')),
+    'distributed skill must not contain a CLI launcher',
+  );
+  check(
+    !existsSync(join(harnessRoot, 'dist')),
+    'distributed skill must not contain a Runtime copy',
   );
 
   checkCiWorkflow(root, check);

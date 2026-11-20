@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { runCli } from '../cli.js';
 import { evaluateReplayContract } from '../lib/replay/replay-contract.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { capturedIo, elementAt, harnessRuntime } from './helpers/harness.js';
 
 const exactReplay = {
   version: 1 as const,
@@ -59,20 +59,19 @@ test('an identical replay is proven without stdout only by exact persisted state
 });
 
 test('new mutation, duplicate delivery, and failed retry have deterministic decisions', () => {
+  const { previousPayload, previousSignalId, ...newMutation } = exactReplay;
+  assert.ok(previousPayload);
+  assert.ok(previousSignalId);
   const fresh = evaluateReplayContract({
-    ...exactReplay,
+    ...newMutation,
     kind: 'new-mutation',
-    previousPayload: undefined,
-    previousSignalId: undefined,
   });
   assert.equal(fresh.decision, 'execute');
   assert.equal(fresh.reasonCode, 'new-mutation-ready');
 
   const inexactFresh = evaluateReplayContract({
-    ...exactReplay,
+    ...newMutation,
     kind: 'new-mutation',
-    previousPayload: undefined,
-    previousSignalId: undefined,
     commandExact: false,
   });
   assert.equal(inexactFresh.decision, 'new-payload-required');
@@ -105,7 +104,7 @@ test('replay verification CLI is read-only and schema-backed', () => {
     }),
     0,
   );
-  assert.equal(JSON.parse(io.logs[0]).result, 'verified');
+  assert.equal(JSON.parse(elementAt(io.logs, 0)).result, 'verified');
   assert.equal(readFileSync(input, 'utf8'), before);
   const schema = JSON.parse(
     readFileSync(

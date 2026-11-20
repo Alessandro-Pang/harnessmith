@@ -12,7 +12,6 @@ export default {
     'node_modules/**',
     'dist/**',
     'coverage/**',
-    'template/agent-harness/dist/**',
     '.pet-runs/**',
   ],
 };

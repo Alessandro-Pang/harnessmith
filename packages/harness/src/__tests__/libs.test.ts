@@ -33,8 +33,13 @@ import { canonicalPath } from '../lib/filesystem/safe-path.js';
 import { render } from '../lib/filesystem/templates.js';
 import { projectSnapshot } from '../lib/project/project.js';
 import { outputSearch, searchableFiles, searchText, textSearch } from '../lib/search/search.js';
-import { calendarDate, createRuntime, timestamp } from '../runtime.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import {
+  assertRuntimeCanMutate,
+  calendarDate,
+  createRuntime,
+  verifyRuntimeIdentity,
+} from '../runtime.js';
+import { capturedIo, elementAt, harnessRuntime, packageRoot } from './helpers/harness.js';
 
 function temporaryRoot(prefix: string): string {
   const root = mkdtempSync(join(tmpdir(), prefix));
@@ -198,7 +203,7 @@ test('search discovers supported text formats once and reports matching lines', 
   assert.equal(textSearch('needle', [root], io), 2);
   assert.equal(io.logs.length, 2);
   assert.equal(
-    io.logs[0],
+    elementAt(io.logs, 0),
     `[untrusted:context] ${JSON.stringify(join(root, 'one.md'))}:2:${JSON.stringify('needle here')}`,
   );
 });
@@ -232,8 +237,8 @@ test('search bounds results and line size while labelling untrusted provenance',
   );
   const io = capturedIo();
   outputSearch(report, io);
-  assert.match(io.logs[0], /^\[untrusted:project-memory\] /);
-  assert.match(io.logs[0], /:"needle first/);
+  assert.match(elementAt(io.logs, 0), /^\[untrusted:project-memory\] /);
+  assert.match(elementAt(io.logs, 0), /:"needle first/);
   assert.match(io.logs.at(-1) ?? '', /truncated after 2 matches/);
 });
 
@@ -250,18 +255,61 @@ test('runtime rendering keeps unknown tokens and formats stable dates', () => {
     `test-owner|${runtime.harnessHome}|${calendarDate(runtime)}|value|{{UNKNOWN}}`,
   );
   assert.equal(calendarDate(runtime, new Date('2026-08-19T23:59:59Z')), '2026-08-19');
-  assert.equal(timestamp(new Date('2026-08-19T01:02:03.456Z')), '2026-08-19T010203-456Z');
 
   const created = createRuntime({
     HOME: join(root, 'custom-home'),
     HARNESS_HOME: join(root, 'custom-harness'),
+    HARNESS_STATE_HOME: join(root, 'custom-state'),
     HARNESS_MEMORY_HOME: join(root, 'custom-memory'),
+    HARNESS_PERSONAL_HOME: join(root, 'custom-personal'),
     HARNESS_REPOSITORY_ROOT: join(root, 'custom-repositories'),
     HARNESS_OWNER: 'custom-owner',
   });
   assert.equal(created.owner, 'custom-owner');
+  assert.equal(created.stateRoot, join(root, 'custom-state'));
   assert.equal(created.memoryHome, canonicalPath(join(root, 'custom-memory')));
+  assert.equal(created.personalHome, canonicalPath(join(root, 'custom-personal')));
+  assert.equal(created.repositoryRoot, join(root, 'custom-repositories'));
   assert.equal(Object.isFrozen(created), true);
+});
+
+test('bundled standalone runtime defaults user data to ~/.harnessmith and honors HARNESS_HOME', () => {
+  const root = temporaryRoot('harness-runtime-home-');
+  const home = join(root, 'home');
+  const defaults = createRuntime({ HOME: home });
+  assert.equal(defaults.hostAdapter, 'standalone');
+  assert.deepEqual(verifyRuntimeIdentity(defaults), { valid: true });
+  assert.equal(defaults.distributionRoot, packageRoot);
+  assert.equal(defaults.harnessRoot, join(packageRoot, 'template', 'skills', 'agent-harness'));
+  assert.equal(defaults.installedHarness, defaults.harnessRoot);
+  assert.equal(defaults.harnessHome, join(home, '.harnessmith'));
+  assert.equal(defaults.stateRoot, join(home, '.harnessmith', 'state'));
+  assert.equal(defaults.memoryHome, canonicalPath(join(home, '.harnessmith', 'memory')));
+  assert.equal(defaults.personalHome, canonicalPath(join(home, '.harnessmith', 'rules')));
+  assert.equal(existsSync(join(home, '.agents', 'harnessmith')), false);
+
+  const overridden = createRuntime({ HOME: home, HARNESS_HOME: join(root, 'custom-data') });
+  assert.equal(overridden.harnessHome, join(root, 'custom-data'));
+  assert.equal(overridden.stateRoot, join(root, 'custom-data', 'state'));
+  assert.equal(overridden.memoryHome, canonicalPath(join(root, 'custom-data', 'memory')));
+  assert.equal(overridden.personalHome, canonicalPath(join(root, 'custom-data', 'rules')));
+  assert.equal(existsSync(join(home, '.agents', 'harnessmith')), false);
+});
+
+test('a standalone runtime outside a verified package root cannot mutate', () => {
+  const root = temporaryRoot('harness-runtime-forged-');
+  const forgedRoot = join(root, 'copied-host', 'skills', 'agent-harness');
+  mkdirSync(forgedRoot, { recursive: true });
+  writeFileSync(join(forgedRoot, 'manifest.json'), '{"schemaVersion":3}\n');
+  const runtime = harnessRuntime(root, {
+    harnessRoot: forgedRoot,
+    hostAdapter: 'standalone',
+    installedHarness: forgedRoot,
+    docsRoot: join(forgedRoot, 'docs'),
+  });
+
+  assert.equal(verifyRuntimeIdentity(runtime).valid, false);
+  assert.throws(() => assertRuntimeCanMutate(runtime), /write commands are disabled/i);
 });
 
 test('project snapshot reports Git, package manager, manifests, and nearest instructions', () => {
@@ -311,7 +359,10 @@ test('project snapshot reports Git, package manager, manifests, and nearest inst
   const output = capturedIo();
   const inspected = inspectProject(root, { json: true }, output);
   assert.equal(inspected.root, canonicalRepositoryRoot);
-  assert.equal((JSON.parse(output.logs[0]) as { packageManager: string }).packageManager, 'npm');
+  assert.equal(
+    (JSON.parse(elementAt(output.logs, 0)) as { packageManager: string }).packageManager,
+    'npm',
+  );
   writeFileSync(join(root, 'package.json'), '{invalid json\n');
   assert.deepEqual(projectSnapshot(join(root, 'package.json')).packageScripts, []);
 });

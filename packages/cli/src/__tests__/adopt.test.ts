@@ -15,6 +15,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { onTestFinished, test } from 'vitest';
+import { elementAt } from '../../../../packages/harness/src/__tests__/helpers/harness.js';
 import { createAdapter } from '../adapters/adapters.js';
 import { applyAdoptPlan, createAdoptPlan } from '../adoption/adopt.js';
 import { canonicalPath } from '../shared/safe-path.js';
@@ -112,9 +113,33 @@ test('adopt is idempotent after ownership and provenance are established', () =>
 
   const repeated = createAdoptPlan([adapter], env).report;
   assert.equal(repeated.requiresWrite, false);
-  assert.equal(repeated.inventory[0].classification, 'managed-compatible');
+  assert.equal(elementAt(repeated.inventory, 0).classification, 'managed-compatible');
   assert.equal(readFileSync(record, 'utf8'), recordBefore);
   assert.deepEqual(readdirSync(join(root, 'codex-home')).sort(), entriesBefore);
+});
+
+test('adopt applies through the shared skills workflow and really installs the skill', () => {
+  const { root, env } = fixture('harnessmith-adopt-skills-');
+  const source = join(root, 'codex-home', 'AGENTS.md');
+  mkdirSync(dirname(source), { recursive: true });
+  writeFileSync(source, '# Existing rules\n');
+  const adapter = createAdapter('codex', { env });
+  const proposal = createAdoptPlan([adapter], env).report;
+
+  const applied = applyAdoptPlan([adapter], env, {
+    proposal: proposal.proposalId,
+    initGlobal: false,
+  });
+
+  assert.equal(applied.result, 'adopted');
+  const skill = join(root, '.agents', 'skills', 'agent-harness');
+  assert.ok(existsSync(join(skill, 'SKILL.md')), 'adopt installs the agent-harness skill');
+  assert.doesNotMatch(readFileSync(join(skill, 'SKILL.md'), 'utf8'), /\{\{HARNESS_/);
+  assert.match(readFileSync(source, 'utf8'), /managed-by: harnessmith/);
+  const personal = readFileSync(join(root, 'personal-harness', 'AGENTS.md'), 'utf8');
+  assert.match(personal, /Existing rules/);
+  assert.match(personal, /harnessmith-adopt:start/);
+  assert.ok(proposal.backups.every(({ path }: { path: string }) => existsSync(path)));
 });
 
 test('adopt separates Cursor frontmatter from importable project rules', () => {
@@ -179,7 +204,7 @@ test('adopt fails closed on secrets, symlinks, binary content, and changed propo
     [createAdapter('codex', { env: secretFixture.env })],
     secretFixture.env,
   ).report;
-  assert.equal(secretPlan.blocked[0].reasonCode, 'SECRET_DETECTED');
+  assert.equal(elementAt(secretPlan.blocked, 0).reasonCode, 'SECRET_DETECTED');
   assert.doesNotMatch(JSON.stringify(secretPlan), new RegExp(secret));
   assert.equal(readFileSync(secretSource, 'utf8'), `# rules\n${secret}\n`);
 
@@ -193,7 +218,7 @@ test('adopt fails closed on secrets, symlinks, binary content, and changed propo
     [createAdapter('codex', { env: symlinkFixture.env })],
     symlinkFixture.env,
   ).report;
-  assert.equal(symlinkPlan.blocked[0].reasonCode, 'SYMLINK_REJECTED');
+  assert.equal(elementAt(symlinkPlan.blocked, 0).reasonCode, 'SYMLINK_REJECTED');
   assert.equal(lstatSync(symlinkSource).isSymbolicLink(), true);
 
   const binaryFixture = fixture('harnessmith-adopt-binary-');
@@ -204,7 +229,7 @@ test('adopt fails closed on secrets, symlinks, binary content, and changed propo
     [createAdapter('codex', { env: binaryFixture.env })],
     binaryFixture.env,
   ).report;
-  assert.equal(binaryPlan.blocked[0].reasonCode, 'UNKNOWN_FORMAT');
+  assert.equal(elementAt(binaryPlan.blocked, 0).reasonCode, 'UNKNOWN_FORMAT');
 
   const changedFixture = fixture('harnessmith-adopt-changed-');
   const changedSource = join(changedFixture.root, 'codex-home', 'AGENTS.md');

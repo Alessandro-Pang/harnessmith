@@ -4,6 +4,7 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { elementAt } from '../../packages/harness/src/__tests__/helpers/harness.js';
 import { readHostCapabilityMatrix } from '../../scripts/evaluation/contracts/eval-host-capability-matrix-contract.js';
 import { buildHostCapabilityMatrixReport } from '../../scripts/evaluation/eval-host-capability-matrix.js';
 import { evaluationFingerprint } from '../../scripts/evaluation/records/eval-fingerprint.js';
@@ -129,7 +130,7 @@ try {
   assert.equal(report.rejectedNonCandidateRecords, 0);
 
   const malformed = structuredClone(readHostCapabilityMatrix());
-  malformed.hosts[0].evidence = ['scripts/missing-evidence.ts'];
+  elementAt(malformed.hosts, 0).evidence = ['scripts/missing-evidence.ts'];
   assert.throws(() => readHostCapabilityMatrix(malformed), /evidence is missing/);
 } finally {
   rmSync(temporaryRoot, { recursive: true, force: true });

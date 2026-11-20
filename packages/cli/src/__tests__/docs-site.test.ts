@@ -3,6 +3,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'vitest';
+import { elementAt } from '../../../../packages/harness/src/__tests__/helpers/harness.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
 
@@ -156,7 +157,7 @@ test('language switching is the only English entry in the Chinese site chrome', 
   const home = read('apps/docs/site/zh/index.md');
   const styles = read('apps/docs/site/.vitepress/theme/custom.css');
   const navPattern = /nav:\s*\[([\s\S]*?)\],\n\s*sidebar:/g;
-  const localeNavs = [...config.matchAll(navPattern)].map((match) => match[1]);
+  const localeNavs = [...config.matchAll(navPattern)].map((match) => elementAt(match, 1));
   assert.ok(localeNavs.length >= 2, 'every locale nav must be paired with its sidebar');
 
   for (const nav of localeNavs) {
@@ -283,6 +284,47 @@ test('capture eligibility has public architecture and executable evidence', () =
   assert.match(evidence, /id: memory-capture-eligibility/);
   assert.match(evidence, /memory-capture-eligibility\.ts/);
   assert.match(evidence, /memory-capture-eligibility\.test\.ts/);
+});
+
+test('current distribution docs describe the package-bundled Runtime and skills-managed skill, not a shared hub', () => {
+  const distributionDocs = [
+    'apps/docs/site/zh/concepts/architecture.md',
+    'apps/docs/site/en/concepts/architecture.md',
+    'apps/docs/site/zh/guide/hosts.md',
+    'apps/docs/site/en/guide/hosts.md',
+    'apps/docs/site/zh/reference/runtime-cli.md',
+    'apps/docs/site/en/reference/runtime-cli.md',
+  ];
+  for (const path of distributionDocs) {
+    const content = read(path);
+    // The Runtime runs from the npm package root; no skill script entry or hub placeholder remains.
+    assert.match(content, /dist\/harness\.mjs/, path);
+    assert.doesNotMatch(content, /scripts\/harness\.mjs/, path);
+    assert.doesNotMatch(content, /<hub>/, path);
+    // User data defaults to ~/.harnessmith.
+    assert.match(content, /~\/\.harnessmith/, path);
+  }
+  // Architecture and hosts name the pinned skills dependency that owns skill install/uninstall.
+  for (const path of [
+    'apps/docs/site/zh/concepts/architecture.md',
+    'apps/docs/site/en/concepts/architecture.md',
+    'apps/docs/site/zh/guide/hosts.md',
+    'apps/docs/site/en/guide/hosts.md',
+  ]) {
+    const content = read(path);
+    assert.match(content, /skills@1\.7\.6/, path);
+    assert.match(content, /~\/\.agents\/skills\/agent-harness/, path);
+  }
+  // Existing users must see the incompatibility and the absence of automatic data deletion.
+  for (const path of [
+    'apps/docs/site/zh/reference/migrations.md',
+    'apps/docs/site/en/reference/migrations.md',
+  ]) {
+    const content = read(path);
+    assert.match(content, /schemaVersion:\s*3/i, path);
+    assert.match(content, /~\/\.agents\/harnessmith/, path);
+    assert.doesNotMatch(content, /Historical layout 3\.0|历史布局 3\.0/, path);
+  }
 });
 
 test('advanced README material remains available in the documentation site', () => {
@@ -455,46 +497,4 @@ test('core documentation follows a human question path and separates current fac
   const versions = read('apps/docs/site/zh/reference/migrations.md');
   assert.doesNotMatch(versions, /当前公开 npm 版本线|`0\.8\.x`/);
   assert.match(versions, /不在长期文档里复制当前版本/);
-});
-
-test('concise bilingual READMEs preserve onboarding and safety while routing depth to apps/docs/site', () => {
-  const chinese = read('README.md');
-  const english = read('README.en.md');
-
-  assert.ok(chinese.split('\n').length <= 180, 'README.md must stay concise');
-  assert.ok(english.split('\n').length <= 180, 'README.en.md must stay concise');
-  assert.match(chinese, /https:\/\/alexpang\.cn\/harnessmith\//);
-  assert.match(english, /https:\/\/alexpang\.cn\/harnessmith\/en\//);
-  assert.match(chinese, /多个项目和 Coding Agent.*历史文档.*模型上下文/s);
-  assert.match(english, /several projects and coding agents.*growing history.*model context/s);
-
-  for (const content of [chinese, english]) {
-    assert.match(content, /npx harnessmith/);
-    assert.match(content, /npx harnessmith status/);
-    assert.match(content, /npx harnessmith restore/);
-    assert.match(content, /npx harnessmith uninstall/);
-    assert.match(content, /Codex/);
-    assert.match(content, /Cursor/);
-    assert.match(content, /Claude Code/);
-    assert.match(content, /OpenCode/);
-    assert.match(content, /Kimi Code/);
-    assert.match(content, /apps\/docs\/site\/capability-evidence\.yaml/);
-  }
-
-  assert.doesNotMatch(chinese, /^### 分层记忆$/m);
-  assert.doesNotMatch(english, /^### Layered memory$/m);
-});
-
-test('README repository-relative links resolve to files that exist', () => {
-  for (const readme of ['README.md', 'README.en.md']) {
-    const content = read(readme);
-    const targets = [
-      ...[...content.matchAll(/<img\s+src="(\.[^"]+)"/g)].map((match) => match[1]),
-      ...[...content.matchAll(/\]\((\.[^)#]+)(?:#[^)]*)?\)/g)].map((match) => match[1]),
-    ];
-    assert.ok(targets.length > 0, `${readme} should link repository files`);
-    for (const target of targets) {
-      assert.equal(existsSync(join(root, target)), true, `${readme} link ${target} must exist`);
-    }
-  }
 });

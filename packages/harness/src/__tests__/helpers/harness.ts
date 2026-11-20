@@ -28,6 +28,18 @@ export function capturedIo(): CapturedIo {
   };
 }
 
+export function first<T>(values: readonly T[]): T {
+  const [value] = values;
+  assert(value !== undefined, 'Expected at least one item');
+  return value;
+}
+
+export function elementAt<T>(values: readonly T[], index: number): T {
+  const value = values[index];
+  assert(value !== undefined, `Expected an item at index ${index}`);
+  return value;
+}
+
 export function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -49,11 +61,9 @@ export function harnessRuntime(root: string, overrides: Partial<Runtime> = {}): 
     env: { HOME: home, TZ: 'UTC' },
     home,
     harnessRoot: sourceHarnessRoot,
-    distributionRoot: join(packageRoot, 'template'),
+    distributionRoot: packageRoot,
     harnessHome,
-    agentsHome: join(root, 'agents'),
     hostAdapter: 'test',
-    instructionFiles: [join(harnessHome, 'entry', 'AGENTS.md')],
     installedHarness,
     docsRoot: join(installedHarness, 'docs'),
     stateRoot: join(harnessHome, 'state'),

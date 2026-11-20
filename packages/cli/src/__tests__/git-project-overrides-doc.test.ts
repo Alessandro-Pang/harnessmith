@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'vitest';
+import { elementAt } from '../../../../packages/harness/src/__tests__/helpers/harness.js';
 import {
   automatedBranchPrefix,
   issueBranchPattern,
@@ -16,10 +17,12 @@ const documentPath = join(
 );
 
 function documentedBranchPattern(document: string): string {
-  const fences = [...document.matchAll(/```text\n([^\n]+)\n```/g)].map(([, body]) => body.trim());
+  const fences = [...document.matchAll(/```text\n([^\n]+)\n```/g)].map((match) =>
+    elementAt(match, 1).trim(),
+  );
   const documented = fences.filter((body) => body.startsWith('^'));
   assert.equal(documented.length, 1, 'the override document must publish exactly one branch regex');
-  return documented[0] as string;
+  return elementAt(documented, 0);
 }
 
 test('documented branch regex matches the mechanical branch contract', () => {

@@ -30,6 +30,7 @@ interface Workflow {
       needs?: unknown;
       if?: unknown;
       permissions?: Record<string, unknown>;
+      strategy?: { matrix?: { node?: unknown } };
       steps?: Array<{
         if?: unknown;
         name?: unknown;
@@ -184,11 +185,15 @@ test('CI exposes one stable aggregate check for branch protection', () => {
   ) as Workflow;
   const required = workflow.jobs?.required;
   assert.equal(required?.name, 'CI Required');
-  assert.deepEqual(required?.needs, ['test', 'coverage']);
+  assert.deepEqual(required?.needs, ['test', 'coverage', 'dependency-audit']);
   assert.equal(required?.if, '$' + '{{ always() }}');
   const gate = required?.steps?.map(({ run }) => text(run)).join('\n') ?? '';
   assert.match(gate, /needs\.test\.result/);
   assert.match(gate, /needs\.coverage\.result/);
+  assert.match(gate, /needs\.dependency-audit\.result/);
+  assert.deepEqual(workflow.jobs?.test?.strategy?.matrix?.node, ['22.20.0', '24']);
+  const audit = workflow.jobs?.['dependency-audit'];
+  assert.ok(audit?.steps?.some(({ run }) => text(run).includes('pnpm audit --audit-level high')));
 });
 
 test('release notes are categorized and only created after npm publication is verified', () => {

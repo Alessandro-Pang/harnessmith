@@ -29,7 +29,11 @@ export function registerTaskInitCommand(
         assertRuntimeCanMutate(runtime);
         return initTask(
           runtime,
-          { ...options, nextAction: options.next, acceptance: options.accept },
+          {
+            ...options,
+            ...(options.next === undefined ? {} : { nextAction: options.next }),
+            ...(options.accept === undefined ? {} : { acceptance: options.accept }),
+          },
           io,
         );
       }),

@@ -13,7 +13,8 @@ import {
   requiredEvaluationAdapters,
 } from '../evaluation/records/eval-fingerprint.js';
 import { readNpmPackageTarball } from './npm-tarball.js';
-import { type ReleaseCliOptions, releaseOptions } from './release-publish-options.js';
+import { readPreparedHead } from './release-checkout.js';
+import { publishArguments, releaseOptions } from './release-publish-options.js';
 import { loadReleaseRiskAcceptance } from './release-risk-acceptance.js';
 import {
   checkedPreparedState,
@@ -28,12 +29,14 @@ import {
 interface ReleaseResult {
   status: number | null;
   signal: string | null;
+  stdout?: string;
+  stderr?: string;
   error?: Error;
 }
 
 interface ReleaseOptions {
   env: NodeJS.ProcessEnv;
-  stdio: 'inherit';
+  stdio: 'inherit' | 'pipe';
 }
 
 export type ReleaseRunner = (
@@ -53,20 +56,13 @@ const defaultRunner: ReleaseRunner = (executable, args, options) => {
   return {
     status: result.exitCode ?? null,
     signal: result.signal ?? null,
-    error: result.failed
-      ? new Error(result.shortMessage ?? result.message ?? 'subprocess failed')
-      : undefined,
+    ...(result.stdout === undefined ? {} : { stdout: result.stdout }),
+    ...(result.stderr === undefined ? {} : { stderr: result.stderr }),
+    ...(result.failed
+      ? { error: new Error(result.shortMessage ?? result.message ?? 'subprocess failed') }
+      : {}),
   };
 };
-
-function publishArguments(options: ReleaseCliOptions): string[] {
-  return [
-    ...(options.dryRun ? ['--dry-run'] : []),
-    ...(options.provenance ? ['--provenance'] : []),
-    ...(options.tag ? ['--tag', options.tag] : []),
-    ...(options.access ? ['--access', options.access] : []),
-  ];
-}
 
 function checkedRun(
   label: string,
@@ -89,6 +85,7 @@ function prepareRelease(
   evaluator: ReleaseEvaluator,
   riskAcceptancePath?: string,
 ): ReleaseState {
+  const preparedHead = readPreparedHead(runner);
   const fingerprint = evaluationFingerprint(source);
   const artifact = join(
     directory,
@@ -122,6 +119,11 @@ function prepareRelease(
     } else {
       checkedRun('Release checks', pnpm, ['run', 'release:check'], env, runner);
       evaluation = evaluator(artifact);
+      if (evaluation.inheritedBehaviorCoverageCount !== 0) {
+        throw new Error(
+          'Inherited Host evaluation coverage is historical read-only; current releases require exact artifact coverage',
+        );
+      }
     }
     const after = readNpmPackageTarball(artifact).sha256;
     if (fingerprint.packageArtifactSha256 !== after) {
@@ -146,6 +148,7 @@ function prepareRelease(
     artifactSha256: fingerprint.packageArtifactSha256,
     packageVersion: fingerprint.packageVersion,
     preparedAt: new Date().toISOString(),
+    preparedHead,
     evaluation: {
       assurance: riskAcceptance
         ? 'maintainer-attested-risk-exception'

@@ -1,7 +1,8 @@
 import { existsSync, rmdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { execaSync } from 'execa';
-import type { Hub } from '../shared/types.js';
+import type { UserDataPaths } from '../shared/types.js';
+import { templateRoot } from './install-template.js';
 import { restoreSnapshots, snapshotFiles } from './records.js';
 import { withUserDataCoordinationLocks } from './user-data-lock.js';
 
@@ -9,39 +10,42 @@ import { withUserDataCoordinationLocks } from './user-data-lock.js';
 export const userDataInitTimeoutMs = 60_000;
 
 /**
- * Initialize the shared personal rules (`hub.rules`) and, unless disabled, the global
- * memory (`hub.memory`) through the installed Harness CLI. Both live beside the hub but are
- * user data: they are created once and never rewritten or removed by Harnessmith.
+ * Initialize personal rules and, unless disabled, global memory through the global CLI.
+ * They are user data: created once and never rewritten or removed by Harnessmith.
  */
 export function initializeUserData(
-  hub: Hub,
+  userData: UserDataPaths,
   env: NodeJS.ProcessEnv,
-  { global, afterInitialize }: { global: boolean; afterInitialize?: () => void },
+  {
+    global,
+    afterInitialize,
+    runtimeEntry = join(templateRoot, 'bin', 'harnessmith.mjs'),
+  }: { global: boolean; afterInitialize?: () => void; runtimeEntry?: string },
 ): string {
   const memoryFiles = global
-    ? ['README.md', 'core.md', 'profile.md'].map((name) => join(hub.memory, name))
+    ? ['README.md', 'core.md', 'profile.md'].map((name) => join(userData.memory, name))
     : [];
   const personalFiles = [
-    join(hub.rules, 'README.md'),
-    join(hub.rules, 'AGENTS.md'),
-    join(hub.rules, 'projects', 'repository-map.yaml'),
-    join(hub.rules, 'projects', 'repository-map.md'),
+    join(userData.rules, 'README.md'),
+    join(userData.rules, 'AGENTS.md'),
+    join(userData.rules, 'projects', 'repository-map.yaml'),
+    join(userData.rules, 'projects', 'repository-map.md'),
   ];
-  const roots = [hub.rules, ...(global ? [hub.memory] : [])];
+  const roots = [userData.rules, ...(global ? [userData.memory] : [])];
   const childEnv = {
     ...env,
-    HARNESS_HOME: hub.home,
-    HARNESS_MEMORY_HOME: hub.memory,
-    HARNESS_PERSONAL_HOME: hub.rules,
+    HARNESS_HOME: userData.home,
+    HARNESS_STATE_HOME: userData.state,
+    HARNESS_MEMORY_HOME: userData.memory,
+    HARNESS_PERSONAL_HOME: userData.rules,
   };
-  const harnessCli = join(hub.harness, 'scripts', 'harness.mjs');
   return withUserDataCoordinationLocks(roots, (lockKeys) => {
     const coordination = ['--coordination-keys', lockKeys.join(',')];
     const snapshots = snapshotFiles([...memoryFiles, ...personalFiles].map((path) => ({ path })));
-    const memoryRootExisted = existsSync(hub.memory);
-    const personalRootExisted = existsSync(hub.rules);
+    const memoryRootExisted = existsSync(userData.memory);
+    const personalRootExisted = existsSync(userData.rules);
     const run = (target: 'personal' | 'global'): string =>
-      execaSync(process.execPath, [harnessCli, 'init', target, ...coordination], {
+      execaSync(process.execPath, [runtimeEntry, 'init', target, ...coordination], {
         encoding: 'utf8',
         env: childEnv,
         extendEnv: false,
@@ -54,17 +58,17 @@ export function initializeUserData(
       return output.filter(Boolean).join('\n');
     } catch (error) {
       restoreSnapshots(snapshots);
-      if (!personalRootExisted && existsSync(hub.rules)) {
+      if (!personalRootExisted && existsSync(userData.rules)) {
         try {
-          rmdirSync(join(hub.rules, 'projects'));
-          rmdirSync(hub.rules);
+          rmdirSync(join(userData.rules, 'projects'));
+          rmdirSync(userData.rules);
         } catch {
           // Preserve unexpected user content created concurrently.
         }
       }
-      if (!memoryRootExisted && existsSync(hub.memory)) {
+      if (!memoryRootExisted && existsSync(userData.memory)) {
         try {
-          rmdirSync(hub.memory);
+          rmdirSync(userData.memory);
         } catch {
           // Preserve unexpected user content created concurrently.
         }

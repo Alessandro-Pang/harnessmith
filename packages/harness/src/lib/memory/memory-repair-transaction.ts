@@ -13,6 +13,7 @@ import {
   type ApplyOptions,
   compactCoreContent,
   digest,
+  type MemoryRepairReport,
   type RepairProposal,
 } from './memory-repair-contract.js';
 import {
@@ -28,12 +29,20 @@ import { validateMemoryRoot } from './memory-validation.js';
 import {
   assertExactFileState,
   type ExactFileState,
-  exactFileStateMatches,
   restoreExactFileState,
 } from './memory-write.js';
 
 export type { RepairJournalObservation } from './memory-repair-journal.js';
 export { discoverRepairJournals } from './memory-repair-journal.js';
+
+function revalidateProposal(proposal: RepairProposal, diagnose: () => MemoryRepairReport): void {
+  const current = diagnose().proposals.find(
+    (candidate) => candidate.proposalId === proposal.proposalId,
+  );
+  if (!current || JSON.stringify(current) !== JSON.stringify(proposal)) {
+    throw new Error('Repair proposal changed or is no longer applicable');
+  }
+}
 
 function rollbackCore(
   root: string,
@@ -85,14 +94,18 @@ export function applyCoreRepairTransaction(
   rootKind: 'global' | 'project',
   io: Io,
   options: ApplyOptions,
+  diagnose: () => MemoryRepairReport,
 ): void {
   const path = proposal.affectedPaths[0];
+  if (!path) throw new Error('Core repair requires an affected path');
   const root = dirname(path);
   const journal = repairJournalPaths(runtime, proposal.proposalId);
   withExclusiveDirectoryLock(journal.root, 'Repair journal', () =>
     withMemoryLock(
       root,
       () => {
+        options.beforeRevalidate?.();
+        revalidateProposal(proposal, diagnose);
         assertSafePath(root, path);
         const entry = lstatSync(path);
         const before = {
@@ -135,59 +148,100 @@ export function applyCoreRepairTransaction(
   );
 }
 
-function restoreInterrupted(marker: RepairMarker, rootKind: 'global' | 'project', io: Io): void {
-  withMemoryLock(
-    marker.root,
-    () => {
-      const before = {
-        exists: true,
-        content: readFileSync(marker.target, 'utf8'),
-        mode: marker.mode,
-      };
-      const restored = {
-        exists: true,
-        content: readFileSync(marker.backup, 'utf8'),
-        mode: marker.mode,
-      };
-      if (!exactFileStateMatches(marker.target, before)) {
-        throw new Error('Interrupted repair target changed; recovery is inconclusive');
-      }
-      try {
-        atomicWrite(marker.target, restored.content, restored.mode);
-        validateMemoryRoot(marker.root, io, { quietSuccess: true, rootKind });
-        cleanupRepairJournal(marker);
-      } catch (error) {
-        const rollbackError = restoreExactFileState(marker.root, marker.target, before, restored);
-        if (rollbackError) {
-          throw new Error(
-            `Repair recovery failed and rollback was incomplete: ${String(error)}; ${rollbackError}`,
-          );
-        }
-        throw error;
-      }
-    },
-    [],
-    { requireExisting: true },
-  );
+function recoveryFileStates(marker: RepairMarker, expectedTargetDigest: string) {
+  const targetEntry = lstatSync(marker.target);
+  const backupEntry = lstatSync(marker.backup);
+  if (
+    !targetEntry.isFile() ||
+    targetEntry.isSymbolicLink() ||
+    !backupEntry.isFile() ||
+    backupEntry.isSymbolicLink()
+  ) {
+    throw new Error('Interrupted repair files changed; recovery is inconclusive');
+  }
+  const before = {
+    exists: true,
+    content: readFileSync(marker.target, 'utf8'),
+    mode: targetEntry.mode & 0o777,
+  } as const;
+  const restored = {
+    exists: true,
+    content: readFileSync(marker.backup, 'utf8'),
+    mode: marker.mode,
+  } as const;
+  if (before.mode !== marker.mode || digest(before.content) !== expectedTargetDigest) {
+    throw new Error('Interrupted repair target changed; recovery is inconclusive');
+  }
+  if (digest(restored.content) !== marker.beforeDigest) {
+    throw new Error('Interrupted repair backup changed; recovery is inconclusive');
+  }
+  return { before, restored };
+}
+
+function restoreInterrupted(
+  marker: RepairMarker,
+  rootKind: 'global' | 'project',
+  io: Io,
+  states: { before: ExactFileState; restored: ExactFileState },
+): void {
+  const { before, restored } = states;
+  try {
+    atomicWrite(marker.target, restored.content, restored.mode);
+    validateMemoryRoot(marker.root, io, { quietSuccess: true, rootKind });
+    cleanupRepairJournal(marker);
+  } catch (error) {
+    const rollbackError = restoreExactFileState(marker.root, marker.target, before, restored);
+    if (rollbackError) {
+      throw new Error(
+        `Repair recovery failed and rollback was incomplete: ${String(error)}; ${rollbackError}`,
+      );
+    }
+    throw error;
+  }
 }
 
 export function applyJournalRecovery(
   runtime: Runtime,
   observation: RepairJournalObservation,
+  proposal: RepairProposal,
   rootKind: 'global' | 'project',
   io: Io,
+  options: ApplyOptions,
+  diagnose: () => MemoryRepairReport,
 ): void {
   const marker = observation.markerRecord;
   if (!marker) throw new Error('Repair journal identity is not verified');
   const journal = repairJournalPaths(runtime, marker.proposalId);
   withExclusiveDirectoryLock(journal.root, 'Repair journal', () => {
-    const current = discoverRepairJournals(runtime, marker.root).find(
-      ({ marker: path }) => path === observation.marker,
+    withMemoryLock(
+      marker.root,
+      () => {
+        options.beforeRevalidate?.();
+        revalidateProposal(proposal, diagnose);
+        const current = discoverRepairJournals(runtime, marker.root).find(
+          ({ marker: path }) => path === observation.marker,
+        );
+        if (
+          !current ||
+          current.status !== observation.status ||
+          current.reasonCode !== observation.reasonCode ||
+          JSON.stringify(current.markerRecord) !== JSON.stringify(observation.markerRecord)
+        ) {
+          throw new Error('Repair recovery proposal changed');
+        }
+        const currentMarker = current.markerRecord;
+        if (!currentMarker) throw new Error('Repair journal identity is not verified');
+        const states = recoveryFileStates(
+          currentMarker,
+          current.status === 'orphan-prepared'
+            ? currentMarker.beforeDigest
+            : currentMarker.afterDigest,
+        );
+        if (current.status === 'orphan-prepared') cleanupRepairJournal(currentMarker);
+        else restoreInterrupted(currentMarker, rootKind, io, states);
+      },
+      [],
+      { requireExisting: true },
     );
-    if (!current || current.status !== observation.status) {
-      throw new Error('Repair recovery proposal changed');
-    }
-    if (observation.status === 'orphan-prepared') cleanupRepairJournal(marker);
-    else restoreInterrupted(marker, rootKind, io);
   });
 }

@@ -1,18 +1,17 @@
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import {
   closeSync,
   constants,
   existsSync,
+  linkSync,
   lstatSync,
   mkdirSync,
   opendirSync,
   openSync,
-  readdirSync,
   readFileSync,
   readlinkSync,
   readSync,
   rmSync,
-  statSync,
 } from 'node:fs';
 import { dirname, join } from 'node:path';
 import writeFileAtomic from 'write-file-atomic';
@@ -27,24 +26,15 @@ export function atomicWrite(path: string, content: string, mode = 0o644): void {
   writeFileAtomic.sync(path, content, { mode });
 }
 
-export function copyRenderedTree(
-  source: string,
-  destination: string,
-  render: (content: string, path?: string) => string,
-  relative = '',
-  include: (relativePath: string) => boolean = () => true,
-): void {
-  mkdirSync(destination, { recursive: true });
-  for (const entry of readdirSync(source, { withFileTypes: true })) {
-    const from = join(source, entry.name);
-    const to = join(destination, entry.name);
-    const child = relative ? join(relative, entry.name) : entry.name;
-    if (!include(child)) continue;
-    if (entry.isDirectory()) copyRenderedTree(from, to, render, child, include);
-    else if (entry.isFile()) {
-      const mode = statSync(from).mode & 0o777;
-      atomicWrite(to, render(readFileSync(from, 'utf8'), child), mode);
-    }
+/** Atomically publish a complete file without replacing any existing directory entry. */
+export function atomicWriteExclusive(path: string, content: string, mode = 0o644): void {
+  mkdirSync(dirname(path), { recursive: true });
+  const staged = `${path}.${process.pid}.${randomUUID()}.tmp`;
+  try {
+    writeFileAtomic.sync(staged, content, { mode });
+    linkSync(staged, path);
+  } finally {
+    rmSync(staged, { force: true });
   }
 }
 
@@ -65,7 +55,6 @@ function entryExists(path: string): boolean {
 }
 
 export interface DigestOptions {
-  exclude?: (relativePath: string) => boolean;
   maxEntries?: number;
   maxBytes?: number;
   maxFileBytes?: number;
@@ -144,22 +133,16 @@ interface DigestItem {
   depth: number;
 }
 
-function digestChildren(
-  item: DigestItem,
-  exclude: (relativePath: string) => boolean,
-  budget: DigestBudget,
-): DigestItem[] {
+function digestChildren(item: DigestItem, budget: DigestBudget): DigestItem[] {
   const children: DigestItem[] = [];
   const directory = opendirSync(item.path);
   try {
     let entry = directory.readSync();
     while (entry) {
       const relative = item.relative ? join(item.relative, entry.name) : entry.name;
-      if (!exclude(relative)) {
-        const child = { path: join(item.path, entry.name), relative, depth: item.depth + 1 };
-        reserveDigestEntry(budget, child.path, child.depth);
-        children.push(child);
-      }
+      const child = { path: join(item.path, entry.name), relative, depth: item.depth + 1 };
+      reserveDigestEntry(budget, child.path, child.depth);
+      children.push(child);
       entry = directory.readSync();
     }
   } finally {
@@ -170,7 +153,6 @@ function digestChildren(
 
 export function digestPath(path: string, options: DigestOptions = {}): string | null {
   if (!entryExists(path)) return null;
-  const exclude = options.exclude ?? (() => false);
   const budget = digestBudget(options);
   const hash = createHash('sha256');
   const pending: DigestItem[] = [{ path, relative: '', depth: 0 }];
@@ -178,12 +160,11 @@ export function digestPath(path: string, options: DigestOptions = {}): string | 
   while (pending.length > 0) {
     const item = pending.pop();
     if (!item) continue;
-    if (item.relative && exclude(item.relative)) continue;
     if (Date.now() > budget.deadline) throw new Error(`Digest time budget exceeded: ${item.path}`);
     const stat = lstatSync(item.path);
     if (stat.isDirectory()) {
       hash.update(`directory:${item.relative}\n`);
-      pending.push(...digestChildren(item, exclude, budget));
+      pending.push(...digestChildren(item, budget));
     } else if (stat.isFile()) {
       if (stat.size > budget.maxFileBytes)
         throw new Error(`Digest file byte budget exceeded: ${item.path}`);

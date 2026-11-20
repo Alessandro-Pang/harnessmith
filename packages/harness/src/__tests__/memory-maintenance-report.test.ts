@@ -6,7 +6,7 @@ import { onTestFinished, test } from 'vitest';
 import { initGlobal, initProject } from '../commands/init.js';
 import { memoryMaintenance } from '../commands/memory/memory-maintenance.js';
 import { memoryMaintenanceReport } from '../lib/memory/memory-maintenance.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { capturedIo, elementAt, harnessRuntime } from './helpers/harness.js';
 
 function fixture() {
   const root = mkdtempSync(join(tmpdir(), 'harness-maintenance-report-'));
@@ -220,7 +220,7 @@ test('JSON maintenance preserves an execution failure instead of masking it', ()
   const io = capturedIo();
 
   assert.throws(() => memoryMaintenance(runtime, project, { json: true }, io), /memory/i);
-  assert.deepEqual(JSON.parse(io.logs[0]), {
+  assert.deepEqual(JSON.parse(elementAt(io.logs, 0)), {
     version: 2,
     mode: 'report-only',
     summary: { result: 'inconclusive' },

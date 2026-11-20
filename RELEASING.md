@@ -57,12 +57,19 @@ Publishing is a maintainer-authorized external write. Never publish only because
    `.release/` state, runs `release:check` against that exact candidate tarball, and preserves the verified
    artifact digest, behavior fingerprint, and compact Host matrix summary. An explicit `--package-artifact` or
    `HARNESS_RELEASE_ARTIFACT` replaces any older prepared state; only a run without either setting resumes the
-   existing snapshot. When compatible evidence is reused, the state records a Host Eval inheritance source
-   version and artifact digest. `finalize` verifies that state,
-   writes the bounded `release-attestation.json`, creates a
-   Conventional Commit, and creates a signed `vX.Y.Z` tag. It does not push or publish.
+   existing snapshot. Current releases require exact-artifact Host Eval coverage and set
+   `inheritedBehaviorCoverageCount` to zero. Inherited evidence and legacy attestations may be inspected only
+   through the explicit `historicalReadOnly` verification path; they cannot satisfy `release:prepare`,
+   `finalize`, or CI verification. The state binds the full `preparedHead` commit. Legacy state without that
+   field must be prepared again rather than guessing a commit. `finalize` verifies `main`, unchanged
+   `preparedHead`, an absent target tag, and the allowed worktree changes before its first file write or Git
+   mutation; revalidation on the same HEAD is deterministic. It then writes the bounded
+   `release-attestation.json`, creates a Conventional Commit, and creates a signed `vX.Y.Z` tag. It does not
+   push or publish.
    `release:check` invokes the same gate and fails when fresh, passing, maintainer-attested real-host records
-   with compatible behavior are absent from any required-host-by-scenario cell. The result is a
+   with compatible behavior are absent from any required-host-by-scenario cell. `release:quality` completes
+   its offline checks before running `quality:dependencies` (`pnpm audit --audit-level high`); that last audit
+   step requires network access and is not an offline verification. The result is a
    **maintainer-attested structure** check: local
    artifacts and digests cannot authenticate their provenance or prove that a real Host behaved as claimed.
    `run.example.json`, schema validation alone, and local unit tests cannot satisfy it; trusted proof requires
@@ -95,6 +102,25 @@ authorized Host Eval gap, the artifact digest, and the package version. `release
 `coverage.missing` with the still-unmeasured requirement ids (for example `memory-operation:close-input`) so the
 accepted gap is reviewable. The gate still requires `coverageCount === 0` for a risk-exception attestation; naming
 the missing cells does not loosen that rule.
+
+## Package smoke contract
+
+`pnpm run release:package-smoke -- --artifact <npm-tarball>` defaults to a fully offline contract: it
+extracts the exact tarball bytes, checks the manifest, exports, and bin mapping, symlinks the repository's
+installed production dependencies, type-checks a clean TypeScript consumer, imports the public entry, and
+stages an npm-style global prefix to exercise the real bin/PATH launcher and the embedded Runtime. The
+default path never invokes npm and never contacts the registry; the publish workflow and the
+`evals/__tests__/package-artifact.test.ts` unit gate rely on this offline contract.
+
+A real `npm install --global` of the tarball with a fresh cache remains available only as the explicit
+`--online` opt-in, which resolves dependencies from the registry and requires network access:
+
+```bash
+node --import tsx scripts/release/package-smoke.ts --artifact <npm-tarball> --online
+```
+
+The post-publish `release:verify-registry` clean-room check is a separate, explicitly networked verification
+of the bytes actually served by the registry; the offline smoke does not replace it.
 
 ## Local fallback
 

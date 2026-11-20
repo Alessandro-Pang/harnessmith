@@ -27,7 +27,14 @@ export function registerTaskEvidenceCommand(
     .action(
       run((options: TaskCliOptions) => {
         assertRuntimeCanMutate(runtime);
-        return verifyAcceptance({ ...options, args: options.arg, type: options.type }, io);
+        return verifyAcceptance(
+          {
+            ...options,
+            args: options.arg ?? [],
+            ...(options.type === undefined ? {} : { type: options.type }),
+          },
+          io,
+        );
       }),
     );
 }

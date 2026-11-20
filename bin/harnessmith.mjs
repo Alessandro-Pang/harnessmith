@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 
 import { run } from '../dist/cli.js';
+import { machineErrorReport } from '../dist/shared/errors.js';
 
 try {
   process.exitCode = await run(process.argv.slice(2));
 } catch (error) {
-  if (!error.commanderHandled) console.error(`ERROR ${error.message}`);
-  process.exitCode = 1;
+  const report = machineErrorReport(error);
+  if (!error.commanderHandled) console.error(`ERROR ${report.error.message}`);
+  process.exitCode = report.error.exitCode;
 }

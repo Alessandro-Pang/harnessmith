@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { PassThrough } from 'node:stream';
 import { test } from 'vitest';
+import { elementAt } from '../../../../packages/harness/src/__tests__/helpers/harness.js';
 import { createProgram, type HarnessmithCommand } from '../app/program.js';
 import { executeCommand } from '../application/command-executor.js';
 import { collectAgents, normalizeAgents } from '../shared/agents.js';
@@ -126,11 +127,11 @@ test('Commander exposes proposal-bound config export and import', async () => {
     ['import', '--input', '/tmp/bundle.json', '--proposal', 'sha256:abc', '--yes', '--json'],
     { from: 'user' },
   );
-  assert.equal(calls[0].command, 'export');
-  assert.equal(calls[0].output, '/tmp/bundle.json');
-  assert.equal(calls[1].command, 'import');
-  assert.equal(calls[1].input, '/tmp/bundle.json');
-  assert.equal(calls[1].proposal, 'sha256:abc');
+  assert.equal(elementAt(calls, 0).command, 'export');
+  assert.equal(elementAt(calls, 0).output, '/tmp/bundle.json');
+  assert.equal(elementAt(calls, 1).command, 'import');
+  assert.equal(elementAt(calls, 1).input, '/tmp/bundle.json');
+  assert.equal(elementAt(calls, 1).proposal, 'sha256:abc');
 });
 
 test('Commander exposes adapter capabilities as a read-only command', async () => {
@@ -160,7 +161,7 @@ test('capabilities reports every adapter without resolving installation paths', 
     },
   );
   assert.equal(status, 0);
-  const report = JSON.parse(logs[0]);
+  const report = JSON.parse(elementAt(logs, 0));
   assert.equal(report.version, 1);
   assert.deepEqual(
     report.adapters.map(({ agent }: { agent: string }) => agent),

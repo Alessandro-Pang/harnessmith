@@ -5,7 +5,8 @@ Thanks for helping improve Harnessmith. Keep changes small, portable, and eviden
 ## Development
 
 Requirements: Node.js 24.12 or newer (the development toolchain pinned by `.nvmrc`), pnpm 10.13.0, and Git.
-The distributed CLI itself runs on Node.js 22.12 or newer; CI exercises both versions.
+The distributed CLI itself runs on Node.js 22.20 or newer; CI exercises the minimum Node.js 22.20.0 and current
+Node.js 24 releases.
 
 ```bash
 pnpm install --frozen-lockfile --ignore-scripts
@@ -37,7 +38,8 @@ host-neutrality test passing.
   files are build products: change the TypeScript source and run `pnpm run build`; never edit them directly.
 - Biome is the shared formatter and linter, Knip rejects unreachable files or exports, and Secretlint scans
   source plus prompt/document surfaces for known credential formats. Run `pnpm run format` after source
-  changes; `pnpm run check` rejects quality drift before rebuilding the published runtimes.
+  changes; `pnpm run check` rejects quality drift before rebuilding the published runtimes. CI also runs
+  `pnpm run quality:dependencies` to reject high-severity known dependency vulnerabilities.
 - Markdownlint checks repository documentation. `scripts/preflight/preflight.ts` checks package and CLI contracts plus
   Harness document routing, frontmatter, relative links, template tokens, and host-neutrality.
 - Vitest owns unit and integration tests. Its V8 gate covers imported runtime and release helpers; c8 merges

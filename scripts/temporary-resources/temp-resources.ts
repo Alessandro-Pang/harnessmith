@@ -13,7 +13,7 @@ export function temporaryResourceReport(args: string[]): void {
     .exitOverride();
   program.parse(args, { from: 'user' });
   const options = program.opts<{ root?: string; json?: boolean }>();
-  const report = scanTemporaryResourceRoots({ roots: options.root ? [options.root] : undefined });
+  const report = scanTemporaryResourceRoots(options.root ? { roots: [options.root] } : {});
   if (options.json) {
     process.stdout.write(`${JSON.stringify(report)}\n`);
     return;

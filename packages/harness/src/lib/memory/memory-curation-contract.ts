@@ -149,8 +149,8 @@ export function curationRecoveryPaths(error: unknown): string[] {
   const message = error instanceof Error ? error.message : String(error);
   return [
     ...new Set(
-      [...message.matchAll(/(?:recovery path|unresolved paths?):\s+([^;\n]+)/giu)].map((match) =>
-        match[1].trim(),
+      [...message.matchAll(/(?:recovery path|unresolved paths?):\s+([^;\n]+)/giu)].flatMap(
+        (match) => (match[1] === undefined ? [] : [match[1].trim()]),
       ),
     ),
   ];

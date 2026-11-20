@@ -17,15 +17,15 @@ function base(states: { installed: ReturnType<typeof state>; healthy: ReturnType
     start: 'positioning' as const,
     end: 'host-verified' as const,
     firstValueAchieved: false,
-    states: {
-      ...states,
-      hostConfigured: state('inconclusive', 'host', 'HOST_CONFIGURATION_NOT_OBSERVED'),
-      hostVerified: state('inconclusive', 'host-and-user', 'CONTROLLED_HOST_TASK_NOT_OBSERVED'),
-    },
     telemetry: {
       uploaded: false,
       remoteEvidenceUsed: false,
       activityInferredFromDownloadsOrTraffic: false,
+    },
+    states: {
+      ...states,
+      hostConfigured: state('inconclusive', 'host', 'HOST_CONFIGURATION_NOT_OBSERVED'),
+      hostVerified: state('inconclusive', 'host-and-user', 'CONTROLLED_HOST_TASK_NOT_OBSERVED'),
     },
   };
 }

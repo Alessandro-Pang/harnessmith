@@ -61,6 +61,8 @@ test('Kimi Code CLI install, status, restore, and uninstall use the effective da
   assert.equal(upgraded.status, 0, upgraded.stderr);
   const restored = execute(root, ['restore', '--agent', 'kimi', '--json']);
   assert.equal(restored.status, 0, restored.stderr);
+  // The repeated install kept no output backup, but the reactivated previous record still
+  // owns the identical managed content, so restore keeps the instruction file in place.
   assert.match(readFileSync(rules, 'utf8'), /managed-by: harnessmith/);
 
   const uninstalled = execute(root, ['uninstall', '--agent', 'kimi', '--json']);

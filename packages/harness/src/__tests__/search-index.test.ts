@@ -20,7 +20,7 @@ import {
   serializeSearchIndexSnapshot,
 } from '../lib/search/search-index-snapshot.js';
 import { loadCurrentIndex } from '../lib/search/search-index-store.js';
-import { assertMode, capturedIo, harnessRuntime } from './helpers/harness.js';
+import { assertMode, capturedIo, elementAt, harnessRuntime } from './helpers/harness.js';
 
 function fixture(): {
   root: string;
@@ -194,8 +194,8 @@ test('field boosts and deterministic tie breakers do not use trust as relevance'
   const sources: SearchSource[] = [{ root: docs, label: 'docs', trust: 'untrusted' }];
 
   const ranked = searchWithIndex(runtime, 'ranked term', sources, { refreshIndex: true });
-  assert.equal(ranked.matches[0].path, join(docs, 'a.md'));
-  assert.ok(ranked.matches[0].matchedFields?.includes('title'));
+  assert.equal(elementAt(ranked.matches, 0).path, join(docs, 'a.md'));
+  assert.ok(elementAt(ranked.matches, 0).matchedFields?.includes('title'));
 
   writeFileSync(join(docs, 'c.md'), '# Same\n\ntiebreakmarker\n');
   writeFileSync(join(docs, 'd.md'), '# Same\n\ntiebreakmarker\n');
@@ -218,7 +218,7 @@ test('context CLI exposes refresh and strict fulltext modes through JSON retriev
     }),
     0,
   );
-  assert.equal(JSON.parse(refreshed.logs[0]).retrieval.indexStatus, 'refreshed');
+  assert.equal(JSON.parse(elementAt(refreshed.logs, 0)).retrieval.indexStatus, 'refreshed');
 
   const strict = capturedIo();
   assert.equal(
@@ -228,7 +228,7 @@ test('context CLI exposes refresh and strict fulltext modes through JSON retriev
     }),
     0,
   );
-  assert.equal(JSON.parse(strict.logs[0]).retrieval.usedMode, 'fulltext');
+  assert.equal(JSON.parse(elementAt(strict.logs, 0)).retrieval.usedMode, 'fulltext');
 });
 
 test('context search excludes host-evals from scan and fulltext retrieval', () => {
@@ -247,7 +247,7 @@ test('context search excludes host-evals from scan and fulltext retrieval', () =
     }),
     1,
   );
-  assert.equal(JSON.parse(scan.logs[0]).matches.length, 0);
+  assert.equal(JSON.parse(elementAt(scan.logs, 0)).matches.length, 0);
 
   assert.equal(
     runCli(['search', '--project', root, '--refresh-index', '--json', 'activecontextmarker'], {
@@ -264,7 +264,7 @@ test('context search excludes host-evals from scan and fulltext retrieval', () =
     ),
     1,
   );
-  assert.equal(JSON.parse(fulltext.logs[0]).matches.length, 0);
+  assert.equal(JSON.parse(elementAt(fulltext.logs, 0)).matches.length, 0);
 });
 
 test('index validation distinguishes malformed, unsupported, and backend-corrupt caches', () => {

@@ -1,123 +1,31 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
-import { managedOutputWithinHome, validateInstructionPath } from '../../runtime.js';
+import { join } from 'node:path';
 import { errorMessage, type Runtime } from '../../types.js';
-import { digestPath } from '../filesystem/files.js';
-import {
-  installationIdentityHealth,
-  isManagedInstallRecord,
-  type ManagedInstallRecord,
-} from './health-runtime.js';
+import { installationIdentityHealth } from './health-runtime.js';
 import type { HealthCheck } from './health-types.js';
 
-function managedInstallationHealth(runtime: Runtime): HealthCheck {
-  const recordPath = join(runtime.harnessHome, '.harnessmith', 'install.json');
-  if (!existsSync(recordPath))
-    return {
-      id: 'installation',
-      status: 'failed',
-      message: 'Installation record is missing',
-      details: [recordPath],
-    };
-  let record: ManagedInstallRecord;
-  try {
-    const parsed: unknown = JSON.parse(readFileSync(recordPath, 'utf8'));
-    if (!isManagedInstallRecord(parsed))
-      throw new Error('managed installation record schema is invalid');
-    record = parsed;
-  } catch (error) {
-    return {
-      id: 'installation',
-      status: 'failed',
-      message: `Installation record is invalid: ${errorMessage(error)}`,
-      details: [recordPath],
-    };
-  }
-  if (record.schemaVersion !== 2 || record.scope !== 'hub' || !Array.isArray(record.outputs)) {
-    return {
-      id: 'installation',
-      status: 'failed',
-      message: 'Installation record is incompatible',
-      details: [recordPath],
-    };
-  }
-  // The hub owns the shared entry, the skill and the `~/.agents/skills` discovery link.
-  const expected = [
-    ...runtime.instructionFiles,
-    runtime.installedHarness,
-    join(runtime.agentsHome, 'skills', 'agent-harness'),
-  ]
-    .map((path) => resolve(path))
-    .sort();
-  const actual = record.outputs
-    .map(({ path }) => (typeof path === 'string' ? resolve(path) : ''))
-    .sort();
-  if (expected.length !== actual.length || expected.some((path, index) => path !== actual[index])) {
-    return {
-      id: 'installation',
-      status: 'failed',
-      message: 'Installation record outputs do not match the hub contract',
-      details: [recordPath],
-    };
-  }
-  const details: string[] = [];
-  for (const output of record.outputs) {
-    if (typeof output.path !== 'string' || typeof output.checksum !== 'string') {
-      details.push('invalid managed output checksum record');
-      continue;
-    }
-    if (
-      !managedOutputWithinHome(runtime.harnessHome, output.path) &&
-      !managedOutputWithinHome(runtime.agentsHome, output.path)
-    ) {
-      details.push(`unsafe managed output: ${output.path}`);
-      continue;
-    }
-    const path = resolve(output.path);
-    try {
-      const checksum = digestPath(path);
-      if (checksum === null) details.push(`missing managed output: ${path}`);
-      else if (checksum !== output.checksum) details.push(`modified managed output: ${path}`);
-    } catch (error) {
-      details.push(`unreadable managed output: ${path}: ${errorMessage(error)}`);
-    }
-  }
-  return {
-    id: 'installation',
-    status: details.length === 0 ? 'passed' : 'failed',
-    message:
-      details.length === 0
-        ? 'Installation contract and managed checksums are valid'
-        : 'Installation ownership or integrity check failed',
-    ...(details.length > 0 ? { details } : {}),
-  };
-}
-
+/**
+ * Read-only check of the bundled standalone package contract: the skill manifest and
+ * bundled CLI entry inside the current npm package, plus the personal AGENTS.md at the
+ * user-selected rules root. This does not prove any Host instruction file or installed
+ * skill state; those belong to the outer installer and the real Host.
+ */
 export function installationHealth(runtime: Runtime): HealthCheck {
   const identityFailure = installationIdentityHealth(runtime);
   if (identityFailure) return identityFailure;
   const manifestPath = join(runtime.installedHarness, 'manifest.json');
   const required = [
-    ...runtime.instructionFiles,
-    join(runtime.installedHarness, 'scripts', 'harness.mjs'),
+    join(runtime.distributionRoot, 'dist', 'harness.mjs'),
     manifestPath,
     join(runtime.personalHome, 'AGENTS.md'),
   ];
-  const unsafeInstructions = runtime.instructionFiles
-    .map((path) => ({ path, check: validateInstructionPath(runtime.harnessHome, path) }))
-    .filter(({ check }) => !check.valid);
-  const unsafePaths = unsafeInstructions.map(
-    ({ path, check }) => `${path}: ${check.valid ? '' : check.reason}`,
-  );
-  const unsafeSet = new Set(unsafeInstructions.map(({ path }) => path));
-  const missing = required.filter((path) => !unsafeSet.has(path) && !existsSync(path));
-  const invalidPaths = [...unsafePaths, ...missing];
-  if (invalidPaths.length > 0)
+  const missing = required.filter((path) => !existsSync(path));
+  if (missing.length > 0)
     return {
       id: 'installation',
       status: 'failed',
-      message: `Installation has ${invalidPaths.length} invalid required path(s)`,
-      details: invalidPaths,
+      message: `Installation has ${missing.length} invalid required path(s)`,
+      details: missing,
     };
   try {
     const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as {
@@ -137,8 +45,5 @@ export function installationHealth(runtime: Runtime): HealthCheck {
       message: `Installation manifest is invalid: ${errorMessage(error)}`,
     };
   }
-  const testFixture = runtime.identityOverride === 'test-fixture' && runtime.hostAdapter === 'test';
-  if (runtime.hostAdapter !== 'standalone' && !testFixture)
-    return managedInstallationHealth(runtime);
-  return { id: 'installation', status: 'passed', message: 'Installation contract available' };
+  return { id: 'installation', status: 'passed', message: 'Standalone package contract available' };
 }

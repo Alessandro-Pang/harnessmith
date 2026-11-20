@@ -188,8 +188,10 @@ export function writeValidated(
       createTrackedDirectories(root, dirname(path), createdDirectories);
     }
     for (const [index, entry] of entries.entries()) {
-      const candidate = { exists: true, content: entry.content, mode: snapshots[index].mode };
-      assertExactFileState(entry.path, snapshots[index], 'Memory write');
+      const snapshot = snapshots[index];
+      if (!snapshot) throw new Error(`Missing memory write snapshot: ${entry.path}`);
+      const candidate = { exists: true, content: entry.content, mode: snapshot.mode };
+      assertExactFileState(entry.path, snapshot, 'Memory write');
       attempted.set(entry.path, candidate);
       atomicWrite(entry.path, candidate.content, candidate.mode);
     }

@@ -29,6 +29,9 @@ function sectionBounds(
     throw new Error(`Memory core section must appear exactly once: ${section}`);
   }
   const [index] = indexes;
+  if (index === undefined) {
+    throw new Error(`Memory core section must appear exactly once: ${section}`);
+  }
   if (lines[index] !== heading) {
     throw new Error(`Memory core section must use its canonical heading: ${section}`);
   }

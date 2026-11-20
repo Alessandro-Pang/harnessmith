@@ -11,7 +11,7 @@ lang: en
 # Getting started
 
 This guide covers a first installation: preview the plan, write to one host, and verify the result. Harnessmith is an
-npm initializer, so run it with `npx`; no global install is needed. The only requirement is Node.js 22.12.0 or newer.
+npm initializer, so run it with `npx`; no global install is needed. The only requirement is Node.js 22.20.0 or newer.
 
 The whole process takes about five minutes if you're installing to a single host. The examples below use Codex. Other
 hosts use the same three-stage flow, but Cursor is project-scoped and requires `--project`; check the
@@ -127,9 +127,9 @@ npx harnessmith restore --agent codex
 npx harnessmith uninstall --agent codex
 ```
 
-Restore goes back one layer, useful when an upgrade introduced a problem and you want the previous state back.
-Uninstall removes all managed layers and the install record. Both validate current files, backup relationships, and
-path boundaries before touching anything.
+Restore uses the ordinary-file backups named by the current schema 3 record. Uninstall restores those backups and
+removes the current instruction files and record; neither walks historical installation chains. Both validate current
+files, backup relationships, and path boundaries before touching anything.
 
 A note on what "removes" means: uninstall deletes the files Harnessmith created, but it doesn't touch files you
 created or modified after install. If you edited a managed file, uninstall will warn you and refuse to proceed

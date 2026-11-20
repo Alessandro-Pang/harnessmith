@@ -1,7 +1,8 @@
-import { createHash } from 'node:crypto';
-import { lstatSync, mkdirSync, realpathSync, unlinkSync, writeFileSync } from 'node:fs';
-import { basename, dirname, isAbsolute, relative, resolve, sep } from 'node:path';
+import { mkdirSync, realpathSync, unlinkSync, writeFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { parseJsonlEvidence } from './transcript.mjs';
 
+/** @param {unknown} value */
 export function resolveHostTurnTimeoutMs(value) {
   if (value === undefined || value === '') return 900_000;
   const timeout = Number(value);
@@ -11,6 +12,13 @@ export function resolveHostTurnTimeoutMs(value) {
   return timeout;
 }
 
+/**
+ * @template T
+ * @param {string} path
+ * @param {unknown} payload
+ * @param {(path: string) => T} invoke
+ * @returns {T}
+ */
 export function withEphemeralJsonPayload(path, payload, invoke) {
   if (typeof invoke !== 'function') throw new TypeError('invoke must be a function');
   mkdirSync(dirname(path), { recursive: true });
@@ -26,6 +34,7 @@ export function withEphemeralJsonPayload(path, payload, invoke) {
   }
 }
 
+/** @param {unknown} left @param {unknown} right */
 export function sameCanonicalPath(left, right) {
   if (typeof left !== 'string' || !left || typeof right !== 'string' || !right) return false;
   try {
@@ -35,6 +44,9 @@ export function sameCanonicalPath(left, right) {
   }
 }
 
+/**
+ * @param {{ threadId?: string | null, model: string, repo: string, writable: boolean, additionalDirs?: string[], configOverrides?: string[], ephemeral?: boolean }} options
+ */
 export function buildCodexTurn({
   threadId,
   model,
@@ -49,9 +61,7 @@ export function buildCodexTurn({
       ? [
           'sandbox_mode="workspace-write"',
           ...(additionalDirs.length > 0
-            ? [
-                `sandbox_workspace_write.writable_roots=${JSON.stringify(additionalDirs)}`,
-              ]
+            ? [`sandbox_workspace_write.writable_roots=${JSON.stringify(additionalDirs)}`]
             : []),
         ]
       : ['sandbox_mode="read-only"'];
@@ -81,38 +91,30 @@ export function buildCodexTurn({
   ];
 }
 
+/** @param {string} stdout */
 export function parseCodexInputTokens(stdout) {
-  const values = [];
-  for (const line of stdout.split(/\r?\n/)) {
-    if (!line.trim()) continue;
-    try {
-      const event = JSON.parse(line);
-      const value = event?.type === 'turn.completed' ? event?.usage?.input_tokens : undefined;
-      if (Number.isSafeInteger(value) && value > 0) values.push(value);
-    } catch {
-      // Non-JSON noise remains transcript evidence and is not usage data.
-    }
-  }
+  const values = parseJsonlEvidence(stdout).events.flatMap((event) => {
+    const value = event.type === 'turn.completed' ? event.usage?.input_tokens : undefined;
+    return Number.isSafeInteger(value) && typeof value === 'number' && value > 0 ? [value] : [];
+  });
   const value = values.at(-1);
   if (!value) throw new Error('Codex turn.completed did not include a positive input_tokens value');
   return value;
 }
 
+/** @param {string} stdout */
 export function parseCodexThreadId(stdout) {
-  for (const line of stdout.split(/\r?\n/)) {
-    if (!line.trim()) continue;
-    try {
-      const event = JSON.parse(line);
-      if (event?.type === 'thread.started' && typeof event.thread_id === 'string') {
-        return event.thread_id;
-      }
-    } catch {
-      // Non-JSON noise is retained in the transcript and ignored for thread discovery.
+  for (const event of parseJsonlEvidence(stdout).events) {
+    if (event.type === 'thread.started' && typeof event.thread_id === 'string') {
+      return event.thread_id;
     }
   }
   throw new Error('Codex initial turn did not emit a thread.started event');
 }
 
+/**
+ * @param {{ afterSecond: import('./types.mjs').CheckpointSnapshot | null | undefined, afterThird: import('./types.mjs').CheckpointSnapshot | null | undefined, allVerifiersPassed: boolean }} options
+ */
 export function multiTaskCheckpointReplacementIsProven({
   afterSecond,
   afterThird,
@@ -129,6 +131,10 @@ export function multiTaskCheckpointReplacementIsProven({
   );
 }
 
+/**
+ * @param {string} scenarioId
+ * @param {string} initialPrompt
+ */
 export function scenarioTurnPlan(scenarioId, initialPrompt) {
   const initial = { label: 'initial', prompt: initialPrompt, kind: 'user' };
   if (scenarioId === 'memory-autopilot-unprompted') {
@@ -160,8 +166,7 @@ export function scenarioTurnPlan(scenarioId, initialPrompt) {
       {
         label: 'preference-while-paused',
         kind: 'user',
-        prompt:
-          'For all future tasks, use tables instead of one-sentence status summaries.',
+        prompt: 'For all future tasks, use tables instead of one-sentence status summaries.',
       },
       {
         label: 'forget-profile',
@@ -207,4 +212,3 @@ export function scenarioTurnPlan(scenarioId, initialPrompt) {
   }
   return [initial];
 }
-

@@ -9,6 +9,7 @@ import {
 } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'vitest';
+import { elementAt } from '../../packages/harness/src/__tests__/helpers/harness.js';
 import { candidateArtifact, currentFingerprint, temporaryDirectory } from './run-fixture.js';
 
 const root = join(import.meta.dirname, '..', '..');
@@ -26,13 +27,15 @@ test('release version prepare leaves the GitHub Releases pointer unchanged and p
   const calls: string[][] = [];
   const runner = (_executable: string, args: string[]) => {
     calls.push(args);
-    if (args[0] === 'status') return { status: 0, stdout: '', stderr: '' };
-    if (args[0] === 'branch') return { status: 0, stdout: 'main\n', stderr: '' };
-    if (args[0] === 'version') {
+    if (elementAt(args, 0) === 'status') return { status: 0, stdout: '', stderr: '' };
+    if (elementAt(args, 0) === 'branch') return { status: 0, stdout: 'main\n', stderr: '' };
+    if (elementAt(args, 0) === 'rev-parse')
+      return { status: 0, stdout: `${'a'.repeat(40)}\n`, stderr: '' };
+    if (elementAt(args, 0) === 'version') {
       writeFileSync(join(fixture, 'package.json'), '{"name":"fixture","version":"1.2.4"}\n');
       return { status: 0, stdout: 'v1.2.4\n', stderr: '' };
     }
-    if (args[0] === 'pack') {
+    if (elementAt(args, 0) === 'pack') {
       const candidate = join(fixture, '.release', 'fixture-1.2.4.tgz');
       writeFileSync(candidate, 'candidate');
       return {
@@ -50,6 +53,7 @@ test('release version prepare leaves the GitHub Releases pointer unchanged and p
 
   assert.equal(result.version, '1.2.4');
   assert.equal(result.tag, 'v1.2.4');
+  assert.equal(result.preparedHead, 'a'.repeat(40));
   assert.equal(result.candidate, join(fixture, '.release', 'fixture-1.2.4.tgz'));
   assert.equal(readFileSync(join(fixture, 'CHANGELOG.md'), 'utf8'), changelog);
   assert.ok(
@@ -57,7 +61,9 @@ test('release version prepare leaves the GitHub Releases pointer unchanged and p
   );
   assert.ok(!calls.some((args) => args.some((arg) => /sbom/i.test(arg))));
   assert.ok(calls.some((args) => args.join(' ') === 'run preflight'));
-  assert.ok(calls.some((args) => args[0] === 'pack' && args.includes('--ignore-scripts')));
+  assert.ok(
+    calls.some((args) => elementAt(args, 0) === 'pack' && args.includes('--ignore-scripts')),
+  );
 });
 
 test('release attestation rejects a candidate digest that differs from local gates', async () => {
@@ -189,12 +195,13 @@ test('release finalization rejects changelog edits because release notes live on
     artifactSha256: fingerprint.packageArtifactSha256,
     packageVersion: fingerprint.packageVersion,
     preparedAt: '2026-08-24T12:00:00.000Z',
+    preparedHead: 'a'.repeat(40),
     evaluation: {
       assurance: 'maintainer-attested-structure',
       coverageCount: Object.keys(fingerprint.scenarios).length,
-      exactArtifactCoverageCount: 0,
-      inheritedBehaviorCoverageCount: Object.keys(fingerprint.scenarios).length,
-      inheritedFrom: [{ packageVersion: '0.5.0', packageArtifactSha256: 'f'.repeat(64) }],
+      exactArtifactCoverageCount: Object.keys(fingerprint.scenarios).length,
+      inheritedBehaviorCoverageCount: 0,
+      inheritedFrom: [],
       packageArtifactSha256: fingerprint.packageArtifactSha256,
       behaviorSha256: fingerprint.behaviorSha256,
       harnessVersion: fingerprint.harnessVersion,
@@ -204,8 +211,15 @@ test('release finalization rejects changelog edits because release notes live on
     },
   });
   const runner = (_executable: string, args: string[]) => ({
-    status: 0,
-    stdout: args[0] === 'status' ? ' M CHANGELOG.md\n' : '',
+    status: elementAt(args, 0) === 'rev-parse' && args.includes('-q') ? 1 : 0,
+    stdout:
+      elementAt(args, 0) === 'status'
+        ? ' M CHANGELOG.md\n'
+        : elementAt(args, 0) === 'branch'
+          ? 'main\n'
+          : elementAt(args, 0) === 'rev-parse' && !args.includes('-q')
+            ? `${'a'.repeat(40)}\n`
+            : '',
     stderr: '',
   });
 
@@ -214,6 +228,150 @@ test('release finalization rejects changelog edits because release notes live on
     /Unexpected release worktree change: CHANGELOG\.md/,
   );
   assert.equal(existsSync(join(fixture, 'release-attestation.json')), false);
+});
+
+async function finalizeFixture() {
+  const { writeReleaseState } = await import('../../scripts/release/release-state.js');
+  const fixture = temporaryDirectory();
+  const directory = join(fixture, '.release');
+  mkdirSync(directory);
+  const fingerprint = currentFingerprint();
+  const preparedHead = 'a'.repeat(40);
+  writeFileSync(
+    join(fixture, 'package.json'),
+    `${JSON.stringify({ name: 'harnessmith', version: fingerprint.packageVersion })}\n`,
+  );
+  const artifact = join(directory, 'candidate.tgz');
+  copyFileSync(candidateArtifact, artifact);
+  chmodSync(artifact, 0o400);
+  writeReleaseState(directory, {
+    schemaVersion: 3,
+    status: 'prepared',
+    artifactPath: artifact,
+    artifactSha256: fingerprint.packageArtifactSha256,
+    packageVersion: fingerprint.packageVersion,
+    preparedAt: '2026-08-24T12:00:00.000Z',
+    preparedHead,
+    evaluation: {
+      assurance: 'maintainer-attested-structure',
+      coverageCount: Object.keys(fingerprint.scenarios).length,
+      exactArtifactCoverageCount: Object.keys(fingerprint.scenarios).length,
+      inheritedBehaviorCoverageCount: 0,
+      inheritedFrom: [],
+      packageArtifactSha256: fingerprint.packageArtifactSha256,
+      behaviorSha256: fingerprint.behaviorSha256,
+      harnessVersion: fingerprint.harnessVersion,
+      rulesSha256: fingerprint.rulesSha256,
+      scenarios: fingerprint.scenarios,
+      requiredHosts: ['codex'],
+    },
+  });
+  return { directory, fixture, preparedHead };
+}
+
+function finalizeRunner({
+  branch = 'main',
+  head,
+  tagExists = false,
+  calls = [],
+}: {
+  branch?: string;
+  head: string;
+  tagExists?: boolean;
+  calls?: string[][];
+}) {
+  return (_executable: string, args: string[]) => {
+    calls.push(args);
+    if (elementAt(args, 0) === 'status') return { status: 0, stdout: '', stderr: '' };
+    if (elementAt(args, 0) === 'branch') return { status: 0, stdout: `${branch}\n`, stderr: '' };
+    if (elementAt(args, 0) === 'rev-parse' && args.includes('-q')) {
+      return { status: tagExists ? 0 : 1, stdout: '', stderr: '' };
+    }
+    if (elementAt(args, 0) === 'rev-parse') return { status: 0, stdout: `${head}\n`, stderr: '' };
+    return { status: 0, stdout: '', stderr: '' };
+  };
+}
+
+function assertNoFinalizeWritesOrMutations(fixture: string, calls: string[][]): void {
+  assert.equal(existsSync(join(fixture, 'release-attestation.json')), false);
+  assert.deepEqual(
+    calls.filter((args) => ['add', 'commit', 'tag'].includes(elementAt(args, 0))),
+    [],
+  );
+}
+
+test('release finalization rejects a non-main checkout before any write or Git mutation', async () => {
+  const { finalizeReleaseVersion } = await import('../../scripts/release/release-finalize.js');
+  const { fixture, preparedHead } = await finalizeFixture();
+  const calls: string[][] = [];
+
+  assert.throws(
+    () =>
+      finalizeReleaseVersion(
+        finalizeRunner({ branch: 'feature/release-test', head: preparedHead, calls }),
+        fixture,
+      ),
+    /requires main/i,
+  );
+  assertNoFinalizeWritesOrMutations(fixture, calls);
+});
+
+test('release finalization rejects HEAD drift before any write or Git mutation', async () => {
+  const { finalizeReleaseVersion } = await import('../../scripts/release/release-finalize.js');
+  const { fixture } = await finalizeFixture();
+  const calls: string[][] = [];
+
+  assert.throws(
+    () => finalizeReleaseVersion(finalizeRunner({ head: 'b'.repeat(40), calls }), fixture),
+    /HEAD.*prepared|prepared.*HEAD/i,
+  );
+  assertNoFinalizeWritesOrMutations(fixture, calls);
+});
+
+test('release finalization rejects an existing tag before any write or Git mutation', async () => {
+  const { finalizeReleaseVersion } = await import('../../scripts/release/release-finalize.js');
+  const { fixture, preparedHead } = await finalizeFixture();
+  const calls: string[][] = [];
+
+  assert.throws(
+    () =>
+      finalizeReleaseVersion(
+        finalizeRunner({ head: preparedHead, tagExists: true, calls }),
+        fixture,
+      ),
+    /tag already exists/i,
+  );
+  assertNoFinalizeWritesOrMutations(fixture, calls);
+});
+
+test('release finalization requires legacy state without preparedHead to be prepared again', async () => {
+  const { finalizeReleaseVersion } = await import('../../scripts/release/release-finalize.js');
+  const { directory, fixture, preparedHead } = await finalizeFixture();
+  const statePath = join(directory, 'release-state.json');
+  const state = JSON.parse(readFileSync(statePath, 'utf8'));
+  delete state.preparedHead;
+  writeFileSync(statePath, `${JSON.stringify(state, null, 2)}\n`);
+  const calls: string[][] = [];
+
+  assert.throws(
+    () => finalizeReleaseVersion(finalizeRunner({ head: preparedHead, calls }), fixture),
+    /preparedHead.*prepare|prepare.*preparedHead|prepare again|re-prepare/i,
+  );
+  assertNoFinalizeWritesOrMutations(fixture, calls);
+});
+
+test('release finalization is deterministic when resumed at the same prepared HEAD', async () => {
+  const { finalizeReleaseVersion } = await import('../../scripts/release/release-finalize.js');
+  const { fixture, preparedHead } = await finalizeFixture();
+  const calls: string[][] = [];
+  const runner = finalizeRunner({ head: preparedHead, calls });
+
+  const first = finalizeReleaseVersion(runner, fixture);
+  const firstAttestation = readFileSync(join(fixture, 'release-attestation.json'), 'utf8');
+  const second = finalizeReleaseVersion(runner, fixture);
+
+  assert.deepEqual(second, first);
+  assert.equal(readFileSync(join(fixture, 'release-attestation.json'), 'utf8'), firstAttestation);
 });
 
 test('release version git calls strip ambient GIT_DIR redirection', async () => {
@@ -229,13 +387,15 @@ test('release version git calls strip ambient GIT_DIR redirection', async () => 
     options: { cwd: string; env?: NodeJS.ProcessEnv },
   ) => {
     seen.push(options.env);
-    if (args[0] === 'status') return { status: 0, stdout: '', stderr: '' };
-    if (args[0] === 'branch') return { status: 0, stdout: 'main\n', stderr: '' };
-    if (args[0] === 'version') {
+    if (elementAt(args, 0) === 'status') return { status: 0, stdout: '', stderr: '' };
+    if (elementAt(args, 0) === 'branch') return { status: 0, stdout: 'main\n', stderr: '' };
+    if (elementAt(args, 0) === 'rev-parse')
+      return { status: 0, stdout: `${'a'.repeat(40)}\n`, stderr: '' };
+    if (elementAt(args, 0) === 'version') {
       writeFileSync(join(fixture, 'package.json'), '{"name":"fixture","version":"1.2.4"}\n');
       return { status: 0, stdout: 'v1.2.4\n', stderr: '' };
     }
-    if (args[0] === 'pack') {
+    if (elementAt(args, 0) === 'pack') {
       writeFileSync(join(fixture, '.release', 'fixture-1.2.4.tgz'), 'candidate');
       return {
         status: 0,

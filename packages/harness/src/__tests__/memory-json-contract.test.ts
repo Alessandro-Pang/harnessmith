@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { runCli } from '../cli.js';
 import { initGlobal, initProject } from '../commands/init.js';
-import { type CapturedIo, capturedIo, harnessRuntime } from './helpers/harness.js';
+import { type CapturedIo, capturedIo, elementAt, harnessRuntime } from './helpers/harness.js';
 
 function warningMemory(project: string): string {
   return `---
@@ -32,7 +32,7 @@ schema-version: 1
 
 function assertSingleJson(io: CapturedIo): void {
   assert.equal(io.logs.length, 1);
-  assert.doesNotThrow(() => JSON.parse(io.logs[0]));
+  assert.doesNotThrow(() => JSON.parse(elementAt(io.logs, 0)));
   assert.match(io.errors.join('\n'), /WARNING Working memory should declare expires/);
 }
 

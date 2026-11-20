@@ -13,7 +13,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { runCli } from '../cli.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { capturedIo, elementAt, harnessRuntime } from './helpers/harness.js';
 
 function fixture() {
   const root = mkdtempSync(join(tmpdir(), 'harness-memory-payload-'));
@@ -52,7 +52,7 @@ test('capture-input accepts payload-only options and keeps --json as an inline o
     0,
   );
 
-  const result = JSON.parse(io.logs[0]);
+  const result = JSON.parse(elementAt(io.logs, 0));
   const stored = readFileSync(result.path, 'utf8');
   assert.match(stored, /# 可靠摘要/);
   assert.ok(stored.includes(content));
@@ -129,7 +129,7 @@ test('handoff maps payload sourceRefs into recovery metadata', () => {
     0,
   );
 
-  const stored = readFileSync(JSON.parse(io.logs[0]).path, 'utf8');
+  const stored = readFileSync(JSON.parse(elementAt(io.logs, 0)).path, 'utf8');
   assert.match(stored, /^scope:\n {2}- packages\/cli\/src\/feature\.ts$/m);
   assert.match(stored, /^source-refs:\n {2}- docs\/contract\.md$/m);
 });

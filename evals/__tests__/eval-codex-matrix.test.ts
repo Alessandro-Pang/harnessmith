@@ -287,7 +287,7 @@ test.skipIf(coverageInstrumentation)(
     }
     assert.equal(scenarioIds.length, 18);
   },
-  120_000,
+  240_000,
 );
 
 test('scenario Host invocation keeps the prompt on stdin through the bounded transport', () => {

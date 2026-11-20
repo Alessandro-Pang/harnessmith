@@ -19,7 +19,9 @@ export type FrontmatterResult =
 export function parseFrontmatterDocument(content: string): FrontmatterResult {
   const match = content.match(frontmatterPattern);
   if (!match) return { found: false, metadata: new Map(), body: content, document: null };
-  const document = parseDocument(match[1]);
+  const source = match[1];
+  if (source === undefined) throw new Error('Memory document has invalid YAML frontmatter');
+  const document = parseDocument(source);
   if (document.errors.length > 0) throw document.errors[0];
   const value = document.toJS();
   return {

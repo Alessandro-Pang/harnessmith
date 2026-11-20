@@ -16,7 +16,7 @@ import { onTestFinished, test } from 'vitest';
 import { runCli } from '../cli.js';
 import { initGlobal } from '../commands/init.js';
 import * as memoryAutopilot from '../commands/memory/memory-autopilot.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { capturedIo, elementAt, harnessRuntime } from './helpers/harness.js';
 
 test('Harness memory autopilot captures input and handoff with indexed documents', () => {
   const root = mkdtempSync(join(tmpdir(), 'harness-memory-autopilot-cli-'));
@@ -52,7 +52,7 @@ test('Harness memory autopilot captures input and handoff with indexed documents
     ),
     0,
   );
-  const inputResult = JSON.parse(input.logs[0]);
+  const inputResult = JSON.parse(elementAt(input.logs, 0));
   assert.equal(inputResult.kind, 'input');
   assert.equal(existsSync(inputResult.path), true);
   assert.match(readFileSync(inputResult.path, 'utf8'), /^project: project$/m);
@@ -81,7 +81,7 @@ test('Harness memory autopilot captures input and handoff with indexed documents
   ];
   const handoff = capturedIo();
   assert.equal(runCli(handoffArguments, { runtime, io: handoff }), 0);
-  const handoffResult = JSON.parse(handoff.logs[0]);
+  const handoffResult = JSON.parse(elementAt(handoff.logs, 0));
   assert.equal(handoffResult.kind, 'episode');
   assert.equal(existsSync(handoffResult.path), true);
 
@@ -117,7 +117,7 @@ test('Harness memory autopilot captures input and handoff with indexed documents
   ];
   const updatedHandoff = capturedIo();
   assert.equal(runCli(compactedArguments, { runtime, io: updatedHandoff }), 0);
-  const updatedResult = JSON.parse(updatedHandoff.logs[0]);
+  const updatedResult = JSON.parse(elementAt(updatedHandoff.logs, 0));
   assert.equal(updatedResult.action, 'updated');
   assert.equal(realpathSync.native(updatedResult.path), realpathSync.native(priorDayPath));
   const snapshot = readFileSync(priorDayPath, 'utf8');
@@ -128,7 +128,7 @@ test('Harness memory autopilot captures input and handoff with indexed documents
 
   const repeatedHandoff = capturedIo();
   assert.equal(runCli(compactedArguments, { runtime, io: repeatedHandoff }), 0);
-  assert.equal(JSON.parse(repeatedHandoff.logs[0]).action, 'unchanged');
+  assert.equal(JSON.parse(elementAt(repeatedHandoff.logs, 0)).action, 'unchanged');
   assert.equal(runCli(['memory', 'check', project, '--indexed'], { runtime, io: capturedIo() }), 0);
 });
 

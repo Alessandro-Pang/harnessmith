@@ -12,7 +12,7 @@ import {
   fileDigestIsFresh,
   scopeDigestsAreFresh,
 } from '../lib/task/task-verification-scope.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { capturedIo, elementAt, harnessRuntime } from './helpers/harness.js';
 
 function git(project: string, args: string[]): void {
   execFileSync('git', ['-C', project, ...args], { stdio: 'ignore' });
@@ -119,7 +119,7 @@ test('diff verification binds the Git workspace and explicit scope', () => {
     },
     capturedIo(),
   );
-  const evidence = verified.acceptance[0].evidence[0];
+  const evidence = elementAt(elementAt(verified.acceptance, 0).evidence, 0);
   if (evidence.type !== 'diff') throw new Error('Expected diff evidence');
   assert.equal(evidence.reference, 'git-workspace');
   assert.equal(evidence.artifactDigest, evidence.workspaceDigest);

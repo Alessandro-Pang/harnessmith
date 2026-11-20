@@ -81,14 +81,14 @@ function checkCliHelp(outerCli: string, harnessCli: string): void {
 }
 
 function checkCli(): void {
-  // The Harness runtime lives in packages/harness/src; the distributed skill only carries dist.
+  // Runtime sources live in packages/harness/src; the only executable bundle is at the package root.
   checkArchitectureImports(join(root, 'packages', 'harness', 'src'), check);
   checkAreaImportEdges(join(root, 'packages', 'cli', 'src'), declaredCliAreaImports, check);
   checkAreaImportCycles(join(root, 'packages', 'cli', 'src'), declaredCliAreaCycles, check);
   checkBranch(root, check);
   checkPackage(root, harnessRoot, check);
   const outerCli = join(root, 'bin', 'harnessmith.mjs');
-  const harnessCli = join(harnessRoot, 'scripts', 'harness.mjs');
+  const harnessCli = outerCli;
   checkCliHelp(outerCli, harnessCli);
   const versionContract = JSON.parse(runNode(harnessCli, ['version', '--json'])) as {
     version?: number;

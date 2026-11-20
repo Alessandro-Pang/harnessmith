@@ -7,7 +7,7 @@ import { onTestFinished, test } from 'vitest';
 import type { SearchReport, SearchSource } from '../lib/search/search.js';
 import { searchText } from '../lib/search/search.js';
 import { searchWithIndex } from '../lib/search/search-index.js';
-import { harnessRuntime } from './helpers/harness.js';
+import { elementAt, harnessRuntime } from './helpers/harness.js';
 
 interface GoldenQuery {
   id: string;
@@ -70,7 +70,7 @@ test('versioned golden queries improve recall without exact technical identifier
   }
   const runtime = harnessRuntime(root);
   const sources: SearchSource[] = [{ root: docs, label: 'golden', trust: 'untrusted' }];
-  searchWithIndex(runtime, golden.queries[0].query, sources, { refreshIndex: true });
+  searchWithIndex(runtime, elementAt(golden.queries, 0).query, sources, { refreshIndex: true });
 
   let scanRecall5 = 0;
   let fulltextRecall5 = 0;
@@ -91,10 +91,14 @@ test('versioned golden queries improve recall without exact technical identifier
     assert.equal(indexedAt10, 1, `${query.id} should retrieve every relevant document in Top-10`);
     if (query.scanMustMiss) assert.equal(scanAt5, 0, `${query.id} must demonstrate recall gain`);
     if (query.expectedFirst) {
-      assert.equal(resultPaths(fulltext, docs, 1)[0], query.expectedFirst, query.id);
+      assert.equal(elementAt(resultPaths(fulltext, docs, 1), 0), query.expectedFirst, query.id);
     }
     if (query.category === 'exact-technical') {
-      assert.equal(resultPaths(fulltext, docs, 1)[0], query.relevant[0], `${query.id} Top-1`);
+      assert.equal(
+        elementAt(resultPaths(fulltext, docs, 1), 0),
+        elementAt(query.relevant, 0),
+        `${query.id} Top-1`,
+      );
       assert.ok(indexedAt5 >= scanAt5, `${query.id} exact retrieval must not regress`);
       assert.ok(
         precisionAt(fulltext, docs, query, 5) >= precisionAt(scan, docs, query, 5),

@@ -80,7 +80,9 @@ function main(): void {
     .description('validate host evaluation record structure and artifacts')
     .option('--runs-dir <path>', 'host evaluation records directory')
     .action(({ runsDir }: { runsDir?: string }) => {
-      const count = validateEvaluationRecords({ runsDirectory: runsDir }).length;
+      const count = validateEvaluationRecords(
+        runsDir === undefined ? {} : { runsDirectory: runsDir },
+      ).length;
       console.log(
         `Validated ${count} maintainer-attested host evaluation record structure${count === 1 ? '' : 's'}`,
       );
@@ -107,8 +109,8 @@ function main(): void {
       }) => {
         const result = gateEvaluationRecords({
           maxAgeDays,
-          packageArtifact,
-          runsDirectory: runsDir,
+          ...(packageArtifact === undefined ? {} : { packageArtifact }),
+          ...(runsDir === undefined ? {} : { runsDirectory: runsDir }),
         });
         if (json) process.stdout.write(`${JSON.stringify(result)}\n`);
         else
@@ -118,9 +120,11 @@ function main(): void {
       },
     );
 
+  const script = process.argv[1];
+  if (!script) throw new Error('Evaluation gate script path is unavailable');
   program.parse([
-    process.argv[0],
-    process.argv[1],
+    process.argv[0] ?? process.execPath,
+    script,
     ...normalizeEvalGateArgs(process.argv.slice(2)),
   ]);
 }

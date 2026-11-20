@@ -151,7 +151,11 @@ function registerCoreCommands(
     .action(run((path = '.') => initProject(runtime, path, io)));
 }
 
-export function createHarnessProgram(runtime: Runtime = createRuntime(), outputIo: Io = console) {
+export function createHarnessProgram(
+  runtime: Runtime = createRuntime(),
+  outputIo: Io = console,
+  commandName = 'harness',
+) {
   const io = redactingCommandIo(outputIo);
   let exitCode = 0;
   const run: CommandRunner =
@@ -170,7 +174,7 @@ export function createHarnessProgram(runtime: Runtime = createRuntime(), outputI
     readFileSync(join(runtime.harnessRoot, 'manifest.json'), 'utf8'),
   ) as HarnessManifest;
   const program = new Command()
-    .name('harness')
+    .name(commandName)
     .description('Personal Agent Harness runtime')
     .version(manifest.harnessVersion)
     .exitOverride()
@@ -202,9 +206,14 @@ export function createHarnessProgram(runtime: Runtime = createRuntime(), outputI
 
 export function runCli(
   args: string[],
-  { runtime = createRuntime(), io = console }: { runtime?: Runtime; io?: Io } = {},
+  {
+    runtime,
+    io = console,
+    env = process.env,
+    commandName = 'harness',
+  }: { runtime?: Runtime; io?: Io; env?: NodeJS.ProcessEnv; commandName?: string } = {},
 ): number {
-  const harness = createHarnessProgram(runtime, io);
+  const harness = createHarnessProgram(runtime ?? createRuntime(env), io, commandName);
   try {
     harness.program.parse(args, { from: 'user' });
   } catch (error) {

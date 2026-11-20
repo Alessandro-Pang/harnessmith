@@ -1,71 +1,51 @@
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { accessSync, constants, existsSync, readFileSync, statSync } from 'node:fs';
 import { join, sep } from 'node:path';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import addFormatsModule from 'ajv-formats';
 import { validateDocs } from '../lib/documentation/docs-validation.js';
-import { listFiles } from '../lib/filesystem/files.js';
+import { digestBudgetDefaults, listFiles } from '../lib/filesystem/files.js';
 import { addCheck as check } from '../lib/filesystem/validation-report.js';
 import { projectSnapshot } from '../lib/project/project.js';
-import { validateInstructionPath } from '../runtime.js';
 import type { Io, Runtime, ValidationReport, ValidationSummary } from '../types.js';
 import { errorMessage } from '../types.js';
 
 const addFormats = addFormatsModule as unknown as (ajv: Ajv2020) => Ajv2020;
 function validateStructure(runtime: Runtime, report: ValidationReport): void {
-  const entry = join(runtime.installedHarness, 'scripts', 'harness.mjs');
+  // The bundled Runtime is imported by the global CLI, not exec'd directly: it must be a
+  // readable regular file within the integrity byte budget, not a small executable shim.
+  const entry = join(runtime.distributionRoot, 'dist', 'harness.mjs');
   if (!existsSync(entry)) {
-    check(report, 'cli-entry', 'failed', 'Missing CLI entry', entry);
+    check(report, 'cli-entry', 'failed', 'Missing bundled CLI entry', entry);
     return;
   }
-  const entryLines = readFileSync(entry, 'utf8').split(/\r?\n/).length;
+  const stats = statSync(entry);
+  check(
+    report,
+    'cli-entry',
+    stats.isFile() ? 'passed' : 'failed',
+    stats.isFile() ? 'Bundled CLI entry present' : 'Bundled CLI entry is not a regular file',
+    entry,
+  );
   check(
     report,
     'cli-entry-size',
-    entryLines <= 30 ? 'passed' : 'failed',
-    `CLI entry has ${entryLines} lines`,
+    stats.size > 0 && stats.size <= digestBudgetDefaults.maxFileBytes ? 'passed' : 'failed',
+    `Bundled CLI entry is ${stats.size} bytes`,
     entry,
   );
+  let readable = true;
+  try {
+    accessSync(entry, constants.R_OK);
+  } catch {
+    readable = false;
+  }
   check(
     report,
-    'cli-entry-mode',
-    process.platform === 'win32' || (statSync(entry).mode & 0o111) !== 0 ? 'passed' : 'failed',
-    process.platform === 'win32'
-      ? 'CLI entry is runnable through Node.js'
-      : 'CLI entry is executable',
+    'cli-entry-readable',
+    readable ? 'passed' : 'failed',
+    readable ? 'Bundled CLI entry is readable by Node.js' : 'Bundled CLI entry is not readable',
     entry,
   );
-}
-
-function validateInstructions(runtime: Runtime, report: ValidationReport): void {
-  for (const path of runtime.instructionFiles) {
-    const pathCheck = validateInstructionPath(runtime.harnessHome, path);
-    if (!pathCheck.valid) {
-      check(report, 'instructions', 'failed', pathCheck.reason, path);
-      continue;
-    }
-    if (!existsSync(path)) {
-      check(report, 'instructions', 'failed', 'Missing instruction file', path);
-      continue;
-    }
-    const content = readFileSync(path, 'utf8');
-    const lines = content.split(/\r?\n/).length;
-    check(
-      report,
-      'instructions-size',
-      lines <= 130 ? 'passed' : 'warning',
-      `Instruction file has ${lines} lines`,
-      path,
-    );
-    if (/\{\{[A-Z0-9_]+\}\}/.test(content)) {
-      check(
-        report,
-        'template-token',
-        'failed',
-        'Unresolved template token in instruction file',
-        path,
-      );
-    }
-  }
 }
 
 function validateVersion(runtime: Runtime, report: ValidationReport): void {
@@ -80,7 +60,7 @@ function validateVersion(runtime: Runtime, report: ValidationReport): void {
       typeof manifest.harnessVersion === 'string' &&
       manifest.schemaVersion === 3 &&
       manifest.memorySchemaVersion === 1 &&
-      manifest.node === '>=22.12.0';
+      manifest.node === '>=22.20.0';
     check(
       report,
       'harness-manifest',
@@ -169,7 +149,6 @@ export function validate(
     valid: false,
   };
   validateVersion(runtime, report);
-  validateInstructions(runtime, report);
   validateDocs(runtime, report);
   validateStructure(runtime, report);
   if (project) validateProject(runtime, project, report);

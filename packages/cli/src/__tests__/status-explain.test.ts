@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { onTestFinished, test } from 'vitest';
+import { elementAt } from '../../../../packages/harness/src/__tests__/helpers/harness.js';
 import { createAdapter } from '../adapters/adapters.js';
 import { installAll } from '../installation/install.js';
 import { inspectStatusAll } from '../installation/lifecycle.js';
@@ -30,44 +31,47 @@ function fixture(prefix: string) {
 
 test('status explanation classifies missing and unmanaged targets without writing', () => {
   const { adapter } = fixture('harnessmith-status-uninstalled-');
-  const missing = explainStatus(inspectStatusAll([adapter])[0]);
+  const missing = explainStatus(elementAt(inspectStatusAll([adapter]), 0));
   assert.equal(missing.observedState, 'missing');
   assert.equal(missing.reasonCode, 'INSTALLATION_MISSING');
-  assert.equal(missing.actions[0].code, 'SETUP_PREVIEW');
+  assert.equal(elementAt(missing.actions, 0).code, 'SETUP_PREVIEW');
   assert.ok(missing.actions.every(({ automatic }) => automatic === false));
   assert.equal(existsSync(adapter.home), false);
 
   mkdirSync(adapter.home, { recursive: true });
-  writeFileSync(adapter.instructions[0].path, 'unmanaged instructions\n');
-  const unmanaged = explainStatus(inspectStatusAll([adapter])[0]);
+  writeFileSync(elementAt(adapter.instructions, 0).path, 'unmanaged instructions\n');
+  const unmanaged = explainStatus(elementAt(inspectStatusAll([adapter]), 0));
   assert.equal(unmanaged.observedState, 'unmanaged');
   assert.equal(unmanaged.reasonCode, 'UNMANAGED_TARGETS');
   assert.ok(unmanaged.actions.some(({ code }) => code === 'INSPECT_OWNERSHIP'));
-  assert.equal(readFileSync(adapter.instructions[0].path, 'utf8'), 'unmanaged instructions\n');
+  assert.equal(
+    readFileSync(elementAt(adapter.instructions, 0).path, 'utf8'),
+    'unmanaged instructions\n',
+  );
   assert.ok(unmanaged.stateDefinitions.unsupported);
 });
 
 test('status explanation reports managed, modified, partial, and backup evidence', () => {
   const { env, adapter } = fixture('harnessmith-status-installed-');
   mkdirSync(adapter.home, { recursive: true });
-  writeFileSync(adapter.instructions[0].path, 'original instructions\n');
+  writeFileSync(elementAt(adapter.instructions, 0).path, 'original instructions\n');
   installAll([adapter], { env, force: true, noInitGlobal: true });
 
-  const managed = explainStatus(inspectStatusAll([adapter])[0]);
+  const managed = explainStatus(elementAt(inspectStatusAll([adapter]), 0));
   assert.equal(managed.observedState, 'managed');
   assert.equal(managed.reasonCode, 'MANAGED_INSTALLATION');
   assert.ok(managed.evidence.backups.some(({ state }) => state === 'present'));
   assert.equal(managed.boundaries.hostBehavior.conclusion, 'inconclusive');
   assert.equal(managed.boundaries.hostBehavior.state, 'host-dependent');
 
-  writeFileSync(adapter.instructions[0].path, 'user-modified instructions\n');
-  const modified = explainStatus(inspectStatusAll([adapter])[0]);
+  writeFileSync(elementAt(adapter.instructions, 0).path, 'user-modified instructions\n');
+  const modified = explainStatus(elementAt(inspectStatusAll([adapter]), 0));
   assert.equal(modified.observedState, 'modified');
   assert.equal(modified.reasonCode, 'MANAGED_OUTPUT_MODIFIED');
   assert.ok(modified.actions.some(({ code }) => code === 'INSPECT_DIFF'));
 
-  rmSync(adapter.hub.harness, { recursive: true });
-  const partial = explainStatus(inspectStatusAll([adapter])[0]);
+  rmSync(elementAt(adapter.instructions, 0).path);
+  const partial = explainStatus(elementAt(inspectStatusAll([adapter]), 0));
   assert.equal(partial.observedState, 'partial');
   assert.equal(partial.reasonCode, 'PARTIAL_INSTALLATION');
   assert.ok(partial.actions.some(({ code }) => code === 'RESTORE_PREVIEW'));

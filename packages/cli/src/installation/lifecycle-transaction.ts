@@ -1,16 +1,14 @@
-import { cpSync, mkdirSync } from 'node:fs';
+import { chmodSync, copyFileSync, lstatSync, mkdirSync, utimesSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { removeExact } from '../shared/files.js';
 import { assertSafePath, entryExists, ignoreRoot, outputRoot } from '../shared/safe-path.js';
-import type { ManagedScope } from '../shared/types.js';
+import type { Adapter, InstallRecord } from '../shared/types.js';
 import { errorMessage } from '../shared/types.js';
 import {
   createTemporaryWorkspace,
   disposeTemporaryWorkspace,
   type TemporaryWorkspace,
 } from '../temporary-resources/temporary-resource.js';
-import { migratedOutputs, migrationRoot, type RecordLayer } from './lifecycle-plan.js';
-import { outputSpec } from './records.js';
 
 interface PathSnapshot {
   root: string;
@@ -21,10 +19,6 @@ interface PathSnapshot {
 interface MutablePath {
   root: string;
   path: string;
-}
-
-export interface LifecycleTransactionContext {
-  registerRecoveryPath(root: string, path: string): () => void;
 }
 
 export class LifecycleRecoveryError extends Error {
@@ -43,27 +37,31 @@ export class LifecycleRecoveryError extends Error {
   }
 }
 
-export function mutableLifecyclePaths(scope: ManagedScope, layers: RecordLayer[]): MutablePath[] {
+/** Every path one single-layer restore/uninstall may mutate, for exact snapshot rollback. */
+export function mutableLifecyclePaths(scope: Adapter, record: InstallRecord): MutablePath[] {
   const paths = new Map<string, MutablePath>();
   const add = (root: string, path: string): void => {
     paths.set(path, { root, path });
   };
   add(scope.home, scope.record);
   for (const ignore of scope.localIgnoreFiles || []) add(ignoreRoot(scope, ignore), ignore.path);
-  for (const layer of layers) {
-    add(scope.home, layer.path);
-    if (layer.record.recordBackup) add(scope.home, layer.record.recordBackup);
-    for (const output of layer.record.outputs) {
-      const root = outputRoot(scope, outputSpec(scope, output.path));
-      add(root, output.path);
-      if (output.backup) add(root, output.backup);
-    }
-    for (const migrated of migratedOutputs(layer.record)) {
-      add(migrationRoot(scope), migrated.path);
-      add(migrationRoot(scope), migrated.backup);
-    }
+  if (record.recordBackup) add(scope.home, record.recordBackup);
+  for (const output of record.outputs) {
+    const contract = scope.outputs.find((item) => item.path === output.path);
+    const root = outputRoot(scope, contract ?? {});
+    add(root, output.path);
+    if (output.backup) add(root, output.backup);
   }
   return [...paths.values()];
+}
+
+/** Regular files only: lifecycle snapshots never copy directory trees or symlinks. */
+function copyExact(source: string, destination: string): void {
+  const stat = lstatSync(source);
+  if (!stat.isFile()) throw new Error(`Unsupported lifecycle snapshot entry: ${source}`);
+  copyFileSync(source, destination);
+  chmodSync(destination, stat.mode);
+  utimesSync(destination, stat.atime, stat.mtime);
 }
 
 function snapshotPaths(paths: MutablePath[]): {
@@ -80,15 +78,13 @@ function snapshotPaths(paths: MutablePath[]): {
   const snapshots: PathSnapshot[] = [];
   try {
     for (const [index, { root: authorizedRoot, path }] of paths.entries()) {
-      assertSafePath(authorizedRoot, path, { allowSymlinkLeaf: true });
-      // A managed link whose target is missing still has to be snapshotted; `existsSync` follows
-      // the link and would report nothing to restore, so rollback would delete it for good.
+      assertSafePath(authorizedRoot, path);
       if (!entryExists(path)) {
         snapshots.push({ root: authorizedRoot, path, copy: null });
         continue;
       }
       const copy = join(root, String(index));
-      cpSync(path, copy, { recursive: true, dereference: false, preserveTimestamps: true });
+      copyExact(path, copy);
       snapshots.push({ root: authorizedRoot, path, copy });
     }
     return { root, workspace, snapshots };
@@ -108,83 +104,33 @@ function snapshotPaths(paths: MutablePath[]): {
 
 function restorePathSnapshots(snapshots: PathSnapshot[]): void {
   for (const snapshot of snapshots) {
-    assertSafePath(snapshot.root, snapshot.path, { allowSymlinkLeaf: true });
+    assertSafePath(snapshot.root, snapshot.path);
     removeExact(snapshot.path);
     if (!snapshot.copy) continue;
     mkdirSync(dirname(snapshot.path), { recursive: true });
-    assertSafePath(snapshot.root, snapshot.path, { allowSymlinkLeaf: true });
-    cpSync(snapshot.copy, snapshot.path, {
-      recursive: true,
-      dereference: false,
-      preserveTimestamps: true,
-    });
+    assertSafePath(snapshot.root, snapshot.path);
+    copyExact(snapshot.copy, snapshot.path);
   }
 }
 
-function recoveryContext(
-  paths: MutablePath[],
-  registered: Map<string, MutablePath>,
-): LifecycleTransactionContext {
-  const authorizedRoots = new Set(paths.map(({ root }) => resolve(root)));
-  return {
-    registerRecoveryPath(root: string, path: string): () => void {
-      const authorizedRoot = resolve(root);
-      const recoveryPath = resolve(path);
-      if (!authorizedRoots.has(authorizedRoot)) {
-        throw new Error(`Recovery path root is not part of the lifecycle transaction: ${root}`);
-      }
-      assertSafePath(authorizedRoot, recoveryPath, { allowSymlinkLeaf: true });
-      registered.set(recoveryPath, { root: authorizedRoot, path: recoveryPath });
-      return () => {
-        registered.delete(recoveryPath);
-      };
-    },
-  };
-}
-
-function cleanupRecoveryPaths(registered: Map<string, MutablePath>): string[] {
-  const failures: string[] = [];
-  for (const [key, recovery] of registered) {
-    try {
-      assertSafePath(recovery.root, recovery.path, { allowSymlinkLeaf: true });
-      removeExact(recovery.path);
-      registered.delete(key);
-    } catch (error) {
-      failures.push(`${recovery.path}: ${errorMessage(error)}`);
-    }
-  }
-  return failures;
-}
-
-function retainedPaths(transactionRoot: string, registered: Map<string, MutablePath>): string[] {
-  return [transactionRoot, ...registered.keys()];
-}
-
-export function lifecycleTransaction<T>(
-  paths: MutablePath[],
-  operation: (context: LifecycleTransactionContext) => T,
-): T {
+/**
+ * The single lifecycle transaction owner: snapshot every mutable path as exact regular
+ * file copies, run the operation, and on any failure restore the precise snapshots.
+ * When rollback or cleanup cannot complete, the retained snapshot root is reported as
+ * the recovery path instead of claiming an infallible atomic transaction.
+ */
+export function lifecycleTransaction<T>(paths: MutablePath[], operation: () => T): T {
   const transaction = snapshotPaths(paths);
-  const registered = new Map<string, MutablePath>();
-  const context = recoveryContext(paths, registered);
   let result: T;
   try {
-    result = operation(context);
+    result = operation();
   } catch (error) {
     try {
       restorePathSnapshots(transaction.snapshots);
     } catch (rollbackError) {
       throw new LifecycleRecoveryError(
         `Lifecycle operation failed and rollback was incomplete: ${errorMessage(error)}; rollback: ${errorMessage(rollbackError)}`,
-        retainedPaths(transaction.root, registered),
-        error,
-      );
-    }
-    const cleanupFailures = cleanupRecoveryPaths(registered);
-    if (cleanupFailures.length > 0) {
-      throw new LifecycleRecoveryError(
-        `Lifecycle operation failed; rollback completed but recovery cleanup was incomplete: ${errorMessage(error)}; cleanup: ${cleanupFailures.join('; ')}`,
-        retainedPaths(transaction.root, registered),
+        [transaction.root],
         error,
       );
     }
@@ -198,13 +144,6 @@ export function lifecycleTransaction<T>(
       );
     }
     throw error;
-  }
-  const cleanupFailures = cleanupRecoveryPaths(registered);
-  if (cleanupFailures.length > 0) {
-    throw new LifecycleRecoveryError(
-      `Lifecycle operation completed but recovery cleanup was incomplete: ${cleanupFailures.join('; ')}`,
-      retainedPaths(transaction.root, registered),
-    );
   }
   try {
     disposeTemporaryWorkspace(transaction.workspace);

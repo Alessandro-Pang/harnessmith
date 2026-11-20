@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "rootDir": "../packages/cli/src",
+    "outDir": "../dist"
+  },
+  "files": ["../packages/cli/src/cli.ts"],
+  "include": [],
+  "exclude": []
+}

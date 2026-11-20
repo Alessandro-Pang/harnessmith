@@ -122,8 +122,8 @@ npx harnessmith status --agent codex --explain
 npx harnessmith restore --agent codex --dry-run
 ```
 
-Confirm you know where the backups are, which layer `restore` will restore, and what scene to preserve on
-failure. The restore preview doesn't modify files.
+Confirm you know where the backups are and which files in the current record `restore` will restore. The restore
+preview doesn't modify files.
 
 ## Local regression for maintainers
 

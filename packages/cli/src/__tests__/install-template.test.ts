@@ -1,48 +1,22 @@
 import assert from 'node:assert/strict';
-import {
-  mkdirSync,
-  mkdtempSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-  symlinkSync,
-  writeFileSync,
-} from 'node:fs';
-import { tmpdir } from 'node:os';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { onTestFinished, test } from 'vitest';
+import { test } from 'vitest';
 import { parse } from 'yaml';
 import { parseFrontmatterDocument } from '../../../../packages/harness/src/lib/documentation/frontmatter.js';
 import { render as renderHarnessTemplate } from '../../../../packages/harness/src/lib/filesystem/templates.js';
 import type { Runtime } from '../../../../packages/harness/src/types.js';
-import {
-  installationRenderer,
-  listModules,
-  templateRoot,
-} from '../installation/install-template.js';
-import type { Hub } from '../shared/types.js';
+import { installationRenderer, templateRoot } from '../installation/install-template.js';
+import type { UserDataPaths } from '../shared/types.js';
 
-function windowsHub(home: string): Hub {
-  const agentsHome = `${home}/.agents`;
-  const hubHome = `${agentsHome}/harnessmith`;
-  const harness = `${hubHome}/skills/agent-harness`;
+function windowsUserData(userHome: string): UserDataPaths {
+  const home = `${userHome}/.harnessmith`;
   return {
-    scope: 'hub',
-    name: 'hub',
-    label: 'Harness hub',
-    userHome: home,
-    agentsHome,
-    home: hubHome,
-    record: `${hubHome}/.harnessmith/install.json`,
-    outputs: [],
-    entry: `${hubHome}/AGENTS.md`,
-    harness,
-    discoveryLink: `${agentsHome}/skills/agent-harness`,
-    state: `${hubHome}/state`,
-    rules: `${hubHome}/rules`,
-    memory: `${hubHome}/memory`,
-    legacyRules: `${home}/.agent-harness`,
-    legacyMemory: `${home}/.agent-docs`,
+    home,
+    userHome,
+    state: `${home}/state`,
+    rules: `${home}/rules`,
+    memory: `${home}/memory`,
   };
 }
 
@@ -56,22 +30,22 @@ function markdownFiles(root: string): string[] {
 
 test('renders the apps/docs/site manifest with a valid Windows path', () => {
   const home = String.raw`C:\Users\runneradmin\AppData\Local\Temp\host`;
-  const hub = windowsHub(home);
+  const userData = windowsUserData(home);
   const template = readFileSync(
     join(templateRoot, 'template', 'skills', 'agent-harness', 'docs', 'manifest.yaml'),
     'utf8',
   );
 
-  const manifest = parse(installationRenderer(hub, {})(template)) as { root: string };
+  const manifest = parse(installationRenderer(userData, {})(template)) as { root: string };
 
-  assert.equal(manifest.root, `${hub.harness}/docs`);
+  assert.equal(manifest.root, 'docs');
 });
 
 test('renders all distributed frontmatter with valid Windows paths', () => {
   const home = String.raw`C:\Users\runneradmin\AppData\Local\Temp\host`;
   const repositoryRoot = String.raw`C:\Users\runneradmin\git-repo`;
-  const hub = windowsHub(home);
-  const render = installationRenderer(hub, {
+  const userData = windowsUserData(home);
+  const render = installationRenderer(userData, {
     HARNESS_REPOSITORY_ROOT: repositoryRoot,
   });
   const docsRoot = join(templateRoot, 'template', 'skills', 'agent-harness', 'docs');
@@ -92,15 +66,13 @@ test('renders all memory template frontmatter with YAML-safe values', () => {
     home,
     harnessRoot,
     distributionRoot: templateRoot,
-    harnessHome: String.raw`C:\Users\runneradmin\.agents\harnessmith`,
-    agentsHome: String.raw`C:\Users\runneradmin\.agents`,
-    hostAdapter: 'hub',
-    instructionFiles: [],
-    installedHarness: String.raw`C:\Users\runneradmin\.agents\harnessmith\skills\agent-harness`,
-    docsRoot: String.raw`C:\Users\runneradmin\.agents\harnessmith\skills\agent-harness\docs`,
-    stateRoot: String.raw`C:\Users\runneradmin\.agents\harnessmith\state`,
-    memoryHome: String.raw`C:\Users\runneradmin\.agents\harnessmith\memory`,
-    personalHome: String.raw`C:\Users\runneradmin\.agents\harnessmith\rules`,
+    harnessHome: String.raw`C:\Users\runneradmin\.harnessmith`,
+    hostAdapter: 'codex',
+    installedHarness: String.raw`C:\Users\runneradmin\.agents\skills\agent-harness`,
+    docsRoot: String.raw`C:\Users\runneradmin\.agents\skills\agent-harness\docs`,
+    stateRoot: String.raw`C:\Users\runneradmin\.harnessmith\state`,
+    memoryHome: String.raw`C:\Users\runneradmin\.harnessmith\memory`,
+    personalHome: String.raw`C:\Users\runneradmin\.harnessmith\rules`,
     repositoryRoot: String.raw`C:\Users\runneradmin\git-repo`,
     owner: String.raw`DOMAIN\runneradmin`,
   } satisfies Runtime;
@@ -114,14 +86,9 @@ test('renders all memory template frontmatter with YAML-safe values', () => {
   }
 });
 
-test('module discovery does not follow symbolic-link files outside the staged Harness', () => {
-  const root = mkdtempSync(join(tmpdir(), 'harnessmith-module-symlink-'));
-  onTestFinished(() => rmSync(root, { recursive: true, force: true }));
-  const outside = join(root, 'outside.mjs');
-  const staged = join(root, 'staged');
-  mkdirSync(staged);
-  writeFileSync(outside, 'export const outside = true;\n');
-  symlinkSync(outside, join(staged, 'linked.mjs'), 'file');
-
-  assert.deepEqual(listModules(staged), []);
+test('the distributed skill contains no Runtime copy or executable shim', () => {
+  const skillRoot = join(templateRoot, 'template', 'skills', 'agent-harness');
+  const entries = readdirSync(skillRoot);
+  assert.equal(entries.includes('scripts'), false);
+  assert.equal(entries.includes('dist'), false);
 });

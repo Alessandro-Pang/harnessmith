@@ -9,7 +9,7 @@ import {
   parseRepositoryMap,
   serializeRepositoryMap,
 } from '../lib/repository-map/repository-map.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { capturedIo, elementAt, harnessRuntime } from './helpers/harness.js';
 
 function validMap() {
   return {
@@ -68,7 +68,7 @@ test('repository-map CLI initializes, checks, renders, verifies, maintains, and 
       harnessVersion: 'test',
       schemaVersion: 3,
       memorySchemaVersion: 1,
-      node: '>=22.12.0',
+      node: '>=22.20.0',
     }),
   );
   mkdirSync(join(runtime.harnessRoot, 'assets', 'templates', 'personal', 'projects'), {
@@ -96,7 +96,7 @@ test('repository-map CLI initializes, checks, renders, verifies, maintains, and 
 
   const checked = capturedIo();
   assert.equal(runCli(['repository-map', 'check', '--json'], { runtime, io: checked }), 0);
-  assert.equal(JSON.parse(checked.logs[0]).valid, true);
+  assert.equal(JSON.parse(elementAt(checked.logs, 0)).valid, true);
 
   const rendered = capturedIo();
   assert.equal(runCli(['repository-map', 'render', '--write'], { runtime, io: rendered }), 0);
@@ -119,12 +119,12 @@ test('repository-map CLI initializes, checks, renders, verifies, maintains, and 
     runCli(['repository-map', 'verify', '--record', '--json'], { runtime, io: verified }),
     0,
   );
-  assert.equal(JSON.parse(verified.logs[0]).result, 'passed');
+  assert.equal(JSON.parse(elementAt(verified.logs, 0)).result, 'passed');
   assert.equal(existsSync(join(runtime.stateRoot, 'repository-map', 'verification.json')), true);
 
   const maintained = capturedIo();
   assert.equal(runCli(['repository-map', 'maintain', '--json'], { runtime, io: maintained }), 0);
-  assert.deepEqual(JSON.parse(maintained.logs[0]).stale, []);
+  assert.deepEqual(JSON.parse(elementAt(maintained.logs, 0)).stale, []);
 
   writeFileSync(
     join(runtime.repositoryRoot, 'platform/account/package.json'),
@@ -142,7 +142,7 @@ test('repository-map CLI initializes, checks, renders, verifies, maintains, and 
     }),
     0,
   );
-  assert.equal(JSON.parse(discovered.logs[0]).appliedRelations.length, 1);
+  assert.equal(JSON.parse(elementAt(discovered.logs, 0)).appliedRelations.length, 1);
 
   const observations = join(root, 'observations.json');
   writeFileSync(
@@ -174,7 +174,7 @@ test('repository-map CLI initializes, checks, renders, verifies, maintains, and 
     }),
     0,
   );
-  assert.equal(JSON.parse(reconciled.logs[0]).proposals.length, 1);
+  assert.equal(JSON.parse(elementAt(reconciled.logs, 0)).proposals.length, 1);
   assert.equal(
     parseRepositoryMap(
       readFileSync(join(runtime.personalHome, 'projects', 'repository-map.yaml'), 'utf8'),
@@ -201,7 +201,7 @@ test('repository-map CLI initializes, checks, renders, verifies, maintains, and 
     }),
     0,
   );
-  assert.equal(JSON.parse(migrated.logs[0]).ready, true);
+  assert.equal(JSON.parse(elementAt(migrated.logs, 0)).ready, true);
   assert.equal(
     readFileSync(join(runtime.personalHome, 'projects', 'repository-map.legacy.md'), 'utf8'),
     '# legacy user map\n',

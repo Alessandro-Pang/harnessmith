@@ -62,9 +62,7 @@ function fixtureRuntime(root: string): Runtime {
     harnessRoot: join(root, 'source'),
     distributionRoot: join(root, 'distribution'),
     harnessHome: join(root, 'host'),
-    agentsHome: join(root, 'agents'),
     hostAdapter: 'test',
-    instructionFiles: [join(root, 'host', 'AGENTS.md')],
     installedHarness,
     docsRoot: join(installedHarness, 'docs'),
     stateRoot: join(root, 'host', 'state'),
@@ -97,7 +95,9 @@ function generateCorpus(root: string, documents: number, chunksPerFile: number):
 
 function percentile(samples: number[], ratio: number): number {
   const sorted = [...samples].sort((left, right) => left - right);
-  return sorted[Math.max(0, Math.ceil(sorted.length * ratio) - 1)];
+  const value = sorted[Math.max(0, Math.ceil(sorted.length * ratio) - 1)];
+  if (value === undefined) throw new Error('Percentile requires at least one sample');
+  return value;
 }
 
 function collectGarbage(): void {
@@ -184,7 +184,7 @@ function runSize(documents: number, iterations: number, chunksPerFile: number): 
 const iterations = positiveInteger(option('--iterations'), 100, 'Iterations');
 const chunksPerFile = positiveInteger(option('--chunks-per-file'), 10, 'Chunks per file');
 const results = benchmarkSizes().map((size) => runSize(size, iterations, chunksPerFile));
-const bundlePath = join('packages', 'harness', 'dist', 'harness.mjs');
+const bundlePath = join('dist', 'harness.mjs');
 console.log(
   JSON.stringify(
     {

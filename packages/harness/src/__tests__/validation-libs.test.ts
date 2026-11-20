@@ -9,7 +9,7 @@ import { memoryDocumentPath } from '../lib/memory/memory-path.js';
 import { metadataReferences, validateMemoryRoot } from '../lib/memory/memory-validation.js';
 import { outputTask } from '../lib/task/task-output.js';
 import type { TaskSummary, ValidationReport } from '../types.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { capturedIo, elementAt, harnessRuntime } from './helpers/harness.js';
 
 function temporaryRoot(): string {
   const root = mkdtempSync(join(tmpdir(), 'harness-validation-libs-'));
@@ -31,13 +31,13 @@ test('docs validation reports missing, malformed, escaping, broken, and unrouted
   const runtime = harnessRuntime(root, { docsRoot: join(root, 'docs') });
   const missing = report();
   validateDocs(runtime, missing);
-  assert.equal(missing.checks[0]?.id, 'docs-manifest');
+  assert.equal(elementAt(missing.checks, 0)?.id, 'docs-manifest');
 
   mkdirSync(runtime.docsRoot);
   writeFileSync(join(runtime.docsRoot, 'manifest.yaml'), 'entries: [invalid\n');
   const malformed = report();
   validateDocs(runtime, malformed);
-  assert.match(malformed.checks[0]?.message ?? '', /Invalid YAML/);
+  assert.match(elementAt(malformed.checks, 0)?.message ?? '', /Invalid YAML/);
 
   writeFileSync(
     join(runtime.docsRoot, 'manifest.yaml'),
@@ -461,11 +461,11 @@ test('task output renders JSON, lists, details, and acceptance criteria', () => 
   };
   const json = capturedIo();
   outputTask(task, true, json);
-  assert.equal(JSON.parse(json.logs[0]).id, task.id);
+  assert.equal(JSON.parse(elementAt(json.logs, 0)).id, task.id);
 
   const list = capturedIo();
   outputTask([task], false, list);
-  assert.match(list.logs[0], /task-1 \| in_progress/);
+  assert.match(elementAt(list.logs, 0), /task-1 \| in_progress/);
 
   const detail = capturedIo();
   outputTask(task, false, detail);

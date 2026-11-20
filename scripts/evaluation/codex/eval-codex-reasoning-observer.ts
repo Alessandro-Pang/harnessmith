@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { reasoningSectionEvidence } from './eval-codex-reasoning-scenarios.js';
 import type {
@@ -9,8 +9,9 @@ import type {
   ReasoningScenario,
 } from './eval-codex-reasoning-types.js';
 import type { HostProcessCapture } from './eval-codex-transport.js';
-
-type CommandEvent = { command: string; output: string; exitCode: number | null };
+import { evaluateCodexTurnCompletion } from './support/codex-completion.js';
+import { readReasoningResultArtifact } from './support/reasoning-artifact.js';
+import { reasoningEvaluatorFailure } from './support/reasoning-failure.js';
 
 function boundTraceOutput(input: string): string {
   const sanitized = String(input)
@@ -32,7 +33,7 @@ function boundTraceOutput(input: string): string {
   return `${sanitized.slice(0, 7800)}\n[TRUNCATED sha256=${hash} bytes=${Buffer.byteLength(sanitized)}]`;
 }
 
-function commandEvents(stdout: string): CommandEvent[] {
+function commandEvents(stdout: string): ReasoningCommandTrace {
   return stdout.split(/\r?\n/u).flatMap((line) => {
     try {
       const event = JSON.parse(line) as { type?: unknown; item?: Record<string, unknown> };
@@ -82,6 +83,7 @@ function observeTurn(
   scenario: ReasoningScenario,
   repo: string,
   started: HostProcessCapture,
+  resultArtifact: Record<string, unknown>,
 ): ReasoningObservation {
   const stdout = 'stdout' in started ? (started.stdout ?? '') : '';
   const events = commandEvents(stdout);
@@ -118,10 +120,6 @@ function observeTurn(
           Buffer.byteLength(output) >= 256,
       )
     : -1;
-  const resultPath = join(repo, '.harness-eval', 'reasoning-result.json');
-  const resultArtifact = existsSync(resultPath)
-    ? (JSON.parse(readFileSync(resultPath, 'utf8')) as Record<string, unknown>)
-    : {};
   const observedArtifacts = Object.keys(resultArtifact);
   const missingArtifacts = scenario.requiredArtifacts.filter((key) => {
     const value = resultArtifact[key];
@@ -148,7 +146,7 @@ function observeTurn(
   return {
     started,
     commandTrace,
-    routeReport,
+    ...(routeReport === undefined ? {} : { routeReport }),
     modes,
     routeIndex,
     sectionIndex,
@@ -169,7 +167,31 @@ export function buildReasoningResult(
   repo: string,
   started: HostProcessCapture,
 ): ReasoningResult {
-  const observation = observeTurn(scenario, repo, started);
+  if (started.kind === 'completed') {
+    const completion = evaluateCodexTurnCompletion({
+      status: started.exitCode,
+      signal: null,
+      error: null,
+      stdout: started.stdout,
+      stderr: started.stderr,
+    });
+    if (!completion.completed) {
+      return reasoningEvaluatorFailure(
+        scenario,
+        `incomplete-codex-turn:${completion.reasons.join(';')}`,
+      );
+    }
+  }
+  let resultArtifact: Record<string, unknown>;
+  try {
+    resultArtifact = readReasoningResultArtifact(
+      join(repo, '.harness-eval', 'reasoning-result.json'),
+      scenario,
+    );
+  } catch (error) {
+    return reasoningEvaluatorFailure(scenario, `invalid-reasoning-result:${String(error)}`);
+  }
+  const observation = observeTurn(scenario, repo, started, resultArtifact);
   const activation = scenario.mode
     ? observation.modes.find((mode) => mode.mode === scenario.mode)
     : undefined;

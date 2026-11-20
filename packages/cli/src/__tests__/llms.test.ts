@@ -11,7 +11,8 @@ const harnessAssets = join(root, 'template', 'skills', 'agent-harness', 'assets'
 test('llms.txt exposes a complete non-interactive install protocol', () => {
   const content = readFileSync(join(root, 'llms.txt'), 'utf8');
   for (const required of [
-    'npx --yes harnessmith setup --agent <agents>',
+    'npm install -g harnessmith',
+    'harnessmith setup --agent <agents>',
     '--dry-run',
     'init global',
     'init project',
@@ -37,6 +38,35 @@ test('llms.txt exposes a complete non-interactive install protocol', () => {
   assert.doesNotMatch(content, /npx --yes (?!harnessmith\b)/);
   assert.doesNotMatch(content, /\bharnesssmith\b/);
   assert.doesNotMatch(content, /create-coding-agent-harness/);
+});
+
+test('llms.txt describes the single global CLI, skills delegation, and ~/.harnessmith user data', () => {
+  const content = readFileSync(join(root, 'llms.txt'), 'utf8');
+  const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as {
+    dependencies?: Record<string, string>;
+    engines?: Record<string, string>;
+  };
+
+  // Skill install/uninstall is fully delegated to the pinned production dependency.
+  assert.equal(manifest.dependencies?.skills, '1.7.6');
+  assert.match(content, /skills@1\.7\.6/);
+  assert.match(content, /skills add/);
+  assert.match(content, /skills remove/);
+  // The Runtime executes from the npm package root and is never copied into user directories.
+  assert.match(content, /dist\/harness\.mjs/);
+  assert.match(content, /Runtime is never copied into a user directory/);
+  // User data defaults to ~/.harnessmith; the shared hub is neither created nor depended on.
+  assert.match(content, /~\/\.harnessmith/);
+  assert.match(content, /HARNESS_HOME/);
+  assert.match(content, /neither creates nor depends on\s+`~\/\.agents\/harnessmith`/);
+  // Host instruction files are rendered copies, not symlinks to a shared entry.
+  assert.match(content, /rendered copies, not symlinks/);
+  assert.doesNotMatch(content, /scripts\/harness\.mjs/);
+  assert.doesNotMatch(content, /<hub>/);
+  // Node floor matches the package contract.
+  assert.equal(manifest.engines?.node, '>=22.20.0');
+  assert.match(content, /Node\.js 22\.20 or newer/);
+  assert.doesNotMatch(content, /22\.12/);
 });
 
 test('AI installation links resolve the protocol from the same npm release channel', () => {
@@ -72,7 +102,9 @@ test('public prose uses the established Harnessmith brand while npm commands kee
     assert.ok(content.includes(canonicalBrand), `${path} is missing ${canonicalBrand}`);
     assert.ok(!content.includes(nonCanonicalBrand), `${path} contains ${nonCanonicalBrand}`);
   }
-  assert.match(readFileSync(join(root, 'llms.txt'), 'utf8'), /npx --yes harnessmith\b/);
+  const llms = readFileSync(join(root, 'llms.txt'), 'utf8');
+  assert.match(llms, /npm install -g harnessmith\b/);
+  assert.match(llms, /npx --yes harnessmith\b/);
 });
 
 test('public guidance routes advanced runtime contracts instead of duplicating them', () => {
@@ -90,8 +122,8 @@ test('public guidance routes advanced runtime contracts instead of duplicating t
   assert.match(llms, /Expected response:.*blocked/);
   assert.match(llms, /Input:.*rollback.*recovery paths/);
   assert.match(llms, /recovery path/);
-  assert.match(readme, /harness\.mjs health --json/);
-  assert.match(english, /harness\.mjs health --json/);
+  assert.match(readme, /harnessmith health --json/);
+  assert.match(english, /harnessmith health --json/);
 });
 
 test('post-install checks are conditional when global memory initialization is skipped', () => {
@@ -216,6 +248,11 @@ test('distributed prompt entrypoints stay readable and use executable Harness co
     }
   }
 
+  for (const path of [agentsPath, join(root, 'llms.txt')]) {
+    const content = readFileSync(path, 'utf8');
+    assert.doesNotMatch(content, /node \S*scripts\/harness\.mjs/, path);
+    assert.match(content, /harnessmith bootstrap\b|`harnessmith`/, path);
+  }
   const agentLines = readFileSync(agentsPath, 'utf8').trimEnd().split('\n');
   assert.ok(agentLines.length <= 140);
   assert.ok(Math.max(...agentLines.map((line) => line.length)) <= 160);
@@ -240,14 +277,18 @@ test('npm package publishes the Harness runtime without its TypeScript sources',
   for (const path of [
     'template/entry/AGENTS.md',
     'template/skills/agent-harness/SKILL.md',
-    'template/skills/agent-harness/scripts',
-    'template/skills/agent-harness/dist',
+    'dist',
     'template/skills/agent-harness/docs',
     'template/skills/agent-harness/manifest.json',
     'template/skills/agent-harness/assets/schemas',
     'template/skills/agent-harness/assets/templates',
   ])
     assert.ok(manifest.files.includes(path), `npm package is missing: ${path}`);
+  // The shipped dist directory must contain the single bundled Runtime the global CLI executes.
+  assert.ok(
+    existsSync(join(root, 'dist', 'harness.mjs')),
+    'npm package is missing the dist/harness.mjs runtime bundle',
+  );
   assert.ok(!manifest.files.includes('template'));
   assert.ok(!manifest.files.some((path: string) => path.includes('agent-harness/src')));
 });
@@ -261,13 +302,31 @@ test('distributed Harness template contains no host product identity', () => {
       const path = join(directory, entry.name);
       if (entry.isDirectory()) pending.push(path);
       else if (entry.isFile()) {
-        const content = readFileSync(path, 'utf8');
-        assert.doesNotMatch(content, /\b(codex|cursor|claude)\b/i, path);
-        assert.doesNotMatch(
-          content,
-          /CODEX_HOME|CLAUDE_CONFIG_DIR|DP_REPO_ROOT|dp-repository/i,
-          path,
-        );
+        const contents = path.endsWith('.map')
+          ? (() => {
+              const map = JSON.parse(readFileSync(path, 'utf8')) as {
+                sources?: unknown;
+                sourcesContent?: unknown;
+              };
+              const { sources, sourcesContent } = map;
+              if (!Array.isArray(sources) || !Array.isArray(sourcesContent)) {
+                throw new Error(`Invalid source map: ${path}`);
+              }
+              // Third-party sources use generic words such as "cursor" outside host identity.
+              return sourcesContent.filter(
+                (_, index) => !String(sources[index]).includes('/node_modules/'),
+              );
+            })()
+          : [readFileSync(path, 'utf8')];
+        for (const content of contents) {
+          assert.equal(typeof content, 'string', path);
+          assert.doesNotMatch(content, /\b(codex|cursor|claude)\b/i, path);
+          assert.doesNotMatch(
+            content,
+            /CODEX_HOME|CLAUDE_CONFIG_DIR|DP_REPO_ROOT|dp-repository/i,
+            path,
+          );
+        }
       }
     }
   }

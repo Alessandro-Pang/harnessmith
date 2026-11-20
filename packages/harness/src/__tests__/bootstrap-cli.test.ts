@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { runCli } from '../cli.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { capturedIo, elementAt, harnessRuntime } from './helpers/harness.js';
 
 test('Harness bootstrap CLI defaults to brief and exposes explicit full detail', () => {
   const root = mkdtempSync(join(tmpdir(), 'harness-bootstrap-cli-'));
@@ -27,8 +27,8 @@ test('Harness bootstrap CLI defaults to brief and exposes explicit full detail',
     0,
   );
 
-  const brief = JSON.parse(briefOutput.logs[0]);
-  const full = JSON.parse(fullOutput.logs[0]);
+  const brief = JSON.parse(elementAt(briefOutput.logs, 0));
+  const full = JSON.parse(elementAt(fullOutput.logs, 0));
   assert.equal(brief.detail, 'brief');
   assert.equal('metadata' in brief.memory, false);
   assert.equal(full.detail, 'full');

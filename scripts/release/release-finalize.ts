@@ -81,20 +81,42 @@ export function finalizeReleaseVersion(
   const directory = join(root, '.release');
   const state = readReleaseState(directory);
   if (!state) throw new Error('Run pnpm run release:prepare with fresh Host Eval evidence first');
+  if (!state.preparedHead) {
+    throw new Error(
+      'Release state has no preparedHead; run pnpm run release:prepare again before finalizing',
+    );
+  }
   const prepared = checkedPreparedState(directory, state);
   const manifest = packageManifest(root);
   if (manifest.version !== prepared.packageVersion) {
     throw new Error('Prepared candidate version does not match package.json');
   }
   const tag = `v${manifest.version}`;
-  const attestation = createReleaseAttestation(manifest.name, prepared);
-  verifyReleaseAttestation(attestation, attestationSubject(prepared.artifactPath, tag, root));
+  const branch = checked('Git branch', ['branch', '--show-current'], root, runner).trim();
+  if (branch !== 'main') {
+    throw new Error(`Release finalization requires main, found ${branch || 'detached'}`);
+  }
+  const head = checked('Git HEAD', ['rev-parse', '--verify', 'HEAD'], root, runner).trim();
+  if (head !== prepared.preparedHead) {
+    throw new Error(`Current HEAD ${head || 'unknown'} does not match preparedHead`);
+  }
+  const existing = runner('git', ['rev-parse', '-q', '--verify', `refs/tags/${tag}`], {
+    cwd: root,
+  });
+  if (existing.status === 0) throw new Error(`Release tag already exists: ${tag}`);
+  if (existing.status !== 1) {
+    throw new Error(
+      `Git tag check failed: ${existing.stderr || `exit ${String(existing.status)}`}`,
+    );
+  }
   const allowed = new Set<string>(releaseFiles);
   const status = checked('Git status', ['status', '--porcelain'], root, runner);
   for (const line of status.split('\n').filter(Boolean)) {
     const path = line.slice(3);
     if (!allowed.has(path)) throw new Error(`Unexpected release worktree change: ${path}`);
   }
+  const attestation = createReleaseAttestation(manifest.name, prepared);
+  verifyReleaseAttestation(attestation, attestationSubject(prepared.artifactPath, tag, root));
   writeFileAtomic.sync(
     join(root, 'release-attestation.json'),
     `${JSON.stringify(attestation, null, 2)}\n`,
@@ -106,10 +128,6 @@ export function finalizeReleaseVersion(
     root,
     runner,
   );
-  const existing = runner('git', ['rev-parse', '-q', '--verify', `refs/tags/${tag}`], {
-    cwd: root,
-  });
-  if (existing.status === 0) throw new Error(`Release tag already exists: ${tag}`);
   checked('Signed release tag', ['tag', '-s', tag, '-m', `harnessmith ${tag}`], root, runner);
   return {
     pushCommand: `git push --atomic origin main refs/tags/${tag}`,

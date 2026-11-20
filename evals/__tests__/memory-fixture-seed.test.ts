@@ -21,7 +21,7 @@ import {
 import { attestationCoverageMissing } from '../../scripts/release/release-attestation.js';
 
 const root = join(import.meta.dirname, '..', '..');
-const harness = join(root, 'template', 'skills', 'agent-harness', 'scripts', 'harness.mjs');
+const harness = join(root, 'bin', 'harnessmith.mjs');
 
 function disposable(): {
   repo: string;
@@ -60,9 +60,12 @@ function runHarness(env: NodeJS.ProcessEnv, cwd: string, argv: string[]): { stdo
     env,
     timeout: 30_000,
   });
-  const payload = argv.includes('--payload-file')
-    ? readFileSync(argv[argv.indexOf('--payload-file') + 1], 'utf8')
-    : '';
+  let payload = '';
+  if (argv.includes('--payload-file')) {
+    const payloadPath = argv[argv.indexOf('--payload-file') + 1];
+    assert(payloadPath !== undefined, '--payload-file requires a path');
+    payload = readFileSync(payloadPath, 'utf8');
+  }
   assert.equal(
     result.status,
     0,

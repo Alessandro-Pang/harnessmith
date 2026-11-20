@@ -20,7 +20,7 @@ export function withMemoryLock<T>(
         return operation(state);
       },
       {
-        directoryMode: options.directoryMode,
+        ...(options.directoryMode === undefined ? {} : { directoryMode: options.directoryMode }),
         cleanupEmptyRootOnFailure: Boolean(options.requireExisting),
       },
     ),

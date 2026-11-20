@@ -2,7 +2,7 @@
 name: agent-harness
 description: 个人 coding-agent Harness（Harnessmith 分发）。当用户要修改/实现代码或配置、排查故障/修 bug/分析 CI 失败、评审/review、做方案/技术选型/调研、理解代码库/梳理架构、验证/验收/证明结论、发布/迁移/远端写操作、写 commit/分支等 Git 操作、推进跨会话长任务与交接、记录或查询项目/全局 Memory、更新用户画像、查 Repository Map，或需要 Harness CLI（bootstrap、route、search、task、memory、health、validate）时使用。Personal coding-agent harness. Use for change, diagnose/debug/CI failure, review, research/design, understand/map a codebase, verify/accept, release/migration/external writes, Git conventions, long-running task checkpoints and handoffs, project or global Memory capture, user-profile updates, Repository Map lookups, or the bundled Harness CLI. Loads only the documents the deterministic router selects; grants no permissions and does not replace host or project rules.
 license: MIT
-compatibility: Host-neutral. Requires Node.js 22.12 or newer to run scripts/harness.mjs; no network access and no extra dependencies.
+compatibility: Host-neutral. Requires Node.js 22.20 or newer and harnessmith on PATH (or npx).
 metadata:
   owner: harnessmith
   layout: skills/agent-harness
@@ -13,7 +13,7 @@ metadata:
 这是 Harnessmith 分发的个人 Harness：宿主中立的工作协议、按任务路由的规则文档和自包含的 Harness CLI。
 授权边界、会话启动顺序和回合结束前的 Memory 沉淀由宿主的 always-on 入口（`AGENTS.md` 或宿主等价文件）约束；
 本 skill 是发现层：说明目录、CLI 和协议，不扩权、不改变宿主权限模型，也不替代项目自己的规则和事实源。
-下文 `<harness>` 指本目录的 `node scripts/harness.mjs`（宿主给出的 skill 路径 + `scripts/harness.mjs`）。
+下文 `<harness>` 指 `harnessmith`；未全局安装 npm 包时，等价使用 `npx --yes harnessmith`。
 
 ## 唯一入口命令
 
@@ -31,7 +31,7 @@ metadata:
 
 | 路径 | 内容 | 何时读取 |
 | --- | --- | --- |
-| `scripts/harness.mjs` | Harness CLI 入口（Node.js，自包含 bundle） | bootstrap、route、search、task、memory、health、validate |
+| 全局 `harnessmith` | 与 skill 同包、同版本的自包含 Runtime 入口 | bootstrap、route、search、task、memory、health、validate |
 | `docs/README.md` | 快速路由表、目录职责和加载层级 | 需要人工挑选文档，或核对路由结果时 |
 | `docs/core/` | 跨任务稳定原则：operating model、execution loop、tool routing、safety、Git、长任务 | 路由返回 `topics` 命中时 |
 | `docs/playbooks/` | 七类任务动作的执行流程 | 路由返回 `primaryPlaybook` 时 |
@@ -67,4 +67,4 @@ metadata:
 - 个人 overlay：`{{HARNESS_PERSONAL_HOME}}/`（用户所有，安装器只补骨架）。
 - 跨项目 Memory 与用户画像：`{{HARNESS_MEMORY_HOME}}/`。
 - 项目 Memory：仓库内 `.agent-docs/`（非权威）。
-- 可变运行状态：`{{HARNESS_STATE_HOME}}/`（hub 内与 `skills/` 同级），升级时保留，不参与完整性校验。
+- 可变运行状态：`{{HARNESS_STATE_HOME}}/`（默认 `~/.harnessmith/state`），升级时保留，不参与完整性校验。

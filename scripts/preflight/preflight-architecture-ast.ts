@@ -185,5 +185,5 @@ export function commandUnit(relativePath: string): string {
 
 export function sourceArea(relativePath: string): string {
   const [area] = normalizeArchitecturePath(relativePath).split('/');
-  return area.endsWith('.ts') ? '(root)' : area;
+  return !area || area.endsWith('.ts') ? '(root)' : area;
 }

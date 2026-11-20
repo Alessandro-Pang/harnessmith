@@ -11,7 +11,7 @@ import {
   validateExperienceSemantics,
   validateFindingDocument,
 } from '../lib/memory/memory-finding-document-rules.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { capturedIo, elementAt, harnessRuntime } from './helpers/harness.js';
 
 function fixture() {
   const root = mkdtempSync(join(tmpdir(), 'harness-finding-'));
@@ -56,7 +56,7 @@ test('typed durable finding deduplicates a conclusion and accumulates evidence',
       0,
       io.errors.join('\n'),
     );
-    return JSON.parse(io.logs[0]);
+    return JSON.parse(elementAt(io.logs, 0));
   };
 
   const first = capture(

@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { execaSync } from 'execa';
+import { templateRoot } from '../installation/install-template.js';
 import { statusAll } from '../installation/lifecycle.js';
 import { describeInstall } from '../installation/records.js';
 import type { Adapter, CliOptions } from '../shared/types.js';
@@ -82,7 +83,8 @@ export function verifySetup(adapters: Adapter[], options: CliOptions, env: NodeJ
       status?.installed && status.outputs.every(({ status: value }) => value === 'managed')
         ? ('managed' as const)
         : ('failed' as const);
-    const healthCommand = `${process.execPath} ${join(adapter.hub.harness, 'scripts', 'harness.mjs')} health --json`;
+    const runtimeEntry = join(templateRoot, 'bin', 'harnessmith.mjs');
+    const healthCommand = `harnessmith health --json`;
     if (options.initGlobal === false) {
       return {
         adapter: adapter.name,
@@ -92,17 +94,13 @@ export function verifySetup(adapters: Adapter[], options: CliOptions, env: NodeJ
         reason: 'Global Memory initialization was explicitly skipped.',
       };
     }
-    const result = execaSync(
-      process.execPath,
-      [join(adapter.hub.harness, 'scripts', 'harness.mjs'), 'health', '--json'],
-      {
-        cwd: adapter.project ?? env.HOME ?? process.cwd(),
-        env,
-        maxBuffer: 1024 * 1024,
-        reject: false,
-        timeout: setupHealthTimeoutMs,
-      },
-    );
+    const result = execaSync(process.execPath, [runtimeEntry, 'health', '--json'], {
+      cwd: adapter.project ?? env.HOME ?? process.cwd(),
+      env,
+      maxBuffer: 1024 * 1024,
+      reject: false,
+      timeout: setupHealthTimeoutMs,
+    });
     const health = parseHealth(result.stdout);
     return {
       adapter: adapter.name,

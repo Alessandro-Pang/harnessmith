@@ -72,39 +72,44 @@ export function initTask(
     throw new Error('Acceptance criteria must not be empty');
   const root = projectRoot(project);
   initializeProjectMemory(runtime, root);
-  return withTaskLock(root, taskId, () => {
-    const path = taskPath(root, taskId);
-    if (existsSync(path)) throw new Error(`Task already exists: ${taskId}`);
-    const created = now();
-    const snapshot = projectSnapshot(root);
-    const task: TaskRecord = {
-      schemaVersion: 3,
-      id: taskId,
-      objective: objective.trim(),
-      status: 'in_progress',
-      created,
-      updated: created,
-      projectRoot: root,
-      nextAction,
-      baseline: { branch: snapshot.branch, head: snapshot.head, dirty: snapshot.dirty },
-      acceptance: criteria.map((description, index) => ({
-        id: `criterion-${index + 1}`,
-        description,
-        status: 'pending',
-        evidence: [],
-      })),
-      checkpoints: [],
-    };
-    writeTaskWithProgress(
-      path,
-      task,
-      join(taskDirectory(root, taskId), 'progress.md'),
-      progressDocument(task, runtime.owner),
-      io,
-    );
-    outputTask(taskSummary(task, snapshot), json, io);
-    return task;
-  });
+  return withTaskLock(
+    root,
+    taskId,
+    () => {
+      const path = taskPath(root, taskId);
+      if (existsSync(path)) throw new Error(`Task already exists: ${taskId}`);
+      const created = now();
+      const snapshot = projectSnapshot(root);
+      const task: TaskRecord = {
+        schemaVersion: 3,
+        id: taskId,
+        objective: objective.trim(),
+        status: 'in_progress',
+        created,
+        updated: created,
+        projectRoot: root,
+        nextAction,
+        baseline: { branch: snapshot.branch, head: snapshot.head, dirty: snapshot.dirty },
+        acceptance: criteria.map((description, index) => ({
+          id: `criterion-${index + 1}`,
+          description,
+          status: 'pending',
+          evidence: [],
+        })),
+        checkpoints: [],
+      };
+      writeTaskWithProgress(
+        path,
+        task,
+        join(taskDirectory(root, taskId), 'progress.md'),
+        progressDocument(task, runtime.owner),
+        io,
+      );
+      outputTask(taskSummary(task, snapshot), json, io);
+      return task;
+    },
+    { create: true },
+  );
 }
 
 export function taskStatus(

@@ -6,7 +6,7 @@ import { test } from 'vitest';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
 
-test('project declares the Node 22.12 runtime floor consistently across runtime and CI contracts', () => {
+test('project declares the Node 22.20 runtime floor consistently across runtime and CI contracts', () => {
   const packageManifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
   const harnessManifest = JSON.parse(
     readFileSync(join(root, 'template', 'skills', 'agent-harness', 'manifest.json'), 'utf8'),
@@ -17,11 +17,11 @@ test('project declares the Node 22.12 runtime floor consistently across runtime 
 
   // Development pins the current LTS; the distributed CLI runs on the lower runtime floor.
   assert.equal(readFileSync(join(root, '.nvmrc'), 'utf8').trim(), 'v24.12.0');
-  assert.equal(packageManifest.engines.node, '>=22.12.0');
-  assert.equal(harnessManifest.node, '>=22.12.0');
+  assert.equal(packageManifest.engines.node, '>=22.20.0');
+  assert.equal(harnessManifest.node, '>=22.20.0');
   // CI must exercise the floor and the development version; types and build target follow the floor
   // so newer runtime APIs cannot slip into shipped code unnoticed.
-  assert.match(workflow, /node: \[22, 24\]/);
+  assert.match(workflow, /node: \['22\.20\.0', '24'\]/);
   assert.match(typesVersion, /^22\./);
   assert.equal(buildConfig.match(/target: 'node22'/g)?.length, 2);
   assert.doesNotMatch(buildConfig, /target: 'node(?:20|24)'/);
@@ -44,6 +44,7 @@ test('Knip owns the dependency and dead-code contract for every TypeScript sourc
     packageManifest.scripts['quality:dead-code'],
     'knip --config config/knip.json --reporter compact',
   );
+  assert(packageManifest.scripts.check, 'package.json must define the check script');
   assert.match(packageManifest.scripts.check, /pnpm run quality:dead-code/);
   // pnpm workspace packages own their own patterns; root-relative patterns pointing into them match
   // nothing, which is how the gate once analysed an empty file set.
@@ -72,7 +73,10 @@ test('release verification reuses one quality build and one covered unit-test ru
   const workflow = readFileSync(join(root, '.github', 'workflows', 'publish.yml'), 'utf8');
   const scripts = packageManifest.scripts;
 
-  assert.equal(scripts['build:emit'], 'tsup --config config/tsup.config.ts');
+  assert.equal(
+    scripts['build:emit'],
+    'tsup --config config/tsup.config.ts && tsc -p config/tsconfig.public-api.json',
+  );
   assert.equal(
     scripts['preflight:quality'],
     'pnpm run check && pnpm run build:emit && node --import tsx scripts/preflight/preflight.ts all',
@@ -80,7 +84,7 @@ test('release verification reuses one quality build and one covered unit-test ru
   assert.equal(scripts.preflight, 'pnpm run preflight:quality && pnpm run test:unit');
   assert.equal(
     scripts['release:quality'],
-    'pnpm run check && pnpm run build:emit && pnpm run test:coverage:unit && pnpm run test:scripts-coverage',
+    'pnpm run check && pnpm run build:emit && pnpm run test:coverage:unit && pnpm run test:scripts-coverage && pnpm run quality:dependencies',
   );
   assert.equal(scripts['release:check'], 'pnpm run release:quality && pnpm run eval:gate');
   assert.equal(
@@ -91,6 +95,18 @@ test('release verification reuses one quality build and one covered unit-test ru
   assert.match(workflow, /scripts\/release\/package-smoke\.ts/);
   assert.doesNotMatch(workflow, /- run: pnpm run preflight\n/);
   assert.doesNotMatch(workflow, /- run: pnpm run test:coverage\n/);
+});
+
+test('release quality runs the high-severity dependency audit after offline quality gates', () => {
+  const packageManifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as {
+    scripts: Record<string, string>;
+  };
+
+  assert.equal(packageManifest.scripts['quality:dependencies'], 'pnpm audit --audit-level high');
+  assert.equal(
+    packageManifest.scripts['release:quality'],
+    'pnpm run check && pnpm run build:emit && pnpm run test:coverage:unit && pnpm run test:scripts-coverage && pnpm run quality:dependencies',
+  );
 });
 
 test('eval checks build their fingerprint inputs in a clean checkout', () => {
@@ -108,11 +124,16 @@ test('eval checks build their fingerprint inputs in a clean checkout', () => {
 test('npm package exposes only the stable CLI entry and package metadata', () => {
   const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as {
     main?: string;
-    exports?: Record<string, string>;
+    types?: string;
+    exports?: Record<string, unknown>;
   };
   assert.equal(manifest.main, './dist/cli.js');
+  assert.equal(manifest.types, './dist/cli.d.ts');
   assert.deepEqual(manifest.exports, {
-    '.': './dist/cli.js',
+    '.': {
+      types: './dist/cli.d.ts',
+      import: './dist/cli.js',
+    },
     './package.json': './package.json',
   });
 });
@@ -225,6 +246,7 @@ test('secret scanning covers every shipped guidance and source tree', () => {
     scripts: Record<string, string>;
   };
   const command = packageManifest.scripts['quality:secrets'];
+  assert(command, 'package.json must define the secret-scanning script');
 
   for (const path of [
     'packages/cli/src/**/*',

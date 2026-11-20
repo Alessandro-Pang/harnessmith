@@ -61,9 +61,12 @@ function supersessionCycles(documents: MaintenanceParsedDocument[]): string[][] 
       const index = seen.get(current);
       if (index !== undefined) {
         const nodes = order.slice(index);
-        const first = nodes.reduce((best, value, item) => (value < nodes[best] ? item : best), 0);
+        const firstNode = nodes.reduce((best, value) => (value < best ? value : best));
+        const first = nodes.indexOf(firstNode);
         const rotated = [...nodes.slice(first), ...nodes.slice(0, first)];
-        const cycle = [...rotated, rotated[0]];
+        const [firstReference] = rotated;
+        if (firstReference === undefined) break;
+        const cycle = [...rotated, firstReference];
         const key = cycle.join('\0');
         if (!keys.has(key)) {
           keys.add(key);

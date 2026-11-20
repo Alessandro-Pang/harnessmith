@@ -94,6 +94,7 @@ function inheritedKeySet(
     const match = token.match(/^([0-9a-f]{64})\.([0-9a-f]{64})$/);
     if (!match) continue;
     const [, key, nonce] = match;
+    if (!key || !nonce) continue;
     const target = targets.find((candidate) => candidate.key === key);
     if (!target) continue;
     const proofPath = handoffPath(target.target, nonce);

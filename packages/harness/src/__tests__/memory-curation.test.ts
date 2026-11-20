@@ -10,7 +10,7 @@ import { captureFinding } from '../commands/memory/memory-finding.js';
 import { captureInput } from '../commands/memory/memory-input.js';
 import { initTask } from '../commands/task/task.js';
 import { digestPath } from '../lib/filesystem/files.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { capturedIo, elementAt, harnessRuntime } from './helpers/harness.js';
 
 function fixture(taskId = 'curation-task') {
   const root = mkdtempSync(join(tmpdir(), 'harness-curation-'));
@@ -128,7 +128,7 @@ test('task completion does not close workstream state, while workstream completi
     capturedIo(),
   );
   assert.equal(workstreamComplete.closeCandidates.length, 1);
-  assert.ok(workstreamComplete.closeCandidates[0].reference.includes('inputs/'));
+  assert.ok(elementAt(workstreamComplete.closeCandidates, 0).reference.includes('inputs/'));
   assert.doesNotMatch(JSON.stringify(workstreamComplete), /Parallel workstream input/);
   assert.equal(digestPath(memoryRoot), before);
 });

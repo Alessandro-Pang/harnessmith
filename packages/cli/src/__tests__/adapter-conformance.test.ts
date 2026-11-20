@@ -12,11 +12,12 @@ import {
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
+import { elementAt } from '../../../../packages/harness/src/__tests__/helpers/harness.js';
 import { type AgentName, adapterRegistry } from '../adapters/adapter-registry.js';
 import { createAdapter } from '../adapters/adapters.js';
 import { installAll } from '../installation/install.js';
 import { restoreAll, statusAll, uninstallAll } from '../installation/lifecycle.js';
-import { describeInstall } from '../installation/records.js';
+import { describeInstall, readInstallRecord } from '../installation/records.js';
 import type { Adapter } from '../shared/types.js';
 
 function fixture(prefix: string) {
@@ -37,6 +38,9 @@ function fixture(prefix: string) {
     HARNESS_REPOSITORY_ROOT: join(root, 'repositories'),
     HARNESS_OWNER: 'adapter-conformance',
   };
+  for (const key of ['HARNESS_HOME', 'HARNESS_STATE_HOME']) {
+    delete (env as NodeJS.ProcessEnv)[key];
+  }
   return { root, project, env };
 }
 
@@ -45,7 +49,7 @@ function adapterFor(name: AgentName, env: NodeJS.ProcessEnv, project: string): A
 }
 
 function primaryInstruction(adapter: Adapter): string {
-  const path = adapter.instructions[0]?.path;
+  const path = elementAt(adapter.instructions, 0)?.path;
   assert.ok(path, `${adapter.name} is missing a primary instruction file`);
   return path;
 }
@@ -59,51 +63,66 @@ for (const entry of adapterRegistry) {
     assert.equal(plan.adapter, entry.name);
     assert.deepEqual(plan.capabilities, entry.capabilities);
     assert.ok(plan.outputs.length > 0);
+    assert.ok(plan.outputs.every((output) => output.action === 'create'));
+    assert.deepEqual(plan.userData, adapter.userData);
     assert.equal(existsSync(adapter.home), false);
     assert.equal(existsSync(adapter.record), false);
   });
 
   test(`conformance ${entry.name}: install, status, upgrade, restore, and uninstall`, () => {
-    const { project, env } = fixture(`harnessmith-conform-life-${entry.name}-`);
+    const { root, project, env } = fixture(`harnessmith-conform-life-${entry.name}-`);
     const adapter = adapterFor(entry.name, env, project);
 
-    assert.equal(statusAll([adapter])[0].installed, false);
+    assert.equal(elementAt(statusAll([adapter]), 0).installed, false);
     assert.equal(existsSync(adapter.home), false);
 
     installAll([adapter], { env, noInitGlobal: true });
-    const afterInstall = statusAll([adapter])[0];
+    const afterInstall = elementAt(statusAll([adapter]), 0);
     assert.equal(afterInstall.installed, true);
     assert.equal(
       afterInstall.outputs.every(({ status }) => status === 'managed'),
       true,
     );
     assert.ok(existsSync(adapter.record));
-    assert.ok(existsSync(adapter.hub.record));
-    assert.equal(lstatSync(adapter.hub.discoveryLink).isSymbolicLink(), true);
-    assert.equal(lstatSync(primaryInstruction(adapter)).isSymbolicLink(), true);
-    if (adapter.harness) assert.equal(lstatSync(adapter.harness).isSymbolicLink(), true);
-    assert.ok(existsSync(join(adapter.hub.harness, 'SKILL.md')));
+    assert.equal(lstatSync(primaryInstruction(adapter)).isSymbolicLink(), false);
+    assert.match(readFileSync(primaryInstruction(adapter), 'utf8'), /managed-by: harnessmith/);
+    const record = readInstallRecord(adapter);
+    assert.equal(record?.schemaVersion, 3);
+    assert.equal(record?.adapter, entry.name);
+    assert.equal(
+      existsSync(join(adapter.userData.home, '.harnessmith', 'install.json')),
+      false,
+      'user data is not a managed scope and carries no record',
+    );
+    assert.equal(existsSync(join(adapter.home, 'skills', 'agent-harness')), false);
+    assert.equal(
+      existsSync(join(adapter.userData.home, 'dist')),
+      false,
+      'no Runtime copy in user data',
+    );
+    assert.equal(existsSync(join(adapter.userData.home, 'scripts')), false);
 
     installAll([adapter], { env, noInitGlobal: true });
     assert.equal(
-      statusAll([adapter])[0].outputs.every(({ status }) => status === 'managed'),
+      elementAt(statusAll([adapter]), 0).outputs.every(({ status }) => status === 'managed'),
       true,
     );
     assert.ok(existsSync(adapter.record));
+    assert.ok(readInstallRecord(adapter)?.recordBackup, 'the upgrade keeps the previous layer');
 
     const restored = restoreAll([adapter]);
-    assert.equal(restored[0].adapter, entry.name);
+    assert.equal(elementAt(restored, 0).adapter, entry.name);
     assert.ok(existsSync(adapter.record));
 
     const uninstalled = uninstallAll([adapter]);
-    assert.equal(uninstalled[0].adapter, entry.name);
+    assert.equal(elementAt(uninstalled, 0).adapter, entry.name);
     assert.equal(existsSync(adapter.record), false);
     assert.equal(existsSync(primaryInstruction(adapter)), false);
-    if (adapter.harness) assert.equal(existsSync(adapter.harness), false);
-    assert.equal(existsSync(adapter.hub.record), false);
-    assert.equal(existsSync(adapter.hub.harness), false);
-    assert.equal(existsSync(adapter.hub.discoveryLink), false);
-    assert.equal(statusAll([adapter])[0].installed, false);
+    assert.ok(
+      existsSync(join(root, 'personal')),
+      'personal rules are user data and survive uninstall',
+    );
+    assert.equal(elementAt(statusAll([adapter]), 0).installed, false);
   });
 
   test(`conformance ${entry.name}: refuses unmanaged conflicts without force`, () => {
@@ -123,26 +142,56 @@ for (const entry of adapterRegistry) {
   });
 }
 
+test('schema 3 installation records reject unknown fields', () => {
+  const { project, env } = fixture('harnessmith-conform-record-');
+  const adapter = adapterFor('codex', env, project);
+  installAll([adapter], { env, noInitGlobal: true });
+  const record = JSON.parse(readFileSync(adapter.record, 'utf8')) as Record<string, unknown>;
+  writeFileSync(adapter.record, JSON.stringify({ ...record, unexpected: true }));
+
+  assert.throws(() => readInstallRecord(adapter), /invalid installation-record shape/);
+});
+
+test('conformance multi-adapter: install preflight rejects a conflicted peer before committing any adapter', () => {
+  const { project, env } = fixture('harnessmith-conform-multi-install-preflight-');
+  const first = adapterFor('codex', env, project);
+  const second = adapterFor('claude', env, project);
+  const peerInstruction = primaryInstruction(second);
+  mkdirSync(dirname(peerInstruction), { recursive: true });
+  writeFileSync(peerInstruction, 'unmanaged peer rules\n');
+
+  assert.throws(() => installAll([first, second], { env, noInitGlobal: true }), /require --force/);
+  assert.equal(
+    existsSync(first.record),
+    false,
+    'no adapter layer is committed before preflight passes',
+  );
+  assert.equal(existsSync(primaryInstruction(first)), false);
+  assert.equal(readFileSync(peerInstruction, 'utf8'), 'unmanaged peer rules\n');
+  assert.equal(existsSync(join(first.userData.home, '.harnessmith', 'install.json')), false);
+});
+
 test('conformance multi-adapter: preflight rejects a modified peer without mutating others', () => {
   const { project, env } = fixture('harnessmith-conform-multi-preflight-');
   const adapters = adapterRegistry.map(({ name }) => adapterFor(name, env, project));
   installAll(adapters, { env, noInitGlobal: true });
 
-  const victim = adapters[0];
-  const peer = adapters[1];
+  const victim = elementAt(adapters, 0);
+  const peer = elementAt(adapters, 1);
   assert.ok(victim && peer);
   const instruction = primaryInstruction(victim);
   writeFileSync(instruction, `${readFileSync(instruction, 'utf8')}\nuser edit\n`);
 
   const peerRecordBefore = readFileSync(peer.record, 'utf8');
   const peerInstruction = primaryInstruction(peer);
+  const peerInstructionBefore = readFileSync(peerInstruction, 'utf8');
 
   assert.throws(() => uninstallAll(adapters), /modified/);
   assert.ok(existsSync(victim.record));
   assert.ok(existsSync(peer.record));
   assert.equal(readFileSync(peer.record, 'utf8'), peerRecordBefore);
-  assert.equal(lstatSync(peerInstruction).isSymbolicLink(), true);
-  assert.ok(existsSync(victim.hub.record));
+  assert.equal(lstatSync(peerInstruction).isSymbolicLink(), false);
+  assert.equal(readFileSync(peerInstruction, 'utf8'), peerInstructionBefore);
 });
 
 test('conformance multi-adapter: later failure rolls back earlier adapter mutations', () => {
@@ -164,8 +213,8 @@ test('conformance multi-adapter: later failure rolls back earlier adapter mutati
   assert.equal(readFileSync(first.record, 'utf8'), firstRecordBefore);
   assert.equal(readFileSync(firstRules, 'utf8'), firstRulesBefore);
   assert.ok(existsSync(second.record));
-  assert.ok(second.harness && existsSync(second.harness));
-  assert.ok(existsSync(first.hub.record));
+  assert.equal(lstatSync(primaryInstruction(second)).isSymbolicLink(), false);
+  assert.equal(existsSync(join(first.userData.home, '.harnessmith', 'install.json')), false);
   assert.deepEqual(
     readdirSync(second.home).filter((name) => name.startsWith('.harnessmith-restore-')),
     [],

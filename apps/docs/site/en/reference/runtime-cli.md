@@ -10,17 +10,18 @@ lang: en
 
 # Runtime CLI
 
-The outer `npx harnessmith` is responsible for "installing it"; this page introduces `harness.mjs`, distributed
-with the Harness after installation — a local, host-neutral work layer for discovering documentation,
-maintaining non-authoritative Memory, recording long-running task state, checking cross-repository
-relationships, and receiving restricted audit events. It does not launch hosts or make model calls; it only
-provides verifiable work state on your file system.
+The outer `harnessmith` is responsible for "installing it". After installation, the same global command dispatches
+the Runtime subcommands on this page to the self-contained bundle `dist/harness.mjs` at the npm package root, bundled
+at the same version as the CLI. This local, host-neutral work layer discovers documentation, maintains non-authoritative
+Memory, records long-running task state, checks cross-repository relationships, and receives restricted audit events. It
+does not launch hosts or make model calls; it only provides verifiable work state on your file system.
 
-The exact path is authoritative from the outer CLI's `--dry-run --json` or `status --json`. Below,
-`<harness-path>` denotes the install directory:
+Without a global npm installation, replace `harnessmith` with `npx --yes harnessmith`. The Runtime is not copied into the
+skill or the user-data directory; the skill contains no script entry, and Agents only need the global command for everyday
+operations.
 
 ```bash
-node <harness-path>/scripts/harness.mjs --help
+harnessmith --help
 ```
 
 ## Decide which command to use first
@@ -54,8 +55,8 @@ the two mean different things. For audit or diagnostics, explicitly request the 
 recommendations):
 
 ```bash
-node <harness-path>/scripts/harness.mjs bootstrap --project /path/to/project --detail brief --json
-node <harness-path>/scripts/harness.mjs bootstrap --project /path/to/project --detail full --json
+harnessmith bootstrap --project /path/to/project --detail brief --json
+harnessmith bootstrap --project /path/to/project --detail full --json
 ```
 
 `truncated` only means an underlying bounded scan or recommendation result was truncated; deliberate omissions
@@ -78,14 +79,14 @@ demand, not nonexistent. This structured contract is version 3. Routing is only 
 discovery; it does not convey authorization:
 
 ```bash
-node <harness-path>/scripts/harness.mjs route --intent diagnose payment callback --json
-node <harness-path>/scripts/harness.mjs explain --intent release-and-external release external write
+harnessmith route --intent diagnose payment callback --json
+harnessmith explain --intent release-and-external release external write
 ```
 
 `search` is what actually scans Harness documentation, project documentation, and project Memory:
 
 ```bash
-node <harness-path>/scripts/harness.mjs search "operation lock" --project /path/to/project --json
+harnessmith search "operation lock" --project /path/to/project --json
 ```
 
 Result counts, per-line length, and scan budgets are independent of each other. The default scan goes at most 8
@@ -98,10 +99,10 @@ Memory are untrusted inputs by default; after a hit, go back to code, configurat
 ## Health checks and compatibility
 
 ```bash
-node <harness-path>/scripts/harness.mjs version --json
-node <harness-path>/scripts/harness.mjs doctor
-node <harness-path>/scripts/harness.mjs health --json
-node <harness-path>/scripts/harness.mjs validate --project /path/to/project --json
+harnessmith version --json
+harnessmith doctor
+harnessmith health --json
+harnessmith validate --project /path/to/project --json
 ```
 
 - `version --json` returns the Harness, Task schema, Memory schema, and Node contract versions.
@@ -117,7 +118,7 @@ interpreted as `inconclusive` rather than declaring the install broken.
 ## Host signal replay: read-only idempotent determination
 
 ```bash
-node <harness-path>/scripts/harness.mjs replay verify --payload-file /absolute/replay-evidence.json --json
+harnessmith replay verify --payload-file /absolute/replay-evidence.json --json
 ```
 
 `replay verify` distinguishes `new-mutation` from `identical-replay`. A new mutation may only use a new identity
@@ -140,14 +141,14 @@ confirmation.
 ### Queries, checks, and lifecycle
 
 ```bash
-node <harness-path>/scripts/harness.mjs memory list /path/to/project --json
-node <harness-path>/scripts/harness.mjs memory search /path/to/project "npm cache" --json
-node <harness-path>/scripts/harness.mjs memory check /path/to/project --indexed --json
-node <harness-path>/scripts/harness.mjs memory relationships /absolute/project/path --json
-node <harness-path>/scripts/harness.mjs memory maintain /path/to/project --json
-node <harness-path>/scripts/harness.mjs memory repair /path/to/project --json
-node <harness-path>/scripts/harness.mjs memory curate /path/to/project --task task-id --json
-node <harness-path>/scripts/harness.mjs memory curate /path/to/project --task task-id --apply-file /tmp/curation-selection.json --yes --json
+harnessmith memory list /path/to/project --json
+harnessmith memory search /path/to/project "npm cache" --json
+harnessmith memory check /path/to/project --indexed --json
+harnessmith memory relationships /absolute/project/path --json
+harnessmith memory maintain /path/to/project --json
+harnessmith memory repair /path/to/project --json
+harnessmith memory curate /path/to/project --task task-id --json
+harnessmith memory curate /path/to/project --task task-id --apply-file /tmp/curation-selection.json --yes --json
 ```
 
 `memory relationships` is a project-level read-only report: it lists Tasks, the default phase/workstream, Memory
@@ -191,7 +192,7 @@ scratchpad: the command requires the conclusion, rationale, application, evidenc
 clearly, and verification against code, configuration, tests, or schema is still required afterwards.
 
 ```bash
-node <harness-path>/scripts/harness.mjs memory capture-finding /path/to/project \
+harnessmith memory capture-finding /path/to/project \
   --kind review --retention workstream --workstream docs-review --expires 2026-12-31 \
   --fact-class verification-pointer \
   --title "Documentation commands match the implementation" \
@@ -237,11 +238,11 @@ deterministically generated views. The YAML is the only source of truth, and vie
 time.
 
 ```bash
-node <harness-path>/scripts/harness.mjs repository-map check --json
-node <harness-path>/scripts/harness.mjs repository-map render --write
-node <harness-path>/scripts/harness.mjs repository-map discover packages --apply
-node <harness-path>/scripts/harness.mjs repository-map verify --record --json
-node <harness-path>/scripts/harness.mjs repository-map maintain --json
+harnessmith repository-map check --json
+harnessmith repository-map render --write
+harnessmith repository-map discover packages --apply
+harnessmith repository-map verify --record --json
+harnessmith repository-map maintain --json
 ```
 
 `check` and `maintain` are read-only; `render --write` updates the views; the built-in `discover packages
@@ -271,11 +272,11 @@ through the acceptance gate, and concurrent modifications use the shared task lo
 ## Audit: restricted metadata, not a full recording
 
 ```bash
-node <harness-path>/scripts/harness.mjs audit record --payload-file /absolute/event.json --json
-node <harness-path>/scripts/harness.mjs audit list --json
-node <harness-path>/scripts/harness.mjs audit summary --json
-node <harness-path>/scripts/harness.mjs audit maintain --json
-node <harness-path>/scripts/harness.mjs audit archive --before 2026-08-01
+harnessmith audit record --payload-file /absolute/event.json --json
+harnessmith audit list --json
+harnessmith audit summary --json
+harnessmith audit maintain --json
+harnessmith audit archive --before 2026-08-01
 ```
 
 `audit record` is a Host-neutral explicit entry point, not an automatic hook. The schema accepts only trace,
@@ -289,10 +290,10 @@ reported it this way", not "it actually happened this way".
 
 | Variable | Purpose | Default |
 | --- | --- | --- |
-| `HARNESS_HOME` | Shared hub holding the rendered skill, entry, state, rules, and memory | `~/.agents/harnessmith` |
-| `HARNESS_STATE_HOME` | Mutable runtime state (Task ledgers, indexes, audit) | `<hub>/state` |
-| `HARNESS_MEMORY_HOME` | Cross-project personal Memory | `<hub>/memory` |
-| `HARNESS_PERSONAL_HOME` | Personal rules and Repository Map | `<hub>/rules` |
+| `HARNESS_HOME` | User-data root holding state, rules, and memory (no distribution content) | `~/.harnessmith` |
+| `HARNESS_STATE_HOME` | Mutable runtime state (Task ledgers, indexes, audit) | `~/.harnessmith/state` |
+| `HARNESS_MEMORY_HOME` | Cross-project personal Memory | `~/.harnessmith/memory` |
+| `HARNESS_PERSONAL_HOME` | Personal rules and Repository Map | `~/.harnessmith/rules` |
 | `HARNESS_REPOSITORY_ROOT` | Root of the local repository collection | `~/git-repo` |
 | `HARNESS_OWNER` | Memory template owner | Current user |
 

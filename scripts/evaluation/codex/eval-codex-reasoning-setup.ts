@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { readNpmPackageTarball } from '../../release/npm-tarball.js';
 import type { CodexMatrixOptions } from './eval-codex-options.js';
 import type { ReasoningScenario } from './eval-codex-reasoning-types.js';
+import { createEvalEnvironment } from './support/environment.js';
 
 export type ReasoningFixture = {
   repo: string;
@@ -62,15 +63,14 @@ export function prepareReasoningFixture(
   const configHome = join(root, 'codex-config');
   mkdirSync(configHome, { recursive: true });
   symlinkSync(authPath, join(configHome, 'auth.json'));
-  const env = {
-    ...process.env,
+  const env = createEvalEnvironment({
     HOME: home,
     CODEX_HOME: configHome,
     HARNESS_MEMORY_HOME: memory,
     HARNESS_PERSONAL_HOME: personal,
     HARNESS_REPOSITORY_ROOT: repo,
     TMPDIR: temp,
-  };
+  });
   mkdirSync(join(repo, '.harness-eval', 'fixtures'), { recursive: true });
   writeFileSync(
     join(repo, '.harness-eval', 'fixtures', 'reasoning.json'),

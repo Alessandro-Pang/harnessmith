@@ -16,7 +16,10 @@ function metadata(content: string): Map<string, string> {
   const front = content.match(/^---\n([\s\S]*?)\n---/u)?.[1] ?? '';
   for (const line of front.split(/\r?\n/u)) {
     const match = /^([a-z0-9-]+):\s*(.*?)\s*$/u.exec(line);
-    if (match) map.set(match[1], match[2].replace(/^['"]|['"]$/gu, ''));
+    const [, key, value] = match ?? [];
+    if (key !== undefined && value !== undefined) {
+      map.set(key, value.replace(/^['"]|['"]$/gu, ''));
+    }
   }
   return map;
 }
@@ -161,7 +164,8 @@ function migrateCheck(
   });
   if (changedPaths.length !== 1)
     return result('failed', 'migrate must change metadata on exactly one document');
-  const path = changedPaths[0];
+  const [path] = changedPaths;
+  if (path === undefined) return result('failed', 'migrate target disappeared');
   const prior = beforeMap.get(path);
   const next = afterMap.get(path);
   if (!prior || !next) return result('failed', 'migrate target disappeared');

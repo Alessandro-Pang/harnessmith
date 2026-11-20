@@ -101,7 +101,7 @@ function assertOptions(options: ExperienceOptions): void {
 function existingEvidence(body: string): string[] {
   const match = body.match(/(?:^|\n)# 证据\n\n([\s\S]*?)(?=\n# |$)/u);
   if (!match) return [];
-  return match[1]
+  return (match[1] ?? '')
     .split('\n')
     .filter((line) => line.startsWith('- '))
     .map((line) => line.slice(2));

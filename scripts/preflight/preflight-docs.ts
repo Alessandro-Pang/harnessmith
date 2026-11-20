@@ -135,8 +135,9 @@ function checkPortableTemplate(root: string, check: DocsContext['check']): void 
     if (statSync(path).size > 250_000) continue;
     const content = readFileSync(path, 'utf8');
     for (const match of content.matchAll(/\{\{([A-Z0-9_]+)\}\}/g)) {
+      const token = match[1];
       check(
-        allowedTokens.has(match[1]),
+        token !== undefined && allowedTokens.has(token),
         `unknown template token ${match[0]} in ${relative(root, path)}`,
       );
     }

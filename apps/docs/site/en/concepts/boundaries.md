@@ -104,8 +104,8 @@ principle is simple: whoever executes is responsible.
 Capability claims fall into three categories, each with a corresponding evidence level:
 
 - **Implemented**: an implementation and an executable verification path exist, and the code and tests can be found in
-  the repository. For example, Adapter installation, dry run preview, status checks, and content fingerprint
-  computation — these capabilities have not only code but also preflight and unit test coverage, plus evidence paths
+  the repository. For example, Adapter installation, dry run preview, status records, and per-output checksum
+  checks — these capabilities have not only code but also preflight and unit test coverage, plus evidence paths
   in `capability-evidence.yaml`.
 - **Delegated to the Host**: Harnessmith only provides rules, interfaces, or record locations; the real capability
   lives in the host. For example, model execution, tool-call sandboxing, and permission approval — Harnessmith's

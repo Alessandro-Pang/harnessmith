@@ -11,7 +11,7 @@ updated: 2026-09-05
 
 按「预览 → 写入 → 核对」三步完成第一次安装。本文以 Codex 为例，说明每一步会改变什么、如何处理拒绝，以及本地安装成功后还需要怎样验证真实宿主。
 
-Harnessmith 是 npm initializer，用 `npx` 直接运行，不需要提前全局安装任何东西。唯一的环境要求是 Node.js 22.12.0 或更高版本。
+Harnessmith 是 npm initializer，用 `npx` 直接运行，不需要提前全局安装任何东西。唯一的环境要求是 Node.js 22.20.0 或更高版本。
 
 ## 开始之前
 
@@ -66,7 +66,7 @@ npx harnessmith status --agent codex --explain
 
 ## 安装失败怎么办
 
-安装是一个事务：失败时会尝试回滚本次写入的精确路径。按错误信息里的指引，先重新 dry-run、再查 `status`，确认现场干净。只有当存在上一安装层时才使用 `restore` 回退，没有上一层的机器上跑它没有意义。
+Host 文件是一个事务：失败时会尝试回滚本次写入的精确路径，skill 由 `skills` 独立管理。按错误信息里的指引，先重新 dry-run、再查 `status`；已提交 Host、失败 skill 会明确标记为部分完成。只有当前 schema 3 记录包含可恢复文件时才使用 `restore`；它不会追溯旧安装链。
 
 ## 「装好了」到底证明了什么
 
@@ -117,6 +117,6 @@ npx harnessmith setup --agent codex,opencode,kimi-code
 
 你也可以把安装交给 Coding Agent 自己完成，只要在写入前亲自检查目标：
 
-> 阅读 https://raw.githubusercontent.com/Alessandro-Pang/harnessmith/main/llms.txt，按其中协议安装 Harnessmith；先执行 dry-run，再让我确认写入。
+> 阅读 https://unpkg.com/harnessmith@latest/llms.txt，按其中协议安装 Harnessmith；先执行 dry-run，再让我确认写入。
 
 <!-- markdownlint-enable MD034 -->

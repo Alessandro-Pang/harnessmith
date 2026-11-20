@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { runCli } from '../cli.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { capturedIo, elementAt, harnessRuntime } from './helpers/harness.js';
 
 test('Harness CLI exposes typed proposal-only memory promotion JSON', () => {
   const root = mkdtempSync(join(tmpdir(), 'harness-memory-promote-cli-'));
@@ -43,7 +43,7 @@ test('Harness CLI exposes typed proposal-only memory promotion JSON', () => {
     ),
     0,
   );
-  const proposal = JSON.parse(output.logs[0]);
+  const proposal = JSON.parse(elementAt(output.logs, 0));
   assert.equal(proposal.version, 2);
   assert.equal(proposal.mode, 'proposal-only');
   assert.equal(proposal.target.artifactType, 'docs');

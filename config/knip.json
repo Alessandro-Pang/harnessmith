@@ -8,6 +8,7 @@
     "dayjs",
     "debug",
     "mermaid",
+    "skills",
     "@commitlint/config-conventional",
     "tar",
     "vitepress-plugin-mermaid"
@@ -24,7 +25,7 @@
         "scripts/release/release-publish.ts",
         "evals/__tests__/eval-host-capability-matrix-coverage.ts",
         "scripts/evaluation/codex/eval-codex-memory-scenario.mjs",
-        "template/skills/agent-harness/scripts/harness.mjs",
+        "packages/harness/src/cli.ts",
         "config/*.config.{ts,mjs}",
         "config/.markdownlint-cli2.mjs"
       ],
@@ -60,8 +61,5 @@
         "site/.vitepress/**/*.ts"
       ]
     }
-  },
-  "ignore": [
-    "template/skills/agent-harness/dist/**"
-  ]
+  }
 }

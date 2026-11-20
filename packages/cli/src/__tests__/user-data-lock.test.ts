@@ -15,6 +15,7 @@ import { fileURLToPath } from 'node:url';
 import { onTestFinished, test } from 'vitest';
 import {
   capturedIo,
+  elementAt,
   harnessRuntime,
 } from '../../../../packages/harness/src/__tests__/helpers/harness.js';
 import { initGlobal } from '../../../../packages/harness/src/commands/init.js';
@@ -59,8 +60,7 @@ async function waitForFile(path: string): Promise<void> {
 }
 
 function writeHarness(home: string): void {
-  const harness = join(home, 'skills', 'agent-harness');
-  const script = join(harness, 'scripts', 'harness.mjs');
+  const script = join(home, 'harness.mjs');
   mkdirSync(dirname(script), { recursive: true });
   writeFileSync(
     script,
@@ -150,9 +150,9 @@ test('coordination targets do not split when process TMPDIR changes', () => {
   const original = process.env.TMPDIR;
   try {
     process.env.TMPDIR = join(root, 'first');
-    const outer = userDataCoordinationTargets([join(root, 'memory')])[0];
+    const outer = elementAt(userDataCoordinationTargets([join(root, 'memory')]), 0);
     process.env.TMPDIR = join(root, 'second');
-    const embedded = embeddedTargets([join(root, 'memory')])[0];
+    const embedded = elementAt(embeddedTargets([join(root, 'memory')]), 0);
     assert.equal(outer.target, embedded.target);
     assert.equal(outer.key, embedded.key);
   } finally {
@@ -166,8 +166,8 @@ test('missing-root aliases are case-folded on case-insensitive host platforms', 
   const root = mkdtempSync(join(tmpdir(), 'harnessmith-user-data-case-'));
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
 
-  const upper = userDataCoordinationTargets([join(root, 'FutureRoot')])[0];
-  const lower = embeddedTargets([join(root, 'futureroot')])[0];
+  const upper = elementAt(userDataCoordinationTargets([join(root, 'FutureRoot')]), 0);
+  const lower = elementAt(embeddedTargets([join(root, 'futureroot')]), 0);
   assert.equal(upper.key, lower.key);
   assert.equal(upper.target, lower.target);
 });
@@ -211,8 +211,8 @@ test('coordination canonicalizes aliases while embedded memory roots still rejec
   mkdirSync(memoryHome);
   symlinkSync(memoryHome, alias, 'dir');
 
-  const outer = userDataCoordinationTargets([memoryHome])[0];
-  const embedded = embeddedTargets([alias])[0];
+  const outer = elementAt(userDataCoordinationTargets([memoryHome]), 0);
+  const embedded = elementAt(embeddedTargets([alias]), 0);
   assert.equal(outer.root, embedded.root);
   assert.equal(outer.key, embedded.key);
   assert.equal(outer.target, embedded.target);
@@ -281,8 +281,8 @@ test('outer and embedded coordination release per-root targets after success', (
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
   const outerRoot = join(root, 'outer-memory');
   const embeddedRoot = join(root, 'embedded-memory');
-  const outer = userDataCoordinationTargets([outerRoot])[0];
-  const embedded = embeddedTargets([embeddedRoot])[0];
+  const outer = elementAt(userDataCoordinationTargets([outerRoot]), 0);
+  const embedded = elementAt(embeddedTargets([embeddedRoot]), 0);
 
   assert.equal(
     withUserDataCoordinationLocks([outerRoot], () => 'outer'),
@@ -304,8 +304,8 @@ test('coordination releases per-root targets after operation failure', () => {
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
   const outerRoot = join(root, 'outer-memory');
   const embeddedRoot = join(root, 'embedded-memory');
-  const outer = userDataCoordinationTargets([outerRoot])[0];
-  const embedded = embeddedTargets([embeddedRoot])[0];
+  const outer = elementAt(userDataCoordinationTargets([outerRoot]), 0);
+  const embedded = elementAt(embeddedTargets([embeddedRoot]), 0);
 
   assert.throws(
     () =>
@@ -332,7 +332,7 @@ test('coordination reports the exact retained target when cleanup is unsafe', ()
   const root = mkdtempSync(join(tmpdir(), 'harnessmith-user-data-clean-error-'));
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
   const memoryRoot = join(root, 'memory');
-  const target = userDataCoordinationTargets([memoryRoot])[0].target;
+  const target = elementAt(userDataCoordinationTargets([memoryRoot]), 0).target;
   mkdirSync(target, { recursive: true });
   writeFileSync(join(target, 'unknown-entry'), 'do not delete');
 
@@ -350,9 +350,8 @@ test('coordination reports the exact retained target when cleanup is unsafe', ()
 test('repeated unique roots do not accumulate coordination target directories', () => {
   const root = mkdtempSync(join(tmpdir(), 'harnessmith-user-data-clean-repeat-'));
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
-  const targets = Array.from(
-    { length: 24 },
-    (_, index) => userDataCoordinationTargets([join(root, `memory-${index}`)])[0],
+  const targets = Array.from({ length: 24 }, (_, index) =>
+    elementAt(userDataCoordinationTargets([join(root, `memory-${index}`)]), 0),
   );
 
   for (const target of targets) {

@@ -1,204 +1,15 @@
-import { existsSync, lstatSync, mkdirSync, renameSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import {
-  atomicWrite,
-  digestPath,
-  removeExact,
-  replaceManagedBlock,
-  timestamp,
-} from '../shared/files.js';
-import {
-  assertSafeOutputPath,
-  assertSafePath,
-  assertSafeScopePaths,
-  entryExists,
-  ignoreRoot,
-  pruneEmptyDirectories,
-} from '../shared/safe-path.js';
-import type {
-  Adapter,
-  InstallOptions,
-  InstallRecord,
-  InstallResult,
-  PreparedInstall,
-} from '../shared/types.js';
+import { removeExact, timestamp } from '../shared/files.js';
+import { entryExists } from '../shared/safe-path.js';
+import type { Adapter, InstallOptions, InstallResult, PreparedInstall } from '../shared/types.js';
 import { errorMessage } from '../shared/types.js';
-import { effectiveContentFingerprint } from '../status/effective-content-fingerprint.js';
-import { hubOwnerId, sharedHub } from './hub.js';
-import { prepareHub, prepareInstall } from './install-stage.js';
-import { packageVersion } from './install-template.js';
-import {
-  assertMigrationPaths,
-  commitMigrations,
-  commitSeeds,
-  recordedMigrations,
-} from './layout-migration.js';
-import { withScopeLocks } from './operation-lock.js';
-import {
-  assertNonOverlappingAdapters,
-  describeInstall,
-  digestManagedOutput,
-  hubOwners,
-  isHub,
-  managedBlockMarker,
-  readInstallRecord,
-  restoreSnapshots,
-} from './records.js';
+import { commitInstall, rollbackInstall } from './install-commit.js';
+import { prepareInstall } from './install-stage.js';
+import { type ScopeLockContext, withScopeLocks } from './operation-lock.js';
+import { assertNonOverlappingAdapters, describeInstall } from './records.js';
 import { initializeUserData } from './user-data.js';
 
-export { prepareHub, prepareInstall } from './install-stage.js';
-
-type RecordIdentity = Pick<InstallRecord, 'adapter' | 'hub' | 'owners' | 'installed' | 'stamp'>;
-
-function assertCommitPaths(prepared: PreparedInstall, stamp: string): void {
-  const { scope } = prepared;
-  assertSafeScopePaths(scope);
-  assertSafePath(scope.home, prepared.stageRoot);
-  for (const output of prepared.outputs) {
-    assertSafePath(prepared.stageRoot, output.staged, { allowSymlinkLeaf: true });
-    assertSafeOutputPath(scope, output, output.destination);
-    assertSafeOutputPath(scope, output, `${output.destination}.backup-${stamp}`);
-  }
-  assertMigrationPaths(prepared, stamp);
-  for (const ignore of scope.localIgnoreFiles || []) {
-    assertSafePath(ignoreRoot(scope, ignore), ignore.path);
-  }
-  assertSafePath(scope.home, scope.record);
-  assertSafePath(scope.home, `${scope.record}.backup-${stamp}`);
-}
-
-/**
- * Move staged outputs into place, retire migrated paths, update ignore blocks and write
- * this layer's record. Managed destinations are replaced in place: identical content is
- * skipped and changed trees/links evacuate into the stage root, so scanned directories
- * only ever hold the latest copy; unmanaged destinations and rendered files keep sibling
- * `.backup-<stamp>` backups. Every step is undone by `rollbackInstall`.
- */
-export function commitInstall(
-  prepared: PreparedInstall,
-  stamp = timestamp(),
-  identity: RecordIdentity = {},
-): PreparedInstall {
-  const { scope } = prepared;
-  assertCommitPaths(prepared, stamp);
-  if (isHub(scope)) commitSeeds(prepared, scope);
-  for (const [index, output] of prepared.outputs.entries()) {
-    mkdirSync(dirname(output.destination), { recursive: true });
-    assertSafeOutputPath(scope, output, output.destination);
-    if (entryExists(output.destination)) {
-      const stagedDigest = digestPath(output.staged);
-      const unchanged =
-        output.managed &&
-        stagedDigest !== null &&
-        stagedDigest === digestManagedOutput(scope, output.destination);
-      if (unchanged) continue;
-      // A regular file at a tree/link destination is pre-hub content needing a backup.
-      if (!output.managed || output.kind === 'file' || lstatSync(output.destination).isFile()) {
-        const backup = `${output.destination}.backup-${stamp}`;
-        renameSync(output.destination, backup);
-        prepared.backups.push({ original: output.destination, backup });
-      } else {
-        const aside = join(prepared.stageRoot, 'asides', String(index));
-        mkdirSync(dirname(aside), { recursive: true });
-        assertSafePath(prepared.stageRoot, aside);
-        renameSync(output.destination, aside);
-        prepared.asides.push({ original: output.destination, backup: aside });
-      }
-    }
-    renameSync(output.staged, output.destination);
-    prepared.installed.push(output.destination);
-  }
-  commitMigrations(prepared, stamp);
-  for (const ignore of scope.localIgnoreFiles || []) {
-    assertSafePath(ignoreRoot(scope, ignore), ignore.path);
-    replaceManagedBlock(ignore.path, managedBlockMarker, ignore.lines, ignore);
-    prepared.ignoreWritten += 1;
-  }
-  mkdirSync(dirname(scope.record), { recursive: true });
-  assertSafePath(scope.home, scope.record);
-  if (existsSync(scope.record)) {
-    prepared.recordBackup = `${scope.record}.backup-${stamp}`;
-    renameSync(scope.record, prepared.recordBackup);
-  }
-  const record: InstallRecord = {
-    schemaVersion: 2,
-    scope: scope.scope,
-    packageVersion,
-    ...identity,
-    stamp,
-    installedAt: new Date().toISOString(),
-    ...(isHub(scope) ? { contentFingerprint: effectiveContentFingerprint(scope) } : {}),
-    outputs: prepared.outputs.map(({ destination, link, linkMode }) => ({
-      path: destination,
-      checksum: digestManagedOutput(scope, destination) ?? '',
-      backup: prepared.backups.find(({ original }) => original === destination)?.backup || null,
-      ...(link ? { link, linkMode } : {}),
-    })),
-    ...(prepared.migrations.length > 0 ? { migratedOutputs: recordedMigrations(prepared) } : {}),
-    ignoreFiles: (scope.localIgnoreFiles || []).map(({ path }) => path),
-    recordBackup: prepared.recordBackup,
-  };
-  atomicWrite(scope.record, `${JSON.stringify(record, null, 2)}\n`);
-  prepared.recordWritten = true;
-  removeExact(prepared.stageRoot);
-  return prepared;
-}
-
-export function rollbackInstall(prepared: PreparedInstall): void {
-  const { scope } = prepared;
-  if (prepared.recordWritten) {
-    assertSafePath(scope.home, scope.record);
-    removeExact(scope.record);
-  }
-  if (prepared.recordBackup && existsSync(prepared.recordBackup)) {
-    assertSafePath(scope.home, prepared.recordBackup);
-    assertSafePath(scope.home, scope.record);
-    renameSync(prepared.recordBackup, scope.record);
-  }
-  for (const path of [...prepared.installed].reverse()) {
-    const output = prepared.outputs.find(({ destination }) => destination === path);
-    if (output) assertSafeOutputPath(scope, output, path);
-    removeExact(path);
-  }
-  for (const { original, backup } of [...prepared.backups].reverse()) {
-    const output = prepared.outputs.find(({ destination }) => destination === original);
-    const migration = prepared.migrations.find(({ path }) => path === original);
-    const root = output ? output.root : migration?.root;
-    if (!root) continue;
-    assertSafePath(root, original, { allowSymlinkLeaf: true });
-    assertSafePath(root, backup, { allowSymlinkLeaf: true });
-    if (entryExists(backup)) renameSync(backup, original);
-  }
-  for (const { original, backup } of [...prepared.asides].reverse()) {
-    const output = prepared.outputs.find(({ destination }) => destination === original);
-    if (!output) continue;
-    assertSafePath(output.root, original, { allowSymlinkLeaf: true });
-    assertSafePath(prepared.stageRoot, backup, { allowSymlinkLeaf: true });
-    if (entryExists(backup)) renameSync(backup, original);
-  }
-  for (const seeded of [...prepared.seeded].reverse()) removeExact(seeded);
-  for (let index = 0; index < prepared.ignoreWritten; index += 1) {
-    const ignore = scope.localIgnoreFiles?.[index];
-    const snapshot = prepared.ignoreSnapshots[index];
-    if (!ignore || !snapshot) continue;
-    assertSafePath(ignoreRoot(scope, ignore), snapshot.path);
-    restoreSnapshots([snapshot]);
-  }
-  assertSafePath(scope.home, prepared.stageRoot);
-  removeExact(prepared.stageRoot);
-  if (!prepared.recordBackup) {
-    pruneEmptyDirectories([
-      ...prepared.outputs
-        .filter(
-          ({ destination }) =>
-            !prepared.backups.some(({ original }) => original === destination) &&
-            !prepared.asides.some(({ original }) => original === destination),
-        )
-        .map(({ destination, root }) => ({ path: dirname(destination), root })),
-      { path: dirname(scope.record), root: scope.home },
-    ]);
-  }
-}
+export { commitInstall, rollbackInstall } from './install-commit.js';
+export { prepareInstall } from './install-stage.js';
 
 function rollbackAll(prepared: PreparedInstall[], error: unknown): never {
   const rollbackErrors: string[] = [];
@@ -218,42 +29,50 @@ function rollbackAll(prepared: PreparedInstall[], error: unknown): never {
   throw error;
 }
 
-/**
- * Install or upgrade the hub and the selected hosts in one transaction: the hub layer is
- * committed first so host links always point at a complete Harness, then each host layer,
- * then user data is initialized. Any failure rolls every layer back.
- */
-export function installAll(adapters: Adapter[], options: InstallOptions = {}): InstallResult[] {
+/** Commit all adapter layers and initialize user data before post-commit stage cleanup. */
+export function installAll(
+  adapters: Adapter[],
+  options: InstallOptions = {},
+  withLocks: ScopeLockContext = (operation) => withScopeLocks(adapters, operation),
+): InstallResult[] {
   assertNonOverlappingAdapters(adapters);
-  const hub = sharedHub(adapters);
-  return withScopeLocks([hub, ...adapters], () => {
+  const [first] = adapters;
+  if (!first) return [];
+  return withLocks(() => {
     const prepared: PreparedInstall[] = [];
+    let postCommit = false;
     try {
-      const hubStage = prepareHub(hub, adapters, options);
-      prepared.push(hubStage);
-      for (const adapter of adapters) prepared.push(prepareInstall(adapter, hubStage, options));
+      for (const adapter of adapters) prepared.push(prepareInstall(adapter, options));
       const stamp = options.stamp || timestamp();
-      const installed = adapters.map(hubOwnerId);
-      const owners = [...new Set([...hubOwners(readInstallRecord(hub)), ...installed])];
-      commitInstall(hubStage, stamp, { owners, installed });
-      for (const item of prepared.slice(1)) {
-        commitInstall(item, stamp, { adapter: item.scope.name as Adapter['name'], hub: hub.home });
-      }
-      const initialization = initializeUserData(hub, options.env || process.env, {
+      for (const item of prepared) commitInstall(item, stamp);
+      const initialization = initializeUserData(first.userData, options.env || process.env, {
         global: !options.noInitGlobal,
-        afterInitialize: options.afterUserDataInitialize,
+        ...(options.afterUserDataInitialize === undefined
+          ? {}
+          : { afterInitialize: options.afterUserDataInitialize }),
       });
-      return prepared.slice(1).map((item, index) => ({
-        ...describeInstall(adapters[index]),
-        migrations: [...hubStage.migrations, ...item.migrations].map(({ path, action }) => ({
-          path,
-          action,
-        })),
-        initializeGlobalMemory: !options.noInitGlobal,
-        backups: [...hubStage.backups, ...item.backups],
-        initialization,
-      }));
+      postCommit = true;
+      for (const item of prepared) removeExact(item.stageRoot);
+      return prepared.map((item, index) => {
+        const adapter = adapters[index];
+        if (!adapter) throw new Error(`Missing installation adapter at index ${index}`);
+        return {
+          ...describeInstall(adapter),
+          initializeGlobalMemory: !options.noInitGlobal,
+          backups: item.backups,
+          initialization,
+        };
+      });
     } catch (error) {
+      if (postCommit) {
+        const paths = prepared
+          .filter((item) => entryExists(item.stageRoot))
+          .map((item) => item.stageRoot);
+        throw new Error(
+          `Installation completed but post-commit cleanup failed: ${errorMessage(error)}; recovery data retained at: ${paths.join(', ')}`,
+          { cause: error instanceof Error ? error : undefined },
+        );
+      }
       return rollbackAll(prepared, error);
     }
   });

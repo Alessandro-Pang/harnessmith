@@ -235,7 +235,7 @@ test('area boundary rejects a newly introduced cycle between independent areas',
   assert.ok(failures[0]?.endsWith('new cross-area cycle: alpha -> beta'));
 });
 
-test('area boundary rejects merging a new area into the legacy cycle baseline', async () => {
+test('area boundary permits retiring cycles but rejects merging a new area into the baseline', async () => {
   const { checkAreaImportCycles } = await import(
     '../../../../scripts/preflight/preflight-architecture-cycles.js'
   );
@@ -250,9 +250,8 @@ test('area boundary rejects merging a new area into the legacy cycle baseline', 
     'harness-area-cycle-merge-architecture-',
   );
 
-  assert.equal(failures.length, 2);
+  assert.equal(failures.length, 1);
   assert.ok(failures[0]?.endsWith('new cross-area cycle: alpha -> beta -> gamma'));
-  assert.ok(failures[1]?.endsWith('declared cross-area cycle no longer exists: alpha -> beta'));
 });
 
 test('architecture preflight fails when no command calls the completion gate at all', async () => {

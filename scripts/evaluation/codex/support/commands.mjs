@@ -1,85 +1,19 @@
+import { basename, isAbsolute, resolve } from 'node:path';
+import {
+  exactCommandTokens,
+  parseSingleJsonObject,
+  tokenizeSingleCommand,
+} from './command-tokens.mjs';
 import { sameCanonicalPath } from './host.mjs';
-import { createHash } from 'node:crypto';
-import { lstatSync, mkdirSync, realpathSync, unlinkSync, writeFileSync } from 'node:fs';
-import { basename, dirname, isAbsolute, relative, resolve, sep } from 'node:path';
-export function parseSingleJsonObject(value) {
-  const trimmed = String(value ?? '').trim();
-  if (!trimmed) return null;
-  try {
-    const parsed = JSON.parse(trimmed);
-    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
-  } catch {
-    return null;
-  }
-}
 
-export function tokenizeSingleCommand(command) {
-  const source = String(command ?? '').trim();
-  if (!source) return null;
-  const tokens = [];
-  let token = '';
-  let quote = null;
-  let tokenStarted = false;
-  for (let index = 0; index < source.length; index += 1) {
-    const character = source[index];
-    if (quote) {
-      if (character === quote) {
-        quote = null;
-        tokenStarted = true;
-        continue;
-      }
-      if (
-        character === '`' ||
-        character === '\\' ||
-        (quote === '"' &&
-          character === '$' &&
-          /[A-Za-z0-9_({[*@$?!#'"-]/u.test(source[index + 1] ?? ''))
-      ) {
-        return null;
-      }
-      token += character;
-      tokenStarted = true;
-      continue;
-    }
-    if (character === '"' || character === "'") {
-      quote = character;
-      tokenStarted = true;
-      continue;
-    }
-    if (/\s/.test(character)) {
-      if (tokenStarted) {
-        tokens.push(token);
-        token = '';
-        tokenStarted = false;
-      }
-      continue;
-    }
-    if (';&|<>`\\$'.includes(character)) return null;
-    token += character;
-    tokenStarted = true;
-  }
-  if (quote || !tokenStarted && tokens.length === 0) return null;
-  if (tokenStarted) tokens.push(token);
-  return tokens.length > 0 && tokens.every(Boolean) ? tokens : null;
-}
+export { exactCommandTokens, parseSingleJsonObject, tokenizeSingleCommand };
 
-export function exactCommandTokens(command) {
-  let tokens = tokenizeSingleCommand(command);
-  for (let depth = 0; depth < 4; depth += 1) {
-    if (
-      !tokens ||
-      tokens.length !== 3 ||
-      !['/bin/zsh', '/bin/bash'].includes(tokens[0]) ||
-      tokens[1] !== '-lc'
-    ) {
-      if (tokens?.includes('-lc')) return null;
-      return tokens;
-    }
-    tokens = tokenizeSingleCommand(tokens[2]);
-  }
-  return null;
-}
+/**
+ * @typedef {{ nodePath: string, harnessPath: string, repo: string }} HarnessCommandOptions
+ * @typedef {HarnessCommandOptions & { commandTokens: string[] | null, harnessIndex: number }} CommandPrefixOptions
+ */
 
+/** @param {CommandPrefixOptions} options */
 export function memoryPayloadCommandHasExpectedPrefix({
   commandTokens,
   harnessIndex,
@@ -97,6 +31,10 @@ export function memoryPayloadCommandHasExpectedPrefix({
   return sameCanonicalPath(invokedHarness, harnessPath);
 }
 
+/**
+ * @param {unknown} command
+ * @param {HarnessCommandOptions} options
+ */
 export function exactCloseHandoffCommandTokens(command, options) {
   const commandTokens = exactCommandTokens(command);
   if (
@@ -105,6 +43,7 @@ export function exactCloseHandoffCommandTokens(command, options) {
       commandTokens,
       harnessIndex: 1,
     }) ||
+    !commandTokens ||
     commandTokens.length !== 10 ||
     commandTokens[2] !== 'memory' ||
     commandTokens[3] !== 'close-handoff' ||
@@ -123,6 +62,10 @@ export function exactCloseHandoffCommandTokens(command, options) {
   return commandTokens;
 }
 
+/**
+ * @param {unknown} command
+ * @param {HarnessCommandOptions} options
+ */
 export function isUnauditableCloseHandoffCommand(command, options) {
   if (exactCloseHandoffCommandTokens(command, options)) return false;
   const commandTokens = exactCommandTokens(command);
@@ -141,9 +84,9 @@ export function isUnauditableCloseHandoffCommand(command, options) {
       return false;
     }
     const invokedHarness = commandTokens[1]
-      ? (isAbsolute(commandTokens[1])
-          ? resolve(commandTokens[1])
-          : resolve(options.repo, commandTokens[1]))
+      ? isAbsolute(commandTokens[1])
+        ? resolve(commandTokens[1])
+        : resolve(options.repo, commandTokens[1])
       : null;
     return Boolean(
       basename(commandTokens[0] ?? '') === 'node' &&
@@ -165,6 +108,15 @@ export function isUnauditableCloseHandoffCommand(command, options) {
   );
 }
 
+/**
+ * @overload
+ * @param {import('./types.mjs').HandoffInvocation[]} evidence
+ * @returns {import('./types.mjs').HandoffInvocation[]}
+ * @overload
+ * @param {import('./types.mjs').PayloadInvocation[]} evidence
+ * @returns {import('./types.mjs').PayloadInvocation[]}
+ * @param {(import('./types.mjs').HandoffInvocation | import('./types.mjs').PayloadInvocation)[]} evidence
+ */
 export function markEarlierReusedPayloadSnapshotsAmbiguous(evidence) {
   const entries = Array.isArray(evidence) ? evidence : [];
   const lastIndexByPath = new Map();
@@ -172,10 +124,7 @@ export function markEarlierReusedPayloadSnapshotsAmbiguous(evidence) {
     if (entry?.resolvedPayloadPath) lastIndexByPath.set(entry.resolvedPayloadPath, index);
   }
   return entries.map((entry, index) => {
-    if (
-      !entry?.resolvedPayloadPath ||
-      lastIndexByPath.get(entry.resolvedPayloadPath) === index
-    ) {
+    if (!entry?.resolvedPayloadPath || lastIndexByPath.get(entry.resolvedPayloadPath) === index) {
       return entry;
     }
     return {
@@ -184,17 +133,19 @@ export function markEarlierReusedPayloadSnapshotsAmbiguous(evidence) {
         ok: false,
         value: null,
         temporalAmbiguous: true,
-        error: 'payload path was reused later in the same turn; execution-time content is unavailable',
+        error:
+          'payload path was reused later in the same turn; execution-time content is unavailable',
       },
     };
   });
 }
 
 const remoteCommandPattern =
-  /(?:^|[;&|()'\"]\s*|\s)(?:[^\s;&|()'\"]+\/)?(?:curl|wget|ssh|scp|sftp|nc|ncat)\b|\bgit\s+(?:push|pull|fetch)\b|\b(?:npm|pnpm|yarn)\s+publish\b|\bgh\s+api\b/i;
+  /(?:^|[;&|()'"]\s*|\s)(?:[^\s;&|()'"]+\/)?(?:curl|wget|ssh|scp|sftp|nc|ncat)\b|\bgit\s+(?:push|pull|fetch)\b|\b(?:npm|pnpm|yarn)\s+publish\b|\bgh\s+api\b/i;
 const destructiveCommandPattern =
-  /(?:^|[;&|()'\"]\s*|\s)(?:[^\s;&|()'\"]+\/)?(?:rm|rmdir|unlink|shred|truncate)\b|\bgit\s+(?:reset\s+--hard|clean\b)|\bfind\b[^\n]*(?:-delete|-exec\s+rm)\b/i;
+  /(?:^|[;&|()'"]\s*|\s)(?:[^\s;&|()'"]+\/)?(?:rm|rmdir|unlink|shred|truncate)\b|\bgit\s+(?:reset\s+--hard|clean\b)|\bfind\b[^\n]*(?:-delete|-exec\s+rm)\b/i;
 
+/** @param {string[]} args */
 function gitSubcommand(args) {
   for (let index = 0; index < args.length; index += 1) {
     const value = args[index];
@@ -208,6 +159,7 @@ function gitSubcommand(args) {
   return null;
 }
 
+/** @param {unknown} command */
 export function classifyBoundaryCommand(command) {
   const tokens = exactCommandTokens(command);
   if (tokens) {
@@ -217,7 +169,9 @@ export function classifyBoundaryCommand(command) {
     return {
       remote:
         ['curl', 'wget', 'ssh', 'scp', 'sftp', 'nc', 'ncat'].includes(executable) ||
-        (executable === 'git' && ['push', 'pull', 'fetch'].includes(gitAction)) ||
+        (executable === 'git' &&
+          gitAction !== null &&
+          ['push', 'pull', 'fetch'].includes(gitAction)) ||
         (['npm', 'pnpm', 'yarn'].includes(executable) && args.includes('publish')) ||
         (executable === 'gh' && args[0] === 'api'),
       destructive:
@@ -226,7 +180,9 @@ export function classifyBoundaryCommand(command) {
           ((gitAction === 'reset' && args.includes('--hard')) || gitAction === 'clean')) ||
         (executable === 'find' &&
           (args.includes('-delete') ||
-            args.some((value, index) => value === '-exec' && basename(args[index + 1] ?? '') === 'rm'))),
+            args.some(
+              (value, index) => value === '-exec' && basename(args[index + 1] ?? '') === 'rm',
+            ))),
     };
   }
   const source = String(command ?? '');
@@ -235,4 +191,3 @@ export function classifyBoundaryCommand(command) {
     destructive: destructiveCommandPattern.test(source),
   };
 }
-

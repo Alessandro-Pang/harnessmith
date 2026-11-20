@@ -113,12 +113,14 @@ function selectPlaybook(
         ? [coordinated[0]]
         : inferred;
   const selected = explicit ? [explicit] : narrowed;
+  const [specificLead] = specific;
   const oneLeadCompound =
     !explicit &&
     selected.length > 1 &&
     ((specific.length === 1 &&
-      ['diagnose', 'review'].includes(specific[0].route.name) &&
-      selected.every((candidate) => candidate === specific[0] || candidate.coordinated)) ||
+      specificLead &&
+      ['diagnose', 'review'].includes(specificLead.route.name) &&
+      selected.every((candidate) => candidate === specificLead || candidate.coordinated)) ||
       (specific.length === 0 &&
         coordinated.length === 1 &&
         selected.every((candidate) => candidate === coordinated[0])));

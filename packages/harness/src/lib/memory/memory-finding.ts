@@ -25,7 +25,7 @@ export function findingSection(body: string, heading: string): string | undefine
   const escaped = heading.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   return body
     .match(new RegExp(`(?:^|\\n)# ${escaped}\\n\\n([\\s\\S]*?)(?=\\n# |$)`, 'u'))?.[1]
-    .trim();
+    ?.trim();
 }
 
 export function findingListSection(body: string, heading: string): string[] {

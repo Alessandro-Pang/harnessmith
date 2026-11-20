@@ -33,7 +33,7 @@ export function canonicalTaskLedgerId(
     parts[5] === 'progress.md';
   if (!live && !archived) return undefined;
   const taskId = live ? parts[1] : parts[4];
-  if (!isPortableIdentityComponent(taskId)) return undefined;
+  if (!taskId || !isPortableIdentityComponent(taskId)) return undefined;
   const sourceRefs = metadata.get('source-refs');
   if (!Array.isArray(sourceRefs) || sourceRefs.length !== 1 || sourceRefs[0] !== `task:${taskId}`) {
     return undefined;

@@ -37,8 +37,8 @@ updated: 2026-09-04
 ## 目录职责
 
 - `core/` 是跨任务稳定原则，`playbooks/` 是按提示触发的工作流，`projects/` 是跨仓导航，`standards/` 是规则设计；Playbook 决定任务动作，reasoning mode 会根据用户明确概念或任务结构自动选择，不自动叠加到每个任务。
-- 本目录随 `../SKILL.md` 作为 skill 只渲染一份到 hub `{{HARNESS_HOME}}/skills/agent-harness/`，各宿主通过符号链接发现；`SKILL.md` 只是发现入口，不承载 always-on 边界。
-- `../assets/` 保存模板与 schema，`../scripts/harness.mjs` 是自包含 CLI 入口；`{{HARNESS_PERSONAL_HOME}}/` 是用户 overlay，安装器只补骨架、不覆盖正文。
+- 本目录随 `../SKILL.md` 由 `skills` 安装到宿主 skill 目录；`SKILL.md` 只是发现入口，不承载 always-on 边界。
+- `../assets/` 保存模板与 schema，全局 `harnessmith` 执行同包 Runtime；`{{HARNESS_PERSONAL_HOME}}/` 是用户 overlay，安装器只补骨架、不覆盖正文。
 
 ## 读取原则
 
@@ -63,8 +63,8 @@ updated: 2026-09-04
 ## 最小发现入口
 
 ```bash
-node {{HARNESS_HOME}}/skills/agent-harness/scripts/harness.mjs bootstrap --project /absolute/project/path --json "评审 permissions 设计"
-node {{HARNESS_HOME}}/skills/agent-harness/scripts/harness.mjs search --project /absolute/project/path --json "authentication"
+harnessmith bootstrap --project /absolute/project/path --json "评审 permissions 设计"
+harnessmith search --project /absolute/project/path --json "authentication"
 ```
 
 `bootstrap` 带原文即完成路由并返回 `route.load`，`route --intent` 只用于重路由，命中后只读所需文档；搜索模式、刷新、预算和 benchmark 见 [search reference](references/search-and-benchmarks.md)，其他参数以 CLI 与子命令的 `--help` 为准。

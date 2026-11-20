@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'vitest';
 import { chunkSearchDocument } from '../lib/search/search-chunks.js';
 import { tokenizeSearchText } from '../lib/search/search-tokenizer.js';
+import { elementAt } from './helpers/harness.js';
 
 test('Markdown chunks preserve frontmatter title, heading lineage, and source lines', () => {
   const content = [
@@ -64,7 +65,7 @@ test('chunk IDs stay stable across body edits but distinguish repeated headings'
     after.map(({ id }) => id),
     before.map(({ id }) => id),
   );
-  assert.notEqual(before[0].id, before[1].id);
+  assert.notEqual(elementAt(before, 0).id, elementAt(before, 1).id);
 });
 
 test('tokenizer keeps technical identifiers and adds Chinese bigrams', () => {

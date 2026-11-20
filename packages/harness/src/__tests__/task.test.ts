@@ -1,6 +1,14 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  renameSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import lockfile from 'proper-lockfile';
@@ -9,7 +17,7 @@ import { memoryCheck } from '../commands/memory/memory.js';
 import { checkpointTask, closeTask, initTask, taskStatus } from '../commands/task/task.js';
 import { updateAcceptance } from '../commands/task/task-acceptance.js';
 import { verifyAcceptance } from '../commands/task/task-verification.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { capturedIo, elementAt, harnessRuntime } from './helpers/harness.js';
 
 function projectFixture(): { project: string; runtime: ReturnType<typeof harnessRuntime> } {
   const root = mkdtempSync(join(tmpdir(), 'harness-task-'));
@@ -68,6 +76,32 @@ test('task initialization validates required fields and creates a queryable ledg
     () => initTask(runtime, { project, id: task.id, objective: 'Again', acceptance: ['done'] }),
     /already exists/,
   );
+});
+
+test('existing-task commands do not initialize memory when the task is absent', () => {
+  const { project } = projectFixture();
+  const attempts = [
+    () => checkpointTask({ project, id: 'missing', summary: 'No task' }),
+    () => closeTask({ project, id: 'missing', summary: 'No task' }),
+    () =>
+      updateAcceptance({
+        project,
+        id: 'missing',
+        criterion: 'criterion-1',
+        status: 'failed',
+      }),
+    () =>
+      verifyAcceptance({
+        project,
+        id: 'missing',
+        criterion: 'criterion-1',
+        type: 'file',
+        file: 'verification.txt',
+      }),
+  ];
+
+  for (const attempt of attempts) assert.throws(attempt, /Task does not exist: missing/);
+  assert.equal(existsSync(join(project, '.agent-docs')), false);
 });
 
 test('task state transitions require valid statuses and acceptance evidence', () => {
@@ -133,8 +167,8 @@ test('task state transitions require valid statuses and acceptance evidence', ()
     },
     capturedIo(),
   );
-  assert.equal(accepted.acceptance[0].status, 'passed');
-  const proof = accepted.acceptance[0].evidence[0];
+  assert.equal(elementAt(accepted.acceptance, 0).status, 'passed');
+  const proof = elementAt(elementAt(accepted.acceptance, 0).evidence, 0);
   assert.equal(proof.type, 'test');
   assert.equal(proof.producer, 'harness');
   assert.equal(proof.recordedAt, accepted.updated);
@@ -187,7 +221,7 @@ test('blocked and superseded closures do not pretend acceptance passed', () => {
   );
   assert.equal(blocked.status, 'blocked');
   assert.equal(blocked.nextAction, 'Obtain access and resume the task');
-  assert.equal(blocked.acceptance[0].status, 'pending');
+  assert.equal(elementAt(blocked.acceptance, 0).status, 'pending');
   assert.throws(
     () => closeTask({ project, id: 'blocked', summary: 'Invalid', status: 'in_progress' }),
     /Invalid closing status/,

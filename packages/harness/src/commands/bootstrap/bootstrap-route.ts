@@ -59,7 +59,11 @@ export function bootstrapRoute(
   intent?: DocumentationIntent,
 ): BootstrapRouteSummary {
   assertNoHighConfidenceSecret(query, 'Bootstrap route query');
-  const report = routeDocumentation(runtime.docsRoot, query, { intent });
+  const report = routeDocumentation(
+    runtime.docsRoot,
+    query,
+    intent === undefined ? {} : { intent },
+  );
   return {
     status: report.status,
     intent: report.intent,

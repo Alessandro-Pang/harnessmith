@@ -28,7 +28,9 @@ function logicalLines(content: string): string[] {
 }
 
 function references(line: string): string[] {
-  return [...line.matchAll(/memory:([A-Za-z0-9_./-]+)/g)].map((match) => match[1]);
+  return [...line.matchAll(/memory:([A-Za-z0-9_./-]+)/g)].flatMap((match) =>
+    match[1] === undefined ? [] : [match[1]],
+  );
 }
 
 export function memoryCoreBudget(content: string): MemoryCoreBudgetReport {
@@ -41,8 +43,13 @@ export function memoryCoreBudget(content: string): MemoryCoreBudgetReport {
         ? 'soft-limit'
         : 'ok';
   const candidates = lines
-    .filter((line) => line.startsWith('- ') && references(line).length === 1)
-    .map((line) => ({ reference: references(line)[0], bytes: Buffer.byteLength(line) }))
+    .flatMap((line) => {
+      if (!line.startsWith('- ')) return [];
+      const pointers = references(line);
+      const [reference] = pointers;
+      if (pointers.length !== 1 || reference === undefined) return [];
+      return [{ reference, bytes: Buffer.byteLength(line) }];
+    })
     .sort(
       (left, right) => right.bytes - left.bytes || left.reference.localeCompare(right.reference),
     );
@@ -98,9 +105,11 @@ export function validateMemoryCoreContract(
       failures += 1;
       continue;
     }
-    const identity = normalizedReference(pointers[0]);
+    const [pointer] = pointers;
+    if (pointer === undefined) continue;
+    const identity = normalizedReference(pointer);
     if (seen.has(identity)) {
-      io.error(`Memory core contains a duplicate pointer: memory:${pointers[0]}: ${path}`);
+      io.error(`Memory core contains a duplicate pointer: memory:${pointer}: ${path}`);
       failures += 1;
     }
     seen.add(identity);

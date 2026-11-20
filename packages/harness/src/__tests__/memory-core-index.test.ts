@@ -8,7 +8,7 @@ import { memoryCheck } from '../commands/memory/memory.js';
 import { captureHandoff, closeHandoff } from '../commands/memory/memory-autopilot.js';
 import { captureInput } from '../commands/memory/memory-input.js';
 import { parseFrontmatter } from '../lib/documentation/frontmatter.js';
-import { capturedIo, harnessRuntime, sourceHarnessRoot } from './helpers/harness.js';
+import { capturedIo, elementAt, harnessRuntime, sourceHarnessRoot } from './helpers/harness.js';
 
 function projectFixture(): { project: string; runtime: ReturnType<typeof harnessRuntime> } {
   const root = mkdtempSync(join(tmpdir(), 'harness-memory-core-index-'));
@@ -137,7 +137,7 @@ test('capture-input emits every frontmatter key declared by the project-agent-do
     join(sourceHarnessRoot, 'assets', 'templates', 'project-agent-docs', 'input.md'),
     'utf8',
   );
-  const keys = [...template.matchAll(/^([a-z0-9-]+):/gmu)].map((match) => match[1]);
+  const keys = [...template.matchAll(/^([a-z0-9-]+):/gmu)].map((match) => elementAt(match, 1));
   const { project, runtime } = projectFixture();
   const result = captureInput(
     runtime,

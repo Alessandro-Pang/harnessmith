@@ -9,38 +9,12 @@ export interface RuntimeHealthCheck {
   details: string[];
 }
 
-export interface ManagedInstallRecord {
-  schemaVersion?: number;
-  scope?: string;
-  outputs?: Array<{ path?: string; checksum?: string }>;
-}
-
-function isManagedInstallOutput(value: unknown): value is { path?: string; checksum?: string } {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
-  const output = value as Record<string, unknown>;
-  return (
-    (output.path === undefined || typeof output.path === 'string') &&
-    (output.checksum === undefined || typeof output.checksum === 'string')
-  );
-}
-
-export function isManagedInstallRecord(value: unknown): value is ManagedInstallRecord {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
-  const record = value as Record<string, unknown>;
-  return (
-    (record.schemaVersion === undefined || typeof record.schemaVersion === 'number') &&
-    (record.scope === undefined || typeof record.scope === 'string') &&
-    (record.outputs === undefined ||
-      (Array.isArray(record.outputs) && record.outputs.every(isManagedInstallOutput)))
-  );
-}
-
 export function runtimeHealth(): RuntimeHealthCheck {
-  const [major, minor] = process.versions.node
+  const [major = Number.NaN, minor = Number.NaN] = process.versions.node
     .split('.')
     .slice(0, 2)
     .map((part) => Number.parseInt(part, 10));
-  const nodeCompatible = major > 22 || (major === 22 && minor >= 12);
+  const nodeCompatible = major > 22 || (major === 22 && minor >= 20);
   const git = gitVersion();
   const details = [`Node.js ${process.versions.node}`, git || 'Git unavailable'];
   return {

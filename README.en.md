@@ -14,7 +14,7 @@
   <a href="https://www.npmjs.com/package/harnessmith">
     <img alt="npm bundle size" src="https://img.shields.io/bundlephobia/minzip/harnessmith">
   </a>
-  <a href="https://nodejs.org/"><img alt="Node.js" src="https://img.shields.io/badge/Node.js-%E2%89%A522.12-43853d.svg" /></a>
+  <a href="https://nodejs.org/"><img alt="Node.js" src="https://img.shields.io/badge/Node.js-%E2%89%A522.20-43853d.svg" /></a>
   <a href="./LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
 </p>
 
@@ -42,15 +42,19 @@ If you use one agent and your rules fit in a few lines, a hand-written `AGENTS.m
 
 ## 🚀 Start in 30 seconds
 
-Node.js 22.12.0 or newer is required (22 or 24 LTS recommended). No global installation is needed.
+Node.js 22.20.0 or newer is required (22 or 24 LTS recommended). Install once globally, then use the same `harnessmith` command for installation and Runtime operations.
 
 ```bash
+npm install -g harnessmith
+
 # 1. Preview destinations, conflicts, backups, and recovery. Nothing is written.
-npx harnessmith setup --agent codex --dry-run
+harnessmith setup --agent codex --dry-run
 
 # 2. Review the preview, then install and run deterministic health checks.
-npx harnessmith setup --agent codex
+harnessmith setup --agent codex
 ```
+
+For one-off execution, replace `harnessmith` below with `npx --yes harnessmith`.
 
 Add `--yes` in non-interactive environments. If you already maintain host rules, run `adopt` first. It inventories existing files without writing and creates a content-bound proposal. Review the proposal, then confirm it with the same `proposalId`; existing files are not overwritten directly.
 
@@ -75,32 +79,32 @@ A global install writes to the host's personal configuration directory and appli
 
 ```bash
 # Inspect ownership, file integrity, and safe next steps
-npx harnessmith status --agent codex
-npx harnessmith status --agent codex --explain
+harnessmith status --agent codex
+harnessmith status --agent codex --explain
 
 # Inventory existing rules without writing; confirm only after review
-npx harnessmith adopt --agent codex --json
-npx harnessmith adopt --agent codex --proposal <proposalId> --yes --json
+harnessmith adopt --agent codex --json
+harnessmith adopt --agent codex --proposal <proposalId> --yes --json
 
-# Restore the previous layer, or return to the pre-install state
-npx harnessmith restore --agent codex
-npx harnessmith uninstall --agent codex
+# Restore the current record's backups, or remove the current install
+harnessmith restore --agent codex
+harnessmith uninstall --agent codex
 
 # Inspect Adapter capability boundaries and a local redacted diagnostic report
-npx harnessmith capabilities --json
-npx harnessmith diagnostics --agent codex --json
+harnessmith capabilities --json
+harnessmith diagnostics --agent codex --json
 
 # Export a portable personal overlay; create a proposal before importing elsewhere
-npx harnessmith export --output ./harness-config.json --json
-npx harnessmith import --input ./harness-config.json --json
-npx harnessmith import --input ./harness-config.json --proposal <proposalId> --yes --json
+harnessmith export --output ./harness-config.json --json
+harnessmith import --input ./harness-config.json --json
+harnessmith import --input ./harness-config.json --proposal <proposalId> --yes --json
 ```
 
-The installation result reports the Runtime path (the shared hub skill, `~/.agents/harnessmith/skills/agent-harness` by default; every host only links to it). Replace `<harness-path>` with that path to run a health check and inspect the Repository Map:
+`harnessmith install` (or `setup`) renders ordinary instruction files, then delegates the bundled `agent-harness` skill to the pinned `skills` package. These are separate transactions and skill failure is explicitly reported as partial. Only schema 3 single-layer records are supported; old installations, Hubs, and Runtime copies are not automatically upgraded or removed. Existing users should first read the [migration guide](https://alexpang.cn/harnessmith/en/reference/migrations). The global command executes the same-version Runtime bundle shipped in the npm package:
 
 ```bash
-node <harness-path>/scripts/harness.mjs health --json
-node <harness-path>/scripts/harness.mjs repository-map check --json
+harnessmith health --json
+harnessmith repository-map check --json
 ```
 
 In a new host session, the rule entry participates in task routing automatically. For long-running work, use `task checkpoint` to save progress and `task verify` to bind mechanical evidence. Only the acceptance gate allows `task close --status complete`. `search` and `memory search` default to `--mode auto`: they use full-text search when a valid index exists and fall back to a bounded scan otherwise. `--mode fulltext` fails when the index is unavailable; `--mode scan` always scans. The index is written only with explicit `--refresh-index` and remains a rebuildable cache.

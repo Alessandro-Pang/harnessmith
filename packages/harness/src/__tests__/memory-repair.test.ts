@@ -28,7 +28,7 @@ import {
   repairJournalPaths,
 } from '../lib/memory/memory-repair-journal.js';
 import { searchIndexPath, searchWithIndex } from '../lib/search/search-index.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { capturedIo, elementAt, harnessRuntime } from './helpers/harness.js';
 
 function fixture(prefix: string) {
   const root = mkdtempSync(join(tmpdir(), prefix));
@@ -57,16 +57,16 @@ test('repair diagnosis is read-only and separates partial initialization from de
     report.proposals.map(({ action }) => action),
     ['initialize-missing-memory', 'rebuild-derived-index'],
   );
-  assert.deepEqual(report.proposals[0].affectedPaths, [canonicalPath(readme)]);
-  assert.equal(report.proposals[0].authority, 'managed-memory-template');
-  assert.equal(report.proposals[0].backup.required, false);
+  assert.deepEqual(elementAt(report.proposals, 0).affectedPaths, [canonicalPath(readme)]);
+  assert.equal(elementAt(report.proposals, 0).authority, 'managed-memory-template');
+  assert.equal(elementAt(report.proposals, 0).backup.required, false);
   assert.equal(readFileSync(unknown, 'utf8'), 'user-owned\n');
   assert.equal(JSON.stringify({ entries: readdirSync(memoryRoot).sort() }), before);
   assert.equal(existsSync(readme), false);
 
   assert.throws(
     () =>
-      applyMemoryRepair(runtime, project, report.proposals[0].proposalId, capturedIo(), {
+      applyMemoryRepair(runtime, project, elementAt(report.proposals, 0).proposalId, capturedIo(), {
         beforeVerify: () => {
           throw new Error('injected initialization verifier failure');
         },
@@ -78,7 +78,7 @@ test('repair diagnosis is read-only and separates partial initialization from de
   mkdirSync(join(memoryRoot, 'working'), { recursive: true });
   assert.throws(
     () =>
-      applyMemoryRepair(runtime, project, report.proposals[0].proposalId, capturedIo(), {
+      applyMemoryRepair(runtime, project, elementAt(report.proposals, 0).proposalId, capturedIo(), {
         beforeVerify: () =>
           writeFileSync(
             unindexed,
@@ -88,7 +88,12 @@ test('repair diagnosis is read-only and separates partial initialization from de
     /unindexed memories/i,
   );
   rmSync(unindexed);
-  const applied = applyMemoryRepair(runtime, project, report.proposals[0].proposalId, capturedIo());
+  const applied = applyMemoryRepair(
+    runtime,
+    project,
+    elementAt(report.proposals, 0).proposalId,
+    capturedIo(),
+  );
   assert.ok('verification' in applied);
   assert.equal(applied.verification.status, 'passed');
   assert.equal(existsSync(readme), true);
@@ -99,7 +104,7 @@ test('repair CLI defaults to diagnosis and requires proposal plus confirmation f
   const { project, runtime } = fixture('harness-memory-repair-cli-');
   const output = capturedIo();
   assert.equal(runCli(['memory', 'repair', project, '--json'], { runtime, io: output }), 0);
-  assert.equal(JSON.parse(output.logs[0]).mode, 'diagnose-only');
+  assert.equal(JSON.parse(elementAt(output.logs, 0)).mode, 'diagnose-only');
   assert.throws(
     () => runCli(['memory', 'repair', project, '--yes', '--json'], { runtime, io: capturedIo() }),
     /requires both --proposal.*--yes/i,

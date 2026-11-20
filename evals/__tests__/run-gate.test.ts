@@ -45,7 +45,7 @@ test('fingerprint binds the candidate package and every complete scenario contra
     'template/skills/agent-harness/docs/README.md',
     'template/skills/agent-harness/manifest.json',
     'template/skills/agent-harness/assets/schemas/task.schema.json',
-    'template/skills/agent-harness/dist/harness.mjs',
+    'dist/harness.mjs',
     'template/skills/agent-harness/assets/templates/project-AGENTS.md',
   ]) {
     assert.ok(output.ruleSources.includes(source), `missing rule fingerprint source: ${source}`);
@@ -433,7 +433,7 @@ test('evaluation and release docs distinguish contracts from real fresh host evi
   assert.match(releasing, /HARNESS_RELEASE_ARTIFACT/);
   assert.match(releasing, /maintainer-attested structure/i);
   assert.match(releasing, /current required host is Codex/i);
-  assert.match(releasing, /Host Eval inheritance/i);
+  assert.match(releasing, /Inherited evidence and legacy attestations/i);
   assert.match(releasing, /exact candidate tarball/i);
   assert.match(architecture, /executable release gate/i);
   assert.match(architecture, /不会启动第三方宿主.*不负责登录或认证/s);

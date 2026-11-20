@@ -32,10 +32,12 @@ export function scanTemporaryResourceRoots(
   const reports = roots.map((root) =>
     scanTemporaryResources({
       root,
-      now: options.now,
-      maxEntries: options.maxEntries,
-      maxBytesPerResource: options.maxBytesPerResource,
-      maxResults: options.maxResults,
+      ...(options.now === undefined ? {} : { now: options.now }),
+      ...(options.maxEntries === undefined ? {} : { maxEntries: options.maxEntries }),
+      ...(options.maxBytesPerResource === undefined
+        ? {}
+        : { maxBytesPerResource: options.maxBytesPerResource }),
+      ...(options.maxResults === undefined ? {} : { maxResults: options.maxResults }),
     }),
   );
   return {

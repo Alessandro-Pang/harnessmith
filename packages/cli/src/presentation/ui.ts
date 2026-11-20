@@ -171,13 +171,7 @@ export function printInstallResults(
     if (interactive) log.success(`${result.adapter} installed in ${result.home}`, { output });
     else io.log(`Installed ${result.adapter}: ${result.home}`);
     for (const path of result.instructions) io.log(`  ${pc.dim('instructions')} ${path}`);
-    if (result.harness) io.log(`  ${pc.dim('skill link')}   ${result.harness}`);
     for (const { backup } of result.backups) io.log(`  ${pc.yellow('backup')}       ${backup}`);
-  }
-  if (results[0]) {
-    io.log(`${pc.bold('hub')}  ${results[0].hub.home}`);
-    io.log(`  ${pc.dim('harness')}      ${results[0].hub.outputs[0]?.path ?? ''}`);
-    io.log(`  ${pc.dim('owners')}       ${results[0].hub.owners.join(', ')}`);
   }
   if (results[0]?.initialization) {
     if (interactive) log.info(results[0].initialization, { output });

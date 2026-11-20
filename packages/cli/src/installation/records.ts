@@ -4,40 +4,22 @@ import { atomicWrite, digestPath, readJson, removeExact } from '../shared/files.
 import { assertSafeOutputPath, assertSafeScopePaths, entryExists } from '../shared/safe-path.js';
 import type {
   Adapter,
-  Hub,
-  HubPlan,
   InstallPlan,
   InstallRecord,
   InstallTargetState,
   ManagedOutput,
-  ManagedScope,
   OutputAction,
   PlannedOutput,
   Snapshot,
 } from '../shared/types.js';
 import { errorMessage, HarnessmithError } from '../shared/types.js';
-import {
-  legacyOutputs,
-  plannedAdapterMigrations,
-  plannedHubMigrations,
-} from './layout-migration.js';
 import { validateRecord } from './record-validation.js';
 
 export const managedBlockMarker = 'harnessmith managed files';
 
-export function isAdapter(scope: ManagedScope): scope is Adapter {
-  return scope.scope === 'adapter';
-}
-
-export function isHub(scope: ManagedScope): scope is Hub {
-  return scope.scope === 'hub';
-}
-
-/** Look up the contract entry for a recorded path (current layout first, then pre-hub). */
-export function outputSpec(scope: ManagedScope, path: string): ManagedOutput {
-  const found =
-    scope.outputs.find((output) => output.path === path) ??
-    (isAdapter(scope) ? legacyOutputs(scope).find((output) => output.path === path) : undefined);
+/** Look up the contract entry for a recorded path; unknown paths fail closed. */
+export function outputSpec(scope: Adapter, path: string): ManagedOutput {
+  const found = scope.outputs.find((output) => output.path === path);
   if (!found) {
     throw new HarnessmithError(
       'INTEGRITY_ERROR',
@@ -48,19 +30,7 @@ export function outputSpec(scope: ManagedScope, path: string): ManagedOutput {
   return found;
 }
 
-/** Pre-hub host copies kept their mutable `state/` inside the Harness directory. */
-export function digestManagedOutput(
-  scope: ManagedScope,
-  path: string,
-  managedPath = path,
-): string | null {
-  const legacyState = isAdapter(scope) && managedPath === scope.legacyHarness;
-  return digestPath(path, {
-    exclude: (relativePath) => legacyState && relativePath.split(sep)[0] === 'state',
-  });
-}
-
-export function assertScopeContract(scope: ManagedScope): void {
+export function assertScopeContract(scope: Adapter): void {
   const home = resolve(scope.home);
   const inside = (root: string, path: string): boolean => {
     const target = resolve(path);
@@ -71,9 +41,6 @@ export function assertScopeContract(scope: ManagedScope): void {
       root: resolve(output.root || scope.home),
       path: output.path,
     })),
-    ...(isAdapter(scope)
-      ? legacyOutputs(scope).map((output) => ({ root: home, path: output.path }))
-      : []),
     { root: home, path: scope.record },
   ];
   for (const { root, path } of paths) {
@@ -82,7 +49,7 @@ export function assertScopeContract(scope: ManagedScope): void {
   assertSafeScopePaths(scope);
 }
 
-export function readInstallRecordAt(scope: ManagedScope, recordPath: string): InstallRecord | null {
+export function readInstallRecordAt(scope: Adapter, recordPath: string): InstallRecord | null {
   assertScopeContract(scope);
   const resolvedRecordPath = resolve(recordPath);
   const validRecordPath =
@@ -111,12 +78,8 @@ export function readInstallRecordAt(scope: ManagedScope, recordPath: string): In
   }
 }
 
-export function readInstallRecord(scope: ManagedScope): InstallRecord | null {
+export function readInstallRecord(scope: Adapter): InstallRecord | null {
   return readInstallRecordAt(scope, scope.record);
-}
-
-export function hubOwners(record: InstallRecord | null): string[] {
-  return record?.owners ?? [];
 }
 
 export function assertNonOverlappingAdapters(adapters: Adapter[]): void {
@@ -126,10 +89,8 @@ export function assertNonOverlappingAdapters(adapters: Adapter[]): void {
       path: resolve(path),
     })),
   );
-  for (let index = 0; index < ownership.length; index += 1) {
-    for (let otherIndex = index + 1; otherIndex < ownership.length; otherIndex += 1) {
-      const left = ownership[index];
-      const right = ownership[otherIndex];
+  for (const [index, left] of ownership.entries()) {
+    for (const right of ownership.slice(index + 1)) {
       if (left.adapter === right.adapter) continue;
       const overlaps =
         left.path === right.path ||
@@ -147,7 +108,7 @@ export function assertNonOverlappingAdapters(adapters: Adapter[]): void {
 }
 
 function outputState(
-  scope: ManagedScope,
+  scope: Adapter,
   output: ManagedOutput,
   record: InstallRecord | null,
 ): { action: OutputAction; state: InstallTargetState } {
@@ -155,58 +116,30 @@ function outputState(
   if (!entryExists(output.path)) return { action: 'create', state: 'missing' };
   const managed = record?.outputs.find((item) => item.path === output.path);
   if (!managed) return { action: 'conflict', state: 'unmanaged' };
-  if (managed.checksum === digestManagedOutput(scope, output.path)) {
+  if (managed.checksum === digestPath(output.path)) {
     return { action: 'replace-managed', state: 'managed' };
   }
-  // Distribution trees and links are volatile and only exist in their latest copy (an
-  // update evacuates the old one without a sibling backup), so drift against an older
-  // record layer must not demand `--force`; rendered files stay strictly gated.
-  if (output.kind !== 'file') return { action: 'replace-managed', state: 'modified' };
   return { action: 'conflict', state: 'modified' };
 }
 
-export function plannedOutputs(scope: ManagedScope, record: InstallRecord | null): PlannedOutput[] {
+export function plannedOutputs(scope: Adapter, record: InstallRecord | null): PlannedOutput[] {
   return scope.outputs.map((output) => ({
     path: output.path,
-    kind: output.kind,
-    ...(output.target ? { target: output.target } : {}),
     ...outputState(scope, output, record),
   }));
 }
 
-export function describeHub(hub: Hub): HubPlan {
-  const record = readInstallRecord(hub);
-  return {
-    home: hub.home,
-    agentsHome: hub.agentsHome,
-    record: hub.record,
-    installed: Boolean(record),
-    owners: hubOwners(record),
-    state: hub.state,
-    rules: hub.rules,
-    memory: hub.memory,
-    outputs: plannedOutputs(hub, record),
-    migrations: plannedHubMigrations(hub).map(({ path, action }) => ({ path, action })),
-  };
-}
-
 export function describeInstall(adapter: Adapter): InstallPlan {
   const record = readInstallRecord(adapter);
-  const hub = describeHub(adapter.hub);
   return {
     adapter: adapter.name,
     home: adapter.home,
-    harness: adapter.harness,
     record: adapter.record,
     capabilities: adapter.capabilities,
     instructions: adapter.instructions.map(({ path }) => path),
     initializeGlobalMemory: true,
-    hub,
-    outputs: [...hub.outputs, ...plannedOutputs(adapter, record)],
-    migrations: [
-      ...hub.migrations,
-      ...plannedAdapterMigrations(adapter, record).map(({ path, action }) => ({ path, action })),
-    ],
+    userData: adapter.userData,
+    outputs: plannedOutputs(adapter, record),
   };
 }
 

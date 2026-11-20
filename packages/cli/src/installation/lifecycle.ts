@@ -1,101 +1,72 @@
 import type { Adapter, InstallOptions } from '../shared/types.js';
-import { HarnessmithError } from '../shared/types.js';
-import { type HubLifecycleDecision, planHubLifecycle, releaseOwners } from './hub-lifecycle.js';
-import { assertRestorable, assertUninstallable, installationLayers } from './lifecycle-plan.js';
-import { restoreOnce } from './lifecycle-restore.js';
 import {
-  type LifecycleTransactionContext,
-  lifecycleTransaction,
-  mutableLifecyclePaths,
-} from './lifecycle-transaction.js';
-import { withScopeLocks } from './operation-lock.js';
-import { assertNonOverlappingAdapters, readInstallRecord } from './records.js';
+  assertLifecyclePaths,
+  assertUnwindable,
+  currentRecord,
+  type LifecycleCommand,
+  previousRecord,
+} from './lifecycle-plan.js';
+import { restoreOnce, uninstallOnce } from './lifecycle-restore.js';
+import { lifecycleTransaction, mutableLifecyclePaths } from './lifecycle-transaction.js';
+import { type ScopeLockContext, withScopeLocks } from './operation-lock.js';
+import { assertNonOverlappingAdapters } from './records.js';
 
 export { inspectStatusAll, statusAll } from '../status/status-inspection.js';
 
-function hubMutablePaths(decision: HubLifecycleDecision) {
-  if (decision.action === 'keep') return [];
-  return mutableLifecyclePaths(decision.hub, installationLayers(decision.hub));
+/** Preflight every adapter before any mutation so a rejection never strands a partial unwind. */
+function preflight(adapters: Adapter[], force: boolean, command: LifecycleCommand) {
+  return adapters.map((adapter) => {
+    const record = currentRecord(adapter);
+    assertLifecyclePaths(adapter, record);
+    assertUnwindable(record, force, command);
+    // Restore reactivates the direct recordBackup: validate it before any adapter mutates.
+    if (command === 'restore') previousRecord(adapter, record);
+    return { adapter, record };
+  });
 }
 
-function applyHubDecision(
-  decision: HubLifecycleDecision,
-  transaction: LifecycleTransactionContext,
-  options: Pick<InstallOptions, 'force'>,
-): void {
-  if (decision.action === 'release') releaseOwners(decision.hub, decision.releasing);
-  if (decision.action !== 'unwind') return;
-  for (let index = 0; index < decision.layers.length; index += 1) {
-    restoreOnce(decision.hub, transaction, options);
-  }
-}
-
+/**
+ * Restore the single current layer of every adapter: outputs revert to their backups
+ * (identical managed content owned by the direct previous record is kept), and each
+ * record reverts to its validated recordBackup (or is removed). User data is never touched.
+ */
 export function restoreAll(adapters: Adapter[], options: Pick<InstallOptions, 'force'> = {}) {
   assertNonOverlappingAdapters(adapters);
   const force = options.force || false;
-  return withScopeLocks([...adapters, ...(adapters[0] ? [adapters[0].hub] : [])], () => {
-    const layers = adapters.map((adapter) => {
-      const current = installationLayers(adapter)[0];
-      if (!current)
-        throw new HarnessmithError(
-          'STATE_CONFLICT',
-          `No Harnessmith installation found for ${adapter.label}: ${adapter.record}`,
-          5,
-        );
-      assertRestorable(adapter, current.record, force);
-      return { adapter, layers: [current] };
-    });
-    const decision = planHubLifecycle('restore', adapters, force);
+  return withScopeLocks(adapters, () => {
+    const current = preflight(adapters, force, 'restore');
     return lifecycleTransaction(
-      [
-        ...layers.flatMap(({ adapter, layers: records }) =>
-          mutableLifecyclePaths(adapter, records),
-        ),
-        ...hubMutablePaths(decision),
-      ],
-      (transaction) => {
-        const results = layers.map(({ adapter }) => ({
+      current.flatMap(({ adapter, record }) => mutableLifecyclePaths(adapter, record)),
+      () =>
+        current.map(({ adapter, record }) => ({
           adapter: adapter.name,
-          restored: restoreOnce(adapter, transaction, options),
-        }));
-        applyHubDecision(decision, transaction, options);
-        return results.map((result) => ({ ...result, hub: decision.action }));
-      },
+          restored: restoreOnce(adapter, record),
+        })),
     );
   });
 }
 
-export function uninstallAll(adapters: Adapter[], options: Pick<InstallOptions, 'force'> = {}) {
+/**
+ * Uninstall the single current installation of every adapter: original user files are
+ * restored from backups, managed content without a backup is removed, and the record
+ * plus its recordBackup file are deleted. No older layer is read or unwound.
+ */
+export function uninstallAll(
+  adapters: Adapter[],
+  options: Pick<InstallOptions, 'force'> = {},
+  withLocks: ScopeLockContext = (operation) => withScopeLocks(adapters, operation),
+) {
   assertNonOverlappingAdapters(adapters);
   const force = options.force || false;
-  return withScopeLocks([...adapters, ...(adapters[0] ? [adapters[0].hub] : [])], () => {
-    const plans = adapters.map((adapter) => {
-      const layers = installationLayers(adapter);
-      assertUninstallable(adapter, layers, force);
-      return { adapter, layers };
-    });
-    const decision = planHubLifecycle('uninstall', adapters, force);
+  return withLocks(() => {
+    const current = preflight(adapters, force, 'uninstall');
     return lifecycleTransaction(
-      [
-        ...plans.flatMap(({ adapter, layers }) => mutableLifecyclePaths(adapter, layers)),
-        ...hubMutablePaths(decision),
-      ],
-      (transaction) => {
-        const results = plans.map(({ adapter }) => {
-          let layers = 0;
-          while (readInstallRecord(adapter)) {
-            restoreOnce(adapter, transaction, options);
-            layers += 1;
-          }
-          return { adapter: adapter.name, layers };
-        });
-        applyHubDecision(decision, transaction, options);
-        return results.map((result) => ({
-          ...result,
-          hub: decision.action,
-          hubLayers: decision.layers.length,
-        }));
-      },
+      current.flatMap(({ adapter, record }) => mutableLifecyclePaths(adapter, record)),
+      () =>
+        current.map(({ adapter, record }) => ({
+          adapter: adapter.name,
+          uninstalled: uninstallOnce(adapter, record),
+        })),
     );
   });
 }

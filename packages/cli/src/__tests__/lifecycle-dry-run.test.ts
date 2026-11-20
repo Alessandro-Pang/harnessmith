@@ -28,7 +28,7 @@ function execute(root: string, args: string[]): string {
 }
 
 for (const command of ['restore', 'uninstall'] as const) {
-  test(`${command} dry-run previews every lifecycle change without modifying the installation`, () => {
+  test(`${command} dry-run previews the single current layer without modifying the installation`, () => {
     const root = mkdtempSync(join(tmpdir(), `harnessmith-${command}-dry-`));
     onTestFinished(() => rmSync(root, { recursive: true, force: true }));
     execute(root, ['install', '--agent', 'codex']);
@@ -47,23 +47,16 @@ for (const command of ['restore', 'uninstall'] as const) {
     const plan = JSON.parse(output);
     assert.equal(plan.command, command);
     assert.equal(plan.adapter, 'codex');
-    assert.deepEqual(plan.capabilities, {
-      scope: 'global',
-      instructionFormat: 'markdown',
-      nativeRuleActivation: 'host-default',
-      enforcement: {
-        fileOwnership: 'harnessmith',
-        instructions: 'advisory',
-        permissions: 'host-owned',
-      },
-    });
-    assert.equal(plan.layers.length, command === 'restore' ? 1 : 2);
+    assert.equal(plan.force, false);
+    assert.equal(plan.hub, undefined);
+    assert.equal(plan.layers, undefined);
+    assert.ok(Array.isArray(plan.changes));
     assert.ok(
-      plan.layers.every((layer: { changes: Array<{ path: string }> }) =>
-        layer.changes.some(
-          ({ path }) => existsSync(path) && realpathSync.native(path) === canonicalRules,
-        ),
+      plan.changes.some(
+        ({ path }: { path: string }) =>
+          existsSync(path) && realpathSync.native(path) === canonicalRules,
       ),
     );
+    assert.ok(plan.changes.some(({ path }: { path: string }) => path === record));
   });
 }

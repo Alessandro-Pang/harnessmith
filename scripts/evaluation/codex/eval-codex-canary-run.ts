@@ -94,13 +94,13 @@ export async function executePreparedMachineErrorCanary(
   };
   const execute = createCodexHostEvalExecutor({
     workspace: fixture.workspace,
-    executable: options.executable,
+    ...(options.executable === undefined ? {} : { executable: options.executable }),
     model: options.model,
     environment: fixture.environment,
     maxOutputBytes: options.maxOutputBytes,
     promptForScenario: (scenarioId) =>
       `Execute the authorized Host Eval scenario ${scenarioId}. Read EVAL_CONTEXT.md first, then follow its exact single-command boundary.`,
-    runProcess: options.runProcess,
+    ...(options.runProcess === undefined ? {} : { runProcess: options.runProcess }),
     observeCapture: (capture) => {
       if (capture.kind === 'evaluator-failure' && capture.reason === 'host-exit') {
         state.hostExitCode = capture.exitCode;

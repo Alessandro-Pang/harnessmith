@@ -180,6 +180,49 @@ test('release attestation accepts an infra-blocked subset only under an exact ri
   );
 });
 
+test('current release attestation requires exact coverage and keeps inherited verification explicitly historical', () => {
+  const subject = {
+    packageName: 'harnessmith',
+    packageVersion: '0.9.0',
+    tag: 'v0.9.0',
+    artifactSha256: 'a'.repeat(64),
+    behaviorSha256: 'b'.repeat(64),
+    harnessVersion: '2.8.0',
+    rulesSha256: 'c'.repeat(64),
+    scenarios: { one: 'd'.repeat(64) },
+    requiredHosts: ['codex'],
+  };
+  const inheritedAttestation = {
+    schemaVersion: 2 as const,
+    ...subject,
+    coverageCount: 1,
+    exactArtifactCoverageCount: 0,
+    inheritedBehaviorCoverageCount: 1,
+    inheritedFrom: [{ packageVersion: '0.8.0', packageArtifactSha256: 'e'.repeat(64) }],
+    assurance: 'maintainer-attested-structure' as const,
+    preparedAt: '2026-08-30T09:00:00.000Z',
+  };
+
+  assert.throws(
+    () => verifyReleaseAttestation(inheritedAttestation, subject),
+    /inherited.*historical|inherited.*exact/i,
+  );
+  assert.doesNotThrow(() =>
+    verifyReleaseAttestation(inheritedAttestation, subject, { historicalReadOnly: true }),
+  );
+  assert.doesNotThrow(() =>
+    verifyReleaseAttestation(
+      {
+        ...inheritedAttestation,
+        exactArtifactCoverageCount: 1,
+        inheritedBehaviorCoverageCount: 0,
+        inheritedFrom: [],
+      },
+      subject,
+    ),
+  );
+});
+
 test('release attestation fails closed with a stable error for malformed inherited evidence', () => {
   const subject = {
     packageName: 'harnessmith',

@@ -43,20 +43,25 @@ export function loadCurationDocuments(memoryRoot: string): CurationDocument[] {
     const bodyReferences = isOpaqueMemoryContent(parsed.metadata, { root: memoryRoot, path })
       ? []
       : contentMemoryReferences(content);
+    const expires = optionalString(parsed.metadata, 'expires');
+    const retention = optionalString(parsed.metadata, 'retention');
+    const workstream = optionalString(parsed.metadata, 'workstream');
+    const session =
+      optionalString(parsed.metadata, 'session-base') ??
+      optionalString(parsed.metadata, 'session-id') ??
+      optionalString(parsed.metadata, 'session');
+    const taskId = optionalString(parsed.metadata, 'task-id');
     return {
       reference: `memory:${memoryReference(memoryRoot, path)}`,
       name: memoryReference(memoryRoot, path),
       type: String(parsed.metadata.get('type') || ''),
       kind: String(parsed.metadata.get('memory-kind') || ''),
       status: String(parsed.metadata.get('status') || ''),
-      expires: optionalString(parsed.metadata, 'expires'),
-      retention: optionalString(parsed.metadata, 'retention'),
-      workstream: optionalString(parsed.metadata, 'workstream'),
-      session:
-        optionalString(parsed.metadata, 'session-base') ??
-        optionalString(parsed.metadata, 'session-id') ??
-        optionalString(parsed.metadata, 'session'),
-      taskId: optionalString(parsed.metadata, 'task-id'),
+      ...(expires === undefined ? {} : { expires }),
+      ...(retention === undefined ? {} : { retention }),
+      ...(workstream === undefined ? {} : { workstream }),
+      ...(session === undefined ? {} : { session }),
+      ...(taskId === undefined ? {} : { taskId }),
       sourceRefs: Array.isArray(sourceRefs)
         ? sourceRefs.filter((entry): entry is string => typeof entry === 'string')
         : [],

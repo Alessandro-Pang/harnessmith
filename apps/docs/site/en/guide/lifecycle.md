@@ -33,7 +33,10 @@ step. For the full options of both commands, see the [installer CLI](/en/referen
 
 Upgrading is simply running install again. When targets don't exist, or still match the previous layer's
 install record, takeover is safe; upgrades preserve the mutable `state/`, so your runtime records are not
-reset together with the managed templates.
+reset together with the managed templates. Installing and upgrading the skill is delegated entirely to the
+version-pinned production dependency `skills@1.7.6` (the installer renders the in-package template and calls
+`skills add`); the Runtime is never copied into the skill or the user-data directory and is always executed by the
+global command from the same-version bundle in the npm package.
 
 ### When files are unmanaged or modified
 
@@ -92,10 +95,14 @@ npx harnessmith restore --agent codex
 npx harnessmith uninstall --agent codex
 ```
 
-`restore` returns to the previous install layer; `uninstall` restores all managed layers and removes the
-Harnessmith install record. Both first verify current files, backup relationships, and path boundaries;
-neither re-renders templates, nor deletes `.agent-docs` in shared or project locations, nor your maintained
-personal overlay. In other words: uninstall clears out what Harnessmith installed; what belongs to you stays.
+`restore` restores the backups named by the current `schemaVersion: 3` record. `uninstall` restores that record's
+backups and removes its current instruction files and record; `skills remove` handles the skill. Neither traverses old
+Hub, Runtime-tree, or record chains. Both verify current files, backup relationships, and path boundaries before writing;
+neither deletes `.agent-docs`, the personal overlay, or `~/.harnessmith` user data. Hosts recover independently.
+
+Host files and the skill are separate transactions. If the skill fails after Host removal, Host files stay removed and
+the command explicitly reports that the skill may remain. Old records must be handled by their original version or
+moved aside manually after backup. See the [migration guide](/en/reference/migrations).
 
 ## Temporary resources
 
@@ -116,7 +123,7 @@ For resource owners, retention conditions, and safe-deletion boundaries, see the
   to make the command pass.
 - **Symlink or out-of-bounds path detected**: fix the target root or directory structure; don't bypass the
   fail-closed checks. What they block is exactly the real risk.
-- **Node version not met**: upgrade to Node.js 22.12.0 or newer, then run the dry run again.
+- **Node version not met**: upgrade to Node.js 22.20.0 or newer, then run the dry run again.
 - **Multi-host operation failed midway**: Harnessmith rolls back along the steps already committed; run
   `status --agent <agent> --explain` again and check the scene Adapter by Adapter.
 - **rollback failure**: preserve the recovery path given in the output and don't repeatedly run overwriting

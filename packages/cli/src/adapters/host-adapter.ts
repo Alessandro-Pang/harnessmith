@@ -1,17 +1,23 @@
 import { existsSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { harnessSkillName } from '../installation/hub.js';
 import { canonicalPath, isPathInside } from '../shared/safe-path.js';
-import type { Adapter, Hub, IgnoreFile, Instruction, ManagedOutput } from '../shared/types.js';
+import type {
+  Adapter,
+  IgnoreFile,
+  Instruction,
+  ManagedOutput,
+  UserDataPaths,
+} from '../shared/types.js';
 import { HarnessmithError } from '../shared/types.js';
 import { type AgentName, getAdapterDefinition } from './adapter-registry.js';
 import { type GitInspection, inspectGit } from './git-inspection.js';
+import { renderMarkdownInstructions } from './instruction-formats.js';
 
 export interface AdapterResolveContext {
   env: NodeJS.ProcessEnv;
   project: string;
   userHome: string;
-  hub: Hub;
+  userData: UserDataPaths;
 }
 
 export type AdapterResolver = (context: AdapterResolveContext) => Adapter;
@@ -44,53 +50,44 @@ export function projectRoot(input: string): string {
 }
 
 /**
- * Hosts never receive a Harness copy. Every always-on instruction file is a symlink to the
- * shared hub entry, and hosts that do not scan `~/.agents/skills` additionally get a
- * `<home>/skills/agent-harness` symlink to the hub skill so it appears in their catalog.
+ * Adapters own only rendered always-on instruction files. The skills CLI owns skill
+ * discovery and canonical copies; no adapter receives a Runtime, script, or skill link.
  */
 export function hostAdapter(
   name: AgentName,
   home: string,
-  hub: Hub,
+  userData: UserDataPaths,
   {
     instructionFiles = ['AGENTS.md'],
-    skillLink = false,
     project,
     renderInstructions = [],
     localIgnoreFiles,
   }: {
     instructionFiles?: string[];
-    skillLink?: boolean;
     project?: string;
     renderInstructions?: Array<{ path: string; render: (content: string) => string }>;
     localIgnoreFiles?: IgnoreFile[];
   } = {},
 ): Adapter {
   const definition = getAdapterDefinition(name);
-  const harness = skillLink ? join(home, 'skills', harnessSkillName) : null;
   const instructions: Instruction[] = [
-    ...instructionFiles.map((file): Instruction => ({ path: join(home, file), mode: 'link' })),
-    ...renderInstructions.map(
-      ({ path, render }): Instruction => ({ path, mode: 'render', render }),
+    ...instructionFiles.map(
+      (file): Instruction => ({
+        path: join(home, file),
+        render: renderMarkdownInstructions,
+      }),
     ),
+    ...renderInstructions.map(({ path, render }): Instruction => ({ path, render })),
   ];
-  const outputs: ManagedOutput[] = [
-    ...(harness ? [{ path: harness, kind: 'link' as const, target: hub.harness }] : []),
-    ...instructions.map(
-      (instruction): ManagedOutput =>
-        instruction.mode === 'link'
-          ? { path: instruction.path, kind: 'link', target: hub.entry }
-          : { path: instruction.path, kind: 'file' },
-    ),
-  ];
+  const outputs: ManagedOutput[] = instructions.map(
+    (instruction): ManagedOutput => ({ path: instruction.path }),
+  );
   return {
     scope: 'adapter',
     name,
     label: definition.label,
     home,
-    hub,
-    harness,
-    legacyHarness: join(home, harnessSkillName),
+    userData,
     record: join(home, '.harnessmith', 'install.json'),
     outputs,
     capabilities: definition.capabilities,

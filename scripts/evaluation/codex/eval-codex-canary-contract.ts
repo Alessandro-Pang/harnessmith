@@ -38,7 +38,9 @@ function boundedInteger(value: string, label: string, maximum: number): number {
   return parsed;
 }
 
-export function validateCanaryOptions(options: Record<string, string>): CodexCanaryOptions {
+export function validateCanaryOptions(
+  options: Record<keyof Omit<CodexCanaryOptions, 'maxAttempts'>, string>,
+): CodexCanaryOptions {
   if (options.scenario !== 'machine-error-contract') {
     throw new Error('This canary is limited to machine-error-contract');
   }

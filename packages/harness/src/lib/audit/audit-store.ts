@@ -132,10 +132,16 @@ function archiveCandidates(runtime: Runtime, before: string): string[] {
   return auditFiles(runtime).filter((path) => path.slice(-16, -6) < before);
 }
 
+interface AuditArchiveOperations {
+  rename: typeof renameSync;
+  saveIndex: typeof saveAuditIndex;
+}
+
 export function archiveAuditEvents(
   runtime: Runtime,
   before: string,
   apply: boolean,
+  operations: AuditArchiveOperations = { rename: renameSync, saveIndex: saveAuditIndex },
 ): { version: 1; action: 'archived' | 'proposed'; archivedFiles: string[] } {
   assertCalendarDate(before);
   const initial = archiveCandidates(runtime, before);
@@ -162,12 +168,38 @@ export function archiveAuditEvents(
       if (existsSync(destination))
         throw new Error(`Audit archive destination exists: ${destination}`);
     }
-    for (const [index, path] of files.entries()) {
-      assertSafePath(root, path);
-      assertSafePath(root, destinations[index]);
-      renameSync(path, destinations[index]);
+    const moved: Array<{ source: string; destination: string }> = [];
+    try {
+      for (const [index, path] of files.entries()) {
+        const destination = destinations[index];
+        if (!destination) throw new Error(`Audit archive destination is missing: ${path}`);
+        assertSafePath(root, path);
+        assertSafePath(root, destination);
+        operations.rename(path, destination);
+        moved.push({ source: path, destination });
+      }
+      operations.saveIndex(runtime, buildAuditIndex(runtime, auditFiles, parseAuditLine));
+    } catch (error) {
+      const recoveryPaths: string[] = [];
+      for (const { source, destination } of moved.reverse()) {
+        try {
+          operations.rename(destination, source);
+        } catch {
+          recoveryPaths.push(destination);
+        }
+      }
+      if (recoveryPaths.length > 0) {
+        const failure = new Error(
+          `Audit archive failed and rollback was incomplete: ${String(error)}; recovery paths: ${recoveryPaths.join(', ')}`,
+          { cause: error instanceof Error ? error : undefined },
+        ) as Error & { moved: string[]; remaining: string[]; recoveryPaths: string[] };
+        failure.moved = recoveryPaths;
+        failure.remaining = files;
+        failure.recoveryPaths = recoveryPaths;
+        throw failure;
+      }
+      throw error;
     }
-    saveAuditIndex(runtime, buildAuditIndex(runtime, auditFiles, parseAuditLine));
     return {
       version: 1,
       action: 'archived',

@@ -1,12 +1,15 @@
-import { resolveHub } from '../../installation/hub.js';
+import { join } from 'node:path';
 import { initializeUserData } from '../../installation/user-data.js';
+import { resolveUserData } from '../../installation/user-data-paths.js';
 import { errorMessage, HarnessmithError } from '../../shared/types.js';
 
 const home = process.env.TEST_ADAPTER_HOME || '';
-const hub = resolveHub({ ...process.env, HARNESS_HOME: home });
 
 try {
-  initializeUserData(hub, process.env, { global: true });
+  initializeUserData(resolveUserData(process.env), process.env, {
+    global: true,
+    runtimeEntry: join(home, 'harness.mjs'),
+  });
 } catch (error) {
   const failure =
     error instanceof HarnessmithError

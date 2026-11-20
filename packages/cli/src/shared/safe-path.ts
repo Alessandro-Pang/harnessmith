@@ -1,6 +1,6 @@
 import { existsSync, lstatSync, readdirSync, realpathSync, rmdirSync } from 'node:fs';
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
-import type { IgnoreFile, ManagedOutput, ManagedScope } from './types.js';
+import type { Adapter, IgnoreFile, ManagedOutput } from './types.js';
 import { HarnessmithError } from './types.js';
 
 export function isPathInside(root: string, target: string): boolean {
@@ -45,12 +45,11 @@ export function canonicalPath(input: string): string {
   return resolve(canonical, ...suffix);
 }
 
-function assertNoSymlinkSegments(root: string, target: string, allowLeaf: boolean): void {
+function assertNoSymlinkSegments(root: string, target: string): void {
   const components = relative(root, target).split(sep).filter(Boolean);
   let current = root;
-  for (const [index, component] of ['', ...components].entries()) {
+  for (const component of ['', ...components]) {
     if (component) current = join(current, component);
-    if (allowLeaf && index === components.length) return;
     const entry = pathEntry(current);
     if (!entry) continue;
     if (entry.isSymbolicLink()) {
@@ -63,25 +62,13 @@ function assertNoSymlinkSegments(root: string, target: string, allowLeaf: boolea
   }
 }
 
-export interface SafePathOptions {
-  /**
-   * Permit the final path component to be a symlink. Managed link outputs (and their
-   * backups) are symlinks by design; every operation on them is non-following
-   * (lstat, readlink, rename, unlink), so the link target never widens authority.
-   */
-  allowSymlinkLeaf?: boolean;
-}
-
 /**
- * Validate both lexical and filesystem containment. Existing symlink/junction
- * segments below the authorized root are rejected even when they currently
- * resolve back inside the root, so a later retarget cannot widen authority.
+ * Validate both lexical and filesystem containment. Every existing segment below the
+ * authorized root — including the leaf — must be a real entry: no symlink is tolerated,
+ * even one that currently resolves back inside the root, so a later retarget cannot widen
+ * authority.
  */
-export function assertSafePath(
-  root: string,
-  target: string,
-  { allowSymlinkLeaf = false }: SafePathOptions = {},
-): void {
+export function assertSafePath(root: string, target: string): void {
   const authorizedRoot = resolve(root);
   const requested = resolve(target);
   if (!isPathInside(authorizedRoot, requested)) {
@@ -92,13 +79,9 @@ export function assertSafePath(
     );
   }
 
-  assertNoSymlinkSegments(authorizedRoot, requested, allowSymlinkLeaf);
+  assertNoSymlinkSegments(authorizedRoot, requested);
   const currentRoot = canonicalPath(authorizedRoot);
-
-  const canonicalTarget =
-    allowSymlinkLeaf && requested !== authorizedRoot
-      ? join(canonicalPath(dirname(requested)), basename(requested))
-      : canonicalPath(requested);
+  const canonicalTarget = canonicalPath(requested);
   if (!isPathInside(currentRoot, canonicalTarget)) {
     throw new HarnessmithError(
       'UNSAFE_PATH',
@@ -108,25 +91,27 @@ export function assertSafePath(
   }
 }
 
-export function ignoreRoot(scope: ManagedScope, ignore: IgnoreFile): string {
+export function ignoreRoot(scope: Adapter, ignore: IgnoreFile): string {
   return ignore.root || scope.home;
 }
 
-export function outputRoot(scope: ManagedScope, output: Pick<ManagedOutput, 'root'>): string {
+export function outputRoot(scope: Adapter, output: Pick<ManagedOutput, 'root'>): string {
   return output.root || scope.home;
 }
 
 /** Validate a managed output (or its sibling backup) against the root that owns it. */
 export function assertSafeOutputPath(
-  scope: ManagedScope,
-  output: Pick<ManagedOutput, 'kind' | 'root'>,
+  scope: Adapter,
+  output: Pick<ManagedOutput, 'root'>,
   path: string,
 ): void {
-  assertSafePath(outputRoot(scope, output), path, { allowSymlinkLeaf: output.kind === 'link' });
+  assertSafePath(outputRoot(scope, output), path);
 }
 
-export function assertSafeScopePaths(scope: ManagedScope): void {
-  for (const output of scope.outputs) assertSafeOutputPath(scope, output, output.path);
+export function assertSafeScopePaths(scope: Adapter): void {
+  for (const output of scope.outputs) {
+    assertSafeOutputPath(scope, output, output.path);
+  }
   assertSafePath(scope.home, scope.record);
   for (const ignore of scope.localIgnoreFiles || []) {
     assertSafePath(ignoreRoot(scope, ignore), ignore.path);
@@ -134,8 +119,8 @@ export function assertSafeScopePaths(scope: ManagedScope): void {
 }
 
 /**
- * Remove directories Harnessmith created only to hold managed outputs (`skills/`,
- * `.harnessmith/`, `~/.agents/skills`) once they are empty. Roots themselves are kept.
+ * Remove directories Harnessmith created only to hold managed outputs (`.harnessmith/`)
+ * once they are empty. Roots themselves are kept.
  */
 export function pruneEmptyDirectories(candidates: Array<{ path: string; root: string }>): void {
   for (const { path, root } of candidates) {

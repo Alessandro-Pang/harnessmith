@@ -3,8 +3,8 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createAdapter } from '../../../packages/cli/src/adapters/adapters.js';
-import { describeLifecycle } from '../../../packages/cli/src/installation/hub-lifecycle.js';
 import { installAll } from '../../../packages/cli/src/installation/install.js';
+import { describeLifecycle } from '../../../packages/cli/src/installation/lifecycle-plan.js';
 import {
   createSetupGuide,
   setupVerificationPassed,
@@ -30,13 +30,15 @@ export function runFirstValueLoop() {
     const guide = createSetupGuide([adapter], options);
     installAll([adapter], { env });
     const verification = verifySetup([adapter], options, env);
-    const explanation = explainStatus(inspectStatusAll([adapter])[0]);
+    const inspection = inspectStatusAll([adapter])[0];
+    if (!inspection) throw new Error('First-value loop has no Codex status inspection');
+    const explanation = explainStatus(inspection);
     const recovery = describeLifecycle('restore', adapter, false);
     const localPassed =
       guide.phase === 'preview' &&
       setupVerificationPassed(verification) &&
       explanation.observedState === 'managed' &&
-      recovery.layers.length > 0;
+      recovery.changes.length > 0;
     return {
       schemaVersion: 1,
       scenarioId: 'first-value-loop',
@@ -53,7 +55,7 @@ export function runFirstValueLoop() {
         controlledTaskReady: 'passed' as const,
         hostConfigured: 'inconclusive' as const,
         hostVerified: 'inconclusive' as const,
-        recoveryAware: recovery.layers.length > 0 ? ('passed' as const) : ('failed' as const),
+        recoveryAware: recovery.changes.length > 0 ? ('passed' as const) : ('failed' as const),
       },
       firstValueAchieved: false,
       telemetry: {

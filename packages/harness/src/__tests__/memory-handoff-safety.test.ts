@@ -104,7 +104,7 @@ test('Handoff updates preserve nested headings and extension metadata', () => {
   memoryAutopilot.captureHandoff(
     runtime,
     project,
-    { ...base, facts: undefined, completed: 'Captured the second phase.' },
+    { ...base, completed: 'Captured the second phase.' },
     capturedIo(),
   );
 

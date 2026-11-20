@@ -14,8 +14,13 @@ export function registerTaskCloseCommand(
   taskOptions(task.command('close').description('close or block a task'), { summary: true }).action(
     run((options: TaskCliOptions) => {
       assertRuntimeCanMutate(runtime);
+      const { status, ...taskOptions } = options;
       return closeTask(
-        { ...options, nextAction: options.next, status: options.status as TaskStatus | undefined },
+        {
+          ...taskOptions,
+          ...(options.next === undefined ? {} : { nextAction: options.next }),
+          ...(status === undefined ? {} : { status: status as TaskStatus }),
+        },
         io,
       );
     }),

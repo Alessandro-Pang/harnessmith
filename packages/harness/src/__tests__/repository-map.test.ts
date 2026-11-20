@@ -14,6 +14,7 @@ import {
   validateRepositoryMap,
   verifyRepositoryMap,
 } from '../lib/repository-map/repository-map.js';
+import { elementAt } from './helpers/harness.js';
 
 function fixtureRoot(): string {
   const root = mkdtempSync(join(tmpdir(), 'harness-repository-map-'));
@@ -64,17 +65,17 @@ test('canonical repository map validates descriptions, direct edge direction, ev
   assert.equal(validateRepositoryMap(map).valid, true);
 
   const invalid = structuredClone(map);
-  invalid.repositories[0].description = '';
-  invalid.relations.push(structuredClone(invalid.relations[0]));
-  invalid.relations[0].evidence = invalid.relations[0].evidence.slice(0, 1);
-  invalid.relations[0].consumer = 'missing';
+  elementAt(invalid.repositories, 0).description = '';
+  invalid.relations.push(structuredClone(elementAt(invalid.relations, 0)));
+  elementAt(invalid.relations, 0).evidence = elementAt(invalid.relations, 0).evidence.slice(0, 1);
+  elementAt(invalid.relations, 0).consumer = 'missing';
   const report = validateRepositoryMap(invalid);
   assert.equal(report.valid, false);
   assert.match(report.issues.join('\n'), /description/);
   assert.match(report.issues.join('\n'), /consumer.*missing/);
   assert.match(report.issues.join('\n'), /consumer evidence/);
   const duplicate = validMap();
-  duplicate.relations.push(structuredClone(duplicate.relations[0]));
+  duplicate.relations.push(structuredClone(elementAt(duplicate.relations, 0)));
   assert.match(validateRepositoryMap(duplicate).issues.join('\n'), /Duplicate relation key/);
 });
 
@@ -149,7 +150,7 @@ test('reconcile auto-applies only deterministic observations from trusted extrac
   changedEvidence.relations = [
     {
       discovery: 'heuristic',
-      ...structuredClone(map.relations[0]),
+      ...structuredClone(elementAt(map.relations, 0)),
       evidence: [
         { repository: 'account', side: 'provider', path: 'routes/session-v2.ts' },
         { repository: 'gateway', side: 'consumer', path: 'config/routes.yaml' },
@@ -161,7 +162,7 @@ test('reconcile auto-applies only deterministic observations from trusted extrac
   assert.equal(changed.proposals.length, 1);
 
   const malformed = structuredClone(result.observations);
-  malformed.relations[0].consumer = 'missing';
+  elementAt(malformed.relations, 0).consumer = 'missing';
   assert.throws(() => reconcileRepositoryMap(map, malformed), /Invalid repository observations/);
 });
 
@@ -203,8 +204,9 @@ test('verification fingerprints authoritative sources and maintenance reports dr
 test('validation enforces anti-bloat budgets and rejects transitive or volatile fields', () => {
   const map = validMap() as ReturnType<typeof validMap> & Record<string, unknown>;
   map.checkedAt = '2026-08-24';
-  map.repositories[0].owns = Array.from({ length: 13 }, (_, index) => `scope-${index}`);
-  const relation = map.relations[0] as (typeof map.relations)[number] & Record<string, unknown>;
+  elementAt(map.repositories, 0).owns = Array.from({ length: 13 }, (_, index) => `scope-${index}`);
+  const relation = elementAt(map.relations, 0) as (typeof map.relations)[number] &
+    Record<string, unknown>;
   relation.transitive = true;
   const report = validateRepositoryMap(map);
   assert.equal(report.valid, false);
@@ -331,7 +333,7 @@ test('reconcile validates and updates repository catalog observations', () => {
   assert.deepEqual(repeated.unchangedRepositories, ['search']);
 
   const changed = structuredClone(observations);
-  changed.repositories[0].description = 'Owns verified search and retrieval contracts.';
+  elementAt(changed.repositories, 0).description = 'Owns verified search and retrieval contracts.';
   assert.equal(reconcileRepositoryMap(applied.map, changed).proposals.length, 1);
   assert.deepEqual(
     reconcileRepositoryMap(applied.map, changed, {
@@ -342,10 +344,13 @@ test('reconcile validates and updates repository catalog observations', () => {
   );
 
   const heuristic = structuredClone(observations);
-  heuristic.repositories[0].discovery = 'heuristic';
+  elementAt(heuristic.repositories, 0).discovery = 'heuristic';
   assert.equal(
-    reconcileRepositoryMap(map, heuristic, { apply: true, trustedExtractors: ['trusted'] })
-      .proposals[0].reason,
+    elementAt(
+      reconcileRepositoryMap(map, heuristic, { apply: true, trustedExtractors: ['trusted'] })
+        .proposals,
+      0,
+    ).reason,
     'manual-review',
   );
   const malformed = structuredClone(observations) as unknown as Record<string, unknown>;
@@ -355,7 +360,7 @@ test('reconcile validates and updates repository catalog observations', () => {
     /Invalid repository observation set/,
   );
   const invalidRepository = structuredClone(observations);
-  invalidRepository.repositories[0].description = '';
+  elementAt(invalidRepository.repositories, 0).description = '';
   assert.throws(
     () => reconcileRepositoryMap(map, invalidRepository),
     /Invalid repository observations/,

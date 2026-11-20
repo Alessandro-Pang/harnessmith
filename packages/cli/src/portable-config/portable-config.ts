@@ -1,11 +1,11 @@
-import { existsSync, lstatSync, readFileSync } from 'node:fs';
+import { lstatSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { containsAdoptSecret } from '../adoption/adopt-secret.js';
-import { resolveHub } from '../installation/hub.js';
 import { restoreSnapshots, snapshotFiles } from '../installation/records.js';
 import { withUserDataCoordinationLocks } from '../installation/user-data-lock.js';
-import { atomicWrite } from '../shared/files.js';
-import { assertSafePath } from '../shared/safe-path.js';
+import { resolveUserData } from '../installation/user-data-paths.js';
+import { atomicWrite, atomicWriteExclusive } from '../shared/files.js';
+import { assertSafePath, entryExists } from '../shared/safe-path.js';
 import { errorMessage, HarnessmithError } from '../shared/types.js';
 import {
   type PortableConfigBundle,
@@ -37,12 +37,10 @@ export interface PortableConfigImportPlan {
 }
 
 /**
- * Personal overlay root as the runtime resolves it. Reading the hub keeps `export`/`import` on the
- * same directory the installer writes, so an unset `HARNESS_PERSONAL_HOME` cannot silently target
- * the pre-hub layout.
+ * Export and import use the same personal overlay root as the installer and Runtime.
  */
 function personalRoot(env: NodeJS.ProcessEnv): string {
-  return resolveHub(env).rules;
+  return resolveUserData(env).rules;
 }
 
 function regularFile(path: string, context: string) {
@@ -75,7 +73,7 @@ export function createPortableConfigBundle({
   const exclusions: PortableConfigExclusion[] = [];
   for (const relative of portableConfigPaths) {
     const path = join(root, relative);
-    if (!existsSync(path)) continue;
+    if (!entryExists(path)) continue;
     assertSafePath(root, path);
     const entry = regularFile(path, 'Portable config source');
     if (entry.size > 256 * 1024) {
@@ -101,14 +99,28 @@ export function createPortableConfigBundle({
   return { ...body, bundleDigest: portableBundleDigest(body) };
 }
 
-export function writePortableConfigBundle(path: string, bundle: PortableConfigBundle): void {
+export function writePortableConfigBundle(
+  path: string,
+  bundle: PortableConfigBundle,
+  { beforePublish }: { beforePublish?: (target: string) => void } = {},
+): void {
   parsePortableConfigBundle(bundle);
   const target = resolve(path);
-  if (existsSync(target)) {
+  if (entryExists(target)) {
     regularFile(target, 'Portable config output');
     throw new HarnessmithError('SAFETY_CONFLICT', 'Portable config output already exists', 3);
   }
-  atomicWrite(target, `${JSON.stringify(bundle, null, 2)}\n`, 0o600);
+  beforePublish?.(target);
+  try {
+    atomicWriteExclusive(target, `${JSON.stringify(bundle, null, 2)}\n`, 0o600);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'EEXIST') {
+      throw new HarnessmithError('SAFETY_CONFLICT', 'Portable config output already exists', 3, {
+        cause: error,
+      });
+    }
+    throw error;
+  }
 }
 
 function readBundle(path: string): PortableConfigBundle {
@@ -135,7 +147,7 @@ function importPlan(
   const changes = bundle.resources.map((resource) => {
     const target = join(root, resource.path);
     assertSafePath(root, target);
-    if (!existsSync(target)) {
+    if (!entryExists(target)) {
       return {
         path: resource.path,
         action: 'create' as const,
@@ -202,7 +214,7 @@ export function applyPortableConfigImport(
     if (plan.changes.some(({ action }) => action === 'conflict')) {
       throw new HarnessmithError(
         'SAFETY_CONFLICT',
-        'Portable config target conflict requires the explicit adopt flow',
+        'Portable config import only creates missing files or accepts identical files. Move or back up each conflicting target, or edit the bundle before creating a new proposal. Adopt does not merge portable config bundles.',
         3,
       );
     }
@@ -212,6 +224,7 @@ export function applyPortableConfigImport(
       bundle.resources.forEach((resource, index) => {
         if (plan.changes[index]?.action === 'already-present') return;
         const target = paths[index];
+        if (!target) throw new Error(`Portable config target is missing: ${resource.path}`);
         assertSafePath(root, target);
         atomicWrite(target, resource.content);
         afterWrite?.({ index, path: resource.path });

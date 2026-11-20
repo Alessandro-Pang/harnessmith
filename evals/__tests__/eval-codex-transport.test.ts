@@ -82,6 +82,49 @@ test('bounded host process applies the isolated Host environment', async () => {
   assert.equal(result.kind === 'completed' ? result.stdout : result.kind, 'isolated');
 });
 
+test('F05 bounded host process uses an allowlisted environment without inherited secrets or Git overrides', async () => {
+  const previousSecret = process.env.HARNESS_EVAL_TEST_SECRET_SENTINEL;
+  const previousGitDir = process.env.GIT_DIR;
+  process.env.HARNESS_EVAL_TEST_SECRET_SENTINEL = 'safe-sentinel-not-a-secret';
+  process.env.GIT_DIR = '/safe-sentinel-git-dir';
+  try {
+    const result = await transport.runBoundedHostProcess({
+      invocation: {
+        executable: process.execPath,
+        args: [
+          '-e',
+          'process.stdout.write(JSON.stringify({path:Boolean(process.env.PATH),home:process.env.HOME,codexHome:process.env.CODEX_HOME,allowed:process.env.HARNESS_EVAL_SENTINEL,secret:process.env.HARNESS_EVAL_TEST_SECRET_SENTINEL,gitDir:process.env.GIT_DIR}))',
+        ],
+        cwd: process.cwd(),
+        env: {
+          PATH: process.env.PATH,
+          HOME: '/isolated-home',
+          CODEX_HOME: '/isolated-codex-home',
+          HARNESS_EVAL_SENTINEL: 'isolated',
+          GIT_DIR: '/explicit-git-dir-must-be-dropped',
+        },
+      },
+      prompt: 'fixture prompt',
+      signal: new AbortController().signal,
+      maxOutputBytes: 1024,
+    });
+
+    assert.equal(result.kind, 'completed');
+    if (result.kind !== 'completed') return;
+    assert.deepEqual(JSON.parse(result.stdout), {
+      path: true,
+      home: '/isolated-home',
+      codexHome: '/isolated-codex-home',
+      allowed: 'isolated',
+    });
+  } finally {
+    if (previousSecret === undefined) delete process.env.HARNESS_EVAL_TEST_SECRET_SENTINEL;
+    else process.env.HARNESS_EVAL_TEST_SECRET_SENTINEL = previousSecret;
+    if (previousGitDir === undefined) delete process.env.GIT_DIR;
+    else process.env.GIT_DIR = previousGitDir;
+  }
+});
+
 test('bounded host process rejects output limits outside the hard cap', async () => {
   const base = {
     invocation: { executable: process.execPath, args: ['-e', ''], cwd: process.cwd() },
@@ -209,7 +252,13 @@ test('Codex executor delegates completed output to the behavior evaluator', asyn
     runProcess: async (options) => {
       observedPrompt = options.prompt;
       assert.equal(options.invocation.args.includes(options.prompt), false);
-      return { kind: 'completed', exitCode: 0, stdout: '{"type":"turn.completed"}', stderr: '' };
+      return {
+        kind: 'completed',
+        exitCode: 0,
+        stdout:
+          '{"type":"item.completed","item":{"type":"agent_message","text":"done"}}\n{"type":"turn.completed"}',
+        stderr: '',
+      };
     },
     evaluate: async (capture) => {
       assert.match(capture.stdout, /turn\.completed/);
@@ -238,7 +287,13 @@ test('Codex executor binds the authorized model and isolated environment', async
     runProcess: async ({ invocation }) => {
       assert.deepEqual(invocation.args.slice(0, 3), ['exec', '--model', 'gpt-5.6-sol']);
       assert.equal(invocation.env?.HARNESS_EVAL_SENTINEL, 'isolated');
-      return { kind: 'completed', exitCode: 0, stdout: '{}', stderr: '' };
+      return {
+        kind: 'completed',
+        exitCode: 0,
+        stdout:
+          '{"type":"item.completed","item":{"type":"agent_message","text":"done"}}\n{"type":"turn.completed"}',
+        stderr: '',
+      };
     },
     evaluate: async () => ({ outcome: 'passed', termination: 'completed' }),
   });
@@ -346,7 +401,8 @@ test('Codex executor never treats exit zero as passed when the evaluator crashes
     runProcess: async () => ({
       kind: 'completed',
       exitCode: 0,
-      stdout: '{"type":"turn.completed"}',
+      stdout:
+        '{"type":"item.completed","item":{"type":"agent_message","text":"done"}}\n{"type":"turn.completed"}',
       stderr: '',
     }),
     evaluate: async () => {

@@ -34,10 +34,11 @@ function existingSection(content: string, title: string): string | undefined {
   const lines = document.body.split(/\r?\n/);
   const indexes = lines.flatMap((line, index) => (isAtxHeading(line, 1, title) ? [index] : []));
   if (indexes.length === 0) return undefined;
-  if (indexes.length > 1 || lines[indexes[0]] !== `# ${title}`) {
+  const [index] = indexes;
+  if (index === undefined) return undefined;
+  if (indexes.length > 1 || lines[index] !== `# ${title}`) {
     throw new Error(`Handoff contains a non-canonical or duplicate section heading: ${title}`);
   }
-  const [index] = indexes;
   const end = lines.findIndex(
     (line, lineIndex) =>
       lineIndex > index && [...headings].some((candidate) => isAtxHeading(line, 1, candidate)),
@@ -112,29 +113,39 @@ export function reconcileHandoffOptions(options: HandoffOptions, existing: strin
   const previousTaskId =
     typeof metadata.get('task-id') === 'string' ? String(metadata.get('task-id')) : undefined;
   const taskId = options.taskId ?? previousTaskId;
+  const facts = reconciledSection(
+    options.facts,
+    options.clearFacts,
+    existing,
+    '已确认事实',
+    'facts',
+  );
+  const decisions = reconciledSection(
+    options.decisions,
+    options.clearDecisions,
+    existing,
+    '关键决策',
+    'decisions',
+  );
+  const verification = reconciledSection(
+    options.verification,
+    options.clearVerification,
+    existing,
+    '验证证据',
+    'verification',
+  );
+  const open = reconciledSection(options.open, options.clearOpen, existing, '未解决事项', 'open');
   assertHandoffTaskTransition(previousTaskId, taskId, options.reason);
   return {
     ...options,
-    taskId,
+    ...(taskId === undefined ? {} : { taskId }),
     status:
       options.status ??
       (existing && (status === 'active' || status === 'blocked') ? status : 'active'),
-    facts: reconciledSection(options.facts, options.clearFacts, existing, '已确认事实', 'facts'),
-    decisions: reconciledSection(
-      options.decisions,
-      options.clearDecisions,
-      existing,
-      '关键决策',
-      'decisions',
-    ),
-    verification: reconciledSection(
-      options.verification,
-      options.clearVerification,
-      existing,
-      '验证证据',
-      'verification',
-    ),
-    open: reconciledSection(options.open, options.clearOpen, existing, '未解决事项', 'open'),
+    ...(facts === undefined ? {} : { facts }),
+    ...(decisions === undefined ? {} : { decisions }),
+    ...(verification === undefined ? {} : { verification }),
+    ...(open === undefined ? {} : { open }),
     scope: reconciledList(options.scope, options.clearScope, metadata, 'scope'),
     sourceRefs: reconciledList(
       options.sourceRefs,

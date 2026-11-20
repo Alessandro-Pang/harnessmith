@@ -18,7 +18,7 @@ root; this page is a summary for getting started, and the root file wins if they
 
 ## Environment and verification
 
-Requirements: Node.js `24.12.0` or newer (the development toolchain pinned by `.nvmrc`), pnpm `10.13.0`, and Git. The distributed CLI itself runs on Node.js `22.12.0` or newer; CI exercises both versions.
+Requirements: Node.js `24.12.0` or newer (the development toolchain pinned by `.nvmrc`), pnpm `10.13.0`, and Git. The distributed CLI itself runs on Node.js `22.20.0` or newer; CI exercises both versions.
 
 ```bash
 pnpm install --frozen-lockfile --ignore-scripts
@@ -59,7 +59,7 @@ in `evals/run.schema.json` is rewritten from the registry. Preflight runs `eval:
 plugin loader or a Pack Registry.
 
 Some invariants are not up for review trade-offs: managed distribution, mutable `state/`, the shared personal rules
-in `~/.agents/harnessmith/rules/`, and the non-authoritative memory in `.agent-docs/` must stay separate; file takeover denies
+in `~/.harnessmith/rules/`, and the non-authoritative memory in `.agent-docs/` must stay separate; file takeover denies
 `unmanaged` / `modified` targets by default, and cross-adapter operations must fully preflight first and support
 rollback; a Task's `complete` can only pass through the acceptance gate, and concurrent writes must hold the task
 lock. Stable rules go in the compact instruction template while detailed workflows go in routed documents;

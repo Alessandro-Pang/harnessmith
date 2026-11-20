@@ -11,8 +11,6 @@ export interface RuleFingerprint {
 const rulePrefixes = [
   'bin',
   'dist',
-  'template/skills/agent-harness/scripts',
-  'template/skills/agent-harness/dist',
   'template/skills/agent-harness/docs',
   'template/skills/agent-harness/assets/schemas',
   'template/skills/agent-harness/assets/templates',
@@ -112,8 +110,7 @@ function worktreeRuleFiles(root: string): Map<string, Buffer> {
     ...filesUnder(join(root, 'dist')),
     join(root, 'template', 'entry', 'AGENTS.md'),
     join(root, 'template', 'skills', 'agent-harness', 'SKILL.md'),
-    ...filesUnder(join(root, 'template', 'skills', 'agent-harness', 'scripts')),
-    ...filesUnder(join(root, 'template', 'skills', 'agent-harness', 'dist')),
+    ...filesUnder(join(root, 'template', 'skills', 'agent-harness', 'docs')),
     ...filesUnder(join(root, 'template', 'skills', 'agent-harness', 'docs')),
     join(root, 'template', 'skills', 'agent-harness', 'manifest.json'),
     ...filesUnder(join(root, 'template', 'skills', 'agent-harness', 'assets', 'schemas')),

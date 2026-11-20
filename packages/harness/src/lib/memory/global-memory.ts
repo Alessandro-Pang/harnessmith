@@ -161,9 +161,12 @@ export function withGlobalMemoryTransaction<T>(
           chmodSync(runtime.memoryHome, 0o700);
         }
         const initialization = initializeUnlocked(runtime, paths, attempted);
-        validateMemoryPreflight(runtime.memoryHome, 'global', {
-          contentOverrides: options.preflightContentOverrides?.(),
-        });
+        const contentOverrides = options.preflightContentOverrides?.();
+        validateMemoryPreflight(
+          runtime.memoryHome,
+          'global',
+          contentOverrides === undefined ? {} : { contentOverrides },
+        );
         return operation(initialization);
       } catch (error) {
         const rollbackErrors = rollbackGlobalMemoryRoot({

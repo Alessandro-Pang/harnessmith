@@ -1,7 +1,6 @@
 version: 1
 updated: 2026-09-04
-root: |-
-  {{HARNESS_HOME}}/skills/agent-harness/docs
+root: docs
 principle: progressive-disclosure
 entries:
   operating-model:
@@ -115,7 +114,7 @@ entries:
     load: reference
     owner: harness-cli-architecture
     path: references/cli-contracts.md
-    conceptAliases: [cli-contracts, payload-contract, payload-file-contract, command-contract, payload-file, --payload-file, --consume-payload-file, version --json, install-context, runtime-identity, 命令契约, payload契约]
+    conceptAliases: [cli-contracts, payload-contract, payload-file-contract, command-contract, payload-file, --payload-file, --consume-payload-file, version --json, runtime-identity, 命令契约, payload契约]
   search-and-benchmarks:
     kind: topic
     load: reference

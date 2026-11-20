@@ -31,14 +31,19 @@ function tokenizeHan(run: string): string[] {
   }
   const expanded = new Set(result);
   const characters = Array.from(run, normalized);
-  for (let index = 0; index < characters.length - 1; index += 1) {
-    const bigram = `${characters[index]}${characters[index + 1]}`;
+  for (const [index, character] of characters.entries()) {
+    const next = characters[index + 1];
+    if (next === undefined) continue;
+    const bigram = `${character}${next}`;
     if (!expanded.has(bigram)) {
       expanded.add(bigram);
       result.push(bigram);
     }
   }
-  if (characters.length === 1 && !expanded.has(characters[0])) result.push(characters[0]);
+  const [onlyCharacter] = characters;
+  if (characters.length === 1 && onlyCharacter && !expanded.has(onlyCharacter)) {
+    result.push(onlyCharacter);
+  }
   return result;
 }
 

@@ -9,7 +9,7 @@ import { closeTask, initTask, taskStatus } from '../commands/task/task.js';
 import { updateAcceptance } from '../commands/task/task-acceptance.js';
 import { verifyAcceptance } from '../commands/task/task-verification.js';
 import { projectSnapshot } from '../lib/project/project.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { capturedIo, first, harnessRuntime } from './helpers/harness.js';
 
 function git(project: string, args: string[]): string {
   return execFileSync('git', ['-C', project, ...args], { encoding: 'utf8' }).trim();
@@ -97,8 +97,8 @@ test('task verify executes commands and records harness-produced proof', () => {
     capturedIo(),
   );
 
-  assert.equal(verified.acceptance[0].status, 'passed');
-  const evidence = verified.acceptance[0].evidence[0];
+  assert.equal(first(verified.acceptance).status, 'passed');
+  const evidence = first(first(verified.acceptance).evidence);
   assert.equal(evidence.type, 'test');
   assert.equal(evidence.producer, 'harness');
   assert.equal(evidence.taskId, 'command-proof');
@@ -162,7 +162,7 @@ test('task verify CLI accepts executable args and explicit freshness scopes', ()
   );
   const task = taskStatus({ project, id: 'cli-proof' }, capturedIo());
   if (Array.isArray(task)) throw new Error('Expected one task');
-  assert.equal(task.acceptance[0].status, 'passed');
+  assert.equal(first(task.acceptance).status, 'passed');
 });
 
 test('task verify persists a mechanically captured failing exit code without passing', () => {
@@ -185,8 +185,8 @@ test('task verify persists a mechanically captured failing exit code without pas
   );
   const task = taskStatus({ project, id: 'failed-command' }, capturedIo());
   if (Array.isArray(task)) throw new Error('Expected one task');
-  assert.equal(task.acceptance[0].status, 'failed');
-  const evidence = task.acceptance[0].evidence[0];
+  assert.equal(first(task.acceptance).status, 'failed');
+  const evidence = first(first(task.acceptance).evidence);
   assert.equal(evidence.producer, 'harness');
   if (evidence.type !== 'command') throw new Error('Expected command evidence');
   assert.equal(evidence.exitCode, 3);
@@ -292,22 +292,28 @@ test('command output digest includes stderr even when the command succeeds', () 
   initVerificationTask(project, runtime, 'stderr-two');
 
   const verify = (id: string, message: string) =>
-    verifyAcceptance(
-      {
-        project,
-        id,
-        criterion: 'criterion-1',
-        type: 'test',
-        command: process.execPath,
-        args: ['-e', `process.stderr.write(${JSON.stringify(message)})`],
-        scope: ['scope.txt'],
-      },
-      capturedIo(),
-    ).acceptance[0].evidence[0];
-  const first = verify('stderr-one', 'one');
-  const second = verify('stderr-two', 'two');
-  if (first.type !== 'test' || second.type !== 'test') throw new Error('Expected test evidence');
-  assert.notEqual(first.outputDigest, second.outputDigest);
+    first(
+      first(
+        verifyAcceptance(
+          {
+            project,
+            id,
+            criterion: 'criterion-1',
+            type: 'test',
+            command: process.execPath,
+            args: ['-e', `process.stderr.write(${JSON.stringify(message)})`],
+            scope: ['scope.txt'],
+          },
+          capturedIo(),
+        ).acceptance,
+      ).evidence,
+    );
+  const firstEvidence = verify('stderr-one', 'one');
+  const secondEvidence = verify('stderr-two', 'two');
+  if (firstEvidence.type !== 'test' || secondEvidence.type !== 'test') {
+    throw new Error('Expected test evidence');
+  }
+  assert.notEqual(firstEvidence.outputDigest, secondEvidence.outputDigest);
 });
 
 test('task verify fails closed when a declared scope changes during command execution', () => {
@@ -331,7 +337,7 @@ test('task verify fails closed when a declared scope changes during command exec
   );
   const task = taskStatus({ project, id: 'changing-scope' }, capturedIo());
   if (Array.isArray(task)) throw new Error('Expected one task');
-  assert.equal(task.acceptance[0].status, 'failed');
+  assert.equal(first(task.acceptance).status, 'failed');
 });
 
 test('task verify fails closed when the Git workspace changes outside the declared scope', () => {
@@ -371,8 +377,8 @@ test('file verification computes its own digest and close rechecks the artifact'
     },
     capturedIo(),
   );
-  assert.equal(verified.acceptance[0].status, 'passed');
-  const evidence = verified.acceptance[0].evidence[0];
+  assert.equal(first(verified.acceptance).status, 'passed');
+  const evidence = first(first(verified.acceptance).evidence);
   assert.equal(evidence.producer, 'harness');
   if (evidence.type !== 'file') throw new Error('Expected file evidence');
   assert.match(evidence.artifactDigest, /^sha256:[0-9a-f]{64}$/);

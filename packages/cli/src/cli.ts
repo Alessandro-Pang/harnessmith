@@ -1,8 +1,11 @@
 import { Writable } from 'node:stream';
 import { createProgram } from './app/program.js';
 import { executeCommand } from './application/command-executor.js';
+import { isRuntimeCommand, runRuntimeCommand } from './runtime/runtime-entry.js';
 import type { RunContext } from './shared/types.js';
 import { errorMessage, machineErrorReport } from './shared/types.js';
+
+export type { RunContext } from './shared/types.js';
 
 export async function run(
   args: string[],
@@ -29,6 +32,10 @@ export async function run(
     },
   );
   try {
+    if (isRuntimeCommand(args)) {
+      const runtimeIo = jsonRequested ? { log: io.log, error: () => {} } : io;
+      return await runRuntimeCommand(args, { env, io: runtimeIo });
+    }
     await program.parseAsync(args, { from: 'user' });
   } catch (caught) {
     const commandError = caught as Error & { code?: string; commanderHandled?: boolean };

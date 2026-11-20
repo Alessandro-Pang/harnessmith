@@ -109,10 +109,23 @@ test('handoff option validation enforces required, bounded, and enumerated field
       { ...base, reason: 'timer' as HandoffOptions['reason'] },
       /invalid handoff checkpoint reason/i,
     ],
-    [{ ...base, status: 'complete' as HandoffOptions['status'] }, /invalid handoff status/i],
+    [
+      { ...base, status: 'complete' as NonNullable<HandoffOptions['status']> },
+      /invalid handoff status/i,
+    ],
   ] as const) {
     assert.throws(() => assertHandoffOptions(options), expected);
   }
+});
+
+test('handoff reconciliation omits unresolved optional fields', () => {
+  const reconciled = reconcileHandoffOptions(base, '');
+
+  assert.equal('taskId' in reconciled, false);
+  assert.equal('facts' in reconciled, false);
+  assert.equal('decisions' in reconciled, false);
+  assert.equal('verification' in reconciled, false);
+  assert.equal('open' in reconciled, false);
 });
 
 test('handoff reconciliation refuses to update a completed snapshot', () => {

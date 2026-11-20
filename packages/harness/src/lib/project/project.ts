@@ -88,9 +88,10 @@ function changedPaths(status: Buffer): string[] {
     if (!entry) continue;
     const state = entry.slice(0, 2);
     paths.add(entry.slice(3));
-    if (/[RC]/.test(state) && entries[index + 1]) {
+    const renamedPath = entries[index + 1];
+    if (/[RC]/.test(state) && renamedPath) {
       index += 1;
-      paths.add(entries[index]);
+      paths.add(renamedPath);
     }
   }
   return [...paths].sort();

@@ -22,7 +22,7 @@ import {
 } from '../commands/memory/memory.js';
 import { contextSearch } from '../commands/search/search.js';
 import { parseFrontmatter } from '../lib/documentation/frontmatter.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { capturedIo, elementAt, harnessRuntime } from './helpers/harness.js';
 
 function temporaryRoot(): string {
   const root = mkdtempSync(join(tmpdir(), 'harness-memory-'));
@@ -59,13 +59,13 @@ test('global memory initialization is idempotent and preserves user content', ()
   const runtime = harnessRuntime(root);
   const first = capturedIo();
   initGlobal(runtime, first);
-  assert.match(first.logs[0], /Initialized global memory/);
+  assert.match(elementAt(first.logs, 0), /Initialized global memory/);
   const core = join(runtime.memoryHome, 'core.md');
   writeFileSync(core, `${readFileSync(core, 'utf8')}\nuser note\n`);
 
   const second = capturedIo();
   initGlobal(runtime, second);
-  assert.match(second.logs[0], /already initialized/);
+  assert.match(elementAt(second.logs, 0), /already initialized/);
   assert.match(readFileSync(core, 'utf8'), /user note/);
   assert.equal(resolveMemoryRoot(runtime, 'global'), runtime.memoryHome);
 });
@@ -133,7 +133,7 @@ test('personal overlay initialization migrates a stale repository-map pointer', 
   const io = capturedIo();
   initPersonal(runtime, io);
 
-  assert.match(io.logs[0], /Migrated stale personal Harness overlay pointers/);
+  assert.match(elementAt(io.logs, 0), /Migrated stale personal Harness overlay pointers/);
   assert.ok(
     readFileSync(rules, 'utf8').includes(`${runtime.personalHome}/projects/repository-map.md`),
   );
@@ -286,7 +286,7 @@ test('memory list, search, and reference validation handle archive and broken re
     () => memoryCheck(runtime, 'global', invalid),
     /1 issue\(s\); typed writers are closed.*harness memory check/,
   );
-  assert.match(invalid.errors[0], /Broken memory reference/);
+  assert.match(elementAt(invalid.errors, 0), /Broken memory reference/);
 });
 
 test('indexed memory check rejects active documents that core cannot reach', () => {

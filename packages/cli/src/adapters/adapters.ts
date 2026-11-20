@@ -1,6 +1,6 @@
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-import { resolveHub } from '../installation/hub.js';
+import { resolveUserData } from '../installation/user-data-paths.js';
 import { canonicalPath } from '../shared/safe-path.js';
 import type { Adapter, AdapterCapabilities } from '../shared/types.js';
 import { HarnessmithError } from '../shared/types.js';
@@ -8,37 +8,35 @@ import { type AgentName, getAdapterDefinition } from './adapter-registry.js';
 import { resolveCursorAdapter } from './cursor-adapter.js';
 import { type AdapterResolveContext, type AdapterResolver, hostAdapter } from './host-adapter.js';
 
-export { harnessSkillName, resolveHub } from '../installation/hub.js';
 export { inspectGit, resolveGitExecutable } from './git-inspection.js';
 
 export function adapterCapabilities(name: AgentName): AdapterCapabilities {
   return getAdapterDefinition(name).capabilities;
 }
 
-/** Codex scans `~/.agents/skills` natively, so it only needs the shared entry link. */
-function resolveCodexAdapter({ env, userHome, hub }: AdapterResolveContext): Adapter {
+/** Resolve Codex's always-on instruction destination; skills owns its skill catalog. */
+function resolveCodexAdapter({ env, userHome, userData }: AdapterResolveContext): Adapter {
   const agentHome = canonicalPath(env.CODEX_HOME || join(userHome, '.codex'));
-  return hostAdapter('codex', agentHome, hub);
+  return hostAdapter('codex', agentHome, userData);
 }
 
-/** Claude Code only scans `~/.claude/skills`, so it also gets a skill link. */
-function resolveClaudeAdapter({ env, userHome, hub }: AdapterResolveContext): Adapter {
+/** Claude Code receives both supported instruction filenames. */
+function resolveClaudeAdapter({ env, userHome, userData }: AdapterResolveContext): Adapter {
   const agentHome = canonicalPath(env.CLAUDE_CONFIG_DIR || join(userHome, '.claude'));
-  return hostAdapter('claude', agentHome, hub, {
+  return hostAdapter('claude', agentHome, userData, {
     instructionFiles: ['AGENTS.md', 'CLAUDE.md'],
-    skillLink: true,
   });
 }
 
-function resolveOpenCodeAdapter({ env, userHome, hub }: AdapterResolveContext): Adapter {
+function resolveOpenCodeAdapter({ env, userHome, userData }: AdapterResolveContext): Adapter {
   const configRoot = canonicalPath(env.XDG_CONFIG_HOME || join(userHome, '.config'));
   const agentHome = canonicalPath(env.OPENCODE_CONFIG_DIR || join(configRoot, 'opencode'));
-  return hostAdapter('opencode', agentHome, hub);
+  return hostAdapter('opencode', agentHome, userData);
 }
 
-function resolveKimiAdapter({ env, userHome, hub }: AdapterResolveContext): Adapter {
+function resolveKimiAdapter({ env, userHome, userData }: AdapterResolveContext): Adapter {
   const agentHome = canonicalPath(env.KIMI_CODE_HOME || join(userHome, '.kimi-code'));
-  return hostAdapter('kimi', agentHome, hub);
+  return hostAdapter('kimi', agentHome, userData);
 }
 
 export function resolveZedAgentHome(
@@ -51,8 +49,8 @@ export function resolveZedAgentHome(
   return canonicalPath(join(userHome, '.config', 'zed'));
 }
 
-function resolveZedAdapter({ env, userHome, hub }: AdapterResolveContext): Adapter {
-  return hostAdapter('zed', resolveZedAgentHome(env, process.platform, userHome), hub);
+function resolveZedAdapter({ env, userHome, userData }: AdapterResolveContext): Adapter {
+  return hostAdapter('zed', resolveZedAgentHome(env, process.platform, userHome), userData);
 }
 
 /**
@@ -85,6 +83,6 @@ export function createAdapter(
     env,
     project,
     userHome: canonicalPath(env.HOME || homedir()),
-    hub: resolveHub(env),
+    userData: resolveUserData(env),
   });
 }

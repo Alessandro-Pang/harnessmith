@@ -164,6 +164,7 @@ export function validateEvaluationRecords(options: EvaluationRecordOptions = {})
     }
     if (record.subject.scenarioSha256 === scenarioFingerprints[record.scenarioId]) {
       const expected = assertionsByScenario[record.scenarioId];
+      if (!expected) throw new Error(`Missing expected assertions: ${record.scenarioId}`);
       verifyExpectedAssertions(path, record.scenarioAssertions, expected.pass, 'scenario', 'pass');
       verifyExpectedAssertions(
         path,
@@ -209,6 +210,7 @@ export function latestEvaluationRecords(records: VerifiedRun[]): VerifiedRun[] {
       );
     }
     const latest = candidates[0];
+    if (!latest) throw new Error(`No evaluation records for ${key}`);
     const tied = candidates.filter(({ evaluatedAt }) => evaluatedAt === latest.evaluatedAt);
     if (tied.length > 1) {
       throw new Error(

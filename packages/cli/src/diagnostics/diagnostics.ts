@@ -50,10 +50,7 @@ export function createDiagnosticsReport(
     package: { version: packageVersion },
     adapters: adaptersReport,
     failures,
-    verification: [
-      'harnessmith diagnostics --agent <agent> --json',
-      'node <harness-path>/scripts/harness.mjs health --json',
-    ],
+    verification: ['harnessmith diagnostics --agent <agent> --json', 'harnessmith health --json'],
   };
 }
 

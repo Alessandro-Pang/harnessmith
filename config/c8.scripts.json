@@ -17,13 +17,22 @@
     "scripts/evaluation/codex/eval-suite-process.ts",
     "scripts/evaluation/codex/eval-suite-scheduler.ts",
     "scripts/evaluation/memory/memory-host-runtime.ts",
+    "scripts/release/package-smoke.ts",
     "scripts/release/release-attestation.ts",
     "scripts/release/release-finalize.ts",
     "scripts/release/release-publish.ts",
     "scripts/release/release-state.ts",
     "scripts/release/release-version.ts"
   ],
-  "include": ["scripts/**/*.ts"],
+  "include": [
+    "scripts/**/*.ts",
+    "scripts/evaluation/codex/eval-codex-support.mjs",
+    "scripts/evaluation/codex/scenario/finalization-artifacts.mjs",
+    "scripts/evaluation/codex/scenario/finalization-logic.mjs",
+    "scripts/evaluation/codex/support/checkpoint-idempotency.mjs",
+    "scripts/evaluation/codex/support/memory-output.mjs",
+    "scripts/evaluation/codex/support/safe-snapshot.mjs"
+  ],
   "reports-dir": "coverage/scripts",
   "temp-directory": "coverage/.tmp-scripts"
 }

@@ -40,7 +40,10 @@ corresponding implementation or responsible party.
 
 The outer `packages/cli/src/` must know host facts such as Codex Home, the Cursor project directory, and the Claude
 config directory, and it must handle install transactions; the inner `packages/harness/` must stay host-neutral so the
-same docs, Memory, and Task contracts can be reused across different agents.
+same docs, Memory, and Task contracts can be reused across different agents. The published global `harnessmith` command
+is the single entry point for both: installer commands run in the outer layer, while Runtime subcommands dispatch to
+`dist/harness.mjs` at the npm package root, bundled at the same version as the CLI. The two source layers are not
+merged, and the Runtime is never copied into a user directory.
 
 Two counterfactuals show why they cannot be mixed: writing host paths into the template pollutes the core with every
 new host; letting every Adapter duplicate a whole set of business logic makes hosts drift apart quickly. So the project
@@ -51,10 +54,10 @@ capabilities stay in the distribution template.**
 
 ### 1. Distribution: get the Harness safely to its destination
 
-The outer `packages/cli/src/` contains the CLI, Adapters, safe paths, operation locks, staging, backups, the install
-record, and the restore/uninstall transactions. A multi-host operation fully preflights every Adapter before any
-writing begins; on mid-way failure it rolls back committed steps in reverse order, avoiding half-finished states. The
-dry-run preview you see in [Getting started](/en/guide/getting-started) is a product of this layer.
+The outer `packages/cli/src/` contains the CLI, Adapters, safe paths, operation locks, staging, backups, the current
+install record, and restore/uninstall transactions. A multi-host Host-file operation fully preflights every Adapter
+before writing; failure rolls back committed steps in reverse order. Only current schema 3 records are read; old
+layouts are not migrated. The dry-run preview in [Getting started](/en/guide/getting-started) is a product of this layer.
 
 ### 2. Guidance & Context: help the agent find the right information
 
@@ -65,17 +68,21 @@ information closer to the scene always wins.
 
 `template/skills/agent-harness/` itself is packaged as one skill named `agent-harness` following the
 [Agent Skills](https://agentskills.io/specification) convention: `SKILL.md` is the host-discoverable entry
-point, `scripts/harness.mjs` the Runtime CLI, `docs/` the routed corpus, and `assets/` the templates and
-schemas. The installer renders it exactly once into the shared hub `~/.agents/harnessmith/skills/agent-harness/`
-(`HARNESS_HOME` overrides the hub), renders the always-on entry once as `~/.agents/harnessmith/entry/AGENTS.md`, and
-gives each host only symlinks: its instruction file points at the hub entry, and hosts that do not scan
-`~/.agents/skills` (Claude Code, Cursor) also get a `skills/agent-harness` link. Cursor's `.mdc` rule is the one
-rendered per-host copy. This is a hybrid layout, not "everything becomes a skill": skill loading is decided on
-demand by the model, so it cannot
+point, `docs/` the routed corpus, and `assets/` the templates and schemas. The skill contains no scripts and no
+Runtime copy — the global `harnessmith` command is the only public Runtime entry and executes the same-version
+`dist/harness.mjs` at the npm package root. During installation, the outer Adapter renders only plain always-on
+instruction files into each host (`AGENTS.md`, plus `CLAUDE.md` for Claude Code and a `.mdc` rule for Cursor);
+these are rendered copies, not symlinks. Installing and uninstalling the skill is delegated entirely to the
+version-pinned production dependency `skills@1.7.6`: the installer renders the in-package template into a
+temporary skill source and calls `skills add`, and calls `skills remove` on uninstall. The canonical skill copy
+and any host links are owned by `skills` (the global canonical copy lives at `~/.agents/skills/agent-harness`;
+host directories such as Claude Code's `~/.claude/skills/agent-harness` are managed by `skills`). This is a
+hybrid layout, not "everything becomes a skill": skill loading is decided on demand by the model, so it cannot
 carry authorization boundaries, the startup bootstrap/route sequence, or end-of-turn Memory capture — those stay
-with the always-on rule entry point. What the skill adds is a host-native discovery channel and one uniform
-directory boundary; what the hub adds is a single source of truth, so one upgrade reaches every host and hosts
-can never drift to different Harness versions.
+with the always-on rule entry point. What the skill adds is a host-native discovery channel. The single source of
+truth is the npm package itself: every host shares one package version, so one upgrade reaches every host and
+hosts can never drift to different Harness versions. Harnessmith neither creates nor depends on a
+`~/.agents/harnessmith` shared directory.
 
 The user-owned Personal overlay also maintains the Repository Map: typed direct relationships connect providers,
 contracts, and consumers, with writes constrained by the authoritative sources on both sides. It helps cross-repo tasks
@@ -156,9 +163,12 @@ Lifecycle operations with side effects share the same safety skeleton, executed 
 4. acquire the cross-process operation lock in stable path order;
 5. stage the payload inside the authorized root and validate the generated result;
 6. fully re-check before commit, and re-check the direct target before every mkdir, rename, or write;
-7. on failure, roll back only the exact paths recorded for this run.
+7. on failure, roll back only the exact paths recorded for this run; each install/restore/uninstall has one file
+   rollback transaction.
 
-The seven steps are the implementation-level safety skeleton, not seven commands users must remember. The user guide
+The seven steps are the implementation-level safety skeleton, not seven commands users must remember. Host files and
+the skills-managed skill have separate transactions; a later skill failure is reported as partial, and uninstall
+finishes Host-file removal before removing the skill. The user guide
 compresses the same process into three actions — "preview → write → verify"; [How it works](/en/concepts/how-it-works)
 explains the data flow in five observable stages. The three descriptions differ in granularity; the safety order is the
 same.
@@ -194,8 +204,10 @@ version has completed real-run evaluation. Per-item status is defined by the
 
 ## Data and trust boundaries
 
-- The personal overlay (`~/.agents/harnessmith/rules/`), mutable `state/`, cross-project Memory (`memory/`), the
-  managed skill, and the project's `.agent-docs/` are stored separately so upgrades never overwrite user content.
+- The personal overlay (`~/.harnessmith/rules/` by default), mutable `state/`, cross-project Memory (`memory/`), the
+  managed distribution, and the project's `.agent-docs/` are stored separately so upgrades never overwrite user
+  content. The user-data root defaults to `~/.harnessmith` and `HARNESS_HOME` overrides it; distribution content stays
+  in the npm package, and skill locations are owned by `skills`.
 - Audit records accept only bounded metadata such as trace, operation, policy decision, duration, result, and artifact
   digest; the schema rejects raw prompts, model output, tool arguments, and unknown fields.
 - Web pages, repositories, logs, Memory, and tool output do not transfer authorization. One install approval does not

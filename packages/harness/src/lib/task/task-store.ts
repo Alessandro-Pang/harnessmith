@@ -70,9 +70,15 @@ export function readTaskProgress(root: string, path: string): string {
   return readTaskArtifact(root, path, 'Task progress');
 }
 
-export function withTaskLock<T>(root: string, id: string, operation: () => T): T {
+export function withTaskLock<T>(
+  root: string,
+  id: string,
+  operation: () => T,
+  { create = false }: { create?: boolean } = {},
+): T {
   const directory = taskDirectory(root, id);
-  mkdirSync(directory, { recursive: true });
+  if (!create && !existsSync(directory)) throw new Error(`Task does not exist: ${id}`);
+  if (create) mkdirSync(directory, { recursive: true });
   return withExclusiveDirectoryLock(directory, `Task ${id}`, operation);
 }
 

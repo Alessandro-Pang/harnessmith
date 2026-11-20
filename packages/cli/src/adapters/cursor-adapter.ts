@@ -22,17 +22,16 @@ const cursorIgnoreLines = [
 ];
 
 /**
- * Cursor rules are project-scoped: the project `.cursor/` receives links to the hub entry
- * and skill plus a rendered `.mdc` rule (Cursor needs frontmatter, so it cannot share the
- * entry file). Everything is excluded from Git and from Cursor indexing.
+ * Cursor rules are project-scoped: the project `.cursor/` receives rendered always-on
+ * instructions plus a rendered `.mdc` rule (Cursor needs frontmatter, so it cannot share
+ * the entry file). Everything is excluded from Git and from Cursor indexing.
  */
-export function resolveCursorAdapter({ project, hub }: AdapterResolveContext): Adapter {
+export function resolveCursorAdapter({ project, userData }: AdapterResolveContext): Adapter {
   const root = projectRoot(project);
   const agentHome = join(root, '.cursor');
   const excludePath = gitExcludePath(root);
-  return hostAdapter('cursor', agentHome, hub, {
+  return hostAdapter('cursor', agentHome, userData, {
     project: root,
-    skillLink: true,
     renderInstructions: [
       { path: join(agentHome, 'rules', 'agent-harness.mdc'), render: renderMdcInstructions },
     ],
@@ -43,7 +42,11 @@ export function resolveCursorAdapter({ project, hub }: AdapterResolveContext): A
               path: excludePath.path,
               root: excludePath.root,
               preserveEmpty: true,
-              lines: [...cursorIgnoreLines, '/.ignore'].map((line) => `/.cursor${line}`),
+              lines: [
+                ...[...cursorIgnoreLines, '/.ignore'].map((line) => `/.cursor${line}`),
+                '/.agents/',
+                '/skills-lock.json',
+              ],
             },
           ]
         : []),

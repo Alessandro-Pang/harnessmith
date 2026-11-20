@@ -1,8 +1,9 @@
 import pc from 'picocolors';
-import type { AdapterStatus, InstallPlan, Io, LifecyclePlan } from '../shared/types.js';
+import type { LifecyclePlan } from '../shared/lifecycle-types.js';
+import type { AdapterStatus, InstallPlan, Io } from '../shared/types.js';
 
 function printOutputs(outputs: InstallPlan['outputs'], io: Io): void {
-  for (const { path, action, kind, target } of outputs) {
+  for (const { path, action } of outputs) {
     const label = action.padEnd(15);
     const state =
       action === 'conflict'
@@ -10,25 +11,14 @@ function printOutputs(outputs: InstallPlan['outputs'], io: Io): void {
         : action === 'create'
           ? pc.green(label)
           : pc.cyan(label);
-    io.log(`  ${state} ${path}${kind === 'link' && target ? pc.dim(` -> ${target}`) : ''}`);
+    io.log(`  ${state} ${path}`);
   }
 }
 
-/** The hub is shared by every plan, so it is printed once before the host layers. */
 export function printPlans(plans: InstallPlan[], io: Io = console): void {
-  const hub = plans[0]?.hub;
-  if (hub) {
-    io.log(`${pc.bold('hub')}  ${pc.dim(hub.home)}`);
-    printOutputs(hub.outputs, io);
-    for (const { path, action } of hub.migrations)
-      io.log(`  ${pc.magenta(action.padEnd(15))} ${path}`);
-  }
   for (const plan of plans) {
     io.log(`${pc.bold(plan.adapter)}  ${pc.dim(plan.home)}`);
-    printOutputs(plan.outputs.slice(plan.hub.outputs.length), io);
-    for (const { path, action } of plan.migrations.slice(plan.hub.migrations.length)) {
-      io.log(`  ${pc.magenta(action.padEnd(15))} ${path}`);
-    }
+    printOutputs(plan.outputs, io);
   }
 }
 
@@ -59,23 +49,12 @@ export function printLifecyclePlans(
     for (const plan of plans) io.log(JSON.stringify(plan));
     return;
   }
-  const printLayers = (layers: LifecyclePlan['layers']): void => {
-    for (const [index, layer] of layers.entries()) {
-      io.log(`  layer ${index + 1}  ${layer.sourceRecord}`);
-      for (const change of layer.changes) {
-        io.log(
-          `    ${change.action.padEnd(20)} ${change.path}${change.source ? ` <- ${change.source}` : ''}`,
-        );
-      }
-    }
-  };
   for (const plan of plans) {
     io.log(`${plan.command} ${plan.adapter}  ${plan.home}`);
-    printLayers(plan.layers);
-  }
-  const hub = plans[0]?.hub;
-  if (hub) {
-    io.log(`${plans[0].command} hub  ${hub.home}  (${hub.action})`);
-    printLayers(hub.layers);
+    for (const change of plan.changes) {
+      io.log(
+        `  ${change.action.padEnd(20)} ${change.path}${change.source ? ` <- ${change.source}` : ''}`,
+      );
+    }
   }
 }

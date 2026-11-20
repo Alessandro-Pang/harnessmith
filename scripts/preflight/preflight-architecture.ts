@@ -27,6 +27,7 @@ export { normalizeArchitecturePath } from './preflight-architecture-ast.js';
 export const declaredCliAreaImports: readonly string[] = [
   '(root) -> app',
   '(root) -> application',
+  '(root) -> runtime',
   '(root) -> shared',
   'adapters -> installation',
   'adapters -> shared',
@@ -47,7 +48,6 @@ export const declaredCliAreaImports: readonly string[] = [
   'diagnostics -> installation',
   'diagnostics -> shared',
   'diagnostics -> status',
-  'installation -> adapters',
   'installation -> shared',
   'installation -> status',
   'installation -> temporary-resources',
@@ -58,6 +58,8 @@ export const declaredCliAreaImports: readonly string[] = [
   'presentation -> setup',
   'presentation -> shared',
   'presentation -> status',
+  'runtime -> installation',
+  'runtime -> shared',
   'setup -> installation',
   'setup -> presentation',
   'setup -> shared',
@@ -106,8 +108,10 @@ function openSources(sourceRoot: string, patterns: string[]): OpenedSources {
     const paths = relativePaths.map((path) => join(sourceRoot, path));
     const snapshot = api.updateSnapshot({ openFiles: paths });
     for (const [index, path] of paths.entries()) {
+      const relativePath = relativePaths[index];
+      if (relativePath === undefined) throw new Error(`Missing source path mapping: ${path}`);
       sources.set(
-        relativePaths[index],
+        relativePath,
         snapshot.getDefaultProjectForFile(path)?.program.getSourceFile(path),
       );
     }

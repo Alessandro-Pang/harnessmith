@@ -1,11 +1,8 @@
 import { existsSync, lstatSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { installAll } from '../installation/install.js';
-import {
-  harnessTemplateRoot,
-  installationRenderer,
-  installationValues,
-} from '../installation/install-template.js';
+import { harnessTemplateRoot, installationRenderer } from '../installation/install-template.js';
+import { installWithSkills } from '../installation/installation-workflow.js';
+import { resolveUserData } from '../installation/user-data-paths.js';
 import { atomicWrite } from '../shared/files.js';
 import { assertSafePath } from '../shared/safe-path.js';
 import type { Adapter, CliOptions } from '../shared/types.js';
@@ -48,15 +45,15 @@ function exactDiff(path: string, before: string, after: string): string {
 }
 
 function personalTemplate(adapter: Adapter, env: NodeJS.ProcessEnv): string {
-  const render = installationRenderer(adapter.hub, env);
+  const render = installationRenderer(adapter.userData, env);
   return render(
     readFileSync(join(harnessTemplateRoot, 'assets', 'templates', 'personal', 'AGENTS.md'), 'utf8'),
   );
 }
 
 function targetState(adapter: Adapter, env: NodeJS.ProcessEnv) {
-  const values = installationValues(adapter.hub, env);
-  const target = join(values.personalHome, 'AGENTS.md');
+  const userData = resolveUserData(env);
+  const target = join(userData.rules, 'AGENTS.md');
   if (existsSync(target) && lstatSync(target).isSymbolicLink()) {
     return {
       target,
@@ -65,7 +62,7 @@ function targetState(adapter: Adapter, env: NodeJS.ProcessEnv) {
       blocked: { path: target, reasonCode: 'SYMLINK_REJECTED' },
     };
   }
-  assertSafePath(values.personalHome, target);
+  assertSafePath(userData.rules, target);
   if (!existsSync(target)) {
     return { target, before: '', expectedAfterInit: personalTemplate(adapter, env), blocked: null };
   }
@@ -81,8 +78,10 @@ function targetState(adapter: Adapter, env: NodeJS.ProcessEnv) {
 }
 
 export function createAdoptPlan(adapters: Adapter[], env: NodeJS.ProcessEnv) {
+  const [adapter] = adapters;
+  if (!adapter) throw new Error('Adopt requires at least one adapter');
   const collected = collectAdoptInventory(adapters);
-  const target = targetState(adapters[0], env);
+  const target = targetState(adapter, env);
   const blocked = [...collected.blocked, ...(target.blocked ? [target.blocked] : [])];
   const seed = JSON.stringify({
     adapters: adapters.map(({ name }) => name),
@@ -159,7 +158,9 @@ export function applyAdoptPlan(
   if (!plan.report.requiresWrite) {
     return { ...plan.report, phase: 'complete' as const, result: 'already-adopted' as const };
   }
-  const installation = installAll(adapters, {
+  // Adopt shares the install workflow so the skills-managed skill is installed under the
+  // same proposal-bound Host transaction semantics, including truthful partial failures.
+  const installation = installWithSkills(adapters, {
     env,
     force: true,
     noInitGlobal: options.initGlobal === false,

@@ -23,11 +23,13 @@ export function validateMemoryPreflight(
       root,
       {
         log: () => {},
-        error: (message, ...optional) =>
+        error: (message, ...optional) => {
+          const code = optional.map(memoryDiagnosticCode).find(Boolean);
           diagnostics.push({
             message: String(message),
-            code: optional.map(memoryDiagnosticCode).find(Boolean),
-          }),
+            ...(code === undefined ? {} : { code }),
+          });
+        },
       },
       { quietSuccess: true, contentOverrides, rootKind },
     );

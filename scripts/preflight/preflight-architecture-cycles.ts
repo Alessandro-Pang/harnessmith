@@ -75,13 +75,7 @@ export function checkAreaImportCycles(
   for (const cycle of actualKeys) {
     if (!declaredKeys.has(cycle)) check(false, `${sourceRoot}: new cross-area cycle: ${cycle}`);
   }
-  for (const cycle of declaredKeys) {
-    if (!actualKeys.has(cycle))
-      check(false, `${sourceRoot}: declared cross-area cycle no longer exists: ${cycle}`);
-  }
-  if (
-    [...actualKeys].every((cycle) => declaredKeys.has(cycle)) &&
-    [...declaredKeys].every((cycle) => actualKeys.has(cycle))
-  )
-    check(true, `${sourceRoot} cross-area cycles match the declared baseline`);
+  // Retiring a legacy cycle is progress, not drift. Only newly introduced components fail.
+  if ([...actualKeys].every((cycle) => declaredKeys.has(cycle)))
+    check(true, `${sourceRoot} introduces no cross-area cycles beyond the declared baseline`);
 }

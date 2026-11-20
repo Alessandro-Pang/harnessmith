@@ -7,7 +7,7 @@ import { onTestFinished, test } from 'vitest';
 import { closeTask, initTask, taskStatus } from '../commands/task/task.js';
 import { updateAcceptance } from '../commands/task/task-acceptance.js';
 import { verifyAcceptance } from '../commands/task/task-verification.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { capturedIo, first, harnessRuntime } from './helpers/harness.js';
 
 function projectFixture(): { project: string; runtime: ReturnType<typeof harnessRuntime> } {
   const root = mkdtempSync(join(tmpdir(), 'harness-task-evidence-'));
@@ -125,18 +125,18 @@ test('external typed evidence is validated and stored only as inconclusive', () 
     reference: 'git-diff',
     artifactDigest: `sha256:${'a'.repeat(64)}`,
   });
-  assert.equal(artifact.acceptance[0].evidence.at(-1)?.type, 'diff');
-  assert.equal(artifact.acceptance[0].evidence.at(-1)?.producer, 'external');
-  assert.equal(artifact.acceptance[0].status, 'inconclusive');
+  assert.equal(first(artifact.acceptance).evidence.at(-1)?.type, 'diff');
+  assert.equal(first(artifact.acceptance).evidence.at(-1)?.producer, 'external');
+  assert.equal(first(artifact.acceptance).status, 'inconclusive');
   const observed = accept({
     type: 'browser',
     tool: 'browser-runner',
     result: 'verified output',
     host: 'local-test-host',
   });
-  assert.equal(observed.acceptance[0].evidence.at(-1)?.type, 'browser');
-  assert.equal(observed.acceptance[0].evidence.at(-1)?.producer, 'external');
-  assert.equal(observed.acceptance[0].status, 'inconclusive');
+  assert.equal(first(observed.acceptance).evidence.at(-1)?.type, 'browser');
+  assert.equal(first(observed.acceptance).evidence.at(-1)?.producer, 'external');
+  assert.equal(first(observed.acceptance).status, 'inconclusive');
 });
 
 test('mechanical evidence cannot be copied across task ledgers', () => {
@@ -155,7 +155,7 @@ test('mechanical evidence cannot be copied across task ledgers', () => {
   const targetPath = join(project, '.agent-docs', 'working', 'target-task', 'task.json');
   const target = JSON.parse(readFileSync(targetPath, 'utf8'));
   target.acceptance[0].status = 'passed';
-  target.acceptance[0].evidence = [source.acceptance[0].evidence[0]];
+  target.acceptance[0].evidence = [first(first(source.acceptance).evidence)];
   writeFileSync(targetPath, `${JSON.stringify(target, null, 2)}\n`);
 
   assert.throws(
@@ -177,7 +177,7 @@ test('legacy v1 tasks migrate safely and cannot reuse string evidence to close',
     schemaVersion: 1,
     acceptance: [
       {
-        ...created.acceptance[0],
+        ...first(created.acceptance),
         status: 'passed',
         evidence: ['test:old-run'],
       },
@@ -196,10 +196,10 @@ test('legacy v1 tasks migrate safely and cannot reuse string evidence to close',
   assert.equal(Array.isArray(normalized), false);
   if (Array.isArray(normalized)) throw new Error('Expected one task');
   assert.equal(normalized.schemaVersion, 3);
-  assert.equal(normalized.acceptance[0].description, 'Verified');
-  assert.equal(normalized.acceptance[0].status, 'inconclusive');
-  assert.equal(normalized.acceptance[0].evidence[0].type, 'legacy');
-  assert.equal(normalized.checkpoints[0].evidence[0].type, 'legacy');
+  assert.equal(first(normalized.acceptance).description, 'Verified');
+  assert.equal(first(normalized.acceptance).status, 'inconclusive');
+  assert.equal(first(first(normalized.acceptance).evidence).type, 'legacy');
+  assert.equal(first(first(normalized.checkpoints).evidence).type, 'legacy');
   assert.throws(
     () => closeTask({ project, id: 'legacy', summary: 'Old evidence is enough' }),
     /acceptance is not passed/,
@@ -230,7 +230,7 @@ test('legacy v2 evidence migrates every shape as bound non-passing evidence', ()
     schemaVersion: 2,
     acceptance: [
       {
-        ...created.acceptance[0],
+        ...first(created.acceptance),
         status: 'passed',
         evidence: [
           { ...common, type: 'test', command: 'old-test', exitCode: 0 },
@@ -258,9 +258,9 @@ test('legacy v2 evidence migrates every shape as bound non-passing evidence', ()
   const normalized = taskStatus({ project, id: 'legacy-v2' }, capturedIo());
   if (Array.isArray(normalized)) throw new Error('Expected one task');
   assert.equal(normalized.schemaVersion, 3);
-  assert.equal(normalized.acceptance[0].status, 'inconclusive');
+  assert.equal(first(normalized.acceptance).status, 'inconclusive');
   assert.deepEqual(
-    normalized.acceptance[0].evidence.map(({ type, producer, taskId, criterionId }) => ({
+    first(normalized.acceptance).evidence.map(({ type, producer, taskId, criterionId }) => ({
       type,
       producer,
       taskId,
@@ -273,7 +273,7 @@ test('legacy v2 evidence migrates every shape as bound non-passing evidence', ()
       criterionId: 'criterion-1',
     })),
   );
-  assert.equal(normalized.checkpoints[0].evidence[0].criterionId, null);
+  assert.equal(first(first(normalized.checkpoints).evidence).criterionId, null);
 });
 
 test('transitional v3 string evidence is recovered as non-passing legacy evidence', () => {
@@ -299,10 +299,10 @@ test('transitional v3 string evidence is recovered as non-passing legacy evidenc
   const normalized = taskStatus({ project, id: 'transitional-v3' }, capturedIo());
   if (Array.isArray(normalized)) throw new Error('Expected one task');
   assert.equal(normalized.schemaVersion, 3);
-  assert.equal(normalized.checkpoints[0].evidence[0].type, 'legacy');
-  assert.equal(normalized.checkpoints[0].evidence[0].producer, 'legacy');
-  assert.equal(normalized.checkpoints[0].evidence[0].verificationPassed, false);
-  assert.equal(normalized.checkpoints[0].evidence[0].criterionId, null);
+  assert.equal(first(first(normalized.checkpoints).evidence).type, 'legacy');
+  assert.equal(first(first(normalized.checkpoints).evidence).producer, 'legacy');
+  assert.equal(first(first(normalized.checkpoints).evidence).verificationPassed, false);
+  assert.equal(first(first(normalized.checkpoints).evidence).criterionId, null);
 });
 
 test('task status validates malformed task schemas for direct and list reads', () => {
@@ -337,13 +337,13 @@ test('close rejects evidence recorded at an older HEAD and reports baseline drif
   verifyTest(project, 'head-drift', 'work.txt');
   const freshIo = capturedIo();
   taskStatus({ project, id: 'head-drift', json: true }, freshIo);
-  assert.equal(JSON.parse(freshIo.logs[0]).acceptance[0].stale, false);
+  assert.equal(JSON.parse(first(freshIo.logs)).acceptance[0].stale, false);
   writeFileSync(join(project, 'work.txt'), 'changed\n');
   const currentHead = commit(project, 'change revision');
 
   const statusIo = capturedIo();
   taskStatus({ project, id: 'head-drift', json: true }, statusIo);
-  const summary = JSON.parse(statusIo.logs[0]);
+  const summary = JSON.parse(first(statusIo.logs));
   assert.equal(summary.baselineDrift.head, true);
   assert.equal(summary.baselineDrift.currentHead, currentHead);
   assert.equal(summary.acceptance[0].status, 'passed');
@@ -379,7 +379,10 @@ test('close rejects evidence after uncommitted workspace content changes', () =>
     capturedIo(),
   );
   const accepted = verifyTest(project, 'workspace-drift', 'work.txt');
-  assert.match(accepted.acceptance[0].evidence[0].workspaceDigest || '', /^sha256:[0-9a-f]{64}$/);
+  assert.match(
+    first(first(accepted.acceptance).evidence).workspaceDigest || '',
+    /^sha256:[0-9a-f]{64}$/,
+  );
 
   writeFileSync(join(project, 'work.txt'), 'changed but not committed\n');
   assert.throws(
@@ -430,6 +433,6 @@ test('non-Git tasks use null HEAD evidence without false drift failures', () => 
   );
   assert.equal(task.baseline.head, null);
   const accepted = verifyTest(project, 'non-git');
-  assert.equal(accepted.acceptance[0].evidence[0].head, null);
+  assert.equal(first(first(accepted.acceptance).evidence).head, null);
   assert.equal(closeTask({ project, id: 'non-git', summary: 'Observed' }).status, 'complete');
 });

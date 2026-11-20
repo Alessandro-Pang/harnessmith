@@ -31,6 +31,9 @@ importers:
       proper-lockfile:
         specifier: 4.1.2
         version: 4.1.2
+      skills:
+        specifier: 1.7.6
+        version: 1.7.6
       which-command:
         specifier: 0.1.0
         version: 0.1.0
@@ -3045,6 +3048,11 @@ packages:
 
   sisteransi@1.0.5:
     resolution: {integrity: sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg==}
+
+  skills@1.7.6:
+    resolution: {integrity: sha512-dAee29yRGin7ub6VHwmifLEfHrysGD41yq4RkY0gg7QQh0wyQKWfhiORGb/r6uNpKWc9A1GY8yowV07Lh+4rCg==}
+    engines: {node: '>=22.20.0'}
+    hasBin: true
 
   slash@5.1.0:
     resolution: {integrity: sha512-ZA6oR3T/pEyuqwMgAKT0/hAv8oAXckzbkmR0UkUosQ+Mc4RxGoJkRmwHgHufaenlyAgE1Mxgpdcrf75y6XcnDg==}
@@ -6390,6 +6398,11 @@ snapshots:
   signal-exit@4.1.0: {}
 
   sisteransi@1.0.5: {}
+
+  skills@1.7.6:
+    dependencies:
+      tar: 7.5.22
+      yaml: 2.9.0
 
   slash@5.1.0: {}
 

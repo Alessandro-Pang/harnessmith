@@ -126,9 +126,11 @@ function currentFiles(sources: SearchSource[], discovery: SearchDiscovery): Curr
     if (entry.isSymbolicLink() || !entry.isFile()) {
       throw new SearchIndexUnavailable('stale', 'A search source is no longer a regular file');
     }
+    const source = sources[candidate.sourceIndex];
+    if (!source) throw new SearchIndexUnavailable('stale', 'A search candidate has no source');
     result.push({
       sourceIndex: candidate.sourceIndex,
-      relativePath: candidateRelativePath(sources[candidate.sourceIndex], candidate.path),
+      relativePath: candidateRelativePath(source, candidate.path),
       absolutePath: resolve(candidate.path),
       dev: entry.dev,
       ino: entry.ino,

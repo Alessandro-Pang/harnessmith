@@ -1,24 +1,14 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import {
-  cpSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  symlinkSync,
-  writeFileSync,
-} from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { digestPath } from '../../../../packages/cli/src/shared/files.js';
 import { runCli } from '../cli.js';
 import { doctor } from '../commands/health/doctor.js';
 import { initGlobal, initPersonal, initProject } from '../commands/init.js';
 import { validate } from '../commands/validate.js';
-import { render } from '../lib/filesystem/templates.js';
-import { capturedIo, harnessRuntime, packageRoot, sourceHarnessRoot } from './helpers/harness.js';
+import { capturedIo, elementAt, harnessRuntime, sourceHarnessRoot } from './helpers/harness.js';
 
 function installedFixture() {
   const root = mkdtempSync(join(tmpdir(), 'harness-cli-unit-'));
@@ -26,12 +16,6 @@ function installedFixture() {
   const runtime = harnessRuntime(root);
   mkdirSync(runtime.harnessHome, { recursive: true });
   cpSync(sourceHarnessRoot, runtime.installedHarness, { recursive: true });
-  const instructions = render(
-    runtime,
-    readFileSync(join(packageRoot, 'template', 'entry', 'AGENTS.md'), 'utf8'),
-  );
-  mkdirSync(dirname(runtime.instructionFiles[0]), { recursive: true });
-  writeFileSync(runtime.instructionFiles[0], instructions);
   initPersonal(runtime, capturedIo());
   initGlobal(runtime, capturedIo());
   return { root, runtime };
@@ -81,7 +65,7 @@ test('Harness CLI dispatches version and memory commands through injected IO', (
   );
   const maintenance = capturedIo();
   assert.equal(runCli(['memory', 'maintain', 'global', '--json'], { runtime, io: maintenance }), 0);
-  assert.deepEqual(JSON.parse(maintenance.logs[0]).unindexed, []);
+  assert.deepEqual(JSON.parse(elementAt(maintenance.logs, 0)).unindexed, []);
 });
 
 test('Harness search CLI emits bounded provenance-rich JSON', () => {
@@ -100,7 +84,7 @@ test('Harness search CLI emits bounded provenance-rich JSON', () => {
     }),
     0,
   );
-  const report = JSON.parse(output.logs[0]);
+  const report = JSON.parse(elementAt(output.logs, 0));
   assert.equal(report.matches.length, 1);
   assert.equal(report.truncated, true);
   assert.equal(report.matches[0].source, 'project-docs');
@@ -112,7 +96,7 @@ test('Harness route CLI consumes manifest aliases without loading document bodie
   const output = capturedIo();
 
   assert.equal(runCli(['route', '--json', 'review', 'permissions'], { runtime, io: output }), 0);
-  const report = JSON.parse(output.logs[0]);
+  const report = JSON.parse(elementAt(output.logs, 0));
   assert.equal(report.version, 3);
   assert.equal(report.status, 'matched');
   assert.equal(report.top1.name, 'review');
@@ -142,7 +126,7 @@ test('Harness route CLI accepts a validated explicit documentation intent', () =
     ),
     0,
   );
-  const report = JSON.parse(output.logs[0]);
+  const report = JSON.parse(elementAt(output.logs, 0));
   assert.equal(report.intent.source, 'explicit');
   assert.equal(report.intent.requested, 'research-and-design');
   assert.equal(report.primaryPlaybook.name, 'research-and-design');
@@ -156,7 +140,7 @@ test.each([
   const output = capturedIo();
 
   assert.equal(runCli(['route', '--json', '--intent', intent, query], { runtime, io: output }), 0);
-  const report = JSON.parse(output.logs[0]);
+  const report = JSON.parse(elementAt(output.logs, 0));
   assert.equal(report.intent.source, 'explicit');
   assert.equal(report.intent.requested, intent);
   assert.equal(report.primaryPlaybook.name, intent);
@@ -166,14 +150,14 @@ test('Harness route CLI fails closed for unmatched and ambiguous action intent',
   const { runtime } = installedFixture();
   const unmatched = capturedIo();
   assert.equal(runCli(['route', '--json', 'digital'], { runtime, io: unmatched }), 2);
-  assert.equal(JSON.parse(unmatched.logs[0]).status, 'unmatched');
+  assert.equal(JSON.parse(elementAt(unmatched.logs, 0)).status, 'unmatched');
 
   const ambiguous = capturedIo();
   assert.equal(
     runCli(['route', '--json', '请检查代码；请诊断失败'], { runtime, io: ambiguous }),
     2,
   );
-  const report = JSON.parse(ambiguous.logs[0]);
+  const report = JSON.parse(elementAt(ambiguous.logs, 0));
   assert.equal(report.status, 'ambiguous');
   assert.equal(report.top1, null);
   assert.deepEqual(report.ambiguity, ['diagnose', 'review']);
@@ -219,7 +203,7 @@ entries:
   const output = capturedIo();
 
   assert.equal(runCli(['route', '--json', 'mandatory'], { runtime, io: output }), 2);
-  const report = JSON.parse(output.logs[0]);
+  const report = JSON.parse(elementAt(output.logs, 0));
   assert.deepEqual(
     report.omittedRequiredTopics.map(({ name }: { name: string }) => name),
     ['required-e'],
@@ -231,7 +215,7 @@ test('Harness explain uses the same progressive-disclosure routing contract', ()
   const output = capturedIo();
 
   assert.equal(runCli(['explain', '--json', 'task-ledger'], { runtime, io: output }), 0);
-  const report = JSON.parse(output.logs[0]);
+  const report = JSON.parse(elementAt(output.logs, 0));
   assert.deepEqual(
     report.routes.map(({ name }: { name: string }) => name),
     ['long-running-tasks'],
@@ -257,7 +241,7 @@ test('Harness memory search exposes the same bounded JSON contract', () => {
     }),
     0,
   );
-  const report = JSON.parse(output.logs[0]);
+  const report = JSON.parse(elementAt(output.logs, 0));
   assert.equal(report.matches.length, 1);
   assert.equal(report.truncated, true);
   assert.equal(report.matches[0].source, 'memory');
@@ -272,7 +256,7 @@ test('Harness memory list and check expose stable JSON contracts', () => {
 
   const listed = capturedIo();
   assert.equal(runCli(['memory', 'list', 'global', '--json'], { runtime, io: listed }), 0);
-  const listReport = JSON.parse(listed.logs[0]);
+  const listReport = JSON.parse(elementAt(listed.logs, 0));
   assert.equal(listReport.version, 1);
   assert.equal(
     listReport.documents.some((document: { path: string }) => document.path === 'core.md'),
@@ -284,7 +268,7 @@ test('Harness memory list and check expose stable JSON contracts', () => {
     runCli(['memory', 'check', 'global', '--indexed', '--json'], { runtime, io: checked }),
     0,
   );
-  const checkReport = JSON.parse(checked.logs[0]);
+  const checkReport = JSON.parse(elementAt(checked.logs, 0));
   assert.equal(checkReport.version, 1);
   assert.equal(checkReport.valid, true);
   assert.equal(checkReport.indexed, true);
@@ -297,12 +281,12 @@ test('Harness version exposes its schema compatibility contract as JSON', () => 
   const output = capturedIo();
 
   assert.equal(runCli(['version', '--json'], { runtime, io: output }), 0);
-  const contract = JSON.parse(output.logs[0]);
+  const contract = JSON.parse(elementAt(output.logs, 0));
   assert.equal(contract.version, 1);
   assert.equal(contract.harnessVersion, '3.0.0');
   assert.equal(contract.schemaVersion, 3);
   assert.equal(contract.memorySchemaVersion, 1);
-  assert.equal(contract.node, '>=22.12.0');
+  assert.equal(contract.node, '>=22.20.0');
 });
 
 test('validation rejects an unsupported embedded memory schema version', () => {
@@ -314,7 +298,7 @@ test('validation rejects an unsupported embedded memory schema version', () => {
   const output = capturedIo();
 
   assert.equal(validate(runtime, { json: true }, output), 1);
-  const report = JSON.parse(output.logs[0]);
+  const report = JSON.parse(elementAt(output.logs, 0));
   assert.equal(report.valid, false);
   assert.equal(
     report.checks.some(
@@ -333,7 +317,7 @@ test('doctor and validate pass for an installed fixture and report missing prere
 
   const validation = capturedIo();
   assert.equal(validate(runtime, { json: true }, validation), 0);
-  assert.equal((JSON.parse(validation.logs[0]) as { valid: boolean }).valid, true);
+  assert.equal((JSON.parse(elementAt(validation.logs, 0)) as { valid: boolean }).valid, true);
 
   const broken = harnessRuntime(join(root, 'broken'));
   assert.throws(() => doctor(broken, { quietSuccess: true }, capturedIo()), /failure/);
@@ -356,7 +340,7 @@ test('Harness health aggregates runtime, installation, and memory checks as JSON
   const output = capturedIo();
 
   assert.equal(runCli(['health', '--project', project, '--json'], { runtime, io: output }), 0);
-  const report = JSON.parse(output.logs[0]);
+  const report = JSON.parse(elementAt(output.logs, 0));
   assert.equal(report.version, 1);
   assert.equal(report.healthy, true);
   assert.deepEqual(
@@ -367,7 +351,7 @@ test('Harness health aggregates runtime, installation, and memory checks as JSON
   rmSync(join(project, '.agent-docs', '.ignore'));
   const broken = capturedIo();
   assert.equal(runCli(['health', '--project', project, '--json'], { runtime, io: broken }), 1);
-  const projectMemory = JSON.parse(broken.logs[0]).checks.find(
+  const projectMemory = JSON.parse(elementAt(broken.logs, 0)).checks.find(
     ({ id }: { id: string }) => id === 'project-memory',
   );
   assert.equal(projectMemory.status, 'failed');
@@ -379,28 +363,21 @@ test('Harness health aggregates runtime, installation, and memory checks as JSON
   writeFileSync(join(runtime.installedHarness, 'manifest.json'), '{}\n');
   const incompatible = capturedIo();
   assert.equal(runCli(['health', '--json'], { runtime, io: incompatible }), 1);
-  const installation = JSON.parse(incompatible.logs[0]).checks.find(
+  const installation = JSON.parse(elementAt(incompatible.logs, 0)).checks.find(
     ({ id }: { id: string }) => id === 'installation',
   );
   assert.equal(installation.status, 'failed');
   assert.match(installation.message, /schema is incompatible/);
 });
 
-test('Harness health verifies managed output checksums for installed host adapters', () => {
-  const fixture = installedFixture();
-  const runtime = {
-    ...fixture.runtime,
-    hostAdapter: 'hub',
-    harnessRoot: fixture.runtime.installedHarness,
-    distributionRoot: fixture.runtime.harnessHome,
-  };
+test('Harness health no longer consumes legacy install contexts or hub records', () => {
+  const { runtime } = installedFixture();
   writeFileSync(
-    join(runtime.harnessRoot, 'install-context.json'),
+    join(runtime.installedHarness, 'install-context.json'),
     `${JSON.stringify({
       version: 2,
       harnessHome: runtime.harnessHome,
-      agentsHome: runtime.agentsHome,
-      instructionFiles: runtime.instructionFiles,
+      instructionFiles: [join(runtime.harnessHome, 'entry', 'AGENTS.md')],
       stateHome: runtime.stateRoot,
       memoryHome: runtime.memoryHome,
       personalHome: runtime.personalHome,
@@ -408,52 +385,18 @@ test('Harness health verifies managed output checksums for installed host adapte
       owner: runtime.owner,
     })}\n`,
   );
-  const discoveryLink = join(runtime.agentsHome, 'skills', 'agent-harness');
-  mkdirSync(join(runtime.agentsHome, 'skills'), { recursive: true });
-  symlinkSync(runtime.installedHarness, discoveryLink);
-  const recordPath = join(runtime.harnessHome, '.harnessmith', 'install.json');
   mkdirSync(join(runtime.harnessHome, '.harnessmith'), { recursive: true });
-  const record = {
-    schemaVersion: 2,
-    scope: 'hub',
-    outputs: [
-      {
-        path: runtime.installedHarness,
-        checksum: digestPath(runtime.installedHarness),
-        backup: null,
-      },
-      {
-        path: runtime.instructionFiles[0],
-        checksum: digestPath(runtime.instructionFiles[0]),
-        backup: null,
-      },
-      { path: discoveryLink, checksum: digestPath(discoveryLink), backup: null },
-    ],
-    ignoreFiles: [],
-    recordBackup: null,
-  };
-  const writeRecord = (): void => writeFileSync(recordPath, `${JSON.stringify(record)}\n`);
-  writeRecord();
-  const initial = capturedIo();
-  assert.equal(runCli(['health', '--json'], { runtime, io: initial }), 0, initial.logs.join('\n'));
+  writeFileSync(
+    join(runtime.harnessHome, '.harnessmith', 'install.json'),
+    `${JSON.stringify({ schemaVersion: 2, scope: 'hub', outputs: [] })}\n`,
+  );
 
-  record.outputs[1].checksum = null;
-  writeRecord();
-  assert.equal(runCli(['health', '--json'], { runtime, io: capturedIo() }), 1);
-  record.outputs[1].checksum = digestPath(runtime.instructionFiles[0]);
-  writeRecord();
-
-  writeFileSync(runtime.instructionFiles[0], 'tampered instructions\n');
   const output = capturedIo();
-  assert.equal(runCli(['health', '--json'], { runtime, io: output }), 1);
-  const installation = JSON.parse(output.logs[0]).checks.find(
+  assert.equal(runCli(['health', '--json'], { runtime, io: output }), 0, output.logs.join('\n'));
+  const installation = JSON.parse(elementAt(output.logs, 0)).checks.find(
     ({ id }: { id: string }) => id === 'installation',
   );
-  assert.equal(installation.status, 'failed');
-  assert.equal(
-    installation.details.some((detail: string) => detail.includes('modified')),
-    true,
-  );
+  assert.equal(installation.status, 'passed');
 });
 
 test('Harness health reports memory maintenance candidates and validation failures', () => {
@@ -475,7 +418,7 @@ test('Harness health reports memory maintenance candidates and validation failur
 
   const maintenance = capturedIo();
   assert.equal(runCli(['health', '--json'], { runtime, io: maintenance }), 0);
-  const globalMemory = JSON.parse(maintenance.logs[0]).checks.find(
+  const globalMemory = JSON.parse(elementAt(maintenance.logs, 0)).checks.find(
     ({ id }: { id: string }) => id === 'global-memory',
   );
   assert.equal(globalMemory.status, 'warning');
@@ -496,7 +439,7 @@ test('Harness health reports memory maintenance candidates and validation failur
   );
   const invalid = capturedIo();
   assert.equal(runCli(['health', '--json'], { runtime, io: invalid }), 1);
-  const failedMemory = JSON.parse(invalid.logs[0]).checks.find(
+  const failedMemory = JSON.parse(elementAt(invalid.logs, 0)).checks.find(
     ({ id }: { id: string }) => id === 'global-memory',
   );
   assert.equal(failedMemory.status, 'failed');

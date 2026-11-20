@@ -47,8 +47,8 @@ export async function executeAdopt(
   }
 
   const result = applyAdoptPlan(adapters, context.env, {
-    proposal,
-    initGlobal: options.initGlobal,
+    ...(proposal === undefined ? {} : { proposal }),
+    ...(options.initGlobal === undefined ? {} : { initGlobal: options.initGlobal }),
   });
   if (options.json) context.io.log(JSON.stringify(result));
   else context.io.log(`Adopted existing rules into ${result.target.path}`);

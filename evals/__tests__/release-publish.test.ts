@@ -3,6 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { chmodSync, copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, beforeEach, test } from 'vitest';
+import { elementAt } from '../../packages/harness/src/__tests__/helpers/harness.js';
 import {
   type ReleaseRunner,
   releaseCandidate,
@@ -33,34 +34,57 @@ afterEach(() => {
   else process.env.HARNESS_RELEASE_ARTIFACT = inheritedReleaseArtifact;
 });
 
-function evaluationGate() {
+function evaluationGateResult(inherited: boolean) {
   const fingerprint = currentFingerprint();
   const coverageCount = Object.keys(fingerprint.scenarios).length;
+  const scenarios = Object.keys(fingerprint.scenarios);
   return {
     valid: true as const,
     assurance: 'maintainer-attested-structure' as const,
     packageArtifactSha256: digest(readFileSync(candidateArtifact)),
     behaviorSha256: fingerprint.behaviorSha256,
     coverageCount,
-    exactArtifactCoverageCount: 0,
-    inheritedBehaviorCoverageCount: coverageCount,
-    inheritedFrom: [inheritedSource],
+    exactArtifactCoverageCount: inherited ? 0 : coverageCount,
+    inheritedBehaviorCoverageCount: inherited ? coverageCount : 0,
+    inheritedFrom: inherited ? [inheritedSource] : [],
     evidence: {
-      exact: [],
-      inherited: Object.keys(fingerprint.scenarios).map((scenario) => ({
-        cell: `codex/${scenario}`,
-        ...inheritedSource,
-      })),
+      exact: inherited ? [] : scenarios.map((scenario) => `codex/${scenario}`),
+      inherited: inherited
+        ? scenarios.map((scenario) => ({
+            cell: `codex/${scenario}`,
+            ...inheritedSource,
+          }))
+        : [],
       infraBlocked: [],
     },
     hosts: ['codex'],
-    scenarios: Object.keys(fingerprint.scenarios),
+    scenarios,
     maxAgeDays: 30,
   };
 }
 
+function evaluationGate() {
+  return evaluationGateResult(false);
+}
+
+const preparedHead = 'a'.repeat(40);
+
+function withPreparedHead(runner: ReleaseRunner): ReleaseRunner {
+  return (executable, args, options) => {
+    if (executable === 'git' && args.join(' ') === 'rev-parse --verify HEAD') {
+      return {
+        status: 0,
+        signal: null,
+        stdout: `${preparedHead}\n`,
+        stderr: '',
+      } as ReturnType<ReleaseRunner>;
+    }
+    return runner(executable, args, options);
+  };
+}
+
 function release(args: string[], runner: ReleaseRunner): void {
-  releaseCandidate(args, runner, evaluationGate);
+  releaseCandidate(args, withPreparedHead(runner), evaluationGate);
 }
 
 test('release helpers preserve exact CLI and risk-acceptance contracts in an isolated process', () => {
@@ -119,8 +143,9 @@ test('release publish workflow checks and publishes the same candidate tarball',
   const stateDirectory = temporaryDirectory();
   const calls: Array<{ executable: string; args: string[]; artifact?: string }> = [];
   const runner: ReleaseRunner = (executable, args, options) => {
-    calls.push({ executable, args, artifact: options.env.HARNESS_RELEASE_ARTIFACT });
-    return { status: 0, signal: null, error: undefined };
+    const artifact = options.env.HARNESS_RELEASE_ARTIFACT;
+    calls.push({ executable, args, ...(artifact === undefined ? {} : { artifact }) });
+    return { status: 0, signal: null };
   };
 
   release(
@@ -129,20 +154,25 @@ test('release publish workflow checks and publishes the same candidate tarball',
   );
 
   assert.equal(calls.length, 2);
-  assert.match(calls[0].executable, /pnpm(?:\.cmd)?$/);
-  assert.deepEqual(calls[0].args, ['run', 'release:check']);
-  assert.notEqual(calls[0].artifact, candidateArtifact);
-  assert.match(calls[1].executable, /npm(?:\.cmd)?$/);
-  assert.deepEqual(calls[1].args, ['publish', calls[0].artifact, '--dry-run']);
-  assert.equal(calls[1].artifact, calls[0].artifact);
+  assert.match(elementAt(calls, 0).executable, /pnpm(?:\.cmd)?$/);
+  assert.deepEqual(elementAt(calls, 0).args, ['run', 'release:check']);
+  assert.notEqual(elementAt(calls, 0).artifact, candidateArtifact);
+  assert.match(elementAt(calls, 1).executable, /npm(?:\.cmd)?$/);
+  assert.deepEqual(elementAt(calls, 1).args, [
+    'publish',
+    elementAt(calls, 0).artifact,
+    '--dry-run',
+  ]);
+  assert.equal(elementAt(calls, 1).artifact, elementAt(calls, 0).artifact);
 });
 
 test('release publish accepts standard equals-style CLI options', () => {
   const stateDirectory = temporaryDirectory();
   const calls: Array<{ args: string[]; artifact?: string }> = [];
   const runner: ReleaseRunner = (_executable, args, options) => {
-    calls.push({ args, artifact: options.env.HARNESS_RELEASE_ARTIFACT });
-    return { status: 0, signal: null, error: undefined };
+    const artifact = options.env.HARNESS_RELEASE_ARTIFACT;
+    calls.push({ args, ...(artifact === undefined ? {} : { artifact }) });
+    return { status: 0, signal: null };
   };
 
   release(
@@ -156,7 +186,13 @@ test('release publish accepts standard equals-style CLI options', () => {
   );
 
   assert.equal(calls.length, 2);
-  assert.deepEqual(calls[1].args, ['publish', calls[0].artifact, '--dry-run', '--tag', 'next']);
+  assert.deepEqual(elementAt(calls, 1).args, [
+    'publish',
+    elementAt(calls, 0).artifact,
+    '--dry-run',
+    '--tag',
+    'next',
+  ]);
 });
 
 test('release publish workflow stops before npm when release checks fail', () => {
@@ -164,7 +200,7 @@ test('release publish workflow stops before npm when release checks fail', () =>
   const calls: string[] = [];
   const runner: ReleaseRunner = (executable) => {
     calls.push(executable);
-    return { status: 1, signal: null, error: undefined };
+    return { status: 1, signal: null };
   };
 
   assert.throws(
@@ -172,12 +208,12 @@ test('release publish workflow stops before npm when release checks fail', () =>
     /release checks failed/i,
   );
   assert.equal(calls.length, 1);
-  assert.match(calls[0], /pnpm(?:\.cmd)?$/);
+  assert.match(elementAt(calls, 0), /pnpm(?:\.cmd)?$/);
 });
 
 test('release publish workflow rejects arguments that could replace the exact package', () => {
   const stateDirectory = temporaryDirectory();
-  const runner: ReleaseRunner = () => ({ status: 0, signal: null, error: undefined });
+  const runner: ReleaseRunner = () => ({ status: 0, signal: null });
 
   assert.throws(
     () =>
@@ -203,11 +239,11 @@ test('release publish keeps one immutable candidate after checks and publishes t
       stagedPath = options.env.HARNESS_RELEASE_ARTIFACT ?? '';
       writeFileSync(artifact, 'source changed after staging');
     } else {
-      assert.equal(args[0], 'publish');
-      assert.equal(args[1], stagedPath);
+      assert.equal(elementAt(args, 0), 'publish');
+      assert.equal(elementAt(args, 1), stagedPath);
       publishedDigest = digest(readFileSync(stagedPath));
     }
-    return { status: 0, signal: null, error: undefined };
+    return { status: 0, signal: null };
   };
 
   release(['--package-artifact', artifact, '--state-dir', stateDirectory, '--dry-run'], runner);
@@ -222,10 +258,10 @@ test('release publish preserves a checked snapshot and resumes without rerunning
   const firstCalls: string[][] = [];
   const firstRunner: ReleaseRunner = (_executable, args) => {
     firstCalls.push(args);
-    if (args[0] === 'publish') {
+    if (elementAt(args, 0) === 'publish') {
       return { status: 1, signal: null, error: new Error('EOTP') };
     }
-    return { status: 0, signal: null, error: undefined };
+    return { status: 0, signal: null };
   };
 
   assert.throws(
@@ -237,13 +273,13 @@ test('release publish preserves a checked snapshot and resumes without rerunning
     /EOTP/,
   );
   assert.equal(firstCalls.length, 2);
-  const stagedPath = firstCalls[1][1];
+  const stagedPath = elementAt(elementAt(firstCalls, 1), 1);
   assert.equal(existsSync(stagedPath), true);
 
   const retryCalls: string[][] = [];
   const retryRunner: ReleaseRunner = (_executable, args) => {
     retryCalls.push(args);
-    return { status: 0, signal: null, error: undefined };
+    return { status: 0, signal: null };
   };
   release(['--state-dir', stateDirectory], retryRunner);
 
@@ -258,7 +294,7 @@ test('release prepare prefers HARNESS_RELEASE_ARTIFACT over an existing prepared
   const calls: string[][] = [];
   const runner: ReleaseRunner = (_executable, args) => {
     calls.push(args);
-    return { status: 0, signal: null, error: undefined };
+    return { status: 0, signal: null };
   };
 
   release(
@@ -294,7 +330,7 @@ test('release prepare prefers --package-artifact over existing state and environ
   const calls: string[][] = [];
   const runner: ReleaseRunner = (_executable, args) => {
     calls.push(args);
-    return { status: 0, signal: null, error: undefined };
+    return { status: 0, signal: null };
   };
 
   release(
@@ -325,7 +361,7 @@ test('release prepare checks a persistent snapshot without contacting npm', () =
   const calls: string[][] = [];
   const runner: ReleaseRunner = (_executable, args) => {
     calls.push(args);
-    return { status: 0, signal: null, error: undefined };
+    return { status: 0, signal: null };
   };
 
   release(
@@ -340,18 +376,35 @@ test('release prepare checks a persistent snapshot without contacting npm', () =
   assert.equal(state.evaluation.coverageCount, Object.keys(currentFingerprint().scenarios).length);
   assert.equal(state.evaluation.packageArtifactSha256, state.artifactSha256);
   assert.equal(state.evaluation.behaviorSha256, currentFingerprint().behaviorSha256);
-  assert.equal(state.evaluation.exactArtifactCoverageCount, 0);
+  assert.equal(state.preparedHead, preparedHead);
   assert.equal(
-    state.evaluation.inheritedBehaviorCoverageCount,
+    state.evaluation.exactArtifactCoverageCount,
     Object.keys(currentFingerprint().scenarios).length,
   );
-  assert.deepEqual(state.evaluation.inheritedFrom, [inheritedSource]);
-  assert.deepEqual(state.evaluation.evidence.exact, []);
+  assert.equal(state.evaluation.inheritedBehaviorCoverageCount, 0);
+  assert.deepEqual(state.evaluation.inheritedFrom, []);
   assert.equal(
-    state.evaluation.evidence.inherited.length,
+    state.evaluation.evidence.exact.length,
     Object.keys(currentFingerprint().scenarios).length,
   );
+  assert.deepEqual(state.evaluation.evidence.inherited, []);
   assert.deepEqual(state.evaluation.evidence.infraBlocked, []);
+});
+
+test('release prepare rejects inherited-only evidence without writing a new release state', () => {
+  const stateDirectory = temporaryDirectory();
+  const runner: ReleaseRunner = () => ({ status: 0, signal: null });
+
+  assert.throws(
+    () =>
+      releaseCandidate(
+        ['--package-artifact', candidateArtifact, '--state-dir', stateDirectory, '--prepare-only'],
+        withPreparedHead(runner),
+        () => evaluationGateResult(true),
+      ),
+    /inherited.*historical|inherited.*exact/i,
+  );
+  assert.equal(existsSync(join(stateDirectory, 'release-state.json')), false);
 });
 
 test('release prepare records an explicit eval-risk exception without claiming passing coverage', () => {
@@ -374,7 +427,7 @@ test('release prepare records an explicit eval-risk exception without claiming p
   const calls: string[][] = [];
   const runner: ReleaseRunner = (_executable, args) => {
     calls.push(args);
-    return { status: 0, signal: null, error: undefined };
+    return { status: 0, signal: null };
   };
 
   releaseCandidate(
@@ -387,7 +440,7 @@ test('release prepare records an explicit eval-risk exception without claiming p
       acceptancePath,
       '--prepare-only',
     ],
-    runner,
+    withPreparedHead(runner),
     () => {
       throw new Error('full eval gate must not be called for an explicit risk exception');
     },
@@ -414,8 +467,8 @@ test('release resume rejects a prepared snapshot whose bytes changed', () => {
   const stateDirectory = temporaryDirectory();
   let stagedPath = '';
   const runner: ReleaseRunner = (_executable, args, options) => {
-    if (args[0] === 'run') stagedPath = options.env.HARNESS_RELEASE_ARTIFACT ?? '';
-    return { status: 0, signal: null, error: undefined };
+    if (elementAt(args, 0) === 'run') stagedPath = options.env.HARNESS_RELEASE_ARTIFACT ?? '';
+    return { status: 0, signal: null };
   };
   release(
     ['--package-artifact', candidateArtifact, '--state-dir', stateDirectory, '--prepare-only'],
@@ -432,7 +485,7 @@ test('release resume rejects a prepared snapshot whose bytes changed', () => {
 
 test('release resume rejects malformed evaluation evidence in persisted state', () => {
   const stateDirectory = temporaryDirectory();
-  const runner: ReleaseRunner = () => ({ status: 0, signal: null, error: undefined });
+  const runner: ReleaseRunner = () => ({ status: 0, signal: null });
   release(
     ['--package-artifact', candidateArtifact, '--state-dir', stateDirectory, '--prepare-only'],
     runner,

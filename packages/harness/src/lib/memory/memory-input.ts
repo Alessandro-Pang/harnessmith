@@ -67,6 +67,7 @@ export function assertSourceReferenceBoundary(
 
 export function parseInputBody(body: string): ParsedInputBody | undefined {
   const match = body.match(/^\r?\n?# (原始输入|可靠摘要)\r?\n\r?\n([\s\S]*)$/);
-  if (!match) return undefined;
-  return { content: match[2], verbatim: match[1] === '原始输入' };
+  const [, heading, content] = match ?? [];
+  if (heading === undefined || content === undefined) return undefined;
+  return { content, verbatim: heading === '原始输入' };
 }

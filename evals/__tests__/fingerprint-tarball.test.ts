@@ -3,6 +3,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import fc from 'fast-check';
 import { test } from 'vitest';
+import { elementAt } from '../../packages/harness/src/__tests__/helpers/harness.js';
 import { readNpmPackageTarball } from '../../scripts/release/npm-tarball.js';
 import { run, temporaryDirectory } from './run-fixture.js';
 import { candidateEntries, tarGzip, writeCandidateTarball } from './tarball-fixture.js';
@@ -165,7 +166,7 @@ test('fingerprint rejects unsafe and duplicate npm tar paths', () => {
     unsafe,
     tarGzip([...entries, { path: 'package/../outside.txt', content: 'escape\n' }]),
   );
-  writeFileSync(duplicate, tarGzip([...entries, entries[0]]));
+  writeFileSync(duplicate, tarGzip([...entries, elementAt(entries, 0)]));
 
   const unsafeResult = run(['fingerprint', '--json', '--package-artifact', unsafe]);
   const duplicateResult = run(['fingerprint', '--json', '--package-artifact', duplicate]);
@@ -213,9 +214,7 @@ test('fingerprint requires the npm tgz extension and core distribution files', (
   writeFileSync(
     incomplete,
     tarGzip(
-      candidateEntries(process.cwd()).filter(
-        ({ path }) => path !== 'package/template/skills/agent-harness/dist/harness.mjs',
-      ),
+      candidateEntries(process.cwd()).filter(({ path }) => path !== 'package/dist/harness.mjs'),
     ),
   );
 
@@ -225,16 +224,16 @@ test('fingerprint requires the npm tgz extension and core distribution files', (
   assert.equal(extensionResult.status, 1);
   assert.match(extensionResult.stderr, /must be an npm \.tgz/i);
   assert.equal(incompleteResult.status, 1);
-  assert.match(
-    incompleteResult.stderr,
-    /missing template\/skills\/agent-harness\/dist\/harness\.mjs/i,
-  );
+  assert.match(incompleteResult.stderr, /missing dist\/harness\.mjs/i);
 });
 
 test('fingerprint rejects a tarball with a corrupted header checksum', () => {
   const artifact = join(temporaryDirectory(), 'corrupted.tgz');
   const compressed = tarGzip(candidateEntries(process.cwd()));
-  compressed[compressed.length - 8] ^= 0xff;
+  const checksumIndex = compressed.length - 8;
+  const checksumByte = compressed[checksumIndex];
+  assert(checksumByte !== undefined, 'Expected a gzip checksum byte');
+  compressed[checksumIndex] = checksumByte ^ 0xff;
   writeFileSync(artifact, compressed);
 
   const result = run(['fingerprint', '--json', '--package-artifact', artifact]);

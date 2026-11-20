@@ -14,8 +14,12 @@
     "harnessmith": "bin/harnessmith.mjs"
   },
   "main": "./dist/cli.js",
+  "types": "./dist/cli.d.ts",
   "exports": {
-    ".": "./dist/cli.js",
+    ".": {
+      "types": "./dist/cli.d.ts",
+      "import": "./dist/cli.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -23,8 +27,6 @@
     "dist",
     "template/entry/AGENTS.md",
     "template/skills/agent-harness/SKILL.md",
-    "template/skills/agent-harness/scripts",
-    "template/skills/agent-harness/dist",
     "template/skills/agent-harness/docs",
     "template/skills/agent-harness/manifest.json",
     "template/skills/agent-harness/assets/schemas",
@@ -57,12 +59,12 @@
     "typecheck:ts": "tsc --project config/tsconfig.json --noEmit",
     "typecheck:evaluators": "tsc --project config/tsconfig.evaluators.json",
     "lint": "biome lint --config-path config/biome.json packages scripts evals bin config package.json tsconfig.json",
-    "lint:md": "markdownlint-cli2 --config config/.markdownlint-cli2.mjs --no-globs \"**/*.md\" \"#node_modules/**\" \"#dist/**\" \"#coverage/**\" \"#template/skills/agent-harness/dist/**\"",
+    "lint:md": "markdownlint-cli2 --config config/.markdownlint-cli2.mjs --no-globs \"**/*.md\" \"#node_modules/**\" \"#dist/**\" \"#coverage/**\" ",
     "format": "biome format --write",
     "format:check": "biome format --config-path config/biome.json packages scripts evals bin config package.json tsconfig.json",
     "commitlint": "commitlint --config config/commitlint.config.mjs",
     "build": "pnpm run typecheck && pnpm run build:emit",
-    "build:emit": "tsup --config config/tsup.config.ts",
+    "build:emit": "tsup --config config/tsup.config.ts && tsc -p config/tsconfig.public-api.json",
     "check": "pnpm run lint && pnpm run format:check && pnpm run lint:md && pnpm run typecheck && pnpm run quality:dead-code && pnpm run quality:secrets",
     "check:docs": "node --import tsx scripts/preflight/preflight.ts docs",
     "docs:dev": "vitepress dev apps/docs/site",
@@ -107,8 +109,9 @@
     "test:scripts-coverage:contracts": "c8 -c config/c8.scripts.json --reporter=json --clean=false node --import tsx evals/__tests__/scripts-c8-eval.ts",
     "test:scripts-coverage:eval": "c8 -c config/c8.scripts.json --reporter=text --clean=false --check-coverage --lines 89 --functions 95 --branches 70 --statements 89 pnpm exec vitest run --config config/vitest.config.ts evals/__tests__ packages/cli/src/__tests__/adapters-git.test.ts packages/cli/src/__tests__/eval-run-schema.test.ts packages/cli/src/__tests__/github-templates.test.ts packages/cli/src/__tests__/preflight-docs.test.ts packages/cli/src/__tests__/preflight-git.test.ts packages/cli/src/__tests__/pr-contract.test.ts packages/cli/src/__tests__/temp-resources.test.ts",
     "quality:dead-code": "knip --config config/knip.json --reporter compact",
+    "quality:dependencies": "pnpm audit --audit-level high",
     "quality:secrets": "secretlint --secretlintrc config/.secretlintrc.json --no-color \"packages/cli/src/**/*\" \"scripts/**/*\" \"template/**/*\" \"packages/harness/**/*\" \"evals/**/*\" \"apps/docs/site/**/*\" \".github/**/*\" \".husky/**/*\" \"*.md\" \"*.txt\" \"*.json\" \"*.yaml\" \"*.yml\" \"*.ts\" \"*.mjs\"",
-    "release:quality": "pnpm run check && pnpm run build:emit && pnpm run test:coverage:unit && pnpm run test:scripts-coverage",
+    "release:quality": "pnpm run check && pnpm run build:emit && pnpm run test:coverage:unit && pnpm run test:scripts-coverage && pnpm run quality:dependencies",
     "release:check": "pnpm run release:quality && pnpm run eval:gate",
     "release:verify-registry": "node --import tsx scripts/release/registry-verify.ts",
     "release:package-smoke": "node --import tsx scripts/release/package-smoke.ts",
@@ -119,7 +122,7 @@
     "prepublishOnly": "node --import tsx scripts/release/release-publish.ts guard"
   },
   "engines": {
-    "node": ">=22.12.0"
+    "node": ">=22.20.0"
   },
   "packageManager": "pnpm@10.13.0",
   "pnpm": {
@@ -152,6 +155,7 @@
     "fdir": "6.5.0",
     "picocolors": "1.1.1",
     "proper-lockfile": "4.1.2",
+    "skills": "1.7.6",
     "which-command": "0.1.0",
     "write-file-atomic": "7.0.1"
   },

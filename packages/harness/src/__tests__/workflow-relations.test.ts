@@ -9,7 +9,7 @@ import { initProject } from '../commands/init.js';
 import { initTask } from '../commands/task/task.js';
 import { workflowRelations } from '../commands/workflow/workflow-relations.js';
 import { buildWorkflowRelationReport } from '../lib/workflow/workflow-relations.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { capturedIo, elementAt, harnessRuntime } from './helpers/harness.js';
 
 test('relation model reports owners, lifecycle roles, orphans, and cross-workstream conflicts', () => {
   const report = buildWorkflowRelationReport(
@@ -48,7 +48,7 @@ test('relation model reports owners, lifecycle roles, orphans, and cross-workstr
 
   assert.equal(report.version, 1);
   assert.equal(report.mode, 'report-only');
-  assert.deepEqual(report.tasks[0], {
+  assert.deepEqual(elementAt(report.tasks, 0), {
     task: 'task-a',
     workstream: 'task-a',
     phase: 'task-a:phase:current',
@@ -85,13 +85,13 @@ test('workflow relation CLI emits the shared model without mutating project stat
 
   const report = workflowRelations(runtime, project, { json: true }, io);
 
-  assert.equal(report.tasks[0].task, 'relation-task');
-  assert.equal(JSON.parse(io.logs[0]).mode, 'report-only');
+  assert.equal(elementAt(report.tasks, 0).task, 'relation-task');
+  assert.equal(JSON.parse(elementAt(io.logs, 0)).mode, 'report-only');
   assert.equal(execFileSync('git', ['-C', project, 'status', '--porcelain']).toString(), before);
 
   const cli = capturedIo();
   assert.equal(runCli(['memory', 'relationships', project, '--json'], { runtime, io: cli }), 0);
-  assert.equal(JSON.parse(cli.logs[0]).summary.tasks, 1);
+  assert.equal(JSON.parse(elementAt(cli.logs, 0)).summary.tasks, 1);
 });
 
 test('workflow relation schema is packaged with the CLI contract', () => {

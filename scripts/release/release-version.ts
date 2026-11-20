@@ -68,12 +68,17 @@ function packageManifest(root: string): { name: string; version: string } {
   };
 }
 
-function assertReleaseCheckout(root: string, runner: ReleaseCommandRunner): void {
+function assertReleaseCheckout(root: string, runner: ReleaseCommandRunner): string {
   const status = checked('Git status', 'git', ['status', '--porcelain'], root, runner);
   if (status.trim()) throw new Error('Release versioning requires a clean working tree');
   const branch = checked('Git branch', 'git', ['branch', '--show-current'], root, runner).trim();
   if (branch !== 'main')
     throw new Error(`Release versioning requires main, found ${branch || 'detached'}`);
+  const head = checked('Git HEAD', 'git', ['rev-parse', '--verify', 'HEAD'], root, runner).trim();
+  if (!/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u.test(head)) {
+    throw new Error('Release versioning could not resolve a full HEAD commit');
+  }
+  return head;
 }
 
 function restoreFiles(root: string, snapshots: Map<string, string | undefined>): void {
@@ -88,13 +93,13 @@ export function prepareReleaseVersion(
   args: string[],
   runner: ReleaseCommandRunner = defaultRunner,
   options: VersionOptions = {},
-): { candidate: string; tag: string; version: string } {
+): { candidate: string; preparedHead: string; tag: string; version: string } {
   const [increment, ...extra] = args;
   if (!['patch', 'minor', 'major'].includes(increment ?? '') || extra.length > 0) {
     throw new Error('Usage: npm run release -- patch|minor|major');
   }
   const root = resolve(options.root ?? repositoryRoot);
-  assertReleaseCheckout(root, runner);
+  const preparedHead = assertReleaseCheckout(root, runner);
   const snapshots = new Map(
     releaseFiles.map((name) => {
       const path = join(root, name);
@@ -130,7 +135,7 @@ export function prepareReleaseVersion(
     const candidate = join(directory, filename);
     if (!existsSync(candidate)) throw new Error(`npm pack candidate is missing: ${candidate}`);
     chmodSync(candidate, 0o400);
-    return { candidate, tag: `v${manifest.version}`, version: manifest.version };
+    return { candidate, preparedHead, tag: `v${manifest.version}`, version: manifest.version };
   } catch (error) {
     restoreFiles(root, snapshots);
     throw error;

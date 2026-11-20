@@ -3,18 +3,25 @@ import { join } from 'node:path';
 import lockfile from 'proper-lockfile';
 import { lockStaleMilliseconds } from '../shared/lock-stale.js';
 import { assertSafePath, assertSafeScopePaths } from '../shared/safe-path.js';
-import type { ManagedScope } from '../shared/types.js';
+import type { Adapter } from '../shared/types.js';
 import { errorMessage, HarnessmithError } from '../shared/types.js';
 
 const operationLockName = '.harnessmith-operation.lock';
 
-export function operationLockPath(scope: ManagedScope): string {
+export function operationLockPath(scope: Adapter): string {
   return join(scope.home, operationLockName);
 }
 
-/** Hold one operation lock per scope (hub and hosts) in a stable order to avoid deadlocks. */
+/**
+ * Lock runner for one composite operation. Workflows that already hold the scope locks
+ * pass an identity runner so nested install/uninstall steps reuse the held locks instead
+ * of deadlocking on a second acquisition; standalone calls keep the default locking.
+ */
+export type ScopeLockContext = <T>(operation: () => T) => T;
+
+/** Hold one operation lock per adapter scope in a stable order to avoid deadlocks. */
 export function withScopeLocks<T>(
-  scopes: ManagedScope[],
+  scopes: Adapter[],
   operation: () => T,
   { createHomes = true }: { createHomes?: boolean } = {},
 ): T {
@@ -27,6 +34,7 @@ export function withScopeLocks<T>(
   let operationError: unknown;
   try {
     for (const scope of ordered) {
+      // Managed outputs are regular files; any symlink at a destination fails closed.
       assertSafeScopePaths(scope);
       if (!existsSync(scope.home) && !createHomes) continue;
       mkdirSync(scope.home, { recursive: true });

@@ -75,11 +75,11 @@ function normalizedScopes(
       }),
     ).values(),
   ].sort((left, right) => left.path.localeCompare(right.path));
-  for (let index = 0; index < scopes.length; index += 1) {
-    for (let other = index + 1; other < scopes.length; other += 1) {
-      if (scopes[index].path === '.' || scopes[other].path.startsWith(`${scopes[index].path}/`)) {
+  for (const [index, left] of scopes.entries()) {
+    for (const right of scopes.slice(index + 1)) {
+      if (left.path === '.' || right.path.startsWith(`${left.path}/`)) {
         throw new Error(
-          `Overlapping verification scopes are not allowed: ${scopes[index].path}, ${scopes[other].path}`,
+          `Overlapping verification scopes are not allowed: ${left.path}, ${right.path}`,
         );
       }
     }

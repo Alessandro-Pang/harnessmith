@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { runCli } from '../cli.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { capturedIo, elementAt, harnessRuntime } from './helpers/harness.js';
 
 function fixture(prefix: string) {
   const root = mkdtempSync(join(tmpdir(), prefix));
@@ -49,7 +49,7 @@ test('capture-input reads untrusted text from a file without marking a summary a
     0,
   );
 
-  const result = JSON.parse(io.logs[0]);
+  const result = JSON.parse(elementAt(io.logs, 0));
   const stored = readFileSync(result.path, 'utf8');
   assert.match(stored, /^verbatim: false$/m);
   assert.match(stored, /# 可靠摘要/);
@@ -137,7 +137,7 @@ test('capture-input stores typed policy metadata and close-input consumes it fro
     ),
     0,
   );
-  const created = JSON.parse(createdIo.logs[0]);
+  const created = JSON.parse(elementAt(createdIo.logs, 0));
   const input = readFileSync(created.path, 'utf8');
   assert.match(input, /^input-schema-version: 2$/m);
   assert.match(input, /^document-purpose-schema-version: 1$/m);
@@ -218,7 +218,7 @@ test('handoff preserves omitted recovery fields, clears them explicitly, and clo
     ),
     0,
   );
-  const handoffPath = JSON.parse(created.logs[0]).path;
+  const handoffPath = JSON.parse(elementAt(created.logs, 0)).path;
 
   const updated = capturedIo();
   assert.equal(
@@ -317,7 +317,7 @@ test('profile autopilot exposes explicit pause and resume controls', () => {
   for (const state of ['pause', 'resume']) {
     const io = capturedIo();
     assert.equal(runCli(['memory', 'profile-autopilot', state, '--json'], { runtime, io }), 0);
-    assert.equal(JSON.parse(io.logs[0]).kind, 'profile');
+    assert.equal(JSON.parse(elementAt(io.logs, 0)).kind, 'profile');
   }
   assert.match(
     readFileSync(join(runtime.memoryHome, 'profile.md'), 'utf8'),

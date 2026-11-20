@@ -18,7 +18,7 @@ export interface EvaluationGateFailure {
 }
 
 function rejectionReason(rejection: string): string {
-  const [kind, detail] = rejection.split(' ');
+  const [kind = '', detail] = rejection.split(' ');
   return kind === 'subject-drift' && detail ? `${kind}:${detail}` : kind;
 }
 

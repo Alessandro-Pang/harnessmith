@@ -11,11 +11,11 @@ export type GitFailureKind = 'not-repository' | 'unavailable' | 'timeout' | 'per
 
 /** @public */
 export interface GitFailureResult {
-  code?: string;
+  code?: string | undefined;
   exitCode?: number;
   failed: boolean;
   isMaxBuffer: boolean;
-  shortMessage?: string;
+  shortMessage?: string | undefined;
   stderr?: string | Uint8Array;
   timedOut: boolean;
 }

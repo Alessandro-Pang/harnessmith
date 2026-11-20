@@ -49,7 +49,14 @@ export function verifyAcceptance(
     const time = now();
     const result = mechanicallyVerifyEvidence(
       root,
-      { type, command, args, scope, file, timeoutMs },
+      {
+        type,
+        ...(command === undefined ? {} : { command }),
+        args,
+        scope,
+        ...(file === undefined ? {} : { file }),
+        ...(timeoutMs === undefined ? {} : { timeoutMs }),
+      },
       time,
       task.id,
       target.id,

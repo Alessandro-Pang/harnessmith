@@ -1,27 +1,42 @@
 import { createHash } from 'node:crypto';
-import { lstatSync, mkdirSync, realpathSync, unlinkSync, writeFileSync } from 'node:fs';
-import { basename, dirname, isAbsolute, relative, resolve, sep } from 'node:path';
 import { parseSingleJsonObject } from './commands.mjs';
+
+/**
+ * @param {string} output
+ * @returns {import('./types.mjs').InstallCaptureEnvelope | null}
+ */
 export function parseInstallCaptureEnvelope(output) {
   const value = parseSingleJsonObject(output);
   if (
     value?.version !== 1 ||
+    typeof value.status !== 'number' ||
     !Number.isInteger(value.status) ||
     (value.signal !== null && typeof value.signal !== 'string') ||
     typeof value.stdout !== 'string' ||
     typeof value.stderr !== 'string' ||
     (value.error !== null && typeof value.error !== 'string') ||
-    !/^[a-f0-9]{64}$/.test(value.commandSha256 ?? '')
+    typeof value.commandSha256 !== 'string' ||
+    !/^[a-f0-9]{64}$/.test(value.commandSha256)
   ) {
     return null;
   }
-  return value;
+  return {
+    version: 1,
+    status: value.status,
+    signal: value.signal,
+    stdout: value.stdout,
+    stderr: value.stderr,
+    error: value.error,
+    commandSha256: value.commandSha256,
+  };
 }
 
+/** @param {string} value */
 function sha256(value) {
   return createHash('sha256').update(value).digest('hex');
 }
 
+/** @param {unknown} input */
 function sanitizedText(input) {
   return String(input)
     .replace(
@@ -44,6 +59,10 @@ function sanitizedText(input) {
     );
 }
 
+/**
+ * @param {string} value
+ * @param {number} budget
+ */
 function prefixWithinBytes(value, budget) {
   if (budget <= 0) return '';
   let low = 0;
@@ -56,6 +75,10 @@ function prefixWithinBytes(value, budget) {
   return value.slice(0, low);
 }
 
+/**
+ * @param {string} value
+ * @param {number} budget
+ */
 function suffixWithinBytes(value, budget) {
   if (budget <= 0) return '';
   let low = 0;
@@ -68,6 +91,10 @@ function suffixWithinBytes(value, budget) {
   return value.slice(value.length - low);
 }
 
+/**
+ * @param {unknown} input
+ * @param {number} [maxBytes]
+ */
 export function sanitizeAndBoundArtifact(input, maxBytes = 7 * 1024 * 1024) {
   if (!Number.isSafeInteger(maxBytes) || maxBytes < 256) {
     throw new Error(`Invalid artifact byte budget: ${String(maxBytes)}`);
@@ -96,11 +123,14 @@ export function sanitizeAndBoundArtifact(input, maxBytes = 7 * 1024 * 1024) {
     truncated: true,
     sanitizedBytes,
     fullSanitizedSha256,
-    omittedBytes:
-      sanitizedBytes - Buffer.byteLength(head) - Buffer.byteLength(tail),
+    omittedBytes: sanitizedBytes - Buffer.byteLength(head) - Buffer.byteLength(tail),
   };
 }
 
+/**
+ * @param {import('./types.mjs').ToolActionDescriptor[]} descriptors
+ * @param {{ maxItems?: number, targetBytes?: number }} [options]
+ */
 export function toolActionArtifactBounds(
   descriptors,
   { maxItems = 1024, targetBytes = 1024 } = {},
@@ -113,8 +143,9 @@ export function toolActionArtifactBounds(
     throw new Error(`Invalid tool action target byte budget: ${String(targetBytes)}`);
   }
   const countExceeded = descriptors.length > maxItems;
-  const targetTruncated = descriptors.some(({ target }) =>
-    sanitizeAndBoundArtifact(target || '(target unavailable)', targetBytes).truncated,
+  const targetTruncated = descriptors.some(
+    ({ target }) =>
+      sanitizeAndBoundArtifact(target || '(target unavailable)', targetBytes).truncated,
   );
   return {
     originalCount: descriptors.length,
@@ -125,4 +156,3 @@ export function toolActionArtifactBounds(
     exceeded: countExceeded,
   };
 }
-

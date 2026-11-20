@@ -52,14 +52,18 @@ export function applyMemoryRepair(
     options.beforeVerify?.();
     loadCurrentIndex(runtime, sources, {});
   } else if (selected.action === 'compact-core-index') {
-    applyCoreRepairTransaction(runtime, selected, rootKind, io, options);
+    applyCoreRepairTransaction(runtime, selected, rootKind, io, options, () =>
+      diagnoseMemoryRepair(runtime, scope, io),
+    );
   } else {
     const markerPath = selected.affectedPaths.find((path) => path.endsWith('.json'));
     const journal = discoverRepairJournals(runtime, report.root).find(
       ({ marker }) => marker === markerPath,
     );
     if (!journal) throw new Error('Repair recovery proposal changed');
-    applyJournalRecovery(runtime, journal, rootKind, io);
+    applyJournalRecovery(runtime, journal, selected, rootKind, io, options, () =>
+      diagnoseMemoryRepair(runtime, scope, io),
+    );
   }
   return {
     version: 1 as const,

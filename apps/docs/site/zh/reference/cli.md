@@ -21,8 +21,8 @@ Harnessmith 有两条 CLI，分工不同：外层 `harnessmith` 负责「装进�
 | `adopt` | 盘点并安全导入已有 Host 规则 | 默认否；确认精确提案后是 |
 | `harnessmith` / `install` | 安装或升级 Harness | 是 |
 | `status` | 检查安装所有权与完整性 | 否 |
-| `restore` | 恢复上一安装层 | 是 |
-| `uninstall` | 恢复全部安装层并移除记录 | 是 |
+| `restore` | 恢复当前记录指向的文件备份 | 是 |
+| `uninstall` | 恢复当前记录的备份并移除当前指令和记录 | 是 |
 | `capabilities` | 输出 Adapter 范围、激活和权限边界 | 否 |
 | `diagnostics` | 预览本地脱敏诊断报告 | 否 |
 | `export` | 预览或写入版本化 personal overlay bundle | 仅提供 `--output` 时是 |
@@ -58,7 +58,7 @@ npx harnessmith setup --agent codex
 npx harnessmith setup --agent cursor --project /path/to/project --yes --json
 ```
 
-计划把目标区分为 `missing`、`managed`、`unmanaged` 和 `modified`，并明确 `unsupported` 与 `host-dependent` 边界。确认步骤不会绕过安全策略：`unmanaged` / `modified` 默认拒绝，只有审阅所有权和备份行为后才能显式使用 `--force`。安装事务失败会尝试回滚，并给出 dry-run → status → restore 的恢复顺序。
+计划把目标区分为 `missing`、`managed`、`unmanaged` 和 `modified`，并明确 `unsupported` 与 `host-dependent` 边界。确认步骤不会绕过安全策略：`unmanaged` / `modified` 默认拒绝，只有审阅所有权和备份行为后才能显式使用 `--force`。Host 文件事务失败会尝试回滚；skill 在 Host 提交后失败则明确报告部分完成，并保留已提交的 Host 文件。
 
 成功报告里的 `installed-and-healthy` 只表示安装所有权与内嵌 Runtime 的确定性检查通过；真实 Host 中的模型行为、工具权限、认证或运行时事件不在其中。报告内的 First Value 状态使用统一的 `installed`、`healthy`、`host-configured`、`host-verified`：setup 可本地证明前两项，后两项在没有真实 Host 证据时保持 `inconclusive`。下一步先运行 `diagnostics --agent <agent> --json`，再执行文档中的首次只读受控任务；完整 journey 见 [首次价值循环](/guide/first-value-loop)。
 
@@ -84,11 +84,9 @@ npx harnessmith status --agent codex --explain
 npx harnessmith status --agent codex --explain --json
 ```
 
-解释输出使用稳定的 `observedState`、`reasonCode` 和 action `code`，逐项列出安装记录、受管理输出与备份证据。稳定性意味着脚本可以依赖这些字段做分支，不会因版本更新而漂移。
+解释输出包含 `observedState`、`reasonCode` 和 action `code`，逐项列出安装记录、受管理输出与备份证据。破坏性版本可能调整 JSON 契约，消费者应以发布的 schema 3 输出为准。
 
-`status --json` 与 `--explain` 还返回 `contentFingerprint`：`recorded` 绑定安装时实际渲染的受管理内容，`current` 绑定当前内容；二者一致为 `matched`，差异为 `drifted`，旧记录或未接管目标为 `unrecorded`。计算按逻辑输出角色排序，并把安装时展开的绝对路径还原为占位符，因此同一 Adapter 的等价安装可以跨主目录比较——换个机器也不会误报 drift。
-
-本地状态可判定为 `managed`、`modified`、`unmanaged`、`partial` 或 `missing`；`unsupported` 表示没有 Adapter 契约并在路径解析前停止。Harness capability、Host configuration 和真实 Host behavior 分开报告，无法从本地证明的 Host 结论固定为 `inconclusive` / `host-dependent`，不会误报为 healthy。内容指纹只证明 Harnessmith 受管理 Prompt/配置的内容身份，不证明 Host 已加载这些文件，也不证明模型行为、权限或认证状态。
+本地状态可判定为 `managed`、`modified`、`unmanaged`、`partial` 或 `missing`；`unsupported` 表示没有 Adapter 契约并在路径解析前停止。每个文件单独报告 checksum 是否符合当前记录，不再额外计算全局 content fingerprint。本地 checksum 不证明 Host 已加载文件、模型行为、权限或认证状态；这些结论固定为 `inconclusive` / `host-dependent`。
 
 `status` 的 First Value 投影只把 `managed` 映射为 `installed: passed`；因为该命令不运行 Runtime health，`healthy` 仍为 `not-checked`。managed 状态的统一下一步是 `diagnostics --agent <agent> --json`。建议动作只作为下一步展示，带有 `automatic: false`、`destructive: false` 和授权要求，不会由 `status` 自动执行。
 
@@ -118,7 +116,7 @@ npx harnessmith import --input ./harness-config.json --proposal <proposalId> --y
 
 v1 bundle 只允许 personal overlay 的 `AGENTS.md` 和 Repository Map 两种表示；managed distribution、可变 state、全局/项目 Memory、Host credential、cache、临时文件和任意 workspace 内容始终排除。allowlist 文件含高置信 secret 或超过 256 KiB 时不会进入 bundle，并将导出标记为 `partial`。宁缺毋滥。
 
-import 对未知 schema、未知字段、digest 不一致、路径越界、symlink 和无效 UTF-8 fail closed。目标缺失时可创建，内容相同则幂等跳过；任何不同内容均视为 conflict，不能用 import 覆盖，需回到显式 `adopt` 流程。实际写入持有 personal root coordination lock，并在失败时按快照回滚；提案后的 bundle 或目标变化会使 `proposalId` 失效。
+import 对未知 schema、未知字段、digest 不一致、路径越界、symlink 和无效 UTF-8 fail closed。目标缺失时可创建，内容相同则幂等跳过；任何不同内容均视为 conflict，不能用 import 或 adopt 覆盖、合并 bundle；先自行备份或移走冲突目标，也可编辑 bundle 后重新生成提案。实际写入持有 personal root coordination lock，并在失败时按快照回滚；提案后的 bundle 或目标变化会使 `proposalId` 失效。
 
 ## 示例
 

@@ -12,7 +12,7 @@ import { initTask } from '../commands/task/task.js';
 import { digestPath } from '../lib/filesystem/files.js';
 import { readTask } from '../lib/task/task-store.js';
 import { applyMemoryCuration, memoryCuration } from '../program/memory/memory-curation-apply.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { capturedIo, first, harnessRuntime } from './helpers/harness.js';
 
 function fixture(taskId = 'curation-apply-task') {
   const root = mkdtempSync(join(tmpdir(), 'harness-curation-apply-'));
@@ -57,7 +57,7 @@ test('curation proposals have stable content identity and diagnosis remains read
   );
   const before = digestPath(memoryRoot);
 
-  const first = curateMemory(
+  const initial = curateMemory(
     runtime,
     project,
     { task: taskId, outcome: 'workstream-complete' },
@@ -71,12 +71,12 @@ test('curation proposals have stable content identity and diagnosis remains read
   );
 
   assert.equal(digestPath(memoryRoot), before);
-  assert.deepEqual(proposals(first), proposals(second));
-  assert.equal(first.mode, 'proposal-only');
-  assert.match(first.closeCandidates[0].proposalId, /^sha256:[0-9a-f]{64}$/);
-  assert.match(first.closeCandidates[0].sourceDigest, /^sha256:[0-9a-f]{64}$/);
-  assert.match(first.closeCandidates[0].expiresOn, /^\d{4}-\d{2}-\d{2}$/);
-  assert.equal(first.closeCandidates[0].action, 'close');
+  assert.deepEqual(proposals(initial), proposals(second));
+  assert.equal(initial.mode, 'proposal-only');
+  assert.match(first(initial.closeCandidates).proposalId, /^sha256:[0-9a-f]{64}$/);
+  assert.match(first(initial.closeCandidates).sourceDigest, /^sha256:[0-9a-f]{64}$/);
+  assert.match(first(initial.closeCandidates).expiresOn, /^\d{4}-\d{2}-\d{2}$/);
+  assert.equal(first(initial.closeCandidates).action, 'close');
 });
 
 test('explicit curation close applies through the typed command and replay fails closed', () => {
@@ -95,12 +95,10 @@ test('explicit curation close applies through the typed command and replay fails
     },
     capturedIo(),
   );
-  const proposal = curateMemory(
-    runtime,
-    project,
-    { task: taskId, outcome: 'workstream-complete' },
-    capturedIo(),
-  ).closeCandidates[0];
+  const proposal = first(
+    curateMemory(runtime, project, { task: taskId, outcome: 'workstream-complete' }, capturedIo())
+      .closeCandidates,
+  );
 
   const result = applyMemoryCuration(
     runtime,
@@ -111,7 +109,7 @@ test('explicit curation close applies through the typed command and replay fails
   );
 
   assert.equal(result.status, 'passed');
-  assert.equal(result.items[0].validation.status, 'passed');
+  assert.equal(first(result.items).validation.status, 'passed');
   assert.match(readFileSync(input.path, 'utf8'), /status: complete/);
   assert.match(readFileSync(input.path, 'utf8'), /close-reason: workstream-complete/);
   assert.equal(readTask(project, taskId).value.status, 'in_progress');
@@ -128,8 +126,8 @@ test('explicit curation close applies through the typed command and replay fails
     capturedIo(),
   );
   assert.equal(replay.status, 'failed');
-  assert.equal(replay.items[0].validation.status, 'failed');
-  assert.match(replay.items[0].reason, /stale|changed|expired/i);
+  assert.equal(first(replay.items).validation.status, 'failed');
+  assert.match(first(replay.items).reason, /stale|changed|expired/i);
 });
 
 test('source drift invalidates an exact proposal without overwriting the changed memory', () => {
@@ -148,12 +146,10 @@ test('source drift invalidates an exact proposal without overwriting the changed
     },
     capturedIo(),
   );
-  const proposal = curateMemory(
-    runtime,
-    project,
-    { task: taskId, outcome: 'workstream-complete' },
-    capturedIo(),
-  ).closeCandidates[0];
+  const proposal = first(
+    curateMemory(runtime, project, { task: taskId, outcome: 'workstream-complete' }, capturedIo())
+      .closeCandidates,
+  );
   writeFileSync(input.path, `${readFileSync(input.path, 'utf8')}\nConcurrent user note.\n`);
 
   const result = applyMemoryCuration(
@@ -165,7 +161,7 @@ test('source drift invalidates an exact proposal without overwriting the changed
   );
 
   assert.equal(result.status, 'failed');
-  assert.match(result.items[0].reason, /stale|changed|expired/i);
+  assert.match(first(result.items).reason, /stale|changed|expired/i);
   assert.match(readFileSync(input.path, 'utf8'), /Concurrent user note/);
   assert.match(readFileSync(input.path, 'utf8'), /status: active/);
 });
@@ -192,7 +188,7 @@ test('authoritative workspace drift and proposal expiry both require regeneratio
     capturedIo(),
   );
   const options = { task: taskId, outcome: 'workstream-complete' as const };
-  const proposal = curateMemory(runtime, project, options, capturedIo()).closeCandidates[0];
+  const proposal = first(curateMemory(runtime, project, options, capturedIo()).closeCandidates);
   writeFileSync(join(project, 'README.md'), '# Concurrent authoritative change\n');
 
   const drifted = applyMemoryCuration(
@@ -204,14 +200,15 @@ test('authoritative workspace drift and proposal expiry both require regeneratio
   );
 
   assert.equal(drifted.status, 'failed');
-  assert.match(drifted.items[0].reason, /stale|changed|expired/i);
+  assert.match(first(drifted.items).reason, /stale|changed|expired/i);
   assert.match(readFileSync(input.path, 'utf8'), /status: active/);
   rmSync(join(project, 'README.md'));
   const futureRuntime = harnessRuntime(root, {
     env: { HOME: runtime.home, TZ: 'Pacific/Kiritimati' },
   });
-  const futureProposal = curateMemory(futureRuntime, project, options, capturedIo())
-    .closeCandidates[0];
+  const futureProposal = first(
+    curateMemory(futureRuntime, project, options, capturedIo()).closeCandidates,
+  );
   assert.notEqual(futureProposal.expiresOn, proposal.expiresOn);
 
   const expired = applyMemoryCuration(
@@ -223,7 +220,7 @@ test('authoritative workspace drift and proposal expiry both require regeneratio
   );
 
   assert.equal(expired.status, 'failed');
-  assert.match(expired.items[0].reason, /stale|changed|expired/i);
+  assert.match(first(expired.items).reason, /stale|changed|expired/i);
   assert.match(readFileSync(input.path, 'utf8'), /status: active/);
 });
 
@@ -265,8 +262,8 @@ test('bounded batches report partial failure without undoing independently verif
     { task: taskId, outcome: 'workstream-complete' },
     capturedIo(),
   );
-  const close = report.closeCandidates[0];
-  const supersede = report.supersedeCandidates[0];
+  const close = first(report.closeCandidates);
+  const supersede = first(report.supersedeCandidates);
   const selections: CurationApplySelection[] = [
     { proposalId: close.proposalId },
     { proposalId: supersede.proposalId },
@@ -281,9 +278,9 @@ test('bounded batches report partial failure without undoing independently verif
   );
 
   assert.equal(result.status, 'partial');
-  assert.equal(result.items[0].validation.status, 'passed');
-  assert.equal(result.items[1].validation.status, 'failed');
-  assert.match(result.items[1].reason, /replacement/i);
+  assert.equal(first(result.items).validation.status, 'passed');
+  assert.equal(first(result.items.slice(1)).validation.status, 'failed');
+  assert.match(first(result.items.slice(1)).reason, /replacement/i);
   assert.match(readFileSync(input.path, 'utf8'), /status: complete/);
   assert.ok(result.remainingProposals.some(({ action }) => action === 'supersede'));
 });
@@ -306,8 +303,9 @@ test('promotion selection delegates to the formal proposal flow and never writes
     },
     capturedIo(),
   );
-  const candidate = curateMemory(runtime, project, { task: taskId }, capturedIo())
-    .promoteCandidates[0];
+  const candidate = first(
+    curateMemory(runtime, project, { task: taskId }, capturedIo()).promoteCandidates,
+  );
   const target = join(project, 'docs', 'promoted.md');
 
   const result = applyMemoryCuration(
@@ -330,10 +328,11 @@ test('promotion selection delegates to the formal proposal flow and never writes
   );
 
   assert.equal(result.status, 'passed');
-  assert.equal(result.items[0].action, 'promote');
-  assert.equal(result.items[0].validation.status, 'passed');
-  assert.ok(result.items[0].result && 'mode' in result.items[0].result);
-  assert.equal(result.items[0].result.mode, 'proposal-only');
+  const item = first(result.items);
+  assert.equal(item.action, 'promote');
+  assert.equal(item.validation.status, 'passed');
+  assert.ok(item.result && 'mode' in item.result);
+  assert.equal(item.result.mode, 'proposal-only');
   assert.equal(digestPath(target), null);
 });
 
@@ -353,12 +352,10 @@ test('curation command requires confirmation and accepts a bounded typed selecti
     },
     capturedIo(),
   );
-  const proposal = curateMemory(
-    runtime,
-    project,
-    { task: taskId, outcome: 'workstream-complete' },
-    capturedIo(),
-  ).closeCandidates[0];
+  const proposal = first(
+    curateMemory(runtime, project, { task: taskId, outcome: 'workstream-complete' }, capturedIo())
+      .closeCandidates,
+  );
   const selectionFile = join(root, 'curation-selection.json');
   writeFileSync(
     selectionFile,

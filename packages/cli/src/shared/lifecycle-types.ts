@@ -1,13 +1,7 @@
 import type { AgentName } from '../adapters/adapter-registry.js';
-import type { AdapterCapabilities } from './scope-types.js';
 
 export type LifecycleCommand = 'restore' | 'uninstall';
-export type LifecycleChangeAction =
-  | 'remove'
-  | 'restore-backup'
-  | 'restore-migrated'
-  | 'remove-managed-block'
-  | 'keep-latest';
+export type LifecycleChangeAction = 'remove' | 'restore-backup' | 'remove-managed-block' | 'keep';
 
 export interface LifecycleChange {
   path: string;
@@ -15,23 +9,11 @@ export interface LifecycleChange {
   source?: string;
 }
 
-export interface LifecycleLayerPlan {
-  sourceRecord: string;
-  changes: LifecycleChange[];
-}
-
-export interface HubLifecyclePlan {
-  home: string;
-  /** `release` drops this host from the owners; `layers` lists hub layers that unwind. */
-  action: 'keep' | 'release' | 'unwind';
-  layers: LifecycleLayerPlan[];
-}
-
+/** Read-only dry-run preview for one current installation record. */
 export interface LifecyclePlan {
   command: LifecycleCommand;
   adapter: AgentName;
-  capabilities: AdapterCapabilities;
+  force: boolean;
   home: string;
-  layers: LifecycleLayerPlan[];
-  hub: HubLifecyclePlan;
+  changes: LifecycleChange[];
 }

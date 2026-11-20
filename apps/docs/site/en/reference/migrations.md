@@ -11,7 +11,7 @@ lang: en
 # Migration guide
 
 The current public npm version changes with each release; long-lived documentation does not duplicate current
-version numbers. Before upgrading, rely on `npx harnessmith --version` and the release notes.
+version numbers. Before upgrading, rely on `npx --yes harnessmith --version` and the release notes.
 
 When upgrading, look at three versions at once: the outer installer, the installed Runtime, and the Memory/Task
 data formats. They can change independently; a successful installer upgrade does not mean old Memory has been
@@ -20,10 +20,10 @@ migrated, nor that a real Host has verified anything.
 ## Capture evidence before migrating
 
 ```bash
-npx harnessmith --version
-npx harnessmith status --agent codex --explain --json
-node <harness-path>/scripts/harness.mjs version --json
-node <harness-path>/scripts/harness.mjs memory check /path/to/project --indexed --json
+npx --yes harnessmith --version
+npx --yes harnessmith status --agent codex --explain --json
+npx --yes harnessmith version --json
+npx --yes harnessmith memory check /path/to/project --indexed --json
 ```
 
 Save the JSON above and the current Git/workspace state. Run `setup --dry-run --json` first, confirm the target
@@ -34,44 +34,44 @@ files are `managed` with no unexpected `modified` or `unmanaged` entries, then d
 Recommended path:
 
 ```bash
-npx harnessmith setup --agent codex --dry-run --json
-npx harnessmith setup --agent codex --yes --json
-npx harnessmith status --agent codex --explain --json
+npx --yes harnessmith setup --agent codex --dry-run --json
+npx --yes harnessmith setup --agent codex --yes --json
+npx --yes harnessmith status --agent codex --explain --json
 ```
 
-### Harness layout 3.0: one shared hub under `~/.agents/harnessmith/`
+### Current layout: one global CLI, skill delegated to `skills`
 
-Harness `3.0.0` stops copying the Harness into every host. The skill is rendered once to
-`~/.agents/harnessmith/skills/agent-harness/` with a `SKILL.md` entry point (`bin/` became `scripts/`,
-`templates/` and `schemas/` moved under `assets/`), the shared always-on entry is `~/.agents/harnessmith/entry/AGENTS.md`,
-and every host instruction file becomes a symlink to it. Hosts that do not scan `~/.agents/skills` (Claude Code,
-Cursor) get a `skills/agent-harness` symlink; Cursor's `.mdc` rule stays a rendered copy. Personal rules move from
-`~/.agent-harness/` to `~/.agents/harnessmith/rules/` and global Memory from `~/.agent-docs/` to
-`~/.agents/harnessmith/memory/` (`HARNESS_PERSONAL_HOME` / `HARNESS_MEMORY_HOME` still override both).
+The published global `harnessmith` command is the single entry point. Installer commands run in the outer layer;
+Runtime subcommands execute the same-version `dist/harness.mjs` at the npm package root. Adapters render only ordinary
+instruction files; the version-pinned `skills@1.7.6` dependency exclusively owns the skill's canonical copy and Host
+links. The Runtime is never copied into a skill or user-data directory.
 
-The `--dry-run --json` plan of a recorded pre-3.0 installation lists the migrations: `~/.agent-harness` and
-`~/.agent-docs` with action `migrate-user-data` (only when the hub locations are still empty), and
-`<host-home>/agent-harness` with action `migrate-legacy-layout`; the hub outputs appear as `create`. On write,
-`setup` copies the user data into the hub, renames each old directory in place to `<name>.backup-<timestamp>`,
-seeds `~/.agents/harnessmith/state/` from the old `state/`, and records the moves as `migratedOutputs` in the hub and
-host records. `restore` moves the directories back and reactivates the previous records; `uninstall` unwinds both
-layers. The copied `rules/` and `memory/` are user data and are never removed automatically. Commands that hard-code
-`<host-home>/agent-harness/bin/harness.mjs` or `<host-home>/skills/agent-harness/scripts/harness.mjs` must be updated
-to `~/.agents/harnessmith/skills/agent-harness/scripts/harness.mjs` (or the `~/.agents/skills/agent-harness` link).
-An unrecorded `agent-harness/` directory is never moved.
+User data defaults to `~/.harnessmith` (`HARNESS_HOME` overrides it): `state/`, `rules/` (`HARNESS_PERSONAL_HOME`), and
+`memory/` (`HARNESS_MEMORY_HOME`). Harnessmith does not create, read, or delete `~/.agents/harnessmith` or old Runtime
+copies inside Host directories. Move personal rules and Memory yourself, or point the environment overrides at their
+existing locations.
 
-If the preview finds conflicts, stop and resolve them first; do not use `--force` to mask unknown content. When
-a write fails, recover in this order:
+### Breaking installation-record change
 
-```bash
-npx harnessmith status --agent codex --explain
-npx harnessmith restore --agent codex
-npx harnessmith status --agent codex --explain
-```
+Only `schemaVersion: 3` single-layer, regular-file records are read. Schema 1/2, Hub links, copied Runtime trees, and
+multi-layer installation chains are no longer supported: they cannot be upgraded, inspected, restored, or uninstalled
+by this version. Old files are not deleted to force adoption.
 
-Use `--force` only when you know exactly which files will be overwritten, where the backups are, and how to roll
-back. `restore` can only recover existing install records; it cannot recover files that Harnessmith never
-adopted.
+Back up your own rules and configuration first. To remove an old installation cleanly, use the Harnessmith version that
+created it; otherwise identify its managed artifacts and manually move those artifacts and records aside before running
+the current `setup --dry-run` and `setup`. Never use `--force` to bypass an unknown record or overwrite files whose
+ownership you have not verified.
+
+`restore` now restores only the ordinary-file backups named by the current record. `uninstall` restores the backups
+named by the current record and removes the current instruction files and record without traversing older Runtime or Hub layers. User data, state,
+and Memory are never deleted by these operations.
+
+Host instruction files and the skills-managed skill are separate transactions. A Host failure attempts Host rollback;
+a skill failure after Host commit is explicitly reported as partial completion, not as a rollback or complete install.
+Replace commands that hard-code old Hub or per-Host Runtime scripts with the global `harnessmith` command.
+
+Stop at unexpected conflicts. `restore` handles only the current record and cannot recover unknown records or files
+that Harnessmith never adopted.
 
 ## Runtime and schema migration
 
@@ -79,10 +79,10 @@ The Runtime's `version --json` reports the Harness, Task, and Memory schema vers
 read-only checks first:
 
 ```bash
-node <harness-path>/scripts/harness.mjs version --json
-node <harness-path>/scripts/harness.mjs doctor
-node <harness-path>/scripts/harness.mjs validate --project /absolute/project/path --json
-node <harness-path>/scripts/harness.mjs memory check /absolute/project/path --indexed --json
+npx --yes harnessmith version --json
+npx --yes harnessmith doctor
+npx --yes harnessmith validate --project /absolute/project/path --json
+npx --yes harnessmith memory check /absolute/project/path --indexed --json
 ```
 
 For unknown schemas, missing owners, or broken references, keep the original directory and output first; do not
@@ -91,9 +91,9 @@ proposal; apply it explicitly only when the proposal state is `ready` and the ta
 unchanged:
 
 ```bash
-node <harness-path>/scripts/harness.mjs memory migrate /absolute/project/path --json
-node <harness-path>/scripts/harness.mjs memory migrate /absolute/project/path --proposal <proposal-id> --apply --yes --json
-node <harness-path>/scripts/harness.mjs memory check /absolute/project/path --indexed --json
+npx --yes harnessmith memory migrate /absolute/project/path --json
+npx --yes harnessmith memory migrate /absolute/project/path --proposal <proposal-id> --apply --yes --json
+npx --yes harnessmith memory check /absolute/project/path --indexed --json
 ```
 
 If the current version has no corresponding migration command or the proposal is not `ready`, record the result
@@ -120,7 +120,7 @@ confirmed, it stays `inconclusive` — it must not be changed to success just to
 
 Confirm at least:
 
-- The content fingerprint from `status --explain` matches expectations;
+- The current record, output checksums, and next action from `status --explain` match expectations;
 - Runtime `doctor`, `health`, `validate`, and the Memory check pass;
 - Task acceptance states were not accidentally closed by the migration;
 - Items that require a real Host still complete a Host Eval separately;

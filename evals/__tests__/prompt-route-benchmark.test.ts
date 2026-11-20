@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'vitest';
+import { elementAt } from '../../packages/harness/src/__tests__/helpers/harness.js';
 import {
   benchmarkMetrics,
   evaluateCorpus,
@@ -55,8 +56,8 @@ test('prompt-examples confusing-behavior few-shots stay locked in the routing co
     readFileSync(join(repositoryRoot, 'evals', 'prompt-route-corpus.v1.json'), 'utf8'),
   ) as { cases: Array<{ query: string }> };
   const queries = new Set(corpus.cases.map((entry) => entry.query));
-  const block = examples.split('## 混淆行为')[1] ?? '';
-  const shots = [...block.matchAll(/[“"]([^”"]+)[”"]\s*→/gu)].map((match) => match[1]);
+  const block = elementAt(examples.split('## 混淆行为'), 1) ?? '';
+  const shots = [...block.matchAll(/[“"]([^”"]+)[”"]\s*→/gu)].map((match) => elementAt(match, 1));
   assert.ok(shots.length >= 5, 'confusing-behavior few-shots');
   for (const query of shots) {
     assert.ok(queries.has(query), query);
@@ -212,5 +213,5 @@ test('missing expected reasoning modes are treated as an empty set and count ext
   const evaluation = evaluateCorpus(corpus, repositoryRoot);
 
   assert.equal(evaluation.reasoningModeExtras, 1);
-  assert.ok(evaluation.cases[0]?.failures.includes('reasoning-modes-mismatch'));
+  assert.ok(elementAt(evaluation.cases, 0)?.failures.includes('reasoning-modes-mismatch'));
 });

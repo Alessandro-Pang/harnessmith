@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { describe, expect, onTestFinished, test } from 'vitest';
 import { runCli } from '../cli.js';
 import { discoverMemoryCandidates } from '../lib/memory/memory-candidate-discovery.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { capturedIo, elementAt, harnessRuntime } from './helpers/harness.js';
 
 describe('memory candidate discovery', () => {
   test('recognizes an explicit cross-task review standard as a profile candidate', () => {
@@ -67,6 +67,6 @@ describe('memory candidate discovery', () => {
         io,
       }),
     ).toBe(0);
-    expect(JSON.parse(io.logs[0]).candidates[0].key).toBe('engineering.review-standard');
+    expect(JSON.parse(elementAt(io.logs, 0)).candidates[0].key).toBe('engineering.review-standard');
   });
 });

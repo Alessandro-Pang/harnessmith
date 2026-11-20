@@ -2,7 +2,7 @@
 title: Harness CLI Architecture
 type: harness-core
 status: active
-updated: 2026-09-05
+updated: 2026-11-14
 owner: harness-cli-architecture
 ---
 
@@ -22,16 +22,16 @@ Reference 独占。
 | 参数注册 | `packages/harness/src/cli.ts`、`packages/harness/src/program/` | 注册命令和参数契约 |
 | 可复用原语 | `packages/harness/src/lib/` | 不依赖 `commands/` |
 | Runtime 环境 | `packages/harness/src/runtime.ts` | 解析 root、owner、日期、身份和可覆盖路径 |
-| 分发入口 | `bin/harnessmith.mjs`、`template/skills/agent-harness/scripts/harness.mjs` | 外层安装器与内层 bundle 的入口 |
+| 分发入口 | `bin/harnessmith.mjs`、根 `dist/harness.mjs` | 全局安装器与 Runtime 共用命令，直接执行同包 bundled Runtime |
 | always-on 模块 | `template/entry/` | 以 `AGENTS.md` 为入口：只放边界、启动顺序和进入 skill 的触发规则 |
-| skill 模块 | `template/skills/agent-harness/` | 以 `SKILL.md` 为入口的单个 skill：`scripts/`、`dist/`、`docs/`、`assets/`、`manifest.json` |
+| skill 模块 | `template/skills/agent-harness/` | 以 `SKILL.md` 为入口的单个 skill：`docs/`、`assets/`、`manifest.json`，不含 Runtime |
 
-外层 Adapter 不是通用 Memory/Task 实现的 owner。`template/skills/agent-harness/dist/` 和根 `dist/` 是构建产物，
-只能由构建生成，不能手工编辑；模板必须保持宿主中立。Node.js 运行时要求以当前 package、源码和测试为准。
-分发模板按 Agent Skills 约定组织，只渲染一份到共享 hub `{{HARNESS_HOME}}/skills/agent-harness/`（默认
-`~/.agents/harnessmith`），always-on 入口渲染为 `{{HARNESS_HOME}}/entry/AGENTS.md`；各宿主只收到指向 hub 的符号链接。
-hub 内 `state/`、`rules/`（个人 overlay）与 `memory/`（跨项目记忆）位于 skill 之外，升级不触碰。宿主链接路径与旧布局
-迁移只属于外层 Adapter，模板内只用 `{{HARNESS_HOME}}/skills/agent-harness` 引用自身。
+外层 Adapter 不是通用 Memory/Task 实现的 owner。根 `dist/` 是构建产物，只能由构建生成，不能手工编辑；
+模板必须保持宿主中立。Node.js 运行时要求以当前 package、源码和测试为准。
+分发模板按 Agent Skills 约定组织，由固定版本 `skills` 安装到各 Agent 的 skill 目录；Harnessmith 不判断这些目标路径。
+Adapter 只把 `template/entry/AGENTS.md` 渲染为宿主的普通 instruction file。可变 `state/`、`rules/`（个人 overlay）与
+`memory/`（跨项目记忆）默认位于 `~/.harnessmith`，可用环境变量覆盖，升级不触碰；它们不包含 Runtime 或第二份 CLI。
+外层只安装当前普通文件布局并写 `schemaVersion: 3` 单份 record，不读取或迁移旧宿主目录和记录。
 
 ## 修改边界
 
@@ -49,7 +49,7 @@ hub 内 `state/`、`rules/`（个人 overlay）与 `memory/`（跨项目记忆�
 | --- | --- | --- |
 | `route` / `explain` | manifest、action、concept、required topic 和 deferred reference 的解析结果 | 宿主一定会读取或遵循路由 |
 | `search` | 有界检索、provenance 和索引失效回退 | 未命中就证明内容不存在 |
-| `health` / `validate` | 身份、schema、内容和安装状态检查 | warning 自动等于故障 |
+| `health` / `validate` | 包内 standalone 身份、schema、必需模板和用户根入口检查 | 已验证每个 Host instruction、skill 或真实 Host 行为 |
 | Task acceptance | 绑定 HEAD、workspace 和 scope 的机械证据 | 自由文本 criterion 已语义满足 |
 | Memory/Task/Handoff | typed store、权限、锁、原子性和失败回退 | 任意 Markdown 或远端写入已被授权 |
 
@@ -84,4 +84,4 @@ pnpm run preflight
 ```
 
 端到端命令必须使用 task-scoped 临时 `HOME`（或 `HARNESS_HOME`、`HARNESS_MEMORY_HOME`、`HARNESS_PERSONAL_HOME`），
-避免修改真实的 `~/.agents/harnessmith`。
+避免修改真实的 `~/.harnessmith` 或旧版遗留的 `~/.agents/harnessmith`。

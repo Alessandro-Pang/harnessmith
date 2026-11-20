@@ -3,6 +3,7 @@ import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
+import { elementAt } from '../../../../packages/harness/src/__tests__/helpers/harness.js';
 import { createAdapter } from '../adapters/adapters.js';
 
 test('Kimi Code CLI adapter installs its global rule in the effective data directory', () => {
@@ -18,14 +19,16 @@ test('Kimi Code CLI adapter installs its global rule in the effective data direc
   assert.equal(adapter.label, 'Kimi Code CLI');
   assert.equal(adapter.home, join(canonicalRoot, 'custom-kimi-code'));
   assert.equal(adapter.instructions.length, 1);
-  assert.equal(adapter.instructions[0].path, join(canonicalRoot, 'custom-kimi-code', 'AGENTS.md'));
-  assert.equal(adapter.harness, null);
-  assert.equal(adapter.instructions[0].mode, 'link');
-  assert.equal(adapter.hub.home, join(canonicalRoot, '.agents', 'harnessmith'));
   assert.equal(
-    adapter.hub.entry,
-    join(canonicalRoot, '.agents', 'harnessmith', 'entry', 'AGENTS.md'),
+    elementAt(adapter.instructions, 0).path,
+    join(canonicalRoot, 'custom-kimi-code', 'AGENTS.md'),
   );
+  assert.equal(typeof elementAt(adapter.instructions, 0).render, 'function');
+  assert.deepEqual(
+    adapter.outputs,
+    adapter.instructions.map(({ path }) => ({ path })),
+  );
+  assert.equal(adapter.userData.home, join(canonicalRoot, '.harnessmith'));
   assert.equal(
     adapter.record,
     join(canonicalRoot, 'custom-kimi-code', '.harnessmith', 'install.json'),
@@ -43,5 +46,8 @@ test('Kimi Code CLI adapter defaults to the documented user data directory', () 
   const adapter = createAdapter('kimi', { env: { HOME: root } });
 
   assert.equal(adapter.home, join(canonicalRoot, '.kimi-code'));
-  assert.equal(adapter.instructions[0].path, join(canonicalRoot, '.kimi-code', 'AGENTS.md'));
+  assert.equal(
+    elementAt(adapter.instructions, 0).path,
+    join(canonicalRoot, '.kimi-code', 'AGENTS.md'),
+  );
 });

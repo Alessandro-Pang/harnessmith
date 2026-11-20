@@ -82,11 +82,12 @@ export function searchableFiles(
   roots: string[],
   options: { excludeDirectories?: string[] } & Partial<SearchScanLimits> = {},
 ): string[] {
+  const excludeDirectories = options.excludeDirectories;
   const discovery = discoverSearchableFiles(
     roots.map((root) => ({
       root,
       label: 'context',
-      excludeDirectories: options.excludeDirectories,
+      ...(excludeDirectories === undefined ? {} : { excludeDirectories }),
     })),
     options,
   );
@@ -103,13 +104,14 @@ export function textSearch(
     trust?: SearchTrust;
   } = {},
 ): number {
+  const excludeDirectories = options.excludeDirectories;
   const report = searchText(
     query,
     roots.map((root) => ({
       root,
       label: options.label || 'context',
       trust: options.trust || 'untrusted',
-      excludeDirectories: options.excludeDirectories,
+      ...(excludeDirectories === undefined ? {} : { excludeDirectories }),
     })),
     options,
   );
@@ -174,6 +176,8 @@ export function searchText(
       if (scanExpired) break;
       continue;
     }
+    const source = sources[candidate.sourceIndex];
+    if (!source) throw new Error(`Search candidate has no source: ${candidate.path}`);
     const lines = content.split(/\r?\n/);
     const semantics = classifyMemoryDocument(content);
     if (searchDeadlineExceeded(discovery, candidate.source, candidate.path)) break;
@@ -190,7 +194,7 @@ export function searchText(
       if (searchDeadlineExceeded(discovery, candidate.source, candidate.path)) break candidateLoop;
       matches.push({
         source: candidate.source,
-        trust: sources[candidate.sourceIndex].trust,
+        trust: source.trust,
         path: candidate.path,
         line: index + 1,
         text: bounded.text,

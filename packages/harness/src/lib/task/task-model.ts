@@ -24,8 +24,8 @@ export interface InitTaskOptions extends TaskBaseOptions {
 
 export interface CheckpointOptions extends TaskBaseOptions {
   summary?: string;
-  nextAction?: string;
-  status?: TaskStatus;
+  nextAction?: string | undefined;
+  status?: TaskStatus | undefined;
   evidence?: string[];
 }
 

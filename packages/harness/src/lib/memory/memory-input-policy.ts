@@ -87,5 +87,5 @@ export function resolveInputPolicy(options: InputOptions): ResolvedInputPolicy {
   if (retention === 'durable' && workstream !== undefined) {
     throw new Error('Durable input must not declare a workstream');
   }
-  return { mode, purpose, retention, workstream };
+  return { mode, purpose, retention, ...(workstream === undefined ? {} : { workstream }) };
 }

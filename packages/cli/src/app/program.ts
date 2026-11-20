@@ -102,13 +102,18 @@ export function createProgram(
 
   for (const [name, description] of [
     ['status', 'inspect installation ownership and integrity'],
-    ['restore', 'restore the previous installation layer'],
-    ['uninstall', 'restore all layers and remove the installation'],
+    ['restore', 'restore the backups in the current installation record'],
+    ['uninstall', 'restore the current backups and remove the installation'],
   ] as const) {
     const command = program.command(name).description(description);
     if (name === 'status')
       command.option('--explain', 'explain evidence, risk, and safe next actions');
     command.action(() => execute(name, command.optsWithGlobals<CliOptions>()));
   }
-  return program;
+  return program.addHelpText(
+    'after',
+    '\nRuntime commands (executed by the bundled Runtime):\n' +
+      '  audit  bootstrap  doctor  explain  health  init  memory  project\n' +
+      '  replay  repository-map  route  search  task  validate  version\n',
+  );
 }

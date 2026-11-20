@@ -1,9 +1,10 @@
 import { createHash } from 'node:crypto';
 import { lstatSync, readFileSync } from 'node:fs';
 import { extname } from 'node:path';
-import { digestManagedOutput, readInstallRecord } from '../installation/records.js';
+import { readInstallRecord } from '../installation/records.js';
+import { digestPath } from '../shared/files.js';
 import { entryExists } from '../shared/safe-path.js';
-import type { Adapter, InstallRecord, ManagedOutput, ManagedScope } from '../shared/types.js';
+import type { Adapter, InstallRecord, ManagedOutput } from '../shared/types.js';
 import { containsAdoptSecret } from './adopt-secret.js';
 
 const maxRuleBytes = 256 * 1024;
@@ -71,29 +72,6 @@ function addBlocked(result: InventoryAccumulator, item: AdoptInventoryItem): voi
   result.blocked.push({ path: item.path, reasonCode: item.reasonCode });
 }
 
-/** Skill directories (hub tree or host skill link) carry no importable rules. */
-function inventoryDistribution(
-  path: string,
-  record: InstallRecord | null,
-  checksum: string | null,
-  result: InventoryAccumulator,
-): void {
-  const entry = lstatSync(path);
-  const reasonCode = entry.isSymbolicLink()
-    ? 'SYMLINK_REJECTED'
-    : 'MANAGED_DISTRIBUTION_NOT_IMPORTABLE';
-  const item: AdoptInventoryItem = {
-    path,
-    owner: record ? 'harnessmith' : 'unknown',
-    classification: record ? 'conflict-rule' : 'not-importable',
-    reasonCode,
-    proposal: entry.isSymbolicLink() ? 'blocked' : 'backup-and-replace',
-    checksum,
-  };
-  if (entry.isSymbolicLink() || record) addBlocked(result, item);
-  else result.inventory.push(item);
-}
-
 function inventoryPortableRule(
   output: string,
   checksum: string | null,
@@ -147,20 +125,12 @@ function inventoryPortableRule(
   }
 }
 
-function isDistribution(scope: ManagedScope, output: ManagedOutput): boolean {
-  if (output.kind === 'tree') return true;
-  return output.kind === 'link' && scope.scope === 'adapter'
-    ? output.target === (scope as Adapter).hub.harness
-    : output.kind === 'link';
-}
-
 function inventoryOutput(
-  scope: ManagedScope,
   record: InstallRecord | null,
   output: ManagedOutput,
   result: InventoryAccumulator,
 ): void {
-  const checksum = digestManagedOutput(scope, output.path);
+  const checksum = digestPath(output.path);
   result.expectedOutputChecksums[output.path] = checksum;
   if (!entryExists(output.path)) {
     result.inventory.push({
@@ -184,9 +154,7 @@ function inventoryOutput(
     });
     return;
   }
-  if (isDistribution(scope, output)) {
-    inventoryDistribution(output.path, record, checksum, result);
-  } else if (record) {
+  if (record) {
     addBlocked(result, {
       path: output.path,
       owner: 'harnessmith',
@@ -198,11 +166,7 @@ function inventoryOutput(
   } else inventoryPortableRule(output.path, checksum, result);
 }
 
-/**
- * Inventory the hub once and every selected host: existing host rule files are import
- * candidates for the personal overlay; recorded managed outputs (including hub links whose
- * target still matches) need no change.
- */
+/** Import portable host rules into the personal overlay; unchanged managed files need no write. */
 export function collectAdoptInventory(adapters: Adapter[]): InventoryAccumulator {
   const result: InventoryAccumulator = {
     inventory: [],
@@ -210,10 +174,14 @@ export function collectAdoptInventory(adapters: Adapter[]): InventoryAccumulator
     blocked: [],
     expectedOutputChecksums: {},
   };
-  const scopes: ManagedScope[] = [...(adapters[0] ? [adapters[0].hub] : []), ...adapters];
-  for (const scope of scopes) {
-    const record = readInstallRecord(scope);
-    for (const output of scope.outputs) inventoryOutput(scope, record, output, result);
+  for (const scope of adapters) {
+    // Keep read-only inventory useful for symlinks without weakening the install path gate:
+    // readAdoptRule rejects the link itself, and the blocked proposal cannot be applied.
+    const hasSymlinkOutput = scope.outputs.some(
+      ({ path }) => entryExists(path) && lstatSync(path).isSymbolicLink(),
+    );
+    const record = hasSymlinkOutput ? null : readInstallRecord(scope);
+    for (const output of scope.outputs) inventoryOutput(record, output, result);
   }
   return result;
 }

@@ -16,8 +16,13 @@ export function registerTaskCheckpointCommand(
   }).action(
     run((options: TaskCliOptions) => {
       assertRuntimeCanMutate(runtime);
+      const { status, ...taskOptions } = options;
       return checkpointTask(
-        { ...options, nextAction: options.next, status: options.status as TaskStatus | undefined },
+        {
+          ...taskOptions,
+          ...(options.next === undefined ? {} : { nextAction: options.next }),
+          ...(status === undefined ? {} : { status: status as TaskStatus }),
+        },
         io,
       );
     }),

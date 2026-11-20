@@ -25,8 +25,8 @@ All commands run via `npx harnessmith <command>`. Start with the full command ta
 | `adopt` | Inventory existing Host rules and import them safely | No by default; yes after confirming an exact proposal |
 | `harnessmith` / `install` | Install or upgrade the Harness | Yes |
 | `status` | Check install ownership and integrity | No |
-| `restore` | Restore the previous install layer | Yes |
-| `uninstall` | Restore all install layers and remove the record | Yes |
+| `restore` | Restore the file backups in the current record | Yes |
+| `uninstall` | Restore the current backups and remove the current files and record | Yes |
 | `capabilities` | Output Adapter scope, activation, and permission boundaries | No |
 | `diagnostics` | Preview the local redacted diagnostics report | No |
 | `export` | Preview or write a versioned personal overlay bundle | Yes only when `--output` is provided |
@@ -71,8 +71,8 @@ npx harnessmith setup --agent cursor --project /path/to/project --yes --json
 The plan classifies targets as `missing`, `managed`, `unmanaged`, or `modified`, and makes `unsupported` and
 `host-dependent` boundaries explicit. The confirmation step does not bypass security policy: `unmanaged` /
 `modified` are denied by default, and `--force` may be used explicitly only after reviewing ownership and backup
-behavior. A failed install transaction attempts a rollback and gives the dry-run → status → restore recovery
-order.
+behavior. A Host-file transaction failure attempts rollback. A skill failure after the Host commit is explicitly
+partial: committed Host files are neither reported as rolled back nor presented as a complete install.
 
 `installed-and-healthy` in the success report only means the deterministic checks for install ownership and the
 embedded Runtime passed; model behavior, tool permissions, authentication, or runtime events in a real Host are
@@ -113,22 +113,15 @@ npx harnessmith status --agent codex --explain
 npx harnessmith status --agent codex --explain --json
 ```
 
-The explain output uses stable `observedState`, `reasonCode`, and action `code` fields, listing install records,
-managed outputs, and backup evidence item by item. Stability means scripts can branch on these fields without
-drift across version updates.
-
-`status --json` and `--explain` also return `contentFingerprint`: `recorded` binds the managed content actually
-rendered at install time, `current` binds the current content; agreement is `matched`, difference is `drifted`,
-and old records or non-adopted targets are `unrecorded`. The computation sorts by logical output role and
-restores absolute paths expanded at install time back to placeholders, so equivalent installs of the same
-Adapter can be compared across home directories — switching machines won't produce a false drift report.
+The explain output includes `observedState`, `reasonCode`, and action `code`, listing install records, managed
+outputs, and backup evidence item by item. A breaking release can change the JSON contract; consumers should target
+the documented schema 3 output.
 
 Local state can be determined as `managed`, `modified`, `unmanaged`, `partial`, or `missing`; `unsupported`
-means there is no Adapter contract, and the command stops before path resolution. Harness capability, Host
-configuration, and real Host behavior are reported separately; Host conclusions that cannot be proven locally
-are fixed as `inconclusive` / `host-dependent` and are never misreported as healthy. Content fingerprints only
-prove the content identity of Harnessmith-managed prompts/configuration; they do not prove the Host has loaded
-these files, nor model behavior, permissions, or authentication state.
+means there is no Adapter contract, and the command stops before path resolution. Each file's checksum is compared
+with the current record; there is no additional whole-install content fingerprint. Checksums do not prove that the
+Host has loaded the files, nor model behavior, permissions, or authentication state. Those Host-dependent
+conclusions remain `inconclusive`.
 
 The First Value projection of `status` maps only `managed` to `installed: passed`; because the command does not
 run Runtime health, `healthy` remains `not-checked`. The unified next step for a managed state is
@@ -176,9 +169,9 @@ over-include.
 
 `import` fails closed on unknown schemas, unknown fields, digest mismatches, out-of-bounds paths, symlinks, and
 invalid UTF-8. A missing target may be created; identical content is skipped idempotently; any differing content
-is treated as a conflict that `import` cannot overwrite — go back to the explicit `adopt` flow. The actual write
-holds a personal root coordination lock and rolls back to the snapshot on failure; changes to the bundle or
-targets after the proposal invalidate the `proposalId`.
+is treated as a conflict that neither `import` nor `adopt` can merge or overwrite. Move or back up the conflict
+yourself, or edit the bundle and create a new proposal. The actual write holds a personal root coordination lock and
+rolls back to the snapshot on failure; changes to the bundle or targets after the proposal invalidate the `proposalId`.
 
 ## Examples
 

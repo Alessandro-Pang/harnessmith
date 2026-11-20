@@ -2,6 +2,8 @@ import { isAbsolute } from 'node:path';
 import { execa } from 'execa';
 import { whichCommand } from 'which-command';
 import type { HostEvalAttempt, HostEvalAttemptResult } from '../planning/eval-runner.js';
+import { evaluateCodexTurnCompletion } from './support/codex-completion.js';
+import { createEvalEnvironment } from './support/environment.js';
 
 const maximumHostOutputBytes = 1024 * 1024;
 
@@ -95,7 +97,8 @@ export async function runBoundedHostProcess(options: {
   if (!executable) return { kind: 'transport-failure', reason: 'process-unavailable' };
   const result = await execa(executable, options.invocation.args, {
     cwd: options.invocation.cwd,
-    env: options.invocation.env,
+    env: createEvalEnvironment(options.invocation.env),
+    extendEnv: false,
     input: options.prompt,
     cancelSignal: options.signal,
     forceKillAfterDelay: 1_000,
@@ -147,7 +150,10 @@ export function createCodexHostEvalExecutor(options: {
     attempt: HostEvalAttempt,
   ) => Promise<HostBehaviorResult>;
 }): (attempt: HostEvalAttempt) => Promise<HostEvalAttemptResult> {
-  const invocation = { ...buildCodexInvocation(options), env: options.environment };
+  const invocation = {
+    ...buildCodexInvocation(options),
+    ...(options.environment === undefined ? {} : { env: options.environment }),
+  };
   const runProcess = options.runProcess ?? runBoundedHostProcess;
   const maxOutputBytes = options.maxOutputBytes ?? maximumHostOutputBytes;
   return async (attempt) => {
@@ -162,6 +168,17 @@ export function createCodexHostEvalExecutor(options: {
       return { outcome: 'infra-inconclusive', termination: 'transport-failure' };
     }
     if (capture.kind === 'evaluator-failure') {
+      return { outcome: 'evaluator-failed', termination: 'evaluator-failure' };
+    }
+    if (
+      !evaluateCodexTurnCompletion({
+        status: capture.exitCode,
+        signal: null,
+        error: null,
+        stdout: capture.stdout,
+        stderr: capture.stderr,
+      }).completed
+    ) {
       return { outcome: 'evaluator-failed', termination: 'evaluator-failure' };
     }
     try {

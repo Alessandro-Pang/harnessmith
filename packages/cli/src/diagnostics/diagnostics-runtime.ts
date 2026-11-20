@@ -1,5 +1,7 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { templateRoot } from '../installation/install-template.js';
+import { entryExists } from '../shared/safe-path.js';
 import type { Adapter, AdapterStatusInspection } from '../shared/types.js';
 import { HarnessmithError } from '../shared/types.js';
 import { inspectStatusAll } from '../status/status-inspection.js';
@@ -30,24 +32,21 @@ export interface DiagnosticFailure {
   result: 'inconclusive';
 }
 
-function installationSummary(inspection: AdapterStatusInspection) {
-  const { status, plan } = inspection;
-  const states = status.installed
-    ? status.outputs.map(({ status: value }) => value)
-    : plan.outputs.map(({ state }) => state);
+function installationSummary({ adapter, status }: AdapterStatusInspection) {
   const counts = { managed: 0, modified: 0, missing: 0, unmanaged: 0 };
-  for (const state of states) {
-    if (state in counts) counts[state as keyof typeof counts] += 1;
-  }
-  const observed = status.installed
-    ? counts.missing > 0
+  const states = status.installed
+    ? status.outputs.map(({ status: state }) => state)
+    : adapter.outputs.map(({ path }) => (entryExists(path) ? 'unmanaged' : 'missing'));
+  for (const state of states) counts[state] += 1;
+  const observed = !status.installed
+    ? counts.unmanaged > 0
+      ? 'unmanaged'
+      : 'missing'
+    : counts.missing > 0
       ? 'partial'
       : counts.modified > 0
         ? 'modified'
-        : 'managed'
-    : counts.unmanaged > 0
-      ? 'unmanaged'
-      : 'missing';
+        : 'managed';
   return {
     status: observed,
     reasonCode: `INSTALLATION_${observed.toUpperCase()}`,
@@ -185,10 +184,10 @@ export function collectDiagnosticAdapter(
   };
   try {
     const inspection = inspectStatusAll([adapter])[0];
+    if (!inspection) throw new Error(`Missing status inspection: ${adapter.name}`);
     const installation = installationSummary(inspection);
     const canRun =
-      installation.status === 'managed' &&
-      existsSync(join(adapter.hub.harness, 'scripts', 'harness.mjs'));
+      installation.status === 'managed' && existsSync(join(templateRoot, 'dist', 'harness.mjs'));
     const runtime = canRun
       ? summarizeRuntime(adapter, env, project, failures)
       : {

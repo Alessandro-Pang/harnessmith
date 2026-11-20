@@ -1,222 +1,159 @@
-import {
-  assertSafeOutputPath,
-  assertSafePath,
-  entryExists,
-  ignoreRoot,
-} from '../shared/safe-path.js';
-import type {
-  InstallRecord,
-  LifecycleChange,
-  LifecycleLayerPlan,
-  ManagedScope,
-  MigratedOutput,
-  RecordOutput,
-} from '../shared/types.js';
+import { digestPath } from '../shared/files.js';
+import { assertSafePath, entryExists, ignoreRoot, outputRoot } from '../shared/safe-path.js';
+import type { Adapter, InstallRecord, RecordOutput } from '../shared/types.js';
 import { HarnessmithError } from '../shared/types.js';
-import { digestManagedOutput, isHub, outputSpec, readInstallRecordAt } from './records.js';
+import { outputSpec, readInstallRecord, readInstallRecordAt } from './records.js';
 
-export interface RecordLayer {
-  path: string;
-  record: InstallRecord;
-}
+export type {
+  LifecycleChange,
+  LifecycleChangeAction,
+  LifecycleCommand,
+  LifecyclePlan,
+} from '../shared/lifecycle-types.js';
 
-/** Hub migrations retire pre-hub user data under the user home; host ones stay in the host home. */
-export function migrationRoot(scope: ManagedScope): string {
-  return isHub(scope) ? scope.userHome : scope.home;
-}
+import type {
+  LifecycleChange,
+  LifecycleCommand,
+  LifecyclePlan,
+} from '../shared/lifecycle-types.js';
 
-export function assertLifecyclePaths(scope: ManagedScope, layers: RecordLayer[] = []): void {
-  for (const output of scope.outputs) assertSafeOutputPath(scope, output, output.path);
+/**
+ * Strict path gate for one adapter and, when known, its current record. Managed outputs
+ * are regular files: any symlink segment (including a symlink leaf at a destination)
+ * fails closed before a lifecycle operation reads or writes anything.
+ */
+export function assertLifecyclePaths(scope: Adapter, record?: InstallRecord | null): void {
+  for (const output of scope.outputs) {
+    assertSafePath(outputRoot(scope, output), output.path);
+  }
   assertSafePath(scope.home, scope.record);
   for (const ignore of scope.localIgnoreFiles || []) {
     assertSafePath(ignoreRoot(scope, ignore), ignore.path);
   }
-  for (const layer of layers) {
-    assertSafePath(scope.home, layer.path);
-    if (layer.record.recordBackup) assertSafePath(scope.home, layer.record.recordBackup);
-    for (const output of layer.record.outputs) {
-      const spec = outputSpec(scope, output.path);
-      assertSafeOutputPath(scope, spec, output.path);
-      if (output.backup) assertSafeOutputPath(scope, spec, output.backup);
-    }
-    for (const migrated of migratedOutputs(layer.record)) {
-      assertSafePath(migrationRoot(scope), migrated.path);
-      assertSafePath(migrationRoot(scope), migrated.backup);
-    }
+  if (!record) return;
+  if (record.recordBackup) assertSafePath(scope.home, record.recordBackup);
+  for (const output of record.outputs) {
+    const root = outputRoot(scope, outputSpec(scope, output.path));
+    assertSafePath(root, output.path);
+    if (output.backup) assertSafePath(root, output.backup);
   }
 }
 
-export function migratedOutputs(record: InstallRecord): MigratedOutput[] {
-  return record.migratedOutputs ?? [];
+/** The current installation record of an adapter. */
+export function currentRecord(scope: Adapter): InstallRecord {
+  const record = readInstallRecord(scope);
+  if (!record) {
+    throw new HarnessmithError(
+      'STATE_CONFLICT',
+      `No Harnessmith installation found for ${scope.label}: ${scope.record}`,
+      5,
+    );
+  }
+  return record;
 }
 
 /**
- * True when unwinding `output`'s layer must leave the current on-disk content in place
- * for the previous layer to adopt: the layer replaced its predecessor without keeping a
- * sibling backup, which only happens for content that exists in a single latest copy —
- * distribution trees and links, or any output whose content the previous record already
- * describes byte-for-byte (an identical rewrite is skipped without a backup).
+ * Fail-closed preflight shared by restore and uninstall. `--force` only overrides
+ * modified managed content; missing backups always block. Restore additionally
+ * requires the recorded `recordBackup` to exist because it becomes the active record;
+ * uninstall only deletes that file, so its absence is not an integrity problem.
  */
-export function retainsLatestContent(
-  scope: ManagedScope,
-  output: RecordOutput,
-  previous: InstallRecord,
-): boolean {
-  if (output.backup) return false;
-  const prior = previous.outputs.find(({ path }) => path === output.path);
-  if (!prior) return false;
-  if (prior.checksum === output.checksum) return true;
-  return outputSpec(scope, output.path).kind !== 'file';
-}
-
-export function assertRestorable(scope: ManagedScope, record: InstallRecord, force: boolean): void {
-  const modified = record.outputs.filter(({ path, checksum }) => {
-    // Trees and links are volatile distribution content that only exists in its latest
-    // copy; drift there is expected after a keep-latest unwind and never blocks restore.
-    if (outputSpec(scope, path).kind !== 'file') return false;
-    return entryExists(path) && digestManagedOutput(scope, path) !== checksum;
-  });
+export function assertUnwindable(
+  record: InstallRecord,
+  force: boolean,
+  command: LifecycleCommand,
+): void {
+  const modified = record.outputs.filter(
+    ({ path, checksum }) => entryExists(path) && digestPath(path) !== checksum,
+  );
   if (modified.length > 0 && !force) {
     throw new HarnessmithError(
       'SAFETY_CONFLICT',
-      `Managed files were modified; use --force to restore anyway:\n${modified.map(({ path }) => `  ${path}`).join('\n')}`,
+      `Managed files were modified; use --force to ${command} anyway:\n${modified.map(({ path }) => `  ${path}`).join('\n')}`,
       3,
     );
   }
-  const missingBackups = [...record.outputs, ...migratedOutputs(record)].filter(
-    ({ backup }) => backup && !entryExists(backup),
-  );
+  const missingBackups = record.outputs
+    .filter(({ backup }) => backup && !entryExists(backup))
+    .map(({ backup }) => backup as string);
+  if (command === 'restore' && record.recordBackup && !entryExists(record.recordBackup)) {
+    missingBackups.push(record.recordBackup);
+  }
   if (missingBackups.length > 0) {
     throw new HarnessmithError(
       'INTEGRITY_ERROR',
-      `Cannot restore because backup files are missing:\n${missingBackups.map(({ backup }) => `  ${backup}`).join('\n')}`,
+      `Cannot ${command} because backup files are missing:\n${missingBackups.map((path) => `  ${path}`).join('\n')}`,
       3,
     );
   }
 }
 
-export function installationLayers(scope: ManagedScope): RecordLayer[] {
-  assertLifecyclePaths(scope);
-  const layers: RecordLayer[] = [];
-  const seen = new Set<string>();
-  let path: string | null = scope.record;
-  while (path) {
-    if (seen.has(path)) {
-      throw new HarnessmithError(
-        'INTEGRITY_ERROR',
-        `Installation record cycle detected: ${path}`,
-        3,
-      );
-    }
-    seen.add(path);
-    const record = readInstallRecordAt(scope, path);
-    if (!record) {
-      if (layers.length === 0) break;
-      throw new HarnessmithError(
-        'INTEGRITY_ERROR',
-        `Installation record backup is missing: ${path}`,
-        3,
-      );
-    }
-    layers.push({ path, record });
-    path = record.recordBackup;
-  }
-  assertLifecyclePaths(scope, layers);
-  return layers;
-}
-
-export function assertUninstallable(
-  scope: ManagedScope,
-  layers: RecordLayer[],
-  force: boolean,
-): void {
-  let activePaths = new Map(layers[0]?.record.outputs.map(({ path }) => [path, path]) || []);
-  for (const [index, layer] of layers.entries()) {
-    const modified = layer.record.outputs.filter(({ path, checksum }) => {
-      if (outputSpec(scope, path).kind !== 'file') return false;
-      const activePath = activePaths.get(path);
-      return Boolean(
-        activePath &&
-          entryExists(activePath) &&
-          digestManagedOutput(scope, activePath, path) !== checksum,
-      );
-    });
-    if (modified.length > 0 && !force) {
-      throw new HarnessmithError(
-        'SAFETY_CONFLICT',
-        `Managed files were modified in installation layer ${index + 1}; use --force to uninstall anyway:\n${modified.map(({ path }) => `  ${path}`).join('\n')}`,
-        3,
-      );
-    }
-    const missingBackups = [...layer.record.outputs, ...migratedOutputs(layer.record)].filter(
-      ({ backup }) => backup && !entryExists(backup),
+/**
+ * Read and strictly validate the direct recordBackup before restore changes anything.
+ * The existing schema-3 reader rejects damaged, old-schema, or foreign backups; only
+ * this one previous layer is ever read, never a chain.
+ */
+export function previousRecord(scope: Adapter, record: InstallRecord): InstallRecord | null {
+  if (!record.recordBackup) return null;
+  const previous = readInstallRecordAt(scope, record.recordBackup);
+  if (!previous) {
+    throw new HarnessmithError(
+      'INTEGRITY_ERROR',
+      `Cannot restore because the record backup is missing: ${record.recordBackup}`,
+      3,
     );
-    if (missingBackups.length > 0) {
-      throw new HarnessmithError(
-        'INTEGRITY_ERROR',
-        `Cannot uninstall because backup files are missing:\n${missingBackups.map(({ backup }) => `  ${backup}`).join('\n')}`,
-        3,
-      );
-    }
-    const previous = layers[index + 1];
-    if (!layer.record.recordBackup || !previous) continue;
-    const next = new Map<string, string>();
-    for (const migrated of migratedOutputs(layer.record)) next.set(migrated.path, migrated.backup);
-    for (const output of layer.record.outputs) {
-      if (output.backup) {
-        next.set(output.path, output.backup);
-        continue;
-      }
-      // A path the previous layer did not own has nothing to restore; a path it did own
-      // must either carry a backup, have been retired through migratedOutputs, or hold
-      // single-copy distribution content that unwinding keeps in place (keep-latest).
-      if (previous.record.outputs.some(({ path }) => path === output.path)) {
-        if (retainsLatestContent(scope, output, previous.record)) {
-          next.set(output.path, output.path);
-          continue;
-        }
-        throw new HarnessmithError(
-          'INTEGRITY_ERROR',
-          `Installation layer is missing its previous output: ${output.path}`,
-          3,
-        );
-      }
-    }
-    activePaths = next;
   }
+  return previous;
 }
 
-export function describeLayer(
-  scope: ManagedScope,
-  layer: RecordLayer,
-  previousRecord: InstallRecord | null,
-): LifecycleLayerPlan {
-  const changes: LifecycleChange[] = layer.record.outputs.map((output): LifecycleChange => {
+/**
+ * A managed output without its own backup survives restore only when the direct previous
+ * record still owns the exact current content; modified or missing content is not kept.
+ */
+export function retainedByPreviousRecord(
+  output: RecordOutput,
+  previous: InstallRecord | null,
+): boolean {
+  if (output.backup || !previous) return false;
+  const inherited = previous.outputs.find(({ path }) => path === output.path);
+  return Boolean(
+    inherited && entryExists(output.path) && digestPath(output.path) === inherited.checksum,
+  );
+}
+
+/** Preview one Adapter's current record using reads and digests only. */
+export function describeLifecycle(
+  command: LifecycleCommand,
+  adapter: Adapter,
+  force = false,
+): LifecyclePlan {
+  const record = currentRecord(adapter);
+  assertLifecyclePaths(adapter, record);
+  assertUnwindable(record, force, command);
+  const previous = command === 'restore' ? previousRecord(adapter, record) : null;
+  const changes: LifecycleChange[] = record.outputs.map((output) => {
     if (output.backup) {
       return { path: output.path, action: 'restore-backup', source: output.backup };
     }
-    if (previousRecord && retainsLatestContent(scope, output, previousRecord)) {
-      return { path: output.path, action: 'keep-latest' };
-    }
+    if (retainedByPreviousRecord(output, previous)) return { path: output.path, action: 'keep' };
     return { path: output.path, action: 'remove' };
   });
+  const restoresRecord = command === 'restore' && Boolean(record.recordBackup);
   changes.push(
-    ...migratedOutputs(layer.record).map(
-      ({ path, backup }): LifecycleChange => ({ path, action: 'restore-migrated', source: backup }),
-    ),
+    restoresRecord
+      ? { path: adapter.record, action: 'restore-backup', source: record.recordBackup as string }
+      : { path: adapter.record, action: 'remove' },
   );
-  changes.push(
-    layer.record.recordBackup
-      ? { path: scope.record, action: 'restore-backup', source: layer.record.recordBackup }
-      : { path: scope.record, action: 'remove' },
-  );
-  if (!layer.record.recordBackup) {
+  if (command === 'uninstall' && record.recordBackup) {
+    changes.push({ path: record.recordBackup, action: 'remove' });
+  }
+  if (!restoresRecord) {
     changes.push(
-      ...(scope.localIgnoreFiles || []).map(({ path }) => ({
+      ...(adapter.localIgnoreFiles || []).map(({ path }) => ({
         path,
         action: 'remove-managed-block' as const,
       })),
     );
   }
-  return { sourceRecord: layer.path, changes };
+  return { command, adapter: adapter.name, force, home: adapter.home, changes };
 }

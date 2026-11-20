@@ -20,6 +20,40 @@ function isValidDate(value: string): boolean {
   return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
 }
 
+function handoffSectionIssues(body: string): string[] {
+  const issues: string[] = [];
+  const lines = body.split(/\r?\n/);
+  let priorIndex = -1;
+  for (const section of handoffSections) {
+    const heading = `# ${section}`;
+    const indexes = lines.flatMap((line, index) => (isAtxHeading(line, 1, section) ? [index] : []));
+    const required = section === '当前目标' || section === '已完成' || section === '下一步';
+    if (indexes.length > 1 || (required && indexes.length !== 1)) {
+      issues.push(heading);
+      continue;
+    }
+    if (indexes.length === 0) continue;
+    const [index] = indexes;
+    if (index === undefined) continue;
+    if (lines[index] !== heading) issues.push(`${heading} canonical`);
+    if (index <= priorIndex) issues.push(`${heading} order`);
+    priorIndex = index;
+    const next = lines.findIndex(
+      (line, lineIndex) =>
+        lineIndex > index && handoffSections.some((title) => isAtxHeading(line, 1, title)),
+    );
+    if (
+      !lines
+        .slice(index + 1, next < 0 ? lines.length : next)
+        .join('\n')
+        .trim()
+    ) {
+      issues.push(`${heading} content`);
+    }
+  }
+  return issues;
+}
+
 export function validateTypedHandoff(
   root: string,
   path: string,
@@ -81,34 +115,7 @@ export function validateTypedHandoff(
     issues.push('checkpoint-reason');
   }
   if (!['active', 'blocked', 'complete', 'archived'].includes(status)) issues.push('status');
-  const lines = body.split(/\r?\n/);
-  let priorIndex = -1;
-  for (const section of handoffSections) {
-    const heading = `# ${section}`;
-    const indexes = lines.flatMap((line, index) => (isAtxHeading(line, 1, section) ? [index] : []));
-    const required = section === '当前目标' || section === '已完成' || section === '下一步';
-    if (indexes.length > 1 || (required && indexes.length !== 1)) {
-      issues.push(heading);
-      continue;
-    }
-    if (indexes.length === 0) continue;
-    const [index] = indexes;
-    if (lines[index] !== heading) issues.push(`${heading} canonical`);
-    if (index <= priorIndex) issues.push(`${heading} order`);
-    priorIndex = index;
-    const next = lines.findIndex(
-      (line, lineIndex) =>
-        lineIndex > index && handoffSections.some((title) => isAtxHeading(line, 1, title)),
-    );
-    if (
-      !lines
-        .slice(index + 1, next < 0 ? lines.length : next)
-        .join('\n')
-        .trim()
-    ) {
-      issues.push(`${heading} content`);
-    }
-  }
+  issues.push(...handoffSectionIssues(body));
   for (const issue of issues) {
     reportMemoryDiagnostic(io, 'handoff-identity', `Invalid typed handoff ${issue}: ${path}`);
   }

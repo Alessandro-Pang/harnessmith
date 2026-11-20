@@ -6,6 +6,7 @@ import { PassThrough } from 'node:stream';
 import { fileURLToPath } from 'node:url';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import { onTestFinished, test } from 'vitest';
+import { elementAt } from '../../../../packages/harness/src/__tests__/helpers/harness.js';
 import { supportedAgentNames } from '../adapters/adapter-registry.js';
 import { createAdapter } from '../adapters/adapters.js';
 import { executeCommand } from '../application/command-executor.js';
@@ -42,8 +43,8 @@ test('diagnostics returns only allowlisted metadata and never leaks paths or raw
     adapter.record,
     JSON.stringify({ prompt: `do not leak ${secret}`, toolArguments: [root], environment: env }),
   );
-  mkdirSync(dirname(adapter.instructions[0].path), { recursive: true });
-  writeFileSync(adapter.instructions[0].path, `# 私有规则\n${secret}\n`);
+  mkdirSync(dirname(elementAt(adapter.instructions, 0).path), { recursive: true });
+  writeFileSync(elementAt(adapter.instructions, 0).path, `# 私有规则\n${secret}\n`);
 
   const before = readFileSync(adapter.record, 'utf8');
   const report = createDiagnosticsReport([adapter], { env, project: root });
@@ -65,7 +66,7 @@ test('diagnostics summarizes healthy installed runtime checks without returning 
   installAll([adapter], { env, noInitGlobal: false });
 
   const report = createDiagnosticsReport([adapter], { env, project: root });
-  const item = report.adapters[0];
+  const item = elementAt(report.adapters, 0);
   assert.equal(report.collectionResult, 'complete');
   assert.equal(item.installation.status, 'managed');
   assert.ok(item.runtimeChecks.some(({ id }) => id === 'installation'));
@@ -90,8 +91,8 @@ test('a failed adapter remains visible when another adapter is collected success
   assert.equal(report.adapters.length, 2);
   assert.equal(report.collectionResult, 'partial');
   assert.equal(report.failures.length, 1);
-  assert.equal(report.failures[0].adapter, 'codex');
-  assert.equal(report.adapters[1].adapter, 'claude');
+  assert.equal(elementAt(report.failures, 0).adapter, 'codex');
+  assert.equal(elementAt(report.adapters, 1).adapter, 'claude');
 });
 
 test('diagnostics command previews JSON without persisting a report', async () => {
@@ -110,8 +111,19 @@ test('diagnostics command previews JSON without persisting a report', async () =
 
   assert.equal(status, 0);
   assert.equal(logs.length, 1);
-  assert.equal(JSON.parse(logs[0]).command, 'diagnostics');
+  assert.equal(JSON.parse(elementAt(logs, 0)).command, 'diagnostics');
   assert.equal(existsSync(join(root, 'diagnostics.json')), false);
+});
+
+test('diagnostics counts unmanaged destinations without constructing an install plan', () => {
+  const { root, env } = fixture('harnessmith-diagnostics-unmanaged-');
+  const adapter = createAdapter('codex', { env });
+  mkdirSync(dirname(elementAt(adapter.instructions, 0).path), { recursive: true });
+  writeFileSync(elementAt(adapter.instructions, 0).path, '# existing rules\n');
+
+  const item = elementAt(createDiagnosticsReport([adapter], { env, project: root }).adapters, 0);
+  assert.equal(item.installation.status, 'unmanaged');
+  assert.equal(item.installation.outputCounts.unmanaged, 1);
 });
 
 test('diagnostics schema rejects unknown fields and documents owner, purpose, and retention', () => {

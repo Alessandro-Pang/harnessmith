@@ -2,14 +2,9 @@ import { adapterCapabilities, createAdapter } from '../adapters/adapters.js';
 import { executeAdopt } from '../adoption/adopt-command.js';
 import type { HarnessmithCommand } from '../app/program.js';
 import { executeDiagnostics } from '../diagnostics/diagnostics-command.js';
-import { describeLifecycle } from '../installation/hub-lifecycle.js';
-import { installAll } from '../installation/install.js';
-import {
-  inspectStatusAll,
-  restoreAll,
-  statusAll,
-  uninstallAll,
-} from '../installation/lifecycle.js';
+import { installWithSkills, uninstallWithSkills } from '../installation/installation-workflow.js';
+import { inspectStatusAll, restoreAll, statusAll } from '../installation/lifecycle.js';
+import { describeLifecycle, type LifecycleCommand } from '../installation/lifecycle-plan.js';
 import { assertNonOverlappingAdapters, describeInstall } from '../installation/records.js';
 import {
   confirmConflicts,
@@ -23,7 +18,7 @@ import {
 } from '../presentation/ui.js';
 import { executeSetup } from '../setup/setup-command.js';
 import { normalizeAgents } from '../shared/agents.js';
-import type { Adapter, CliOptions, ExecuteContext, LifecycleCommand } from '../shared/types.js';
+import type { Adapter, CliOptions, ExecuteContext } from '../shared/types.js';
 import { HarnessmithError } from '../shared/types.js';
 import { explainStatus, explainUnsupportedStatus } from '../status/status-explanation.js';
 import type { AdapterCommand } from './command-routing.js';
@@ -63,7 +58,7 @@ function previewLifecycle(
   interactive: boolean,
 ): number {
   const plans = adapters.map((adapter) =>
-    describeLifecycle(command, adapter, options.force || false, adapters),
+    describeLifecycle(command, adapter, options.force || false),
   );
   printLifecyclePlans(plans, context.io, Boolean(options.json || !interactive));
   if (interactive) finishInteractive('Preview complete. No files were changed.', context.output);
@@ -107,18 +102,16 @@ export function executeLifecycle(
   if (options.dryRun) {
     return previewLifecycle(command, adapters, options, context, interactive);
   }
+  const force = options.force === undefined ? {} : { force: options.force };
   const results =
     command === 'restore'
-      ? restoreAll(adapters, { force: options.force })
-      : uninstallAll(adapters, { force: options.force });
+      ? restoreAll(adapters, force)
+      : uninstallWithSkills(adapters, force, context.env);
   for (const result of results) {
     if (options.json) context.io.log(JSON.stringify({ command, ...result }));
     else if (command === 'restore')
       context.io.log(`Restored ${result.adapter} to the previous installation state`);
-    else
-      context.io.log(
-        `Uninstalled ${result.adapter}: restored ${'layers' in result ? result.layers : 0} installation layer(s)`,
-      );
+    else context.io.log(`Uninstalled ${result.adapter} instruction files and installation record`);
   }
   if (interactive) {
     finishInteractive(
@@ -180,9 +173,9 @@ export async function executeInstall(
       );
     }
   }
-  const results = installAll(adapters, {
+  const results = installWithSkills(adapters, {
     env: context.env,
-    force,
+    ...(force === undefined ? {} : { force }),
     noInitGlobal: !options.initGlobal,
   });
   if (options.json) context.io.log(JSON.stringify({ command: 'install', results }));

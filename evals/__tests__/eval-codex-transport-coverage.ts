@@ -112,7 +112,8 @@ const attempt = {
 const completed = {
   kind: 'completed',
   exitCode: 0,
-  stdout: '{"type":"turn.completed"}',
+  stdout:
+    '{"type":"turn.completed"}\n{"type":"item.completed","item":{"type":"agent_message","text":"done"}}',
   stderr: '',
 } as const;
 assert.equal(

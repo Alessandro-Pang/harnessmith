@@ -12,9 +12,7 @@ interface AdapterOutput {
 
 interface AdapterResult {
   adapter?: string;
-  harness?: string | null;
   record?: string;
-  hub?: { home?: string; record?: string; owners?: string[] };
   outputs?: AdapterOutput[];
 }
 
@@ -86,30 +84,20 @@ function checkInstall(
     check,
   );
   for (const result of results) {
-    const hubHarness = join(result.hub?.home || '', 'skills', 'agent-harness');
     check(existsSync(result.record || ''), `${result.adapter} install record was not created`);
-    check(existsSync(result.hub?.record || ''), `${result.adapter} hub record was not created`);
-    // Owner ids are `<agent>` for global hosts and `<agent>:<project>` for project hosts.
     check(
-      Boolean(
-        result.hub?.owners?.some(
-          (owner) => owner === result.adapter || owner.startsWith(`${result.adapter}:`),
-        ),
-      ),
-      `${result.adapter} is not recorded as a hub owner`,
+      !existsSync(join(env.HOME || '', '.agents', 'harnessmith')),
+      `${result.adapter} created an obsolete hub`,
     );
     check(
-      !existsSync(join(hubHarness, 'packages/cli/src')),
-      'hub Harness unexpectedly contains TypeScript sources',
+      'harness' in result === false && 'hub' in result === false,
+      `${result.adapter} result has obsolete distribution fields`,
     );
-    // Hosts that do not scan ~/.agents/skills receive a symlink; verify the link resolves.
-    const entry = result.harness ? join(result.harness, 'scripts', 'harness.mjs') : null;
-    if (entry) check(existsSync(entry), `${result.adapter} skill link does not resolve`);
-    const validation = JSON.parse(
-      runNode(entry || join(hubHarness, 'scripts', 'harness.mjs'), ['validate', '--json'], env),
-    ) as { valid?: boolean };
-    check(validation.valid === true, `${result.adapter} installed Harness validation did not pass`);
   }
+  const validation = JSON.parse(runNode(outerCli, ['validate', '--json'], env)) as {
+    valid?: boolean;
+  };
+  check(validation.valid === true, 'installed Harness validation did not pass');
   return results;
 }
 

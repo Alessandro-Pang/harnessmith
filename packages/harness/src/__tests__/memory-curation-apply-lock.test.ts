@@ -16,7 +16,7 @@ import {
   applyMemoryCuration,
   curationApplyLockRoot,
 } from '../program/memory/memory-curation-apply.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { capturedIo, elementAt, harnessRuntime } from './helpers/harness.js';
 
 function fixture(taskId = 'curation-apply-lock-task') {
   const root = mkdtempSync(join(tmpdir(), 'harness-curation-apply-lock-'));
@@ -50,12 +50,11 @@ test('curation apply is serialized by a project-scoped lock', () => {
     },
     capturedIo(),
   );
-  const proposal = curateMemory(
-    runtime,
-    project,
-    { task: taskId, outcome: 'workstream-complete' },
-    capturedIo(),
-  ).closeCandidates[0];
+  const proposal = elementAt(
+    curateMemory(runtime, project, { task: taskId, outcome: 'workstream-complete' }, capturedIo())
+      .closeCandidates,
+    0,
+  );
   const lockRoot = curationApplyLockRoot(runtime, project);
   mkdirSync(lockRoot, { recursive: true });
   assert.equal(
@@ -145,8 +144,10 @@ test('curation apply preserves typed supersession cycle checks', () => {
     capturedIo(),
   );
   supersedeMemory(runtime, project, replacement.reference, source.reference, capturedIo());
-  const proposal = curateMemory(runtime, project, { task: taskId }, capturedIo())
-    .supersedeCandidates[0];
+  const proposal = elementAt(
+    curateMemory(runtime, project, { task: taskId }, capturedIo()).supersedeCandidates,
+    0,
+  );
 
   const result = applyMemoryCuration(
     runtime,
@@ -157,6 +158,6 @@ test('curation apply preserves typed supersession cycle checks', () => {
   );
 
   assert.equal(result.status, 'failed');
-  assert.match(result.items[0].reason, /cycle/i);
+  assert.match(elementAt(result.items, 0).reason, /cycle/i);
   assert.match(readFileSync(source.path, 'utf8'), /status: active/);
 });

@@ -1,7 +1,7 @@
 # Harness
 
 本文件只保留每次会话都适用的边界与触发规则。工作方法在 skill `agent-harness`，机械约束由 Harness CLI 与 schema 执行。
-下文 `<harness>` 指 `node {{HARNESS_HOME}}/skills/agent-harness/scripts/harness.mjs`。
+下文 `<harness>` 指 `harnessmith`；未全局安装 npm 包时，等价使用 `npx --yes harnessmith`。
 
 ## 信任与授权
 
@@ -26,7 +26,7 @@
    再核对代码、配置、测试、manifest、lockfile 等事实源；`truncated` 或 `inconclusive` 不等于不存在。
 5. 不递归读 `docs/`、`.agent-docs/`、archive 或历史会话；只在缺失信息会改变权限、范围或结果时提问。
 6. 首条回复的第一行输出 `harness: bootstrap=<ok|skipped:原因> route=<playbook|ask|none>`，之后不再提及 Harness 内部动作。
-   Harness 的目录、CLI 与协议说明在 `{{HARNESS_HOME}}/skills/agent-harness/SKILL.md`，只在 bootstrap 不可用时手动读取。
+   Harness 的目录、CLI 与协议说明在 skill `agent-harness` 的 `SKILL.md`，只在 bootstrap 不可用时手动读取。
 
 ## 交付与 Memory
 

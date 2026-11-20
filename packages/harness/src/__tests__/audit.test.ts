@@ -15,7 +15,7 @@ import { onTestFinished, test } from 'vitest';
 import { runCli } from '../cli.js';
 import { buildAuditIndex } from '../lib/audit/audit-accounting.js';
 import { createHealthReport } from '../lib/health/health.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { capturedIo, elementAt, harnessRuntime } from './helpers/harness.js';
 
 function fixture() {
   const root = mkdtempSync(join(tmpdir(), 'harness-audit-'));
@@ -62,7 +62,7 @@ test('audit record stores a bounded privacy-safe event without prompts or tool a
   const io = capturedIo();
 
   assert.equal(runCli(['audit', 'record', '--payload-file', input, '--json'], { runtime, io }), 0);
-  const result = JSON.parse(io.logs[0]);
+  const result = JSON.parse(elementAt(io.logs, 0));
   const records = readFileSync(result.path, 'utf8')
     .trim()
     .split('\n')
@@ -168,8 +168,8 @@ test('audit append recovers only a verifiable prefix after a torn final record',
     .split('\n')
     .map((line) => JSON.parse(line));
   assert.equal(records.length, 2);
-  assert.equal(records[0].traceId, 'trace-20260828-001');
-  assert.equal(records[1].traceId, 'trace-20260828-002');
+  assert.equal(elementAt(records, 0).traceId, 'trace-20260828-001');
+  assert.equal(elementAt(records, 1).traceId, 'trace-20260828-002');
 });
 
 test('audit append fails closed when no complete record survives a torn file', () => {
@@ -284,11 +284,11 @@ test('audit list filters by trace and summary aggregates outcomes, policy, cost,
     }),
     0,
   );
-  assert.equal(JSON.parse(listed.logs[0]).events.length, 2);
+  assert.equal(JSON.parse(elementAt(listed.logs, 0)).events.length, 2);
 
   const summarized = capturedIo();
   assert.equal(runCli(['audit', 'summary', '--json'], { runtime, io: summarized }), 0);
-  assert.deepEqual(JSON.parse(summarized.logs[0]), {
+  assert.deepEqual(JSON.parse(elementAt(summarized.logs, 0)), {
     version: 1,
     eventCount: 3,
     traceCount: 2,
@@ -417,7 +417,7 @@ test('audit maintenance reports retention candidates and archive is proposal-fir
     }),
     1,
   );
-  const report = JSON.parse(maintenance.logs[0]);
+  const report = JSON.parse(elementAt(maintenance.logs, 0));
   assert.equal(report.version, 1);
   assert.deepEqual(report.staleFiles, ['2026-01-01.jsonl']);
   assert.equal(report.withinBudget, true);
@@ -430,7 +430,7 @@ test('audit maintenance reports retention candidates and archive is proposal-fir
     }),
     0,
   );
-  assert.equal(JSON.parse(proposal.logs[0]).action, 'proposed');
+  assert.equal(JSON.parse(elementAt(proposal.logs, 0)).action, 'proposed');
   assert.equal(existsSync(join(runtime.stateRoot, 'audit', '2026-01-01.jsonl')), true);
 
   const applied = capturedIo();
@@ -441,12 +441,12 @@ test('audit maintenance reports retention candidates and archive is proposal-fir
     }),
     0,
   );
-  assert.deepEqual(JSON.parse(applied.logs[0]).archivedFiles, ['2026-01-01.jsonl']);
+  assert.deepEqual(JSON.parse(elementAt(applied.logs, 0)).archivedFiles, ['2026-01-01.jsonl']);
   assert.equal(existsSync(join(runtime.stateRoot, 'audit', '2026-01-01.jsonl')), false);
   assert.equal(existsSync(join(runtime.stateRoot, 'audit', 'archive', '2026-01-01.jsonl')), true);
   const summary = capturedIo();
   runCli(['audit', 'summary', '--json'], { runtime, io: summary });
-  assert.equal(JSON.parse(summary.logs[0]).eventCount, 0);
+  assert.equal(JSON.parse(elementAt(summary.logs, 0)).eventCount, 0);
 });
 
 test('audit archive refuses a non-directory archive root and existing destinations', () => {

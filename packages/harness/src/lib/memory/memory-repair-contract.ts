@@ -42,6 +42,7 @@ export interface MemoryRepairReport {
 }
 
 export interface ApplyOptions {
+  beforeRevalidate?: () => void;
   beforeVerify?: () => void;
 }
 
@@ -100,7 +101,9 @@ export function compactCoreContent(content: string): string {
     .map((line) => {
       const references = [...line.matchAll(/memory:([A-Za-z0-9_./-]+)/g)];
       if (!line.startsWith('- ') || references.length !== 1) return line;
-      return `- memory:${references[0][1]}${line.endsWith('\n') ? '\n' : ''}`;
+      const reference = references[0]?.[1];
+      if (reference === undefined) return line;
+      return `- memory:${reference}${line.endsWith('\n') ? '\n' : ''}`;
     })
     .join('');
 }

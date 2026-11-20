@@ -12,7 +12,11 @@ export function route(
   io: Io = console,
 ): number {
   assertNoHighConfidenceSecret(query, 'Documentation route query');
-  const report = routeDocumentation(runtime.docsRoot, query, { intent });
+  const report = routeDocumentation(
+    runtime.docsRoot,
+    query,
+    intent === undefined ? {} : { intent },
+  );
   if (json) io.log(JSON.stringify(report, null, 2));
   else if (report.status === 'unmatched') io.log('No matching documentation routes');
   else if (report.status === 'ambiguous') {

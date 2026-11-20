@@ -21,7 +21,7 @@ function fixture() {
   return { root, env, adapter: createAdapter('codex', { env }) };
 }
 
-test('first value preview names the start, end, owners, recovery checkpoint, and local-only boundary', () => {
+test('first value preview names observable states, owners, recovery, and the next action', () => {
   const { adapter } = fixture();
   const journey = firstValuePreview([adapter]);
 

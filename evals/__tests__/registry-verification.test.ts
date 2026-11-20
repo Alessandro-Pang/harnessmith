@@ -86,9 +86,11 @@ import { join } from 'node:path';
 const args = process.argv.slice(2);
 if (args[0] === '--version') console.log('${version}');
 else if (args[0] === 'capabilities') console.log(JSON.stringify({ version: 1, agents: ['codex'] }));
+else if (args[0] === 'doctor') console.log('Doctor passed');
+else if (args[0] === 'health' && args.includes('--json')) console.log(JSON.stringify({ version: 1, healthy: true, checks: [] }));
 else if (args[0] === 'install' && args.includes('--dry-run')) console.log(JSON.stringify({ command: 'install', dryRun: true }));
 else if (args[0] === 'install') {
-  mkdirSync(join(process.env.HOME, '.agents', 'skills', 'agent-harness', 'scripts'), { recursive: true });
+  mkdirSync(join(process.env.HOME, '.agents', 'skills', 'agent-harness'), { recursive: true });
   mkdirSync(process.env.HARNESS_MEMORY_HOME, { recursive: true });
   mkdirSync(process.env.HARNESS_PERSONAL_HOME, { recursive: true });
   writeFileSync(join(process.env.CODEX_HOME, 'AGENTS.md'), 'managed');
@@ -96,12 +98,7 @@ else if (args[0] === 'install') {
   writeFileSync(join(process.env.HARNESS_MEMORY_HOME, 'core.md'), 'core');
   writeFileSync(join(process.env.HARNESS_MEMORY_HOME, 'profile.md'), 'profile');
   writeFileSync(join(process.env.HARNESS_PERSONAL_HOME, 'AGENTS.md'), 'personal');
-  writeFileSync(join(process.env.HOME, '.agents', 'skills', 'agent-harness', 'scripts', 'harness.mjs'), \\\`#!/usr/bin/env node
-const args = process.argv.slice(2);
-if (args[0] === 'doctor') console.log('Doctor passed');
-else if (args[0] === 'health' && args.includes('--json')) console.log(JSON.stringify({ version: 1, healthy: true, checks: [] }));
-else process.exitCode = 2;
-\\\`);
+  writeFileSync(join(process.env.HOME, '.agents', 'skills', 'agent-harness', 'SKILL.md'), '# agent-harness');
   console.log(JSON.stringify({ command: 'install', adapter: 'codex' }));
 } else process.exitCode = 2;
 \`,

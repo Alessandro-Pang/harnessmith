@@ -69,7 +69,7 @@ export function taskReferences(sourceRefs: string[]): string[] {
     ...new Set(
       sourceRefs.flatMap((reference) => {
         const match = /^task:([^\s:]+)$/u.exec(reference.trim());
-        return match ? [match[1]] : [];
+        return match?.[1] ? [match[1]] : [];
       }),
     ),
   ].sort();
@@ -193,9 +193,9 @@ function relationDocument(document: CurationDocument): MemoryRelationInput {
     type: document.type,
     kind: document.kind,
     status: document.status,
-    workstream: document.workstream,
-    session: document.session,
-    taskId: document.taskId,
+    ...(document.workstream === undefined ? {} : { workstream: document.workstream }),
+    ...(document.session === undefined ? {} : { session: document.session }),
+    ...(document.taskId === undefined ? {} : { taskId: document.taskId }),
     sourceRefs: document.sourceRefs,
   };
 }

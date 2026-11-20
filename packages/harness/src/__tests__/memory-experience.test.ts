@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { runCli } from '../cli.js';
 import { captureExperience } from '../commands/memory/memory-experience.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { capturedIo, elementAt, harnessRuntime } from './helpers/harness.js';
 
 function fixture() {
   const root = mkdtempSync(join(tmpdir(), 'harness-experience-'));
@@ -47,7 +47,7 @@ test('typed experience deduplicates one conclusion and accumulates sourced evide
       0,
       io.errors.join('\n'),
     );
-    return JSON.parse(io.logs[0]);
+    return JSON.parse(elementAt(io.logs, 0));
   };
   const first = capture(
     'The compressed rule exceeded normal sentence complexity.',

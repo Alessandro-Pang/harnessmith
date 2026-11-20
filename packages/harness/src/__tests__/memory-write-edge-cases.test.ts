@@ -9,7 +9,7 @@ import {
   snapshotDirectoryIdentity,
   writeValidated,
 } from '../lib/memory/memory-write.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { capturedIo, elementAt, harnessRuntime } from './helpers/harness.js';
 
 function temporaryRoot(prefix: string): string {
   const root = mkdtempSync(join(tmpdir(), prefix));
@@ -38,7 +38,7 @@ test.skipIf(process.platform === 'win32')(
     );
 
     assert.equal(errors.length, 1);
-    assert.match(errors[0], /directory identity check failed.*recovery path/i);
+    assert.match(elementAt(errors, 0), /directory identity check failed.*recovery path/i);
   },
 );
 

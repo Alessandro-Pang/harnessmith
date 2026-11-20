@@ -16,8 +16,12 @@ export function registerTaskAcceptanceCommand(
   }).action(
     run((options: TaskCliOptions) => {
       assertRuntimeCanMutate(runtime);
+      const { status, ...taskOptions } = options;
       return updateAcceptance(
-        { ...options, status: options.status as AcceptanceStatus | undefined },
+        {
+          ...taskOptions,
+          ...(status === undefined ? {} : { status: status as AcceptanceStatus }),
+        },
         io,
       );
     }),

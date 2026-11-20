@@ -1,6 +1,7 @@
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
+import { templateRoot } from '../installation/install-template.js';
 import type { Adapter } from '../shared/types.js';
 
 export const diagnosticsMaxCommandBytes = 256 * 1024;
@@ -19,14 +20,14 @@ function digest(value: string): string {
 }
 
 export function runDiagnosticJson(
-  adapter: Adapter,
+  _adapter: Adapter,
   args: string[],
   env: NodeJS.ProcessEnv,
   project: string,
 ): DiagnosticCommandResult {
   const result = spawnSync(
     process.execPath,
-    [join(adapter.hub.harness, 'scripts', 'harness.mjs'), ...args],
+    [join(templateRoot, 'bin', 'harnessmith.mjs'), ...args],
     {
       cwd: project,
       env,

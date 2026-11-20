@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import { test } from 'vitest';
 import { supportedAgentNames } from '../../packages/cli/src/adapters/adapter-registry.js';
+import { elementAt } from '../../packages/harness/src/__tests__/helpers/harness.js';
 import {
   buildHostCapabilityMatrixReport,
   readHostCapabilityMatrix,
@@ -182,11 +183,11 @@ test('matrix report binds every cell to one candidate and preserves real outcome
 test('matrix contract rejects unknown scenarios and executable cells without scenarios', () => {
   const matrix = readHostCapabilityMatrix();
   const invalid = structuredClone(matrix);
-  invalid.capabilities[0].scenarioIds = ['unknown-scenario'];
+  elementAt(invalid.capabilities, 0).scenarioIds = ['unknown-scenario'];
   assert.throws(() => readHostCapabilityMatrix(invalid), /unknown scenario/);
 
   const missing = structuredClone(matrix);
-  missing.capabilities[0].scenarioIds = [];
+  elementAt(missing.capabilities, 0).scenarioIds = [];
   assert.throws(() => readHostCapabilityMatrix(missing), /executable.*scenario/i);
 });
 
@@ -199,15 +200,18 @@ test('matrix contract fails closed for malformed order, duplicates, and missing 
   assert.throws(() => readHostCapabilityMatrix(malformed as never), /violates schema/);
 
   const reordered = structuredClone(readHostCapabilityMatrix());
-  [reordered.hosts[0], reordered.hosts[1]] = [reordered.hosts[1], reordered.hosts[0]];
+  [reordered.hosts[0], reordered.hosts[1]] = [
+    elementAt(reordered.hosts, 1),
+    elementAt(reordered.hosts, 0),
+  ];
   assert.throws(() => readHostCapabilityMatrix(reordered), /canonical ordered Host list/);
 
   const duplicated = structuredClone(readHostCapabilityMatrix());
-  duplicated.capabilities[1].id = duplicated.capabilities[0].id;
+  elementAt(duplicated.capabilities, 1).id = elementAt(duplicated.capabilities, 0).id;
   assert.throws(() => readHostCapabilityMatrix(duplicated), /ids must be unique/);
 
   const missingEvidence = structuredClone(readHostCapabilityMatrix());
-  missingEvidence.hosts[0].evidence = ['scripts/does-not-exist.ts'];
+  elementAt(missingEvidence.hosts, 0).evidence = ['scripts/does-not-exist.ts'];
   assert.throws(() => readHostCapabilityMatrix(missingEvidence), /evidence is missing/);
 });
 
@@ -258,7 +262,7 @@ test('matrix report rejects a candidate whose matrix contract differs from the w
   const directory = temporaryDirectory();
   const artifact = join(directory, 'tampered-matrix.tgz');
   const hostMatrix = readHostCapabilityMatrix();
-  hostMatrix.capabilities[0].description = 'tampered candidate matrix';
+  elementAt(hostMatrix.capabilities, 0).description = 'tampered candidate matrix';
   writeCandidateTarball(artifact, root, { hostMatrix });
 
   assert.throws(

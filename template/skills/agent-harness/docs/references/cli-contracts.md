@@ -2,7 +2,7 @@
 title: Harness CLI Contracts
 type: harness-reference
 status: active
-updated: 2026-09-04
+updated: 2026-11-14
 owner: harness-cli-architecture
 ---
 
@@ -20,15 +20,15 @@ Memory 语义仍以 Core、playbook 和对应 owner 文档为准。
 | 用例命令 | `packages/harness/src/commands/` |
 | 可复用领域原语 | `packages/harness/src/lib/` |
 | Runtime 路径、身份和环境 | `packages/harness/src/runtime.ts` |
-| 分发入口 | `template/skills/agent-harness/scripts/harness.mjs`、`template/skills/agent-harness/dist/harness.mjs` |
+| 分发入口 | 全局 `harnessmith`；同包的根 `dist/harness.mjs` 为内部 bundled Runtime，不分发进 skill |
 
 `packages/cli` 是外层 Adapter，不是通用 Memory/Task 实现的 owner。`dist/` 是生成物，不手工编辑。
 
-## 兼容性与 Runtime 身份
+## Schema 与 Runtime 身份
 
-- version --json 返回 harnessVersion、schemaVersion、memorySchemaVersion 和 Node 契约；当前兼容值为 schemaVersion: 3、memorySchemaVersion: 1、node: >=22.12.0。未知 schema 必须 fail closed。
-- managed Runtime 必须由当前安装目录内合法的 install-context.json 证明，并匹配 adapter、harness home、memory/personal home、repository root、owner 和 instruction files；不能把缺失或损坏 context 降级成 standalone。
-- standalone 只在经源码布局、packages/harness/src/runtime.ts 和根 package manifest 共同证明时成立。
+- version --json 返回 harnessVersion、schemaVersion、memorySchemaVersion 和 Node 契约；当前兼容值为 schemaVersion: 3、memorySchemaVersion: 1、node: >=22.20.0。未知 schema 必须 fail closed。
+- Runtime 只从当前 npm 包内的 `dist/harness.mjs` 启动，以根 package manifest 与包内 skill manifest 的组合结构证明 standalone 身份；不读取安装记录或 install-context.json，不依赖 source-tree 文件位置字面值。
+- personal、memory、state 与 repository paths 只由当前环境变量或 `~/.harnessmith` 默认位置决定；旧安装上下文不能改变路径。
 - 任何写入命令先做 Runtime identity、SafePath、领域 schema 和 owner 状态校验；只读命令不得借此获得写入资格。
 
 ## 命令与输出
@@ -102,10 +102,12 @@ evidence 和 .git/.agent-docs 元数据边界。Task、acceptance 和 checkpoint
 
 ## 安装、回滚与恢复
 
-外层 Adapter 的 managed outputs、install-context.json、installation record、staging、备份和恢复必须保持
-路径 containment 与用户文件保护。多文件 rollback 不是不可失败的原子事务；任何 rollback、恢复或清理失败都必须
-保留并报告精确 recovery path，不能声称整体已回滚或已清理。个人 overlay 位于 managed output 之外，升级和卸载
-不得覆盖或删除用户正文。
+外层 Adapter 只向宿主写入普通 instruction files，并写入 `schemaVersion: 3` 单份当前 record；旧 Hub、
+pre-hub Runtime 树、symbolic-link 布局与历史 record 链没有读取或迁移路径。路径 containment 与用户文件保护
+仍然必需，每次 install/restore/uninstall 只保留一个文件回滚事务。任何 rollback、恢复或清理失败都必须保留并
+报告精确 recovery path，不能声称整体已回滚或已清理。Host 文件与 `skills` 管理的 skill 是独立事务；后者失败
+要明确报告部分完成，不能谎称跨 owner 原子回滚。personal overlay、state 与 Memory 位于受管输出之外，升级和
+卸载不得覆盖或删除用户正文和用户旧数据。
 
 临时 workspace 必须带 owner、purpose、创建时间和 lifecycle marker；成功与普通失败统一 disposer 清理，只有明确
 recovery 需要才保留。历史维护先运行仓库 temp:scan dry-run；未知目录、活动 lock/proof 和 recovery 引用不进入

@@ -40,7 +40,9 @@ function redactingIo(io: Io): Io {
 }
 
 export function contentMemoryReferences(content: string): string[] {
-  return [...content.matchAll(/memory:([A-Za-z0-9_./-]+)/g)].map((match) => match[1]);
+  return [...content.matchAll(/memory:([A-Za-z0-9_./-]+)/g)].flatMap((match) =>
+    match[1] === undefined ? [] : [match[1]],
+  );
 }
 
 export function metadataReferences(metadata: Map<string, unknown>): string[] {

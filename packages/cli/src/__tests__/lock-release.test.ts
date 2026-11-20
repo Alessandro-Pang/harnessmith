@@ -3,16 +3,18 @@ import { mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test, vi } from 'vitest';
-import type { ManagedScope } from '../shared/types.js';
+import type { AgentName } from '../adapters/adapter-registry.js';
+import type { Adapter } from '../shared/types.js';
 
 const locks = vi.hoisted(() => ({ lockSync: vi.fn() }));
 
 vi.mock('proper-lockfile', () => ({ default: { lockSync: locks.lockSync } }));
 
+import { elementAt } from '../../../../packages/harness/src/__tests__/helpers/harness.js';
 import { withExclusiveDirectoryLock } from '../../../../packages/harness/src/lib/filesystem/exclusive-lock.js';
 import { withScopeLocks } from '../installation/operation-lock.js';
 
-function adapter(home: string, name: string): ManagedScope {
+function adapter(home: string, name: AgentName): Adapter {
   return {
     scope: 'adapter',
     name,
@@ -20,6 +22,24 @@ function adapter(home: string, name: string): ManagedScope {
     home,
     record: join(home, '.harnessmith', 'install.json'),
     outputs: [],
+    userData: {
+      home: join(home, 'user-data'),
+      userHome: home,
+      state: join(home, 'user-data', 'state'),
+      rules: join(home, 'user-data', 'rules'),
+      memory: join(home, 'user-data', 'memory'),
+    },
+    capabilities: {
+      scope: 'global',
+      instructionFormat: 'markdown',
+      nativeRuleActivation: 'host-default',
+      enforcement: {
+        fileOwnership: 'harnessmith',
+        instructions: 'advisory',
+        permissions: 'host-owned',
+      },
+    },
+    instructions: [],
   };
 }
 
@@ -68,7 +88,7 @@ test('adapter locks sort, acquire, release, and return successful operations', (
 
   assert.equal(result, 'complete');
   assert.deepEqual(released, ['b', 'a']);
-  assert.equal(locks.lockSync.mock.calls[0][0], join(root, 'a'));
+  assert.equal(elementAt(elementAt(locks.lockSync.mock.calls, 0), 0), join(root, 'a'));
 });
 
 test('adapter locks can inspect an absent home without creating or locking it', () => {

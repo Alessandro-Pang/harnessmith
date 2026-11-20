@@ -175,7 +175,7 @@ export function evaluateCoverage(results: SuiteCaseResult[] = [], entries = eval
     }[];
   };
   const modeNames =
-    manifest.entries['reasoning-modes'].activationRules?.map((rule) => rule.mode) ?? [];
+    manifest.entries['reasoning-modes']?.activationRules?.map((rule) => rule.mode) ?? [];
   const requiredModes = [...new Set([...modeNames, ...contract.requiredReasoningModes])];
   const reasoning = cells(
     [

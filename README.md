@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/harnessmith"><img alt="npm version" src="https://img.shields.io/npm/v/harnessmith.svg?color=orange" /></a>
   <a href="https://www.npmjs.com/package/harnessmith"><img alt="npm downloads" src="https://img.shields.io/npm/d18m/harnessmith" /></a>
-  <a href="https://nodejs.org/"><img alt="Node.js" src="https://img.shields.io/badge/Node.js-%E2%89%A522.12-43853d.svg" /></a>
+  <a href="https://nodejs.org/"><img alt="Node.js" src="https://img.shields.io/badge/Node.js-%E2%89%A522.20-43853d.svg" /></a>
   <a href="./LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>
 </p>
 
@@ -35,15 +35,19 @@ Harnessmith 将这些问题分成几条可检查的边界。Repository Map 负�
 
 ## 🚀 30 秒开始
 
-要求 Node.js 22.12.0 或更高版本（建议使用 22 或 24 LTS），不需要全局安装。
+要求 Node.js 22.20.0 或更高版本（建议使用 22 或 24 LTS）。全局安装一次后，安装器和 Runtime 共用 `harnessmith` 命令。
 
 ```bash
+npm install -g harnessmith
+
 # 1. 预览目标、冲突、备份和恢复方式，不写入文件
-npx harnessmith setup --agent codex --dry-run
+harnessmith setup --agent codex --dry-run
 
 # 2. 检查预览结果后执行安装，并运行本地确定性健康检查
-npx harnessmith setup --agent codex
+harnessmith setup --agent codex
 ```
+
+只需临时执行时，也可以用 `npx --yes harnessmith` 代替下文中的 `harnessmith`。
 
 在非交互环境中，请显式添加 `--yes`。如果你已经维护宿主规则，先运行 `adopt`。它只读盘点现有文件并生成提案；审阅提案后，用同一个 `proposalId` 确认接管。原文件不会被直接覆盖。
 
@@ -68,32 +72,32 @@ npx harnessmith setup --agent codex
 
 ```bash
 # 查看所有权、文件完整性和风险说明
-npx harnessmith status --agent codex
-npx harnessmith status --agent codex --explain
+harnessmith status --agent codex
+harnessmith status --agent codex --explain
 
 # 只读盘点已有规则；确认提案后再接管
-npx harnessmith adopt --agent codex --json
-npx harnessmith adopt --agent codex --proposal <proposalId> --yes --json
+harnessmith adopt --agent codex --json
+harnessmith adopt --agent codex --proposal <proposalId> --yes --json
 
-# 恢复上一层，或恢复到首次安装前
-npx harnessmith restore --agent codex
-npx harnessmith uninstall --agent codex
+# 恢复当前记录的备份，或移除当前安装
+harnessmith restore --agent codex
+harnessmith uninstall --agent codex
 
 # 查看 Adapter 能力和本地脱敏诊断
-npx harnessmith capabilities --json
-npx harnessmith diagnostics --agent codex --json
+harnessmith capabilities --json
+harnessmith diagnostics --agent codex --json
 
 # 导出 personal overlay；在另一台机器上先生成提案再导入
-npx harnessmith export --output ./harness-config.json --json
-npx harnessmith import --input ./harness-config.json --json
-npx harnessmith import --input ./harness-config.json --proposal <proposalId> --yes --json
+harnessmith export --output ./harness-config.json --json
+harnessmith import --input ./harness-config.json --json
+harnessmith import --input ./harness-config.json --proposal <proposalId> --yes --json
 ```
 
-安装结果会给出 Runtime 的实际路径（默认是共享 hub 中的 skill `~/.agents/harnessmith/skills/agent-harness`，各宿主只通过符号链接指向它）。将它填入 `<harness-path>` 后，可以运行健康检查和 Repository Map 检查：
+`harnessmith install`（或 `setup`）按宿主渲染普通指令文件，再交给固定版本的 `skills` 安装同包的 `agent-harness` skill；两部分是独立事务，skill 失败会明确报告为部分完成。当前只支持 schema 3 单层记录，不自动升级或卸载旧版本、Hub 与 Runtime 副本；已有用户请先阅读[迁移指南](https://alexpang.cn/harnessmith/reference/migrations)。Runtime 只执行 npm 包内与 CLI 同版本的 bundle：
 
 ```bash
-node <harness-path>/scripts/harness.mjs health --json
-node <harness-path>/scripts/harness.mjs repository-map check --json
+harnessmith health --json
+harnessmith repository-map check --json
 ```
 
 新建宿主会话后，规则入口会自动参与任务路由。长任务用 `task checkpoint` 保存进度，用 `task verify` 绑定机械证据；只有验收门禁通过后，才能运行 `task close --status complete`。`search` 和 `memory search` 默认使用 `--mode auto`：有可用索引时走全文检索，否则退回有界扫描。`--mode fulltext` 在索引不可用时直接失败，`--mode scan` 强制扫描。只有显式传入 `--refresh-index` 才会写入索引，而且索引只是可重建缓存。

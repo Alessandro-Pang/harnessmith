@@ -23,6 +23,12 @@ export interface MemoryContract {
   trigger?: string;
   deterministic?: boolean;
 }
+
+const profileContractKinds = new Set<MemoryContractKind>([
+  'profile-create',
+  'profile-update',
+  'profile-forget',
+]);
 export interface SemanticReview {
   status: 'passed' | 'failed' | 'inconclusive';
   message?: string;
@@ -59,8 +65,17 @@ function parseProfileRecords(
       if (line.trim().startsWith('- ')) return null;
       continue;
     }
-    if (result.has(match[1])) return null;
-    result.set(match[1], { conclusion: match[2], evidence: match[3], confidence: match[4] });
+    const [, key, conclusion, evidence, confidence] = match;
+    if (
+      key === undefined ||
+      conclusion === undefined ||
+      evidence === undefined ||
+      confidence === undefined
+    ) {
+      return null;
+    }
+    if (result.has(key)) return null;
+    result.set(key, { conclusion, evidence, confidence });
   }
   return result;
 }
@@ -93,7 +108,7 @@ function profileContractCheck(input: {
   after: MemoryContractState;
   globalBefore: NonNullable<ReturnType<typeof parseProfileRecords>>;
   globalAfter: NonNullable<ReturnType<typeof parseProfileRecords>>;
-  semanticReview?: SemanticReview;
+  semanticReview?: SemanticReview | undefined;
 }): MemoryContractResult {
   const { contract, before, after, globalBefore, globalAfter } = input;
   if (changed(before.project, after.project))
@@ -127,7 +142,7 @@ export function verifyMemoryContract(input: {
   before: MemoryContractState;
   after: MemoryContractState;
   contract?: MemoryContract;
-  semanticReview?: SemanticReview;
+  semanticReview?: SemanticReview | undefined;
 }): MemoryContractResult {
   const contract = input.contract;
   if (!contract) return result('inconclusive', 'scenario has no typed state contract');
@@ -191,11 +206,7 @@ export function verifyMemoryContract(input: {
       ? result('passed')
       : (semanticGate(input.semanticReview) ?? result('passed'));
   }
-  if (
-    contract.kind === 'profile-create' ||
-    contract.kind === 'profile-update' ||
-    contract.kind === 'profile-forget'
-  )
+  if (profileContractKinds.has(contract.kind))
     return profileContractCheck({
       contract,
       before: input.before,

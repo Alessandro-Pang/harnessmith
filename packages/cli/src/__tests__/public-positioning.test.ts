@@ -31,7 +31,7 @@ test('public positioning uses one control-plane scope and explicit capability st
     ['README.md', readme],
     ['README.en.md', english],
     ['docs/architecture.md', architecture],
-  ]) {
+  ] as const) {
     assert.match(content, /Implemented|已实现/, `${path} must label implemented capabilities`);
     assert.match(
       content,
@@ -47,7 +47,7 @@ test('public positioning uses one control-plane scope and explicit capability st
     ['README.md', readme],
     ['README.en.md', english],
     ['docs/architecture.md', architecture],
-  ]) {
+  ] as const) {
     assert.match(
       content,
       /audit record/,
@@ -70,7 +70,7 @@ test('architecture documents the mechanically checked ownership and write bounda
   assert.match(architecture, /capability claim.*唯一.*executable verification/s);
 });
 
-test('current-state docs name the hub overlay instead of the pre-hub personal path', () => {
+test('current-state docs name the ~/.harnessmith user-data home instead of legacy hub or pre-hub paths', () => {
   const currentState = [
     'AGENTS.md',
     'apps/docs/site/en/concepts/memory-and-tasks.md',
@@ -82,7 +82,8 @@ test('current-state docs name the hub overlay instead of the pre-hub personal pa
   ];
   for (const path of currentState) {
     const content = readFileSync(join(root, path), 'utf8');
-    assert.match(content, /~\/\.agents\/harnessmith\/(?:rules|memory)/, path);
+    assert.match(content, /~\/\.harnessmith\/(?:rules|memory)/, path);
     assert.doesNotMatch(content, /~\/\.agent-harness/, path);
+    assert.doesNotMatch(content, /~\/\.agents\/harnessmith/, path);
   }
 });

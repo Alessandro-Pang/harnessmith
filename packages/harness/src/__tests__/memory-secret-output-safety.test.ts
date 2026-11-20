@@ -27,7 +27,7 @@ import {
 import { checkpointTask, closeTask, initTask, taskStatus } from '../commands/task/task.js';
 import { updateAcceptance } from '../commands/task/task-acceptance.js';
 import { verifyAcceptance } from '../commands/task/task-verification.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { capturedIo, elementAt, harnessRuntime } from './helpers/harness.js';
 
 function fixture() {
   const root = mkdtempSync(join(tmpdir(), 'harness-memory-secret-output-'));
@@ -322,8 +322,8 @@ test('CLI output boundary redacts secret-bearing successful reports', () => {
   assert.equal(runCli(['version', '--json'], { runtime: secretRuntime, io }), 0);
   assert.deepEqual(io.errors, []);
   assert.equal(io.logs.length, 1);
-  assert.match(io.logs[0], /output redacted.*secret material/i);
-  assert.doesNotMatch(io.logs[0], new RegExp(secret));
+  assert.match(elementAt(io.logs, 0), /output redacted.*secret material/i);
+  assert.doesNotMatch(elementAt(io.logs, 0), new RegExp(secret));
 });
 
 test('task request fields reject secrets before validation can echo them', () => {

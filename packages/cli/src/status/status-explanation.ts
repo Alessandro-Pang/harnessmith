@@ -1,5 +1,5 @@
-import { existsSync } from 'node:fs';
 import { firstValueFromStatus } from '../setup/first-value.js';
+import { entryExists } from '../shared/safe-path.js';
 import type { Adapter, AdapterStatus, AdapterStatusInspection } from '../shared/types.js';
 
 const stateDefinitions = {
@@ -22,13 +22,13 @@ interface SafeAction {
   requiresAuthorization: boolean;
 }
 
-function classify(status: AdapterStatus, plan: AdapterStatusInspection['plan']): ObservedState {
+function classify(status: AdapterStatus, adapter: Adapter): ObservedState {
   if (status.installed) {
     if (status.outputs.some(({ status: value }) => value === 'missing')) return 'partial';
     if (status.outputs.some(({ status: value }) => value === 'modified')) return 'modified';
     return 'managed';
   }
-  return plan.outputs.some(({ state }) => state === 'unmanaged') ? 'unmanaged' : 'missing';
+  return adapter.outputs.some(({ path }) => entryExists(path)) ? 'unmanaged' : 'missing';
 }
 
 function reasonCode(state: ObservedState) {
@@ -71,14 +71,14 @@ function safeActions(adapter: Adapter, state: ObservedState): SafeAction[] {
   return [action('SETUP_PREVIEW', `harnessmith setup ${selector} --dry-run`)];
 }
 
-export function explainStatus({ adapter, status, record, plan }: AdapterStatusInspection) {
-  const state = classify(status, plan);
+export function explainStatus({ adapter, status, record }: AdapterStatusInspection) {
+  const state = classify(status, adapter);
   const backups = record
     ? [record.recordBackup, ...record.outputs.map(({ backup }) => backup)]
         .filter((path): path is string => Boolean(path))
         .map((path) => ({
           path,
-          state: existsSync(path) ? ('present' as const) : ('missing' as const),
+          state: entryExists(path) ? ('present' as const) : ('missing' as const),
         }))
     : [];
   return {
@@ -96,10 +96,12 @@ export function explainStatus({ adapter, status, record, plan }: AdapterStatusIn
           : ('requires-review' as const),
     evidence: {
       record: { path: adapter.record, state: record ? ('present' as const) : ('missing' as const) },
-      contentFingerprint: status.contentFingerprint,
       outputs: status.installed
         ? status.outputs
-        : plan.outputs.map(({ path, state: outputState }) => ({ path, status: outputState })),
+        : adapter.outputs.map(({ path }) => ({
+            path,
+            status: entryExists(path) ? ('unmanaged' as const) : ('missing' as const),
+          })),
       backups,
     },
     actions: safeActions(adapter, state),

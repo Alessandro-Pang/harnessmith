@@ -24,22 +24,32 @@ export interface UserProfileRecord {
 export function parseUserProfileRecord(line: string, lineIndex = 0): UserProfileRecord | undefined {
   const listLike = line.match(listLikeRecordPattern);
   if (!listLike) return undefined;
-  const [, indentation, marker, spacing, payload] = listLike;
+  const [, indentation = '', marker = '', spacing = '', payload = ''] = listLike;
   const parsed = payload.match(profileRecordPayloadPattern);
+  const recordKey = payload.match(profileRecordKeyPattern)?.[1];
   const record: UserProfileRecord = {
     line,
     lineIndex,
     canonicalMarker: indentation === '' && marker === '-' && spacing === ' ',
-    key: payload.match(profileRecordKeyPattern)?.[1],
+    ...(recordKey === undefined ? {} : { key: recordKey }),
   };
   if (!parsed) return record;
   const [, key, conclusion, evidence, confidence, date] = parsed;
+  if (
+    key === undefined ||
+    conclusion === undefined ||
+    evidence === undefined ||
+    confidence === undefined ||
+    date === undefined
+  ) {
+    return record;
+  }
   return {
     ...record,
     key,
     conclusion,
-    evidence: evidence as UserProfileRecord['evidence'],
-    confidence: confidence as UserProfileRecord['confidence'],
+    evidence: evidence as NonNullable<UserProfileRecord['evidence']>,
+    confidence: confidence as NonNullable<UserProfileRecord['confidence']>,
     date,
     semanticEntry: `- ${key} | ${conclusion} | ${evidence} | ${confidence}`,
   };

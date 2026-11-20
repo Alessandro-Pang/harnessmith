@@ -1,9 +1,11 @@
 import assert from 'node:assert/strict';
 import {
   existsSync,
+  lstatSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  readlinkSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -13,6 +15,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Ajv2020 } from 'ajv/dist/2020.js';
 import { onTestFinished, test } from 'vitest';
+import { elementAt } from '../../../../packages/harness/src/__tests__/helpers/harness.js';
 import {
   applyPortableConfigImport,
   createPortableConfigBundle,
@@ -87,14 +90,14 @@ test('export includes only allowlisted personal overlay files and excludes secre
   ]);
 });
 
-test('export and import target the hub overlay when no personal home is configured', () => {
+test('export and import target the default user-data overlay when no personal home is configured', () => {
   const root = mkdtempSync(join(tmpdir(), 'harnessmith-portable-default-'));
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
   const env: NodeJS.ProcessEnv = { ...process.env, HOME: root };
   delete env.HARNESS_PERSONAL_HOME;
   delete env.HARNESS_HOME;
   delete env.HARNESS_MEMORY_HOME;
-  const hubRules = join(root, '.agents', 'harnessmith', 'rules');
+  const hubRules = join(root, '.harnessmith', 'rules');
   write(join(hubRules, 'AGENTS.md'), '# 默认 hub 规则\n');
   write(join(root, '.agent-harness', 'AGENTS.md'), '# 迁移前布局\n');
 
@@ -141,6 +144,82 @@ test('export and import round-trip allowed data through a proposal-bound transac
   );
 });
 
+test('export fails closed on a dangling source symlink', () => {
+  const { root, env } = fixture('harnessmith-portable-dangling-source-');
+  const source = join(env.HARNESS_PERSONAL_HOME, 'AGENTS.md');
+  mkdirSync(dirname(source), { recursive: true });
+  symlinkSync(join(root, 'missing.md'), source);
+
+  assert.throws(
+    () =>
+      executePortableConfigExport(
+        { agent: [], project: root, json: true },
+        { env, io: { log: () => undefined } },
+      ),
+    /symbolic link/,
+  );
+  assert.equal(lstatSync(source).isSymbolicLink(), true);
+  assert.equal(readlinkSync(source), join(root, 'missing.md'));
+});
+
+test('export refuses a dangling output symlink without replacing it', () => {
+  const { root, env } = fixture('harnessmith-portable-dangling-output-');
+  const output = join(root, 'bundle.json');
+  const linkTarget = join(root, 'missing.json');
+  symlinkSync(linkTarget, output);
+
+  assert.throws(
+    () => writePortableConfigBundle(output, createPortableConfigBundle({ env })),
+    /symbolic link/,
+  );
+  assert.equal(lstatSync(output).isSymbolicLink(), true);
+  assert.equal(readlinkSync(output), linkTarget);
+});
+
+test('import refuses a dangling target symlink without replacing it', () => {
+  const source = fixture('harnessmith-portable-dangling-import-source-');
+  const target = fixture('harnessmith-portable-dangling-import-target-');
+  write(join(source.env.HARNESS_PERSONAL_HOME, 'AGENTS.md'), '# imported\n');
+  const bundlePath = join(source.root, 'bundle.json');
+  writePortableConfigBundle(bundlePath, createPortableConfigBundle({ env: source.env }));
+  const destination = join(target.env.HARNESS_PERSONAL_HOME, 'AGENTS.md');
+  const linkTarget = join(target.root, 'missing.md');
+  mkdirSync(dirname(destination), { recursive: true });
+  symlinkSync(linkTarget, destination);
+
+  assert.throws(() => planPortableConfigImport(bundlePath, { env: target.env }), /symbolic link/);
+  assert.equal(lstatSync(destination).isSymbolicLink(), true);
+  assert.equal(readlinkSync(destination), linkTarget);
+});
+
+test('export creates a missing output and refuses an existing regular file', () => {
+  const { root, env } = fixture('harnessmith-portable-no-clobber-');
+  const output = join(root, 'bundle.json');
+  const bundle = createPortableConfigBundle({ env });
+
+  writePortableConfigBundle(output, bundle);
+  const exported = readFileSync(output, 'utf8');
+  assert.deepEqual(JSON.parse(exported), bundle);
+  assert.throws(() => writePortableConfigBundle(output, bundle), /already exists/);
+  assert.equal(readFileSync(output, 'utf8'), exported);
+});
+
+test('export does not clobber a target created after the precheck', () => {
+  const { root, env } = fixture('harnessmith-portable-publish-race-');
+  const output = join(root, 'bundle.json');
+  const bundle = createPortableConfigBundle({ env });
+  const original = 'concurrent original bytes\n';
+
+  assert.throws(
+    () =>
+      writePortableConfigBundle(output, bundle, {
+        beforePublish: () => writeFileSync(output, original),
+      }),
+    /already exists/,
+  );
+  assert.equal(readFileSync(output, 'utf8'), original);
+});
+
 test('import refuses changed targets and stale proposals without overwriting user content', () => {
   const source = fixture('harnessmith-portable-conflict-source-');
   const target = fixture('harnessmith-portable-conflict-target-');
@@ -157,10 +236,10 @@ test('import refuses changed targets and stale proposals without overwriting use
   );
   assert.equal(readFileSync(destination, 'utf8'), '# local edit\n');
   const conflict = planPortableConfigImport(bundlePath, { env: target.env });
-  assert.equal(conflict.changes[0].action, 'conflict');
+  assert.equal(elementAt(conflict.changes, 0).action, 'conflict');
   assert.throws(
     () => applyPortableConfigImport(bundlePath, conflict.proposalId, { env: target.env }),
-    /adopt flow/,
+    /Move or back up.*Adopt does not merge/,
   );
 });
 
@@ -179,7 +258,7 @@ test('import rejects unknown schema, tampering, traversal, and symlink input', (
 
   const traversal = {
     ...bundle,
-    resources: [{ ...bundle.resources[0], path: '../escape.md' }],
+    resources: [{ ...elementAt(bundle.resources, 0), path: '../escape.md' }],
   };
   write(bundlePath, `${JSON.stringify(traversal)}\n`);
   assert.throws(() => planPortableConfigImport(bundlePath, { env: target.env }), /resource path/);
@@ -248,7 +327,7 @@ test('version fixtures preserve v1 compatibility and fail closed on unsupported 
 
   const plan = planPortableConfigImport(join(fixtureRoot, 'v1.json'), { env: target.env });
   assert.equal(plan.schemaVersion, 1);
-  assert.equal(plan.changes[0].action, 'create');
+  assert.equal(elementAt(plan.changes, 0).action, 'create');
   assert.throws(
     () => planPortableConfigImport(join(fixtureRoot, 'unsupported-v2.json'), { env: target.env }),
     /schema version/,
@@ -268,7 +347,7 @@ test('CLI handlers preview export and require an exact proposal before import', 
     ),
     0,
   );
-  assert.equal(JSON.parse(exportLogs[0]).kind, 'harnessmith-portable-config');
+  assert.equal(JSON.parse(elementAt(exportLogs, 0)).kind, 'harnessmith-portable-config');
 
   const previewLogs: string[] = [];
   assert.equal(
@@ -278,7 +357,7 @@ test('CLI handlers preview export and require an exact proposal before import', 
     ),
     0,
   );
-  const proposalId = JSON.parse(previewLogs[0]).proposalId;
+  const proposalId = JSON.parse(elementAt(previewLogs, 0)).proposalId;
   assert.throws(
     () =>
       executePortableConfigImport(

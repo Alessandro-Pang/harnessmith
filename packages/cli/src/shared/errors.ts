@@ -12,7 +12,7 @@ export type HarnessmithErrorOptions = ErrorOptions & { reason?: string };
 export class HarnessmithError extends Error {
   readonly code: HarnessmithErrorCode;
   readonly exitCode: number;
-  readonly reason?: string;
+  readonly reason?: string | undefined;
 
   constructor(
     code: HarnessmithErrorCode,

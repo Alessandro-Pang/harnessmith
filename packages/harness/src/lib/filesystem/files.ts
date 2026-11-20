@@ -32,17 +32,20 @@ export function atomicWriteMany(
       ? { existed: true, content: readFileSync(path, 'utf8'), mode: statSync(path).mode & 0o777 }
       : { existed: false, content: '', mode: 0o644 },
   );
-  let written = 0;
+  const completed: Array<{
+    entry: (typeof entries)[number];
+    snapshot: (typeof snapshots)[number];
+  }> = [];
   try {
-    for (const entry of entries) {
-      atomicWrite(entry.path, entry.content, entry.mode ?? snapshots[written].mode);
-      written += 1;
+    for (const [index, entry] of entries.entries()) {
+      const snapshot = snapshots[index];
+      if (!snapshot) throw new Error(`Missing write snapshot: ${entry.path}`);
+      atomicWrite(entry.path, entry.content, entry.mode ?? snapshot.mode);
+      completed.push({ entry, snapshot });
     }
   } catch (error) {
     const rollbackErrors: string[] = [];
-    for (let index = written - 1; index >= 0; index -= 1) {
-      const entry = entries[index];
-      const snapshot = snapshots[index];
+    for (const { entry, snapshot } of completed.reverse()) {
       try {
         if (snapshot.existed) atomicWrite(entry.path, snapshot.content, snapshot.mode);
         else rmSync(entry.path, { force: true });

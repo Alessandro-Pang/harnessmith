@@ -3,11 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { doctor } from '../commands/health/doctor.js';
-import { validate } from '../commands/validate.js';
-import { installationHealth } from '../lib/health/health-installation.js';
-import { resolveRuntimeIdentity } from '../runtime.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { validateInstructionPath } from '../lib/filesystem/instruction-path.js';
 
 function temporaryRoot(): string {
   const root = mkdtempSync(join(tmpdir(), 'harness-instruction-path-'));
@@ -15,84 +11,46 @@ function temporaryRoot(): string {
   return root;
 }
 
-test('runtime identity rejects a dangling instruction symlink inside the managed home', () => {
+test('instruction paths must be absolute and stay inside the authorized home', () => {
   const root = temporaryRoot();
-  const harnessHome = join(root, 'host');
-  const harnessRoot = join(harnessHome, 'skills', 'agent-harness');
-  const instruction = join(harnessHome, 'entry', 'AGENTS.md');
-  mkdirSync(harnessRoot, { recursive: true });
-  mkdirSync(dirname(instruction), { recursive: true });
-  symlinkSync(join(root, 'removed', 'AGENTS.md'), instruction);
-  writeFileSync(
-    join(harnessRoot, 'install-context.json'),
-    JSON.stringify({
-      version: 2,
-      harnessHome,
-      agentsHome: join(root, 'agents'),
-      instructionFiles: [instruction],
-      stateHome: join(harnessHome, 'state'),
-      memoryHome: join(root, 'memory'),
-      personalHome: join(root, 'personal'),
-      repositoryRoot: join(root, 'repositories'),
-      owner: 'test-owner',
-    }),
-  );
+  const home = join(root, 'host');
+  mkdirSync(home, { recursive: true });
 
-  assert.equal(resolveRuntimeIdentity(harnessRoot).kind, 'invalid');
+  assert.equal(validateInstructionPath(home, 'AGENTS.md').valid, false);
+  assert.equal(validateInstructionPath('host', join(home, 'AGENTS.md')).valid, false);
+  const outside = validateInstructionPath(home, join(root, 'outside', 'AGENTS.md'));
+  assert.equal(outside.valid, false);
+  assert.match(outside.valid ? '' : outside.reason, /escapes the managed home/);
 });
 
-test('doctor and validate reject dangling instruction symlinks', () => {
+test('instruction paths reject symlink components, including dangling links', () => {
   const root = temporaryRoot();
-  const runtime = harnessRuntime(root);
-  const instruction = runtime.instructionFiles[0];
-  mkdirSync(runtime.installedHarness, { recursive: true });
+  const home = join(root, 'host');
+  const instruction = join(home, 'entry', 'AGENTS.md');
+  mkdirSync(dirname(instruction), { recursive: true });
+
+  symlinkSync(join(root, 'removed', 'AGENTS.md'), instruction);
+  const dangling = validateInstructionPath(home, instruction);
+  assert.equal(dangling.valid, false);
+  assert.match(dangling.valid ? '' : dangling.reason, /symbolic link/i);
+
+  rmSync(instruction);
+  writeFileSync(join(root, 'outside.md'), '# outside\n');
+  symlinkSync(join(root, 'outside.md'), instruction);
+  const retargetable = validateInstructionPath(home, instruction);
+  assert.equal(retargetable.valid, false);
+  assert.match(retargetable.valid ? '' : retargetable.reason, /symbolic link/i);
+});
+
+test('regular instruction paths are accepted and missing files are left to the caller', () => {
+  const root = temporaryRoot();
+  const home = join(root, 'host');
+  const instruction = join(home, 'entry', 'AGENTS.md');
   mkdirSync(dirname(instruction), { recursive: true });
   writeFileSync(instruction, '# rules\n');
-  rmSync(instruction);
-  symlinkSync(join(runtime.harnessHome, 'removed', 'AGENTS.md'), instruction);
 
-  const validation = capturedIo();
-  assert.equal(validate(runtime, { json: true }, validation), 1);
-  const report = JSON.parse(validation.logs[0]) as {
-    checks: Array<{ id: string; status: string; message: string }>;
-  };
-  assert.equal(
-    report.checks.some(
-      (check) =>
-        check.id === 'instructions' &&
-        check.status === 'failed' &&
-        /symbolic link/i.test(check.message),
-    ),
-    true,
-  );
-
-  const doctorIo = capturedIo();
-  assert.throws(() => doctor(runtime, {}, doctorIo), /failure/);
-  assert.equal(
-    doctorIo.logs.some((line) => /FAIL instructions .*symbolic link/i.test(line)),
-    true,
-  );
-});
-
-test('installation health reports unsafe instruction paths', () => {
-  const root = temporaryRoot();
-  const runtime = harnessRuntime(root);
-  const instruction = runtime.instructionFiles[0];
-  mkdirSync(join(runtime.installedHarness, 'scripts'), { recursive: true });
-  writeFileSync(join(runtime.installedHarness, 'scripts', 'harness.mjs'), '#!/usr/bin/env node\n');
-  writeFileSync(
-    join(runtime.installedHarness, 'manifest.json'),
-    JSON.stringify({ schemaVersion: 3, memorySchemaVersion: 1 }),
-  );
-  mkdirSync(runtime.personalHome, { recursive: true });
-  writeFileSync(join(runtime.personalHome, 'AGENTS.md'), '# personal\n');
-  mkdirSync(dirname(instruction), { recursive: true });
-  symlinkSync(join(runtime.harnessHome, 'removed', 'AGENTS.md'), instruction);
-
-  const check = installationHealth(runtime);
-  assert.equal(check.status, 'failed');
-  assert.equal(
-    check.details?.some((detail) => /symbolic link/i.test(detail)),
-    true,
-  );
+  assert.deepEqual(validateInstructionPath(home, instruction), { valid: true });
+  assert.deepEqual(validateInstructionPath(home, join(home, 'missing', 'AGENTS.md')), {
+    valid: true,
+  });
 });

@@ -106,8 +106,10 @@ export function bindCaseEvidence(
   try {
     if (!existsSync(directory)) throw new Error('case evidence directory is missing');
     const records = recordPaths(directory);
-    if (records.length !== 1) throw new Error('case requires exactly one final run record');
-    const recordRef = relative(root, join(directory, records[0]));
+    const recordPath = records[0];
+    if (records.length !== 1 || !recordPath)
+      throw new Error('case requires exactly one final run record');
+    const recordRef = relative(root, join(directory, recordPath));
     const bytes = readSuiteArtifact(root, recordRef);
     const record = JSON.parse(bytes.toString('utf8'));
     const outcome = entry.family === 'behavior' ? record.verdict?.outcome : record.outcome;
@@ -119,6 +121,15 @@ export function bindCaseEvidence(
       readMemoryEvaluationRecords(directory);
       if (record.promptVariant !== entry.promptVariant)
         throw new Error('memory prompt variant mismatch');
+      const forbiddenContract = record.stateEvidence?.forbiddenContract;
+      const forbiddenContractFailed =
+        forbiddenContract?.outcome === 'failed' || forbiddenContract?.criticalForbidden === true;
+      if (
+        (forbiddenContractFailed &&
+          (record.criticalForbidden !== true || record.outcome !== 'behavior-failed')) ||
+        (record.criticalForbidden === true && record.outcome === 'passed')
+      )
+        throw new Error('forbidden repository changes cannot enter a passing Memory suite record');
     }
     const candidate = record.subject?.packageArtifactSha256 ?? record.candidateSha256;
     if (candidate !== candidateSha256 || record.host?.model !== model)

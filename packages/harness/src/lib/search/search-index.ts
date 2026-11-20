@@ -103,9 +103,13 @@ export function queryLoadedIndex(
     const lineIndex = globalLine >= 0 ? globalLine : result.lineStart - 1;
     const bounded = boundedLine(lines[lineIndex] || '', maxLineLength);
     const semantics = classifyMemoryDocument(lines.join('\n'));
+    const source = sources[result.sourceIndex];
+    if (!source) {
+      throw new SearchIndexUnavailable('stale', 'An indexed search result has no source');
+    }
     return {
-      source: sources[result.sourceIndex].label,
-      trust: sources[result.sourceIndex].trust,
+      source: source.label,
+      trust: source.trust,
       path: current.absolutePath,
       line: lineIndex + 1,
       text: bounded.text,

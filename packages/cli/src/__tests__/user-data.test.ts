@@ -12,19 +12,18 @@ import {
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
-import { resolveHub } from '../installation/hub.js';
 import { initializeUserData } from '../installation/user-data.js';
-import type { Hub } from '../shared/types.js';
+import { resolveUserData } from '../installation/user-data-paths.js';
+import type { UserDataPaths } from '../shared/types.js';
 
-function hubFixture(root: string, env: NodeJS.ProcessEnv = {}): Hub {
-  const home = join(root, 'hub');
-  const script = join(home, 'skills', 'agent-harness', 'scripts', 'harness.mjs');
+function runtimeEntryFixture(root: string): string {
+  const script = join(root, 'runtime-fixture.mjs');
   mkdirSync(dirname(script), { recursive: true });
   writeFileSync(
     script,
     `import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-const personal = process.env.HARNESS_PERSONAL_HOME || join(process.env.HOME, '.agent-harness');
+const personal = process.env.HARNESS_PERSONAL_HOME || join(process.env.HOME, '.harnessmith', 'rules');
 if (process.env.TEST_ENV_RECORD) writeFileSync(process.env.TEST_ENV_RECORD, personal);
 for (const name of [
   'README.md',
@@ -38,19 +37,23 @@ for (const name of [
 }
 `,
   );
-  return resolveHub({ HOME: root, HARNESS_HOME: home, ...env });
+  return script;
 }
 
-test('initialization pins Harness paths to the hub instead of inheriting parent env', () => {
+function userDataFixture(root: string, env: NodeJS.ProcessEnv = {}): UserDataPaths {
+  return resolveUserData({ HOME: root, ...env });
+}
+
+test('initialization pins Harness paths to user data instead of inheriting parent env', () => {
   const root = mkdtempSync(join(tmpdir(), 'harnessmith-user-data-env-'));
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
   const inheritedPersonalHome = join(root, 'inherited-personal');
   const previous = process.env.HARNESS_PERSONAL_HOME;
   process.env.HARNESS_PERSONAL_HOME = inheritedPersonalHome;
-  const hub = hubFixture(root);
+  const userData = userDataFixture(root);
   try {
     initializeUserData(
-      hub,
+      userData,
       { HOME: join(root, 'other-home'), HARNESS_PERSONAL_HOME: inheritedPersonalHome },
       { global: false },
     );
@@ -59,8 +62,9 @@ test('initialization pins Harness paths to the hub instead of inheriting parent 
     else process.env.HARNESS_PERSONAL_HOME = previous;
   }
 
-  assert.equal(hub.rules, join(root, 'hub', 'rules'));
-  assert.equal(existsSync(join(hub.rules, 'README.md')), true);
+  assert.equal(userData.home, join(realpathSync.native(root), '.harnessmith'));
+  assert.equal(userData.rules, join(userData.home, 'rules'));
+  assert.equal(existsSync(join(userData.rules, 'README.md')), true);
   assert.equal(existsSync(join(inheritedPersonalHome, 'README.md')), false);
 });
 
@@ -74,9 +78,9 @@ test('user-data initialization locks, snapshots, and writes through one canonica
   symlinkSync(personalHome, alias, process.platform === 'win32' ? 'junction' : 'dir');
 
   initializeUserData(
-    hubFixture(root, { HARNESS_PERSONAL_HOME: alias }),
+    userDataFixture(root, { HARNESS_PERSONAL_HOME: alias }),
     { HOME: root, TEST_ENV_RECORD: record },
-    { global: false },
+    { global: false, runtimeEntry: runtimeEntryFixture(root) },
   );
 
   assert.equal(readFileSync(record, 'utf8'), realpathSync.native(personalHome));
@@ -86,20 +90,20 @@ test('user-data initialization locks, snapshots, and writes through one canonica
 test('user-data initialization terminates a hung init child instead of waiting out the lock', () => {
   const root = mkdtempSync(join(tmpdir(), 'harnessmith-user-data-timeout-'));
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
-  const home = join(root, 'hub');
-  const script = join(home, 'skills', 'agent-harness', 'scripts', 'harness.mjs');
-  mkdirSync(dirname(script), { recursive: true });
+  const script = join(root, 'hung-runtime.mjs');
   writeFileSync(script, 'await new Promise(() => {});\n');
+  const userData = userDataFixture(root);
   const started = Date.now();
 
   assert.throws(
     () =>
       initializeUserData(
-        resolveHub({ HOME: root, HARNESS_HOME: home }),
+        userData,
         { HOME: root, HARNESS_USER_DATA_INIT_TIMEOUT_MS: '400' },
-        { global: false },
+        { global: false, runtimeEntry: script },
       ),
     /timed? ?out|ETIMEDOUT|Timeout/i,
   );
   assert.ok(Date.now() - started < 8_000);
+  assert.equal(existsSync(userData.rules), false, 'a timed-out init leaves no partial rules root');
 });

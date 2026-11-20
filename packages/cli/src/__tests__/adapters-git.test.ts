@@ -12,6 +12,7 @@ import {
 import { tmpdir } from 'node:os';
 import { delimiter, dirname, join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
+import { elementAt } from '../../../../packages/harness/src/__tests__/helpers/harness.js';
 import { checkBranch } from '../../../../scripts/preflight/preflight-git.js';
 import { createAdapter, resolveGitExecutable } from '../adapters/adapters.js';
 
@@ -273,6 +274,6 @@ test('branch preflight reports Git unavailability without treating it as a branc
   );
 
   assert.equal(checks.length, 1);
-  assert.equal(checks[0].condition, false);
-  assert.match(checks[0].message, /Git executable is unavailable/i);
+  assert.equal(elementAt(checks, 0).condition, false);
+  assert.match(elementAt(checks, 0).message, /Git executable is unavailable/i);
 });

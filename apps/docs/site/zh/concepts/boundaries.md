@@ -61,7 +61,7 @@ Harnessmith 不是另一个 Coding Agent，而是 Agent 周围的个人工作层
 
 能力声明分为三类，每类都有对应的证据等级：
 
-- **Implemented**：存在实现与可执行验证路径，仓库里能找到代码和测试。例如 Adapter 安装、dry-run 预览、status 检查、content fingerprint 计算，这些能力不仅有代码，还有 preflight 和单元测试覆盖，以及 `capability-evidence.yaml` 中的证据路径。
+- **Implemented**：存在实现与可执行验证路径，仓库里能找到代码和测试。例如 Adapter 安装、dry-run 预览、status 记录与逐文件 checksum 检查，这些能力不仅有代码，还有 preflight 和单元测试覆盖，以及 `capability-evidence.yaml` 中的证据路径。
 - **Delegated to the Host**：Harnessmith 只提供规则、接口或记录位置，真正能力在宿主。例如模型执行、工具调用 sandbox、权限批准，Harnessmith 的文档可以写「远端写入需要授权」，但实际阻止写入的是宿主权限系统。
 - **Unsupported**：当前明确不声称拥有，例如通用 Agent Runtime、Policy Engine、Registry 与多 Agent 调度。文档列出这些名称，是为了避免把未实现能力误认为隐藏功能。
 

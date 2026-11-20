@@ -173,9 +173,11 @@ export function readMemoryEvaluationRecords(directory: string): MemoryMetricReco
       actualDecision: record.actualDecision.decision,
       outcome: record.outcome,
       transition: record.transition,
-      failureCategory: record.failureCategory,
-      criticalForbidden: record.criticalForbidden,
-      idempotency: record.idempotency,
+      ...(record.failureCategory === undefined ? {} : { failureCategory: record.failureCategory }),
+      ...(record.criticalForbidden === undefined
+        ? {}
+        : { criticalForbidden: record.criticalForbidden }),
+      ...(record.idempotency === undefined ? {} : { idempotency: record.idempotency }),
     };
   });
 }

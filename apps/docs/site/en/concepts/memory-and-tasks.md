@@ -93,9 +93,9 @@ verification".
 | Location | Contents | Boundary |
 | --- | --- | --- |
 | Host-native memory | Historical leads the host recalls automatically | Input to verify only |
-| `~/.agents/harnessmith/rules` | User-maintained personal rules and cross-repository relationships | Personal overlay; upgrades and uninstalls never overwrite it |
-| `~/.agents/harnessmith/memory/profile.md` | Current identity, working style, and long-term preferences | The only canonical user profile in the Harness |
-| `~/.agents/harnessmith/memory/core.md` and other global Memory | Cross-project topics and high-value distilled entry points | Never stores a second current profile |
+| `~/.harnessmith/rules` | User-maintained personal rules and cross-repository relationships | Personal overlay; upgrades and uninstalls never overwrite it |
+| `~/.harnessmith/memory/profile.md` | Current identity, working style, and long-term preferences | The only canonical user profile in the Harness |
+| `~/.harnessmith/memory/core.md` and other global Memory | Cross-project topics and high-value distilled entry points | Never stores a second current profile |
 | `<project>/.agent-docs` | Inputs, sessions, work state, evidence, and distilled findings | Reviewable but non-authoritative |
 | `docs/`, code, tests, schemas, CI | The project's current facts and executable constraints | The authoritative layer |
 

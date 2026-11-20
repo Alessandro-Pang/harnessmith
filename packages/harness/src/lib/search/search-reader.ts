@@ -13,7 +13,12 @@ function skipCandidate(
   reason: SearchSkip['reason'],
   size?: number,
 ): null {
-  recordSearchSkip(discovery, { source: candidate.source, path: candidate.path, reason, size });
+  recordSearchSkip(discovery, {
+    source: candidate.source,
+    path: candidate.path,
+    reason,
+    ...(size === undefined ? {} : { size }),
+  });
   return null;
 }
 

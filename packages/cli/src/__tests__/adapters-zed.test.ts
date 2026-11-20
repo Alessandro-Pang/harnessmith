@@ -3,6 +3,7 @@ import { mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
+import { elementAt } from '../../../../packages/harness/src/__tests__/helpers/harness.js';
 import { createAdapter, resolveZedAgentHome } from '../adapters/adapters.js';
 
 test('Zed Agent adapter uses the documented Unix personal configuration directory', () => {
@@ -21,14 +22,13 @@ test('Zed Agent adapter uses the documented Unix personal configuration director
   assert.equal(adapter.label, 'Zed Agent');
   assert.equal(adapter.home, expectedHome);
   assert.equal(adapter.instructions.length, 1);
-  assert.equal(adapter.instructions[0].path, join(expectedHome, 'AGENTS.md'));
-  assert.equal(adapter.harness, null);
-  assert.equal(adapter.instructions[0].mode, 'link');
-  assert.equal(adapter.hub.home, join(canonicalRoot, '.agents', 'harnessmith'));
-  assert.equal(
-    adapter.hub.entry,
-    join(canonicalRoot, '.agents', 'harnessmith', 'entry', 'AGENTS.md'),
+  assert.equal(elementAt(adapter.instructions, 0).path, join(expectedHome, 'AGENTS.md'));
+  assert.equal(typeof elementAt(adapter.instructions, 0).render, 'function');
+  assert.deepEqual(
+    adapter.outputs,
+    adapter.instructions.map(({ path }) => ({ path })),
   );
+  assert.equal(adapter.userData.home, join(canonicalRoot, '.harnessmith'));
   assert.equal(adapter.record, join(expectedHome, '.harnessmith', 'install.json'));
   assert.equal(adapter.capabilities.scope, 'global');
   assert.equal(adapter.capabilities.instructionFormat, 'markdown');

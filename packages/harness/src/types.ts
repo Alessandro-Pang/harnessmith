@@ -3,37 +3,25 @@ export interface Io {
   error(message?: unknown, ...optional: unknown[]): void;
 }
 
-export interface InstallationContext {
-  harnessHome?: string;
-  agentsHome?: string;
-  instructionFiles?: string[];
-  stateHome?: string;
-  memoryHome?: string;
-  personalHome?: string;
-  repositoryRoot?: string;
-  owner?: string;
-}
-
 export interface Runtime {
   readonly env: NodeJS.ProcessEnv;
   readonly home: string;
   readonly harnessRoot: string;
+  /** npm package root that ships the bundled Runtime at `dist/harness.mjs`. */
   readonly distributionRoot: string;
-  /** Hub home (`~/.agents/harnessmith`) for managed installs; the template parent otherwise. */
+  /** Mutable user-data home (`~/.harnessmith`, overridable with `HARNESS_HOME`). */
   readonly harnessHome: string;
-  /** `~/.agents`, where the hub publishes its skill discovery link. */
-  readonly agentsHome: string;
   readonly hostAdapter: string;
-  readonly instructionFiles: string[];
+  /** Skill content root the Runtime reads (manifest, docs, schemas); never a writable copy. */
   readonly installedHarness: string;
   readonly docsRoot: string;
-  /** Mutable runtime state (`<hub>/state`), kept outside the distributed skill. */
+  /** Mutable runtime state (`<user-data home>/state`), kept outside the distributed skill. */
   readonly stateRoot: string;
   readonly memoryHome: string;
   readonly personalHome: string;
   readonly repositoryRoot: string;
   readonly owner: string;
-  /** Test fixtures only. Production runtimes are derived from install-context.json. */
+  /** Test fixtures only. Production runtimes are derived from the verified npm package. */
   readonly identityOverride?: 'test-fixture';
 }
 

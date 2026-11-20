@@ -11,6 +11,15 @@ export interface ReleaseCliOptions {
   tag?: string;
 }
 
+export function publishArguments(options: ReleaseCliOptions): string[] {
+  return [
+    ...(options.dryRun ? ['--dry-run'] : []),
+    ...(options.provenance ? ['--provenance'] : []),
+    ...(options.tag ? ['--tag', options.tag] : []),
+    ...(options.access ? ['--access', options.access] : []),
+  ];
+}
+
 export function releaseOptions(args: string[]): ReleaseCliOptions {
   let packageArtifactSeen = false;
   const packageArtifact = (value: string): string => {

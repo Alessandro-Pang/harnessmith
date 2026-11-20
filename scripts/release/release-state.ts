@@ -29,6 +29,8 @@ export interface ReleaseState {
   artifactSha256: string;
   packageVersion: string;
   preparedAt: string;
+  /** Legacy state may omit this; finalization requires re-preparing instead of guessing HEAD. */
+  preparedHead?: string;
   publishedAt?: string;
   evaluation: {
     assurance: 'maintainer-attested-structure' | 'maintainer-attested-risk-exception';
@@ -185,6 +187,10 @@ export function readReleaseState(directory: string): ReleaseState | undefined {
     !sha256Pattern.test(String((parsed as Partial<ReleaseState>).artifactSha256)) ||
     typeof (parsed as Partial<ReleaseState>).packageVersion !== 'string' ||
     typeof (parsed as Partial<ReleaseState>).preparedAt !== 'string' ||
+    ((parsed as Partial<ReleaseState>).preparedHead !== undefined &&
+      !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u.test(
+        String((parsed as Partial<ReleaseState>).preparedHead),
+      )) ||
     !hasValidEvaluation(
       (parsed as Partial<ReleaseState>).evaluation,
       (parsed as Partial<ReleaseState>).artifactSha256,

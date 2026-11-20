@@ -92,6 +92,7 @@ export function createReleaseAttestation(
 export function verifyReleaseAttestation(
   attestation: ReleaseAttestation,
   subject: ReleaseSubject,
+  options: { historicalReadOnly?: boolean } = {},
 ): void {
   if (![2, 3, 4, 5].includes(attestation.schemaVersion)) {
     throw new Error('Unsupported release attestation schema');
@@ -159,6 +160,11 @@ export function verifyReleaseAttestation(
         JSON.stringify(risk?.infraBlockedScenarios ?? []));
   if (requiresEvidence && !evidenceValid) {
     throw new Error('Release attestation Host evaluation evidence is invalid');
+  }
+  if (attestation.inheritedBehaviorCoverageCount !== 0 && !options.historicalReadOnly) {
+    throw new Error(
+      'Inherited Host evaluation coverage is historical read-only; current releases require exact artifact coverage',
+    );
   }
   if (!coverageShapeValid || (!fullCoverage && !acceptedRisk) || (fullCoverage && acceptedRisk)) {
     throw new Error('Release attestation does not cover the required Host evaluation matrix');

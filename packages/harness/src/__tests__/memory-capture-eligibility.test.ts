@@ -8,7 +8,7 @@ import {
   type CaptureEligibilityInput,
   evaluateCaptureEligibility,
 } from '../lib/memory/memory-capture-eligibility.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { capturedIo, elementAt, harnessRuntime } from './helpers/harness.js';
 
 function eligibleInput(overrides: Partial<CaptureEligibilityInput> = {}): CaptureEligibilityInput {
   return {
@@ -119,7 +119,7 @@ test('memory evaluate-capture emits stable machine-readable status and reason co
     0,
     io.errors.join('\n'),
   );
-  assert.deepEqual(JSON.parse(io.logs[0]), {
+  assert.deepEqual(JSON.parse(elementAt(io.logs, 0)), {
     version: 1,
     status: 'proposed',
     eligible: false,

@@ -1,5 +1,5 @@
 import type { Readable, Writable } from 'node:stream';
-import { installAll } from '../installation/install.js';
+import { installWithSkills } from '../installation/installation-workflow.js';
 import {
   confirmSetup,
   finishInteractive,
@@ -58,15 +58,19 @@ export async function executeSetup(
   }
   let results: InstallResult[];
   try {
-    results = installAll(adapters, {
+    results = installWithSkills(adapters, {
       env: context.env,
-      force: options.force,
+      ...(options.force === undefined ? {} : { force: options.force }),
       noInitGlobal: !options.initGlobal,
     });
   } catch (error) {
+    const skillFailed =
+      error instanceof HarnessmithError && error.reason === 'skill-install-failed';
     throw new HarnessmithError(
       error instanceof HarnessmithError ? error.code : 'INTERNAL_ERROR',
-      `Setup failed; the installation transaction attempted rollback. Next run setup --dry-run, inspect status, and use restore only if a prior layer exists: ${error instanceof Error ? error.message : String(error)}`,
+      skillFailed
+        ? `Setup is partially complete: ${error instanceof Error ? error.message : String(error)}`
+        : `Setup failed during the Host transaction, which attempted rollback. Inspect setup --dry-run, status, and the restore path before retrying: ${error instanceof Error ? error.message : String(error)}`,
       error instanceof HarnessmithError ? error.exitCode : 1,
       { cause: error instanceof Error ? error : undefined },
     );

@@ -97,15 +97,8 @@ export function runRegistrySmoke(
     'CLI install smoke',
     runCli('CLI install smoke', ['install', '--agent', 'codex', '--json', '--yes']),
   );
-  // Codex discovers the shared hub skill through ~/.agents/skills; no per-host copy exists.
-  const harnessCli = join(
-    paths.home,
-    '.agents',
-    'skills',
-    'agent-harness',
-    'scripts',
-    'harness.mjs',
-  );
+  // Runtime commands use the installed global CLI and its same-version bundled Runtime.
+  const harnessCli = cli;
   checkedRegistryRun(
     'Harness doctor smoke',
     process.execPath,

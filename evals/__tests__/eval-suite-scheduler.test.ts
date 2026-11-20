@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'vitest';
+import { elementAt } from '../../packages/harness/src/__tests__/helpers/harness.js';
 import {
   runEvaluationSuite,
   summarizeSuiteResults,
@@ -48,7 +49,7 @@ test('behavior or semantic failure is never retried', async () => {
 test('missing, duplicate, unknown or empty results cannot pass the complete suite', async () => {
   assert.equal(summarizeSuiteResults(ids, []), 'inconclusive');
   const record = {
-    scenarioId: ids[0],
+    scenarioId: elementAt(ids, 0),
     outcome: 'passed' as const,
     termination: 'completed' as const,
     attempts: 1,
@@ -60,7 +61,7 @@ test('missing, duplicate, unknown or empty results cannot pass the complete suit
   await assert.rejects(
     runEvaluationSuite({
       requiredIds: ids,
-      scenarioIds: [ids[0]],
+      scenarioIds: [elementAt(ids, 0)],
       execute: async () => ({ outcome: 'passed', termination: 'completed' }),
     }),
     /complete/,

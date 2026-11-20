@@ -21,7 +21,7 @@ npx harnessmith install --agent codex
 
 `install` 是安装或升级的直接命令，裸命令 `npx harnessmith` 默认执行的就是它。第一次接触某个宿主时更推荐用 `setup`：它按「预览 → 确认 → 安装 → 自动健康检查」的引导流程走，每一步都有人工确认的机会。两个命令的完整选项见 [安装器 CLI](/reference/cli)。
 
-升级就是再跑一次 install。目标不存在，或仍与上一层安装记录一致时，可以安全接管；升级会保留可变 `state/`，不会把你的运行记录和受管理模板混在一起重置。
+升级就是再跑一次 install。目标不存在，或仍与上一层安装记录一致时，可以安全接管；升级会保留可变 `state/`，不会把你的运行记录和受管理模板混在一起重置。skill 的安装与升级完全交给固定版本的生产依赖 `skills@1.7.6`（安装器渲染包内模板后调用 `skills add`）；Runtime 不复制到 skill 或用户数据目录，始终由全局命令执行 npm 包内同版本的 bundle。
 
 ### 遇到 unmanaged 或已修改的文件
 
@@ -60,7 +60,9 @@ npx harnessmith restore --agent codex
 npx harnessmith uninstall --agent codex
 ```
 
-`restore` 回到前一安装层；`uninstall` 恢复全部受管层并移除 Harnessmith 安装记录。两者都会先验证当前文件、备份关系和路径边界，不会重新渲染模板，也不会删除共享或项目里的 `.agent-docs`、你维护的 personal overlay。换句话说：卸载清掉的是 Harnessmith 装进去的东西，你自己的东西还在。
+`restore` 恢复当前 `schemaVersion: 3` 记录指向的备份；`uninstall` 恢复当前记录中的备份并移除当前指令和记录，skill 的移除同样交给 `skills`（`skills remove`）。两者只处理一层普通文件，不再追溯历史 Hub、Runtime 副本或旧 record 链。它们先验证当前文件、备份关系和路径边界，不会删除共享或项目里的 `.agent-docs`、你维护的 personal overlay，以及 `~/.harnessmith` 用户数据。卸载或恢复一个宿主不影响其他宿主。
+
+Host 文件与 skill 是独立事务。Host 已成功移除、skill 随后失败时，文件不会假装恢复；命令会明确提示 skill 可能仍在。旧版本记录必须由原版本卸载或在备份后手工处理，当前命令不会接管，详见[迁移指南](/reference/migrations)。
 
 ## 临时资源
 
@@ -76,6 +78,6 @@ pnpm run temp:scan
 
 - **目标已存在且 unmanaged**：先看 dry-run / status 输出，确认来源后再决定是否走 `adopt` 或 `--force`。不要为了让命令通过而删除原文件。
 - **检测到 symlink 或路径越界**：修正目标根或目录结构，不要绕过 fail-closed 检查。它们拦住的正是真正的风险。
-- **Node 版本不满足**：升级到 Node.js 22.12.0 或更高版本，然后重新运行 dry-run。
+- **Node 版本不满足**：升级到 Node.js 22.20.0 或更高版本，然后重新运行 dry-run。
 - **多宿主操作中途失败**：Harnessmith 会按已提交的步骤回滚；再跑一次 `status --agent <agent> --explain`，逐个 Adapter 核对现场。
 - **rollback failure**：保留输出中给出的 recovery path，不要重复执行覆盖性命令；先复制现场和备份，再按路径逐项恢复。

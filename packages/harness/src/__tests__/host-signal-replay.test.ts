@@ -7,7 +7,7 @@ import { onTestFinished, test } from 'vitest';
 import { runCli } from '../cli.js';
 import { initProject } from '../commands/init.js';
 import { digestPath } from '../lib/filesystem/files.js';
-import { capturedIo, harnessRuntime } from './helpers/harness.js';
+import { capturedIo, elementAt, harnessRuntime } from './helpers/harness.js';
 
 test('a duplicate host signal replay leaves the persisted Handoff unchanged', () => {
   const root = mkdtempSync(join(tmpdir(), 'harness-host-signal-replay-'));
@@ -39,7 +39,7 @@ test('a duplicate host signal replay leaves the persisted Handoff unchanged', ()
     }),
     0,
   );
-  const path = JSON.parse(first.logs[0]).path;
+  const path = JSON.parse(elementAt(first.logs, 0)).path;
   const before = digestPath(join(project, '.agent-docs'));
   const persisted = readFileSync(path, 'utf8');
 
@@ -51,7 +51,7 @@ test('a duplicate host signal replay leaves the persisted Handoff unchanged', ()
     }),
     0,
   );
-  assert.equal(JSON.parse(replay.logs[0]).action, 'unchanged');
+  assert.equal(JSON.parse(elementAt(replay.logs, 0)).action, 'unchanged');
   assert.equal(readFileSync(path, 'utf8'), persisted);
   assert.equal(digestPath(join(project, '.agent-docs')), before);
 });
