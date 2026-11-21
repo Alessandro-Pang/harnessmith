@@ -8,6 +8,7 @@ import {
   renderMarkdownInstructions,
   renderMdcInstructions,
 } from './instruction-formats.js';
+import { normalizePiAgentDir } from './pi-paths.js';
 import { canonicalPath, isPathInside } from './safe-path.js';
 import type { Adapter, AdapterCapabilities } from './types.js';
 import { HarnessmithError } from './types.js';
@@ -130,6 +131,20 @@ function resolveDeepSeekAdapter({ env, userHome }: AdapterResolveContext): Adapt
   return globalMarkdownAdapter('deepseek', agentHome);
 }
 
+function resolvePiAdapter({ env, userHome }: AdapterResolveContext): Adapter {
+  // Pi Coding Agent config root: $PI_CODING_AGENT_DIR, default ~/.pi/agent.
+  // PI_CODING_AGENT_DIR has dual role (config root AND writable state dir for sessions/settings/auth).
+  // Empty/whitespace PI_CODING_AGENT_DIR is treated as unset.
+  // Normalize Pi's literal tilde and Windows shell path forms before SafePath canonicalization.
+  const configured = env.PI_CODING_AGENT_DIR;
+  const agentHome = canonicalPath(
+    configured !== undefined && configured.trim().length > 0
+      ? normalizePiAgentDir(configured, userHome)
+      : join(userHome, '.pi', 'agent'),
+  );
+  return globalMarkdownAdapter('pi', agentHome);
+}
+
 function resolveCursorAdapter({ project }: AdapterResolveContext): Adapter {
   const definition = getAdapterDefinition('cursor');
   const root = projectRoot(project);
@@ -198,6 +213,7 @@ const adapterResolvers = {
   opencode: resolveOpenCodeAdapter,
   kimi: resolveKimiAdapter,
   deepseek: resolveDeepSeekAdapter,
+  pi: resolvePiAdapter,
 } as const satisfies Record<AgentName, AdapterResolver>;
 
 export function createAdapter(

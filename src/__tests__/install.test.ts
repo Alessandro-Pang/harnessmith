@@ -28,6 +28,7 @@ function testEnv(root: string, overrides: NodeJS.ProcessEnv = {}): NodeJS.Proces
     OPENCODE_CONFIG_DIR: join(root, 'opencode-home'),
     KIMI_CODE_HOME: join(root, 'kimi-home'),
     DSH_HOME: join(root, 'dsh-home'),
+    PI_CODING_AGENT_DIR: join(root, 'pi-home'),
     HARNESS_MEMORY_HOME: join(root, 'agent-docs'),
     HARNESS_PERSONAL_HOME: join(root, 'personal-harness'),
     HARNESS_REPOSITORY_ROOT: join(root, 'repos'),
@@ -246,7 +247,7 @@ test('dry-run reports destinations without creating agent homes', () => {
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
   mkdirSync(join(root, 'project'));
   const output = execute(root, ['--agent', 'all', '--project', join(root, 'project'), '--dry-run']);
-  for (const adapter of ['codex', 'cursor', 'claude', 'opencode', 'kimi', 'deepseek']) {
+  for (const adapter of ['codex', 'cursor', 'claude', 'opencode', 'kimi', 'deepseek', 'pi']) {
     assert.match(output, new RegExp(`"adapter":"${adapter}"`));
   }
   assert.match(output, /"action":"create"/);
@@ -275,7 +276,7 @@ test('json mode emits parseable automation output without terminal decoration', 
     .map((line) => JSON.parse(line));
   assert.deepEqual(
     plans.map(({ adapter }) => adapter),
-    ['codex', 'cursor', 'claude', 'opencode', 'kimi', 'deepseek'],
+    ['codex', 'cursor', 'claude', 'opencode', 'kimi', 'deepseek', 'pi'],
   );
   assert.equal(plans[0].capabilities.scope, 'global');
   assert.equal(plans[1].capabilities.scope, 'project');

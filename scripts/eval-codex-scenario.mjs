@@ -13,7 +13,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { basename, delimiter, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readNpmPackageTarball } from './npm-tarball.js';
 import { runBoundedHostProcess } from './eval-codex-transport.ts';
@@ -435,7 +435,7 @@ const commonEnv = {
   HARNESS_PERSONAL_HOME: personal,
   HARNESS_REPOSITORY_ROOT: repo,
   TMPDIR: temp,
-  PATH: `${process.env.PATH ?? ''}:${dirname(nodeBin)}`,
+  PATH: [process.env.PATH, dirname(nodeBin)].filter(Boolean).join(delimiter),
 };
 let configHome;
 function installHarness() {

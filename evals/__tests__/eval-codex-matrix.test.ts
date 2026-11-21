@@ -24,6 +24,9 @@ const coverageInstrumentation =
   process.argv.includes('--coverage') ||
   process.env.NODE_V8_COVERAGE !== undefined ||
   process.env.npm_lifecycle_event?.includes('coverage') === true;
+// Hosted Windows runners need more time for repeated clean-room process and
+// filesystem setup than the Unix runners.
+const fixtureProcessTimeoutMs = process.platform === 'win32' ? 60_000 : 30_000;
 
 function runMatrix(overrides: Partial<Record<string, string>> = {}) {
   const options = {
@@ -157,7 +160,7 @@ test('scenario fixture binds the supplied candidate and prepares without launchi
     {
       cwd: repositoryRoot,
       encoding: 'utf8',
-      timeout: 30_000,
+      timeout: fixtureProcessTimeoutMs,
       maxBuffer: 2 * 1024 * 1024,
       env: {
         ...process.env,
@@ -193,7 +196,7 @@ test('multi-turn fixtures keep payloads in the workspace and mount lock-bearing 
     const result = spawnSync(process.execPath, ['--import', 'tsx', scenarioEntry, scenarioId], {
       cwd: repositoryRoot,
       encoding: 'utf8',
-      timeout: 30_000,
+      timeout: fixtureProcessTimeoutMs,
       maxBuffer: 2 * 1024 * 1024,
       env: {
         ...process.env,
@@ -284,7 +287,7 @@ test.skipIf(coverageInstrumentation)(
       const result = spawnSync(process.execPath, ['--import', 'tsx', scenarioEntry, scenarioId], {
         cwd: repositoryRoot,
         encoding: 'utf8',
-        timeout: 30_000,
+        timeout: fixtureProcessTimeoutMs,
         maxBuffer: 2 * 1024 * 1024,
         env: {
           ...process.env,
@@ -304,7 +307,7 @@ test.skipIf(coverageInstrumentation)(
     }
     assert.equal(scenarioIds.length, 15);
   },
-  120_000,
+  process.platform === 'win32' ? 300_000 : 120_000,
 );
 
 test('scenario Host invocation keeps the prompt on stdin through the bounded transport', () => {
@@ -342,7 +345,7 @@ process.stdout.write('{"type":"turn.completed","usage":{"input_tokens":12}}\\n')
     {
       cwd: repositoryRoot,
       encoding: 'utf8',
-      timeout: 30_000,
+      timeout: fixtureProcessTimeoutMs,
       maxBuffer: 2 * 1024 * 1024,
       env: {
         ...process.env,

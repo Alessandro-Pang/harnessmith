@@ -57,10 +57,16 @@ npx harnessmith --dry-run --agent codex
 | OpenCode | 全局 | `opencode` |
 | Kimi Code CLI | 全局 | `kimi`（别名 `kimi-code`） |
 | DeepSeek Harness | 全局 | `deepseek`（别名 `dsh`、`deepseek-harness`） |
+| Pi Agent | 全局 | `pi`（别名 `pi-agent`） |
 
 DeepSeek Adapter **只**安装用户全局 `$DSH_HOME/AGENTS.md`（默认 `~/.dsh/AGENTS.md`）。项目根/嵌套指令与
 权限、sandbox、审批仍由宿主负责；安装成功不等于完整 DSH 作用域链或正式 Host Eval 已验证。兼容性目前仅针对
 `@deepseek-ai/dsh@0.1.1-rc.2` / tag `dsh-v0.1.1-rc.2` 的验证结果声明，其他 revision 需重新验证。
+
+Pi Adapter **只**安装用户全局 `$PI_CODING_AGENT_DIR/AGENTS.md`（默认 `~/.pi/agent/AGENTS.md`）。
+`PI_CODING_AGENT_DIR` 同时是 Pi 的可写状态目录（sessions/settings/auth），Harnessmith 只写入 AGENTS.md、
+agent-harness/ 与 `.harnessmith/install.json` 元数据。Pi 没有内建权限系统，以用户进程权限运行；如果存在 `AGENTS.override.md`，Pi 会用它替代
+`AGENTS.md`，Harnessmith 安装的内容将被忽略。当前未锁定特定 Pi 版本。
 
 Cursor 需用 `--project /path/to/project` 指定项目根。目标路径、别名和支持证据见
 [宿主指南](https://alexpang.cn/harnessmith/guide/hosts)。

@@ -94,6 +94,18 @@ export const adapterRegistry = [
       enforcement: defaultAdapterEnforcement,
     },
   },
+  {
+    name: 'pi',
+    label: 'Pi Agent',
+    aliases: ['pi-agent'],
+    hint: 'global configuration',
+    capabilities: {
+      scope: 'global',
+      instructionFormat: 'markdown',
+      nativeRuleActivation: 'host-default',
+      enforcement: defaultAdapterEnforcement,
+    },
+  },
 ] as const satisfies readonly AdapterRegistryEntry[];
 
 export type AgentName = (typeof adapterRegistry)[number]['name'];
