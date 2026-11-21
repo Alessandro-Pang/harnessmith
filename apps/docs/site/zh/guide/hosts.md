@@ -1,6 +1,6 @@
 ---
 title: 宿主支持
-description: 六类 Coding Agent 的安装范围、路径规则与「支持」的准确含义
+description: 八类 Coding Agent 的安装范围、路径规则与「支持」的准确含义
 owner: maintainers
 audience: users
 status: active
@@ -11,11 +11,11 @@ updated: 2026-09-05
 
 本文回答三个实际问题：Harnessmith 能装进哪些 Coding Agent、文件会写到哪里、所谓“支持”到底承诺了什么。先看表格选择宿主，再用 `setup --dry-run --json` 查看你这台机器的最终路径；不要根据默认路径猜测写入位置。
 
-Harnessmith 当前为六类宿主提供 Adapter。可以把 Adapter 理解成「翻译层」：它负责路径解析和文件格式适配，让同一套个人规则落进不同宿主约定的位置。它不替代宿主自身的模型循环、工具调度、sandbox 或权限批准——那些仍然是宿主的地盘。
+Harnessmith 当前为八类宿主提供 Adapter。可以把 Adapter 理解成「翻译层」：它负责路径解析和文件格式适配，让同一套个人规则落进不同宿主约定的位置。它不替代宿主自身的模型循环、工具调度、sandbox 或权限批准——那些仍然是宿主的地盘。
 
 为什么要用 Adapter 而不是直接写文件？因为每个宿主对「规则入口」的约定不一样：有的读用户主目录下的固定文件，有的读项目目录，有的要求特定 frontmatter 格式。如果把这些差异硬编码进分发模板，模板就会和宿主耦合，换个宿主就得改模板。Adapter 模式把「写什么」（宿主中立的 Harness）和「写到哪里、用什么格式」（宿主相关）分开，新增宿主只需要新增一个 Adapter，不动模板。
 
-## 一张表看懂六个宿主
+## 一张表看懂八个宿主
 
 | 宿主 | `--agent` | 默认规则入口 | 范围与激活 |
 | --- | --- | --- | --- |
@@ -25,6 +25,8 @@ Harnessmith 当前为六类宿主提供 Adapter。可以把 Adapter 理解成「
 | OpenCode | `opencode` | `${OPENCODE_CONFIG_DIR:-${XDG_CONFIG_HOME:-~/.config}/opencode}/AGENTS.md` | 全局；宿主默认 |
 | Kimi Code CLI | `kimi`（别名 `kimi-code`） | `${KIMI_CODE_HOME:-~/.kimi-code}/AGENTS.md` | 全局；宿主默认 |
 | Zed Agent | `zed` | `~/.config/zed/AGENTS.md`（Windows：`%APPDATA%\Zed\AGENTS.md`） | 全局；宿主默认 |
+| DeepSeek Harness | `deepseek`（别名 `dsh`、`deepseek-harness`） | `${DSH_HOME:-~/.dsh}/AGENTS.md` | 全局；宿主默认 |
+| Pi Agent | `pi`（别名 `pi-agent`） | `${PI_CODING_AGENT_DIR:-~/.pi/agent}/AGENTS.md` | 全局；宿主默认 |
 
 想查看当前版本登记的宿主、别名和能力范围，可以使用：
 
@@ -42,13 +44,13 @@ dry-run 输出包含解析后的目标、每个文件的状态、冲突、备份
 
 ## 全局宿主与项目宿主
 
-六类宿主分两种安装范围。全局 Adapter 把个人规则入口渲染进宿主约定的用户目录，并通过 `skills` 把 skill 装进宿主的 skill 目录，装一次对所有项目生效；Cursor 是唯一的例外——它写入你明确授权的项目根，省略 `--project` 时使用当前工作目录，换一个项目就要再装一次。
+八类宿主分两种安装范围。全局 Adapter 把个人规则入口渲染进宿主约定的用户目录，并通过 `skills` 把 skill 装进宿主的 skill 目录，装一次对所有项目生效；Cursor 是唯一的例外——它写入你明确授权的项目根，省略 `--project` 时使用当前工作目录，换一个项目就要再装一次。
 
 为什么 Cursor 要特殊处理？因为它的规则加载机制是项目级的：`.cursor/rules/` 目录下的 MDC 文件随项目走，而不是随用户走。这意味着如果你想在多个项目里用同一套 Harness，需要在每个项目里各装一次。好消息是安装是可重复的，且每次都会做冲突检查，不会因为你忘了装过就重复写入。
 
 无论哪种范围，所有路径在写入前都会先做 containment 与 symlink 检查，防止目标被符号链接引到预期之外的位置。这个检查的实际意义是：如果你或某个工具曾经把 `~/.codex` 链接到了别的地方（比如一个同步盘），安装器会发现并停下来，而不是把文件写进你意想不到的位置。
 
-上表里的入口都是 Harnessmith 渲染出的普通副本，不是符号链接。skill 按 [Agent Skills](https://agentskills.io/specification) 约定组织——`SKILL.md` 是发现入口，`docs/` 是按任务路由的规则文档，`assets/` 放模板和 schema；skill 内没有脚本或 Runtime 副本，全局 `harnessmith` 是唯一公开 Runtime 入口，直接执行 npm 包根目录中同版本的 `dist/harness.mjs`。skill 的安装与卸载完全交给固定版本的生产依赖 `skills@1.7.6`：安装器渲染包内模板后调用 `skills add`，卸载时调用 `skills remove`，规范副本与宿主链接由 `skills` 拥有。Codex、OpenCode、Kimi Code CLI 与 Zed 原生扫描 `~/.agents/skills/`，共用那里的规范副本 `~/.agents/skills/agent-harness`；Claude Code 的 skill 位于 `~/.claude/skills/agent-harness`，由 `skills` 管理；Cursor 是项目范围，skill 位于 `<project>/.agents/skills/agent-harness`。Cursor 的 `.cursor/rules/agent-harness.mdc` 仍由 Harnessmith 渲染，因为 MDC frontmatter 需要按宿主生成。实际效果是：所有宿主共用同一个 npm 包版本，升级一次即更新所有已安装宿主，不可能出现两个宿主停在不同 Harness 版本的情况。Harnessmith 不创建也不依赖 `~/.agents/harnessmith` 共享目录。
+上表里的入口都是 Harnessmith 渲染出的普通副本，不是符号链接。skill 按 [Agent Skills](https://agentskills.io/specification) 约定组织——`SKILL.md` 是发现入口，`docs/` 是按任务路由的规则文档，`assets/` 放模板和 schema；skill 内没有脚本或 Runtime 副本，全局 `harnessmith` 是唯一公开 Runtime 入口，直接执行 npm 包根目录中同版本的 `dist/harness.mjs`。skill 的安装与卸载完全交给固定版本的生产依赖 `skills@1.7.6`：安装器渲染包内模板后调用 `skills add`，卸载时调用 `skills remove`，规范副本与宿主链接由 `skills` 拥有。Codex、OpenCode、Kimi Code CLI、Zed 与 Pi 原生扫描 `~/.agents/skills/`，DeepSeek 也通过该共享根目录发现 skill，它们共用规范副本 `~/.agents/skills/agent-harness`；Claude Code 的 skill 位于 `~/.claude/skills/agent-harness`，由 `skills` 管理；Cursor 是项目范围，skill 位于 `<project>/.agents/skills/agent-harness`。Cursor 的 `.cursor/rules/agent-harness.mdc` 仍由 Harnessmith 渲染，因为 MDC frontmatter 需要按宿主生成。实际效果是：所有宿主共用同一个 npm 包版本，升级一次即更新所有已安装宿主，不可能出现两个宿主停在不同 Harness 版本的情况。Harnessmith 不创建也不依赖 `~/.agents/harnessmith` 共享目录。
 
 你的数据保存在用户数据目录，默认 `~/.harnessmith`（可用 `HARNESS_HOME` 覆盖），与分发内容分离：`state/`（Task ledger、索引等可变运行状态）、`rules/`（个人 overlay，可用 `HARNESS_PERSONAL_HOME` 覆盖）和 `memory/`（跨项目 Memory，可用 `HARNESS_MEMORY_HOME` 覆盖）。这些目录由全局 CLI 在首次安装时初始化一次，升级从不改写它们，`uninstall` 也从不删除它们。
 
@@ -62,6 +64,8 @@ dry-run 输出包含解析后的目标、每个文件的状态、冲突、备份
 
 - **Cursor**：Harnessmith 只把自己管理的文件写进 repository-local Git exclude 与 `.cursor/.ignore`，不会隐藏或覆盖团队已有的整个 `.cursor/` 目录。和团队共享仓库时，不会干扰他人的配置。这个设计的出发点是：`.cursor/` 目录通常已经存在，里面可能有团队共享的规则或设置，Harnessmith 只往里加自己管理的文件，并在 Git exclude 里登记，让 `git status` 不会被这些本地文件刷屏。
 - **Kimi Code CLI**：Adapter 面向当前 TypeScript/Node.js 实现的 Kimi Code CLI，使用 `KIMI_CODE_HOME`；它不接管旧 Python `kimi-cli` 用的 `~/.kimi/` 目录。如果你的目录是旧的，先确认自己跑的是哪个版本。这个区分容易踩坑：两个版本的 CLI 可以共存，规则入口完全不同，装错了版本会看到「装了但 Agent 没反应」的现象。
+- **DeepSeek Harness**：Adapter 面向官方 `dsh` / `@deepseek-ai/dsh`，只托管用户全局 `$DSH_HOME/AGENTS.md`；项目根/嵌套候选、权限与 sandbox 仍由宿主负责。兼容性仅针对 `@deepseek-ai/dsh@0.1.1-rc.2`、`@deepseek-ai/dsh-agent-instructions@0.1.1-rc.2`、上游 tag `dsh-v0.1.1-rc.2`（commit `b150a551b8d465e31e418e1b2eaf5e79bbb7d28e`）的验证结果声明，其他 revision 需重新验证。完整边界见[架构设计](/concepts/architecture#deepseek-harness-契约来源与验证边界)。
+- **Pi Agent**：Adapter 面向官方 `@earendil-works/pi-coding-agent`，只托管用户全局 `$PI_CODING_AGENT_DIR/AGENTS.md`（默认 `~/.pi/agent/AGENTS.md`）。该目录同时保存 Pi 的 sessions/settings/auth；Host 文件事务只写指令与 `.harnessmith/install.json`，不接管这些状态，skill 由 `skills` 独立管理。Pi 没有内建权限系统，以用户进程权限运行；`AGENTS.override.md` 会替代同目录的 `AGENTS.md`。当前未锁定特定 Pi 版本，完整边界见[架构设计](/concepts/architecture#pi-agent-契约来源与验证边界)。
 
 精确兼容要求以对应 npm 发布包中的 `llms.txt` 为准，那是每次发布时最新的契约。如果你在读这份文档的离线副本，或者距离发布有一段时间了，`llms.txt` 里可能有更新的说明。
 

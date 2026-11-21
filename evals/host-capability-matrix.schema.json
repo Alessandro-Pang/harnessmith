@@ -8,8 +8,8 @@
     "schemaVersion": { "const": 1 },
     "hosts": {
       "type": "array",
-      "minItems": 6,
-      "maxItems": 6,
+      "minItems": 8,
+      "maxItems": 8,
       "items": { "$ref": "#/$defs/host" }
     },
     "capabilities": {
@@ -51,7 +51,7 @@
       "additionalProperties": false,
       "required": ["id", "state", "reason", "evidence"],
       "properties": {
-        "id": { "enum": ["codex", "cursor", "claude", "opencode", "kimi", "zed"] },
+        "id": { "enum": ["codex", "cursor", "claude", "opencode", "kimi", "zed", "deepseek", "pi"] },
         "state": { "enum": ["executable", "inconclusive", "unsupported"] },
         "reason": { "$ref": "#/$defs/text" },
         "evidence": {
@@ -89,7 +89,9 @@
             "claude": { "$ref": "#/$defs/support" },
             "opencode": { "$ref": "#/$defs/support" },
             "kimi": { "$ref": "#/$defs/support" },
-            "zed": { "$ref": "#/$defs/support" }
+            "zed": { "$ref": "#/$defs/support" },
+            "deepseek": { "$ref": "#/$defs/support" },
+            "pi": { "$ref": "#/$defs/support" }
           }
         }
       }

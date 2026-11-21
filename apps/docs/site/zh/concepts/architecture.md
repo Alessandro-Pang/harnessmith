@@ -9,7 +9,7 @@ updated: 2026-09-05
 
 # 架构设计
 
-Harnessmith 是**跨 Host 的 Personal Harness 分发与工作状态控制层**。它把宿主中立的规则、文档和本地 Runtime 安全接入 Codex、Cursor、Claude Code、OpenCode、Kimi Code CLI 与 Zed Agent，但不替代这些宿主的 Agent Runtime。宿主负责运行 Agent，Harnessmith 负责把你的工作方式安全地带入并延续下去。
+Harnessmith 是**跨 Host 的 Personal Harness 分发与工作状态控制层**。它把宿主中立的规则、文档和本地 Runtime 安全接入 Codex、Cursor、Claude Code、OpenCode、Kimi Code CLI、Zed Agent、DeepSeek Harness 与 Pi Agent，但不替代这些宿主的 Agent Runtime。宿主负责运行 Agent，Harnessmith 负责把你的工作方式安全地带入并延续下去。
 
 公开能力分成三种状态：**已实现（Implemented）** 表示代码与可执行证据都存在；**由宿主负责（Delegated to the Host）** 表示 Harnessmith 只提供 guidance 或接入点；**不支持（Unsupported）** 表示当前明确不声称拥有。逐项 owner 和证据路径见[能力声明—证据矩阵](https://github.com/Alessandro-Pang/harnessmith/blob/main/apps/docs/site/capability-evidence.yaml)。
 
@@ -107,9 +107,49 @@ tests、schema、preflight、覆盖率与包检查验证仓库内确定性契约
 | OpenCode | global | Markdown | host-default | host |
 | Kimi Code CLI | global | Markdown | host-default | host |
 | Zed Agent | global | Markdown | host-default | host |
+| DeepSeek Harness | global | Markdown | host-default | host |
+| Pi Agent | global | Markdown | host-default | host |
 | Cursor | project | AGENTS.md + MDC | MDC always | host |
 
 「支持」表示 Adapter 生命周期、能力描述和回归测试存在，不表示每个宿主版本都完成真实运行评测。逐项状态以[能力声明—证据矩阵](https://github.com/Alessandro-Pang/harnessmith/blob/main/apps/docs/site/capability-evidence.yaml)为准。
+
+### DeepSeek Harness 契约来源与验证边界
+
+产品身份为官方仓库 [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)、npm 包 `@deepseek-ai/dsh` 和可执行文件 `dsh`。配置根为 `$DSH_HOME`（默认 `~/.dsh`）；空或仅空白的 `DSH_HOME` 按上游 `resolveDshHome` 视为未设置。用户全局指令契约来自 `@deepseek-ai/dsh-agent-instructions`（`packages/context/agent-instructions`）。
+
+| 坐标 | 已验证值 |
+| --- | --- |
+| npm CLI | `@deepseek-ai/dsh@0.1.1-rc.2` |
+| npm 指令契约 | `@deepseek-ai/dsh-agent-instructions@0.1.1-rc.2` |
+| 上游 Git tag | [`dsh-v0.1.1-rc.2`](https://github.com/deepseek-ai/deepseek-harness/releases/tag/dsh-v0.1.1-rc.2) |
+| 上游 commit | `b150a551b8d465e31e418e1b2eaf5e79bbb7d28e` |
+
+DeepSeek Harness 仍处于 developer preview。兼容性声明只覆盖上表这一组 npm 版本和上游 revision 的验证结果，其他版本在重新验证前不视为已支持。Adapter 安装生命周期只面向文档化的 `$DSH_HOME/AGENTS.md`，不能把全局 Markdown 文件安装等同于完整 Session baseline 或 Host Eval 验证。
+
+| 范围 | 谁负责 | 说明 |
+| --- | --- | --- |
+| 用户全局 `$DSH_HOME/AGENTS.md` | Harnessmith Adapter | 唯一安装的指令入口；同根下还有 `.harnessmith/`，skill 由 `skills` 独立管理 |
+| 项目根 / 嵌套 `AGENTS.md`、`CLAUDE.md` 与 `.local` overlay | 宿主 / 工作区 | 按 Session 上下文加载，不在安装范围 |
+| 权限、sandbox、工具白名单、审批 | 宿主 Runtime | 指令仅为 advisory，文件存在不代表强制执行 |
+| Cordis patch、`settings.yaml`、凭证 | 宿主 / 用户 | Harnessmith 不写入、不挂载插件 |
+
+已实现的是路径解析、dry-run、install/status/restore/uninstall、SafePath、锁、备份、所有权与回滚。尚未提交 maintainer-attested DeepSeek Host Eval，发布门禁仍只要求 Codex。
+
+### Pi Agent 契约来源与验证边界
+
+产品身份为官方仓库 [earendil-works/pi](https://github.com/earendil-works/pi)、npm 包 `@earendil-works/pi-coding-agent` 和可执行文件 `pi`。配置根为 `$PI_CODING_AGENT_DIR`（默认 `~/.pi/agent`），空或仅空白时视为未设置；它同时是配置根和 Pi 的可写状态目录（sessions/、settings.json、auth.json）。
+
+Pi 从有效 `agentDir`、父目录和项目目录逐级加载 `AGENTS.md`（及 `CLAUDE.md`）。如果某目录存在 `AGENTS.override.md`，它会替代同目录的 `AGENTS.md`。Harnessmith 只托管用户全局这一层，未锁定特定已验证 revision；兼容性基于文档化的 AGENTS.md 加载契约，而非特定 npm 版本或上游 commit。
+
+| 范围 | 谁负责 | 说明 |
+| --- | --- | --- |
+| 用户全局 `$PI_CODING_AGENT_DIR/AGENTS.md` | Harnessmith Adapter | 唯一安装的指令入口；同根下还有 `.harnessmith/`，skill 由 `skills` 独立管理 |
+| 项目 `.pi/AGENTS.md`、父目录 `AGENTS.md`、`AGENTS.override.md` | 宿主 / 用户 | 按目录层级加载，不在安装范围 |
+| `SYSTEM.md`、context hook 扩展 | 宿主 / 扩展 | 扩展可在指令到达模型前过滤内容 |
+| 权限、sandbox、工具白名单 | 用户进程 | Pi 没有内建权限系统，以用户进程权限运行 |
+| sessions/、settings.json、auth.json、trust.json | 宿主 / 用户 | Harnessmith 不写入这些文件 |
+
+已实现的是路径解析、dry-run、install/status/restore/uninstall、SafePath、锁、备份、所有权与回滚。尚未提交 maintainer-attested Pi Host Eval，发布门禁仍只要求 Codex。
 
 ## 数据与信任边界
 

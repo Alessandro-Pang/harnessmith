@@ -7,6 +7,7 @@ import { HarnessmithError } from '../shared/types.js';
 import { type AgentName, getAdapterDefinition } from './adapter-registry.js';
 import { resolveCursorAdapter } from './cursor-adapter.js';
 import { type AdapterResolveContext, type AdapterResolver, hostAdapter } from './host-adapter.js';
+import { normalizePiAgentDir } from './pi-paths.js';
 
 export { inspectGit, resolveGitExecutable } from './git-inspection.js';
 
@@ -53,6 +54,24 @@ function resolveZedAdapter({ env, userHome, userData }: AdapterResolveContext): 
   return hostAdapter('zed', resolveZedAgentHome(env, process.platform, userHome), userData);
 }
 
+function resolveDeepSeekAdapter({ env, userHome, userData }: AdapterResolveContext): Adapter {
+  const configured = env.DSH_HOME;
+  const agentHome = canonicalPath(
+    configured !== undefined && configured.trim().length > 0 ? configured : join(userHome, '.dsh'),
+  );
+  return hostAdapter('deepseek', agentHome, userData);
+}
+
+function resolvePiAdapter({ env, userHome, userData }: AdapterResolveContext): Adapter {
+  const configured = env.PI_CODING_AGENT_DIR;
+  const agentHome = canonicalPath(
+    configured !== undefined && configured.trim().length > 0
+      ? normalizePiAgentDir(configured, userHome)
+      : join(userHome, '.pi', 'agent'),
+  );
+  return hostAdapter('pi', agentHome, userData);
+}
+
 /**
  * Exhaustive resolver map: adding a registry entry without a path resolver fails typecheck.
  * Host-specific paths and env vars remain here; the registry stays host-identity only.
@@ -64,6 +83,8 @@ const adapterResolvers = {
   opencode: resolveOpenCodeAdapter,
   kimi: resolveKimiAdapter,
   zed: resolveZedAdapter,
+  deepseek: resolveDeepSeekAdapter,
+  pi: resolvePiAdapter,
 } as const satisfies Record<AgentName, AdapterResolver>;
 
 export function createAdapter(

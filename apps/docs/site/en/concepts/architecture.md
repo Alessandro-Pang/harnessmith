@@ -11,8 +11,8 @@ lang: en
 # Architecture
 
 Harnessmith is a **cross-host distribution and work-state control layer for a personal Harness**. It safely connects
-host-neutral rules, docs, and a local Runtime into Codex, Cursor, Claude Code, OpenCode, Kimi Code CLI, and Zed Agent,
-but it does not replace these hosts' agent runtimes. The host runs the agent; Harnessmith safely brings your way of
+host-neutral rules, docs, and a local Runtime into Codex, Cursor, Claude Code, OpenCode, Kimi Code CLI, Zed Agent,
+DeepSeek Harness, and Pi Agent, but it does not replace these hosts' agent runtimes. The host runs the agent; Harnessmith safely brings your way of
 working in and keeps it going.
 
 Public capabilities come in three states: **Implemented** means both code and executable evidence exist; **Delegated to
@@ -196,11 +196,66 @@ loading is introduced.
 | OpenCode | global | Markdown | host-default | host |
 | Kimi Code CLI | global | Markdown | host-default | host |
 | Zed Agent | global | Markdown | host-default | host |
+| DeepSeek Harness | global | Markdown | host-default | host |
+| Pi Agent | global | Markdown | host-default | host |
 | Cursor | project | AGENTS.md + MDC | MDC always | host |
 
 "Support" means the Adapter lifecycle, capability description, and regression tests exist; it does not mean every host
 version has completed real-run evaluation. Per-item status is defined by the
 [capability claims—evidence matrix](https://github.com/Alessandro-Pang/harnessmith/blob/main/apps/docs/site/capability-evidence.yaml).
+
+### DeepSeek Harness contract source and validation boundary
+
+The product coordinates are the official [deepseek-ai/deepseek-harness](https://github.com/deepseek-ai/deepseek-harness)
+repository, the `@deepseek-ai/dsh` npm package, and the `dsh` executable. Its configuration root is `$DSH_HOME`
+(default `~/.dsh`); an empty or whitespace-only value is treated as unset by upstream `resolveDshHome`. The user-global
+instruction contract comes from `@deepseek-ai/dsh-agent-instructions` (`packages/context/agent-instructions`).
+
+| Coordinate | Validated value |
+| --- | --- |
+| npm CLI | `@deepseek-ai/dsh@0.1.1-rc.2` |
+| npm instruction contract | `@deepseek-ai/dsh-agent-instructions@0.1.1-rc.2` |
+| Upstream Git tag | [`dsh-v0.1.1-rc.2`](https://github.com/deepseek-ai/deepseek-harness/releases/tag/dsh-v0.1.1-rc.2) |
+| Upstream commit | `b150a551b8d465e31e418e1b2eaf5e79bbb7d28e` |
+
+DeepSeek Harness remains in developer preview. Compatibility is claimed only for the validated npm versions and upstream
+revision above; other versions are unsupported until re-validated. The Adapter lifecycle targets only the documented
+`$DSH_HOME/AGENTS.md`; installing that Markdown file does not establish the complete Session baseline or Host Eval proof.
+
+| Scope | Owner | Boundary |
+| --- | --- | --- |
+| User-global `$DSH_HOME/AGENTS.md` | Harnessmith Adapter | The only managed instruction entry; `.harnessmith/` shares its root and `skills` independently owns the skill |
+| Project/nested `AGENTS.md`, `CLAUDE.md`, and `.local` overlays | Host / workspace | Loaded from Session context and outside the install scope |
+| Permissions, sandbox, tool allowlists, and approval | Host runtime | Instructions are advisory; file presence does not enforce them |
+| Cordis patches, `settings.yaml`, and credentials | Host / user | Harnessmith neither writes these nor installs plugins |
+
+Implemented behavior covers path resolution, dry-run, install/status/restore/uninstall, SafePath, locks, backups,
+ownership, and rollback. No maintainer-attested DeepSeek Host Eval has been submitted; the release gate still requires
+only Codex.
+
+### Pi Agent contract source and validation boundary
+
+The product coordinates are the official [earendil-works/pi](https://github.com/earendil-works/pi) repository, the
+`@earendil-works/pi-coding-agent` npm package, and the `pi` executable. Its configuration root is
+`$PI_CODING_AGENT_DIR` (default `~/.pi/agent`), with empty or whitespace-only values treated as unset. This directory has
+a dual role as both the config root and Pi's writable state directory for sessions, settings, and authentication.
+
+Pi loads `AGENTS.md` (and `CLAUDE.md`) from its effective `agentDir`, parent directories, and the project directory. An
+`AGENTS.override.md` replaces `AGENTS.md` in the same directory. Harnessmith manages only the user-global layer and pins
+no validated revision; compatibility is based on the documented AGENTS.md loading contract rather than a specific npm
+version or upstream commit.
+
+| Scope | Owner | Boundary |
+| --- | --- | --- |
+| User-global `$PI_CODING_AGENT_DIR/AGENTS.md` | Harnessmith Adapter | The only managed instruction entry; `.harnessmith/` shares its root and `skills` independently owns the skill |
+| Project `.pi/AGENTS.md`, parent `AGENTS.md`, and `AGENTS.override.md` | Host / user | Loaded by directory hierarchy and outside the install scope |
+| `SYSTEM.md` and context-hook extensions | Host / extension | Extensions can filter instructions before they reach the model |
+| Permissions, sandbox, and tool allowlists | User process | Pi has no built-in permission system and runs with user-process permissions |
+| sessions/, settings.json, auth.json, and trust.json | Host / user | Harnessmith never writes these files |
+
+Implemented behavior covers path resolution, dry-run, install/status/restore/uninstall, SafePath, locks, backups,
+ownership, and rollback. No maintainer-attested Pi Host Eval has been submitted; the release gate still requires only
+Codex.
 
 ## Data and trust boundaries
 

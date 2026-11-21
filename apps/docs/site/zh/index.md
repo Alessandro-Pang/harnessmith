@@ -29,7 +29,7 @@ hero:
 <section class="home-signal" aria-label="Harnessmith 概览">
   <p class="home-eyebrow">Personal Agent Harness · Local first</p>
   <div class="home-signal-grid">
-    <div><strong>6</strong><span>个内置 Adapter</span></div>
+    <div><strong>8</strong><span>个内置 Adapter</span></div>
     <div><strong>0</strong><span>默认静默覆盖用户文件</span></div>
     <div><strong>1</strong><span>份宿主中立的工作方式</span></div>
   </div>
@@ -49,10 +49,10 @@ hero:
 <section class="home-bento" aria-label="核心能力">
   <article class="home-card home-card-hosts">
     <span class="home-card-index">01 / DISTRIBUTE</span>
-    <h2>规则写一次，六个宿主都能用</h2>
-    <p>同一份宿主中立的 Harness，通过 Adapter 装进 Codex、Cursor、Claude Code、OpenCode、Kimi Code CLI 和 Zed Agent。路径怎么解析、入口放哪里、格式怎么适配，交给外层处理；升级时旧层自动备份。</p>
+    <h2>规则写一次，八个宿主都能用</h2>
+    <p>同一份宿主中立的 Harness，通过 Adapter 装进 Codex、Cursor、Claude Code、OpenCode、Kimi Code CLI、Zed Agent、DeepSeek Harness 和 Pi Agent。路径怎么解析、入口放哪里、格式怎么适配，交给外层处理；升级时旧层自动备份。</p>
     <div class="host-list" aria-label="支持的宿主">
-      <span>Codex</span><span>Cursor</span><span>Claude Code</span><span>OpenCode</span><span>Kimi Code</span><span>Zed Agent</span>
+      <span>Codex</span><span>Cursor</span><span>Claude Code</span><span>OpenCode</span><span>Kimi Code</span><span>Zed Agent</span><span>DeepSeek</span><span>Pi Agent</span>
     </div>
   </article>
 

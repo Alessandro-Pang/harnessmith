@@ -127,7 +127,7 @@ function checkPortableTemplate(root: string, check: DocsContext['check']): void 
     'TIMESTAMP',
   ]);
   const hostIdentity = new RegExp(
-    String.raw`\b(?:${supportedAgentNames.join('|')})\b|CODEX_HOME|CLAUDE_CONFIG_DIR|OPENCODE_CONFIG_DIR|KIMI_CODE_HOME`,
+    String.raw`\b(?:${supportedAgentNames.join('|')})\b|CODEX_HOME|CLAUDE_CONFIG_DIR|OPENCODE_CONFIG_DIR|KIMI_CODE_HOME|DSH_HOME|PI_CODING_AGENT_DIR`,
     'i',
   );
   for (const path of filesUnder(join(root, 'template'))) {

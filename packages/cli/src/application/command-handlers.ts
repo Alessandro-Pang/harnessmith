@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs';
 import { adapterCapabilities, createAdapter } from '../adapters/adapters.js';
 import { normalizeAgents, supportedAgents } from '../adapters/agent-selection.js';
 import { executeAdopt } from '../adoption/adopt-command.js';
@@ -53,6 +54,19 @@ async function resolveAdapters(options: CliOptions, context: ExecuteContext): Pr
   assertNonOverlappingAdapters(adapters);
   return adapters;
 }
+
+function installedPeerAdapters(
+  adapters: Adapter[],
+  options: CliOptions,
+  context: ExecuteContext,
+): Adapter[] {
+  const selectedNames = new Set(adapters.map(({ name }) => name));
+  return supportedAgents
+    .filter(({ value }) => !selectedNames.has(value))
+    .map(({ value }) => createAdapter(value, { env: context.env, project: options.project }))
+    .filter((adapter) => !adapter.project && existsSync(adapter.record));
+}
+
 function previewLifecycle(
   command: LifecycleCommand,
   adapters: Adapter[],
@@ -109,7 +123,12 @@ function executeLifecycle(
   const results =
     command === 'restore'
       ? restoreAll(adapters, force)
-      : uninstallWithSkills(adapters, force, context.env);
+      : uninstallWithSkills(
+          adapters,
+          force,
+          context.env,
+          installedPeerAdapters(adapters, options, context),
+        );
   for (const result of results) {
     if (options.json) context.io.log(JSON.stringify({ command, ...result }));
     else if (command === 'restore')

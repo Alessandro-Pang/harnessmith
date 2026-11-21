@@ -9,7 +9,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { delimiter, dirname, join } from 'node:path';
 import { readNpmPackageTarball } from '../../../release/npm-tarball.js';
 import { applyMemoryFixtureSeeds } from '../../memory/memory-fixture-seed.ts';
 import { createEvalEnvironment } from '../support/environment.ts';
@@ -115,7 +115,7 @@ export function initializeMemoryFixture(setup) {
     TMPDIR: temp,
     HOME: home,
     CODEX_HOME: configHome,
-    PATH: `${process.env.PATH ?? ''}:${dirname(nodeBin)}`,
+    PATH: [process.env.PATH, dirname(nodeBin)].filter(Boolean).join(delimiter),
   });
   checked('git', ['init', '-b', 'main'], { cwd: repo, env });
   checked(

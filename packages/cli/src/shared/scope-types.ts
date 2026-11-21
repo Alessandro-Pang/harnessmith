@@ -3,7 +3,15 @@
  * union (enforced via `satisfies`), so adding a host fails typecheck until every map is
  * exhaustive. Living in `shared` keeps the type layer free of any adapter import.
  */
-export type AgentName = 'codex' | 'cursor' | 'claude' | 'opencode' | 'kimi' | 'zed';
+export type AgentName =
+  | 'codex'
+  | 'cursor'
+  | 'claude'
+  | 'opencode'
+  | 'kimi'
+  | 'zed'
+  | 'deepseek'
+  | 'pi';
 
 export interface AdapterCapabilities {
   scope: 'global' | 'project';

@@ -36,6 +36,18 @@
       "state": "inconclusive",
       "reason": "The distribution adapter exists, but no Zed Agent real-Host transport and independent evaluator are implemented.",
       "evidence": ["packages/cli/src/adapters/adapter-registry.ts", "evals/README.md"]
+    },
+    {
+      "id": "deepseek",
+      "state": "inconclusive",
+      "reason": "The distribution adapter exists, but no DeepSeek Harness real-Host transport and independent evaluator are implemented.",
+      "evidence": ["packages/cli/src/adapters/adapter-registry.ts", "evals/README.md"]
+    },
+    {
+      "id": "pi",
+      "state": "inconclusive",
+      "reason": "The distribution adapter exists, but no Pi Agent real-Host transport and independent evaluator are implemented.",
+      "evidence": ["packages/cli/src/adapters/adapter-registry.ts", "evals/README.md"]
     }
   ],
   "capabilities": [

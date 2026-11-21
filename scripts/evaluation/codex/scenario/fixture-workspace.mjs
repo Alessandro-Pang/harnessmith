@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync, symlinkSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { delimiter, dirname, join } from 'node:path';
 
 /** @param {import('./fixture-types.mjs').FixtureConfig} config */
 function writeBaseFiles(config) {
@@ -72,7 +72,7 @@ export function createFixtureWorkspace(config) {
     HARNESS_PERSONAL_HOME: personal,
     HARNESS_REPOSITORY_ROOT: repo,
     TMPDIR: temp,
-    PATH: `${process.env.PATH ?? ''}:${dirname(nodeBin)}`,
+    PATH: [process.env.PATH, dirname(nodeBin)].filter(Boolean).join(delimiter),
   };
   /** @type {string | undefined} */
   let configHome;

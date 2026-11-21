@@ -160,7 +160,7 @@ test('diagnostics schema accepts the complete registered adapter set', () => {
   const adapters = supportedAgentNames.map((agent) => createAdapter(agent, { env, project: root }));
   const report = createDiagnosticsReport(adapters, { env, project: root });
   const ajv = new Ajv2020({ allErrors: true, strict: false });
-  assert.equal(report.adapters.length, 6);
-  assert.equal(report.budget.maxAdapters, 6);
+  assert.equal(report.adapters.length, 8);
+  assert.equal(report.budget.maxAdapters, 8);
   assert.equal(ajv.validate(schema, report), true, JSON.stringify(ajv.errors));
 });

@@ -11,8 +11,8 @@ export default defineConfig({
       'evals/__tests__/**/*.test.ts',
     ],
     pool: 'forks',
-    testTimeout: 30_000,
-    hookTimeout: 30_000,
+    testTimeout: process.platform === 'win32' ? 60_000 : 30_000,
+    hookTimeout: process.platform === 'win32' ? 60_000 : 30_000,
     coverage: {
       provider: 'v8',
       include: [

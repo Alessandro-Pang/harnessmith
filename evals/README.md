@@ -54,7 +54,7 @@ failures route to their respective fixture/writer/transport repairs. The evaluat
 changing a prompt or regex and rerunning for those categories, so a failed run must first acquire a new
 root-cause hypothesis and an independent verifier result.
 
-Unit tests cover deterministic file and CLI behavior. This directory describes how maintainers record an observed run of the installed Harness in Codex, Cursor, Claude Code, OpenCode, Kimi Code CLI, or Zed Agent. Codex is required by the current release policy; records from the other five hosts are optional evidence. A schema fixture, scenario catalog, mock transcript, or passing unit test does not count as Host evidence.
+Unit tests cover deterministic file and CLI behavior. This directory describes how maintainers record an observed run of the installed Harness in Codex, Cursor, Claude Code, OpenCode, Kimi Code CLI, Zed Agent, DeepSeek Harness, or Pi Agent. Codex is required by the current release policy; records from the other seven hosts are optional evidence. A schema fixture, scenario catalog, mock transcript, or passing unit test does not count as Host evidence.
 
 ## Before you start
 
@@ -275,7 +275,7 @@ evidence by copying or reclassifying a legacy record.
 The gate fails when schema v2 `suite-summary.json` is absent, stale, bound to another candidate or
 evaluator contract, has `behavior-failed`, `evaluator-inconclusive`, `evaluator-failed`,
 `infra-inconclusive`, or `infra-blocked` outcomes, or is missing any required scenario cell. The
-current required host is Codex; Cursor, Claude Code, OpenCode, Kimi Code CLI, and Zed Agent can still be validated and retained as optional evidence.
+current required host is Codex; Cursor, Claude Code, OpenCode, Kimi Code CLI, Zed Agent, DeepSeek Harness, and Pi Agent can still be validated and retained as optional evidence.
 The gate itself never launches, authenticates to, or spends money on a third-party host. Required Codex Host
 execution is started only by an explicit unified-suite invocation such as `pnpm run eval:codex`; importing or
 testing either module does not create evidence. Maintainers/CI still provide credentials and any non-Codex

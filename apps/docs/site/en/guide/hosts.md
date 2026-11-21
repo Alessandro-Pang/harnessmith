@@ -1,6 +1,6 @@
 ---
 title: Host support
-description: Install scope, path rules, and the precise meaning of support for six classes of coding agents
+description: Install scope, path rules, and the precise meaning of support for eight classes of coding agents
 owner: maintainers
 audience: users
 status: active
@@ -15,7 +15,7 @@ are written, and what "support" actually promises. Pick a host from the table fi
 `setup --dry-run --json` to see the final paths on your machine; don't guess write locations from default
 paths.
 
-Harnessmith currently provides Adapters for six classes of hosts. Think of an Adapter as a translation layer:
+Harnessmith currently provides Adapters for eight classes of hosts. Think of an Adapter as a translation layer:
 it handles path resolution and file-format adaptation so the same personal rules land in the location each
 host's conventions expect. It doesn't replace the host's own model loop, tool scheduling, sandbox, or
 permission approvals — those remain the host's territory.
@@ -27,7 +27,7 @@ couple the template to hosts, and every new host would force a template change. 
 what to write (the host-neutral Harness) from where to write it and in what format (host-specific); adding a
 host only requires adding an Adapter, without touching the template.
 
-## The six hosts in one table
+## The eight hosts in one table
 
 | Host | `--agent` | Default rule entry point | Scope and activation |
 | --- | --- | --- | --- |
@@ -37,6 +37,8 @@ host only requires adding an Adapter, without touching the template.
 | OpenCode | `opencode` | `${OPENCODE_CONFIG_DIR:-${XDG_CONFIG_HOME:-~/.config}/opencode}/AGENTS.md` | Global; host default |
 | Kimi Code CLI | `kimi` (alias `kimi-code`) | `${KIMI_CODE_HOME:-~/.kimi-code}/AGENTS.md` | Global; host default |
 | Zed Agent | `zed` | `~/.config/zed/AGENTS.md` (Windows: `%APPDATA%\Zed\AGENTS.md`) | Global; host default |
+| DeepSeek Harness | `deepseek` (aliases `dsh`, `deepseek-harness`) | `${DSH_HOME:-~/.dsh}/AGENTS.md` | Global; host default |
+| Pi Agent | `pi` (alias `pi-agent`) | `${PI_CODING_AGENT_DIR:-~/.pi/agent}/AGENTS.md` | Global; host default |
 
 To see the hosts, aliases, and capability scope registered by the current version, run:
 
@@ -57,7 +59,7 @@ is the true basis for judging, before installing, where the final changes will l
 
 ## Global hosts and project hosts
 
-The six hosts fall into two install scopes. Global Adapters render the personal rules entry point into the user
+The eight hosts fall into two install scopes. Global Adapters render the personal rules entry point into the user
 directory the host's conventions specify and install the skill into the host's skill catalog through `skills`; one
 install then applies to every project. Cursor is the only exception: it writes to the project root you explicitly
 authorize, uses the current working directory when `--project` is omitted, and must be installed again for each
@@ -79,8 +81,8 @@ the task-routed guidance, and `assets/` contains the templates and schemas. The 
 copy; the global `harnessmith` command is the only public Runtime entry and executes the same-version `dist/harness.mjs`
 at the npm package root. Installing and uninstalling the skill is delegated entirely to the version-pinned production
 dependency `skills@1.7.6`: the installer renders the in-package template and calls `skills add`, and calls `skills remove`
-on uninstall. The canonical copy and any host links are owned by `skills`. Codex, OpenCode, Kimi Code CLI, and Zed scan
-`~/.agents/skills/` natively and share the canonical copy there, `~/.agents/skills/agent-harness`; Claude Code's skill
+on uninstall. The canonical copy and any host links are owned by `skills`. Codex, OpenCode, Kimi Code CLI, Zed, and Pi scan
+`~/.agents/skills/` natively, DeepSeek also discovers skills through this shared root, and they share the canonical copy there, `~/.agents/skills/agent-harness`; Claude Code's skill
 lives at `~/.claude/skills/agent-harness`, managed by `skills`; Cursor is project-scoped, with its skill at
 `<project>/.agents/skills/agent-harness`. Cursor's `.cursor/rules/agent-harness.mdc` is still rendered by Harnessmith,
 because MDC frontmatter must be generated per host. The practical consequence: every host shares one npm package version,
@@ -122,6 +124,19 @@ files".
   If your directory is the old one, first confirm which version you're running. This distinction is an easy
   trap: the two CLI versions can coexist with completely different rule entry points, and installing for the
   wrong version shows up as "installed, but the agent doesn't respond".
+- **DeepSeek Harness**: The Adapter targets the official `dsh` / `@deepseek-ai/dsh` and manages only the
+  user-global `$DSH_HOME/AGENTS.md`; project and nested candidates, permissions, and sandboxing remain
+  Host-owned. Compatibility is claimed only for `@deepseek-ai/dsh@0.1.1-rc.2`,
+  `@deepseek-ai/dsh-agent-instructions@0.1.1-rc.2`, and upstream tag `dsh-v0.1.1-rc.2` (commit
+  `b150a551b8d465e31e418e1b2eaf5e79bbb7d28e`); other revisions require re-validation. See the
+  [architecture contract](/en/concepts/architecture#deepseek-harness-contract-source-and-validation-boundary).
+- **Pi Agent**: The Adapter targets the official `@earendil-works/pi-coding-agent` and manages only the
+  user-global `$PI_CODING_AGENT_DIR/AGENTS.md` (default `~/.pi/agent/AGENTS.md`). That directory also holds
+  Pi's sessions, settings, and authentication; the Host-file transaction writes only instructions and
+  `.harnessmith/install.json`, while `skills` owns the separate skill transaction. Pi has no built-in
+  permission system and runs with user-process permissions; `AGENTS.override.md` replaces `AGENTS.md` in the
+  same directory. No Pi revision is pinned. See the
+  [architecture contract](/en/concepts/architecture#pi-agent-contract-source-and-validation-boundary).
 
 For exact compatibility requirements, the `llms.txt` in the corresponding npm release package is
 authoritative; it is the freshest contract at each release. If you're reading an offline copy of this

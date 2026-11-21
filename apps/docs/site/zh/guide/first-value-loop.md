@@ -32,7 +32,7 @@ updated: 2026-09-05
 
 ### 2. 选择宿主和范围
 
-Codex、Claude Code、OpenCode、Kimi Code CLI、Zed Agent 使用全局范围；Cursor 使用项目范围。先查看[宿主支持](/guide/hosts)，再决定 `--agent` 和 `--project`。
+Codex、Claude Code、OpenCode、Kimi Code CLI、Zed Agent、DeepSeek Harness、Pi Agent 使用全局范围；Cursor 使用项目范围。先查看[宿主支持](/guide/hosts)，再决定 `--agent` 和 `--project`。
 
 ### 3. 预览计划
 

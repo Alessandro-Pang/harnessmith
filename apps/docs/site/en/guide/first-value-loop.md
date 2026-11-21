@@ -41,7 +41,7 @@ recoverable personal work layer. If a short `AGENTS.md` is already enough, you c
 
 ### 2. Choose a host and scope
 
-Codex, Claude Code, OpenCode, Kimi Code CLI, and Zed Agent use global scope; Cursor uses project scope. Check
+Codex, Claude Code, OpenCode, Kimi Code CLI, Zed Agent, DeepSeek Harness, and Pi Agent use global scope; Cursor uses project scope. Check
 [Host support](/en/guide/hosts) first, then decide on `--agent` and `--project`.
 
 ### 3. Preview the plan

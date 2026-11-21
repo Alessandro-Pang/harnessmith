@@ -1,7 +1,6 @@
 # Harnessmith Contributor Guide
 
-Harnessmith 是跨 Codex、Cursor、Claude Code、OpenCode、Kimi Code CLI、Zed Agent 分发个人 Agent Harness 的 npm initializer。详细贡献
-规范见 `CONTRIBUTING.md`；内置 Harness 架构见
+Harnessmith 是跨 Codex、Cursor、Claude Code、OpenCode、Kimi Code CLI、Zed Agent、DeepSeek Harness、Pi Agent 分发个人 Agent Harness 的 npm initializer。详细贡献规范见 `CONTRIBUTING.md`；内置 Harness 架构见
 `template/skills/agent-harness/docs/core/harness-cli-architecture.md`。
 
 ## 不可破坏的边界

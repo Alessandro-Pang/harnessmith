@@ -35,11 +35,12 @@ export function uninstallWithSkills(
   adapters: Adapter[],
   options: Pick<InstallOptions, 'force'>,
   env: NodeJS.ProcessEnv,
+  installedPeers: Adapter[] = [],
 ) {
-  return withScopeLocks(adapters, () => {
+  return withScopeLocks([...adapters, ...installedPeers], () => {
     const results = uninstallAll(adapters, options, heldScopeLocks);
     try {
-      uninstallSkills(adapters, env);
+      uninstallSkills(adapters, env, installedPeers);
     } catch (error) {
       throw new HarnessmithError(
         'INTERNAL_ERROR',

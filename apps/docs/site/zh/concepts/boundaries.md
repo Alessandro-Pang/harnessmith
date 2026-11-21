@@ -33,7 +33,7 @@ Harnessmith 不是另一个 Coding Agent，而是 Agent 周围的个人工作层
 
 ## Coding Agent 宿主保证什么
 
-模型循环、上下文压缩、工具/MCP 调度、sandbox、网络访问、权限提示、凭据管理、token/成本与事件真实性，属于 Codex、Cursor、Claude Code、OpenCode、Kimi Code CLI 或 Zed Agent。Harnessmith 可以提供建议和接入点，但不能替宿主执行这些职责。
+模型循环、上下文压缩、工具/MCP 调度、sandbox、网络访问、权限提示、凭据管理、token/成本与事件真实性，属于 Codex、Cursor、Claude Code、OpenCode、Kimi Code CLI、Zed Agent、DeepSeek Harness 或 Pi Agent。Harnessmith 可以提供建议和接入点，但不能替宿主执行这些职责。
 
 举个具体例子：Harnessmith 可以在规则里写明「远端写入需要明确授权」，但真正拦下一次未经批准的网络调用，靠的是宿主权限系统和你的审批。Markdown 本身不是 sandbox。把这句话写进文档和把它变成机制，是两件完全不同的事。
 

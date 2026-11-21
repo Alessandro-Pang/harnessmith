@@ -1,6 +1,6 @@
-import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { tmpdir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execaSync } from 'execa';
 import { fdir } from 'fdir';
@@ -31,12 +31,22 @@ const agentDetectionVariables = [
   'REPL_ID',
 ] as const;
 
+export function resolveSkillsHome(
+  env: NodeJS.ProcessEnv,
+  platform: NodeJS.Platform = process.platform,
+): string {
+  return platform === 'win32' ? env.USERPROFILE || homedir() : env.HOME || homedir();
+}
+
 function skillsAgentName(name: AgentName): string {
   switch (name) {
     case 'claude':
       return 'claude-code';
     case 'kimi':
       return 'kimi-code-cli';
+    case 'deepseek':
+      // skills@1.7.6 has no DeepSeek id; DSH scans the shared ~/.agents/skills root.
+      return 'pi';
     default:
       return name;
   }
@@ -101,7 +111,7 @@ function runSkills(
     if (scope.global) args.push('--global');
     args.push(
       '--agent',
-      ...scope.adapters.map((adapter) => skillsAgentName(adapter.name)),
+      ...new Set(scope.adapters.map((adapter) => skillsAgentName(adapter.name))),
       '--yes',
     );
     execaSync(process.execPath, args, {
@@ -129,6 +139,20 @@ export function installSkills(adapters: Adapter[], env: NodeJS.ProcessEnv): void
   for (const scope of skillScopes(adapters)) runSkills('add', scope, env);
 }
 
-export function uninstallSkills(adapters: Adapter[], env: NodeJS.ProcessEnv): void {
-  for (const scope of skillScopes(adapters)) runSkills('remove', scope, env);
+export function uninstallSkills(
+  adapters: Adapter[],
+  env: NodeJS.ProcessEnv,
+  installedPeers: Adapter[] = [],
+): void {
+  for (const scope of skillScopes(adapters)) {
+    const sharedSkill = join(resolveSkillsHome(env), '.agents', 'skills', 'agent-harness');
+    const sharedSkillExisted = scope.global && existsSync(sharedSkill);
+    runSkills('remove', scope, env);
+    const remainingGlobalPeers = installedPeers.filter((adapter) => !adapter.project);
+    if (sharedSkillExisted && !existsSync(sharedSkill) && remainingGlobalPeers.length > 0) {
+      // skills cannot detect every installed Adapter or custom home. Restore the shared copy only
+      // when its removal deleted a skill that a peer still owns; withScopeLocks already covers peers.
+      installSkills(remainingGlobalPeers, env);
+    }
+  }
 }

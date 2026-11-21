@@ -61,8 +61,8 @@ they are not permanent promises across versions. For the precise claims of each 
 ## What the coding agent host guarantees
 
 The model loop, context compression, tool/MCP scheduling, sandboxing, network access, permission prompts, credential
-management, tokens/costs, and event authenticity belong to Codex, Cursor, Claude Code, OpenCode, Kimi Code CLI, or
-Zed Agent. Harnessmith can provide guidance and integration points, but it cannot carry out these responsibilities on
+management, tokens/costs, and event authenticity belong to Codex, Cursor, Claude Code, OpenCode, Kimi Code CLI, Zed
+Agent, DeepSeek Harness, or Pi Agent. Harnessmith can provide guidance and integration points, but it cannot carry out these responsibilities on
 the host's behalf.
 
 A concrete example: Harnessmith can state in its rules that "remote writes require explicit authorization", but what

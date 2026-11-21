@@ -14,6 +14,8 @@ function fixture() {
     ...process.env,
     HOME: root,
     CODEX_HOME: join(root, 'codex-home'),
+    DSH_HOME: join(root, 'custom-dsh'),
+    PI_CODING_AGENT_DIR: join(root, 'custom-pi'),
     HARNESS_STATE_HOME: join(root, 'state'),
     HARNESS_MEMORY_HOME: join(root, 'memory'),
     HARNESS_PERSONAL_HOME: join(root, 'rules'),
@@ -89,4 +91,28 @@ test('a refused uninstall leaves both the skill and modified instructions untouc
   assert.match(result.errors.join('\n'), /modified/i);
   assert.ok(existsSync(join(skill, 'SKILL.md')));
   assert.match(readFileSync(hostEntry, 'utf8'), /local edit/);
+});
+
+test('uninstalling DeepSeek preserves the shared skill while custom-home Pi remains installed', async () => {
+  const { root, env } = fixture();
+  const skill = join(root, '.agents', 'skills', 'agent-harness', 'SKILL.md');
+  await execute(env, ['install', '--agent', 'deepseek,pi', '--no-init-global', '--yes']);
+  assert.equal(existsSync(skill), true);
+
+  await execute(env, ['uninstall', '--agent', 'deepseek', '--yes']);
+
+  assert.equal(existsSync(skill), true);
+  assert.equal(existsSync(join(root, 'custom-pi', 'AGENTS.md')), true);
+});
+
+test('uninstalling custom-home Pi preserves the shared skill while DeepSeek remains installed', async () => {
+  const { root, env } = fixture();
+  const skill = join(root, '.agents', 'skills', 'agent-harness', 'SKILL.md');
+  await execute(env, ['install', '--agent', 'deepseek,pi', '--no-init-global', '--yes']);
+  assert.equal(existsSync(skill), true);
+
+  await execute(env, ['uninstall', '--agent', 'pi', '--yes']);
+
+  assert.equal(existsSync(skill), true);
+  assert.equal(existsSync(join(root, 'custom-dsh', 'AGENTS.md')), true);
 });

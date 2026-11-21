@@ -87,7 +87,7 @@ npx harnessmith diagnostics --agent <agent> --json
 
 ## 装到其他宿主
 
-`codex`、`claude-code`、`opencode`、`kimi-code` 与 `zed` 使用全局安装范围；`cursor` 使用项目范围，需要显式给出项目根：
+`codex`、`claude-code`、`opencode`、`kimi-code`、`zed`、`deepseek` 与 `pi` 使用全局安装范围；`cursor` 使用项目范围，需要显式给出项目根：
 
 ```bash
 npx harnessmith setup --agent cursor --project /path/to/project

@@ -72,6 +72,8 @@ You can also ask a coding agent to follow the install protocol:
 | OpenCode | global | `opencode` |
 | Kimi Code CLI | global | `kimi` (alias: `kimi-code`) |
 | Zed Agent | global | `zed` |
+| DeepSeek Harness | global | `deepseek` (aliases: `dsh`, `deepseek-harness`) |
+| Pi Agent | global | `pi` (alias: `pi-agent`) |
 
 A global install writes to the host's personal configuration directory and applies to every project. A project install applies to one project. Cursor accepts `--project /path/to/project`; when omitted, it uses the current working directory. The [host guide](https://alexpang.cn/harnessmith/en/guide/hosts) lists actual destinations, environment variables, activation behavior, and evidence status.
 

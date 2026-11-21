@@ -65,6 +65,8 @@ harnessmith setup --agent codex
 | OpenCode | 全局 | `opencode` |
 | Kimi Code CLI | 全局 | `kimi`，别名 `kimi-code` |
 | Zed Agent | 全局 | `zed` |
+| DeepSeek Harness | 全局 | `deepseek`，别名 `dsh`、`deepseek-harness` |
+| Pi Agent | 全局 | `pi`，别名 `pi-agent` |
 
 全局安装写入宿主的个人配置目录，对所有项目生效；项目安装只作用于一个项目。Cursor 可以通过 `--project /path/to/project` 指定项目，省略时使用当前工作目录。实际目标路径、环境变量和宿主激活方式见[宿主支持](https://alexpang.cn/harnessmith/guide/hosts)。
 

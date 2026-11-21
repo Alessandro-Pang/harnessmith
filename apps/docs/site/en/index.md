@@ -30,7 +30,7 @@ hero:
 <section class="home-signal" aria-label="Harnessmith overview">
   <p class="home-eyebrow">Personal Agent Harness · Local first</p>
   <div class="home-signal-grid">
-    <div><strong>6</strong><span>built-in adapters</span></div>
+    <div><strong>8</strong><span>built-in adapters</span></div>
     <div><strong>0</strong><span>silent overwrites of your files by default</span></div>
     <div><strong>1</strong><span>host-neutral working style</span></div>
   </div>
@@ -51,10 +51,10 @@ hero:
 <section class="home-bento" aria-label="Core capabilities">
   <article class="home-card home-card-hosts">
     <span class="home-card-index">01 / DISTRIBUTE</span>
-    <h2>Write the rules once, use them on six hosts</h2>
-    <p>The same host-neutral Harness installs into Codex, Cursor, Claude Code, OpenCode, Kimi Code CLI, and Zed Agent through adapters. Path resolution, entry placement, and format adaptation stay in the outer layer; upgrades back up the previous layer automatically.</p>
+    <h2>Write the rules once, use them on eight hosts</h2>
+    <p>The same host-neutral Harness installs into Codex, Cursor, Claude Code, OpenCode, Kimi Code CLI, Zed Agent, DeepSeek Harness, and Pi Agent through adapters. Path resolution, entry placement, and format adaptation stay in the outer layer; upgrades back up the previous layer automatically.</p>
     <div class="host-list" aria-label="Supported hosts">
-      <span>Codex</span><span>Cursor</span><span>Claude Code</span><span>OpenCode</span><span>Kimi Code</span><span>Zed Agent</span>
+      <span>Codex</span><span>Cursor</span><span>Claude Code</span><span>OpenCode</span><span>Kimi Code</span><span>Zed Agent</span><span>DeepSeek</span><span>Pi Agent</span>
     </div>
   </article>
 

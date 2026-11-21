@@ -115,7 +115,7 @@ failure exits, and the zero-telemetry regression is in the [First Value Loop](/e
 
 ## Other hosts
 
-`codex`, `claude-code`, `opencode`, `kimi-code`, and `zed` use global install scope; `cursor` uses project scope and
+`codex`, `claude-code`, `opencode`, `kimi-code`, `zed`, `deepseek`, and `pi` use global install scope; `cursor` uses project scope and
 needs an explicit project root:
 
 ```bash

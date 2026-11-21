@@ -31,7 +31,10 @@ test('adapter registry is the single host inventory for CLI selection and aliase
   assert.deepEqual(normalizeAgents(['all']), [...supportedAgentNames]);
   assert.deepEqual(normalizeAgents(['claude-code']), ['claude']);
   assert.deepEqual(normalizeAgents(['kimi-code']), ['kimi']);
-  assert.deepEqual(normalizeAgents(['1', '2', '3', '4', '5', '6']), [...supportedAgentNames]);
+  assert.deepEqual(normalizeAgents(['dsh', 'deepseek-harness']), ['deepseek']);
+  assert.deepEqual(normalizeAgents(['1', '2', '3', '4', '5', '6', '7', '8']), [
+    ...supportedAgentNames,
+  ]);
   assert.deepEqual([...adapterAliasMap().entries()].sort(), [
     ['1', 'codex'],
     ['2', 'cursor'],
@@ -39,8 +42,13 @@ test('adapter registry is the single host inventory for CLI selection and aliase
     ['4', 'opencode'],
     ['5', 'kimi'],
     ['6', 'zed'],
+    ['7', 'deepseek'],
+    ['8', 'pi'],
     ['claude-code', 'claude'],
+    ['deepseek-harness', 'deepseek'],
+    ['dsh', 'deepseek'],
     ['kimi-code', 'kimi'],
+    ['pi-agent', 'pi'],
   ]);
 });
 
@@ -80,6 +88,8 @@ test('createAdapter preserves registry metadata for every registered host', () =
     CLAUDE_CONFIG_DIR: join(root, 'claude'),
     OPENCODE_CONFIG_DIR: join(root, 'opencode'),
     KIMI_CODE_HOME: join(root, 'kimi'),
+    DSH_HOME: join(root, 'dsh'),
+    PI_CODING_AGENT_DIR: join(root, 'pi'),
   };
 
   for (const entry of adapterRegistry) {
@@ -92,6 +102,15 @@ test('createAdapter preserves registry metadata for every registered host', () =
 });
 
 test('AgentName union stays aligned with registry order used by install records', () => {
-  const names: AgentName[] = ['codex', 'cursor', 'claude', 'opencode', 'kimi', 'zed'];
+  const names: AgentName[] = [
+    'codex',
+    'cursor',
+    'claude',
+    'opencode',
+    'kimi',
+    'zed',
+    'deepseek',
+    'pi',
+  ];
   assert.deepEqual(names, [...supportedAgentNames]);
 });

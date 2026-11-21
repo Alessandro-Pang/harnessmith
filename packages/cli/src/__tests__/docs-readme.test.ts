@@ -33,6 +33,8 @@ test('concise bilingual READMEs preserve onboarding and safety while routing dep
     assert.match(content, /Claude Code/);
     assert.match(content, /OpenCode/);
     assert.match(content, /Kimi Code/);
+    assert.match(content, /DeepSeek/);
+    assert.match(content, /Pi Agent/);
     assert.match(content, /apps\/docs\/site\/capability-evidence\.yaml/);
   }
 

@@ -31,7 +31,7 @@ test('host capability matrix is complete, unique, and backed by repository evide
   assert.equal(validate(matrix), true, JSON.stringify(validate.errors));
   assert.deepEqual(
     matrix.hosts.map(({ id }: { id: string }) => id),
-    ['codex', 'cursor', 'claude', 'opencode', 'kimi', 'zed'],
+    ['codex', 'cursor', 'claude', 'opencode', 'kimi', 'zed', 'deepseek', 'pi'],
   );
   assert.deepEqual(
     matrix.capabilities.map(({ id }: { id: string }) => id),
@@ -129,10 +129,10 @@ test('matrix report binds every cell to one candidate and preserves real outcome
   const fingerprint = currentFingerprint();
   assert.equal(report.subject.packageArtifactSha256, fingerprint.packageArtifactSha256);
   assert.equal(report.subject.rulesSha256, fingerprint.rulesSha256);
-  assert.equal(report.cells.length, 60);
+  assert.equal(report.cells.length, 80);
   assert.equal(report.summary.passed, 1);
   assert.equal(report.summary['infra-inconclusive'], 2);
-  assert.equal(report.summary.inconclusive, 53);
+  assert.equal(report.summary.inconclusive, 73);
   assert.equal(report.summary['not-executed'], 4);
   assert.equal(report.summary.unsupported, 0);
   assert.equal(report.rejectedNonCandidateRecords, 0);
