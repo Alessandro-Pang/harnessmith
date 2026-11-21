@@ -3,16 +3,14 @@ import { updateFrontmatter } from '../documentation/frontmatter.js';
 import { isAtxHeading, parseAtxHeading } from '../documentation/markdown-heading.js';
 import { contentMemoryReferences } from './memory-validation.js';
 
+export { escapeCoreLabel } from '../contract/core-label.js';
+
 export type MemoryCoreSection =
   | 'Active Work'
   | 'Important Inputs'
   | 'Distilled Memory'
   | 'Recent Handoffs'
   | 'User Profile';
-
-export function escapeCoreLabel(value: string): string {
-  return value.replaceAll('memory:', 'memory&#58;');
-}
 
 const placeholders: Partial<Record<MemoryCoreSection, string>> = {
   'Important Inputs': '- <输入来源与适用范围；创建后补充 memory 引用>',

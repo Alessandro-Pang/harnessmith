@@ -4,7 +4,7 @@ description: 给 Harnessmith 贡献代码的流程：环境、边界、验证与
 owner: maintainers
 audience: maintainers
 status: active
-updated: 2026-09-05
+updated: 2026-11-21
 ---
 
 # 项目贡献
@@ -37,7 +37,7 @@ npm pack --dry-run
 | --- | --- | --- |
 | `packages/cli/src/` | 宿主 Adapter、安装事务、备份、恢复与发布边界 | 宿主身份、路径和环境变量只能进入外层 Adapter |
 | `packages/harness/src/` | 通用 Harness 能力（嵌入式 Runtime） | 源码是严格 TypeScript；改动需配套自身 `__tests__/` 下的定向测试 |
-| `packages/harness/dist/`、根 `dist/` | 构建产物 | 只修改 TypeScript 源码再运行 `pnpm run build`，永远不要直接编辑产物 |
+| 根 `dist/`（含 `dist/harness.mjs`） | 构建产物 | 只修改 TypeScript 源码再运行 `pnpm run build`，永远不要直接编辑产物 |
 | `template/` | 随安装分发的可移植 Harness 核心 | 不得标识任何具体宿主产品 |
 | 就近 `__tests__/` | 单元与集成测试 | 测试跟随所属代码，位于 `packages/cli/src/__tests__/`、`packages/harness/src/__tests__/` 或 `evals/__tests__/`；不要在仓库根目录新建 `test/` |
 

@@ -1,3 +1,5 @@
+// Direct-execution c8 coverage for the canary helper graph; not a Vitest test.
+
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';

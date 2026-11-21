@@ -2,7 +2,7 @@
 title: Task, Handoff, and Replay Contracts
 type: harness-reference
 status: active
-updated: 2026-09-04
+updated: 2026-11-21
 owner: long-running-tasks
 ---
 
@@ -38,7 +38,7 @@ verification 必须绑定精确命令、exit 0、当前 HEAD/workspace/scope 新
 
 `command`/`test` 使用 execFile 语义直接执行 `--command` 与重复 `--arg`，不经过 shell；二者至少提供一个 `--scope`。`file` 只读取项目根内 regular file，`diff` 要求可读 Git workspace；路径同时做 lexical/realpath containment，拒绝 symlink、特殊文件、目录型 file evidence 与 `.git`/`.agent-docs` 元数据边界。
 
-一次机械验证最多接受 16 个互不重叠 scope；聚合预算为最多 25,000 个条目、128 MiB 总读取、32 MiB 单文件、32 层和 15 秒。Git 子进程默认 deadline 5 秒，并禁用仓库 fsmonitor/untracked cache；预算或 workspace digest 不可用时 fail closed。`browser`/`observation` 只能是 external `inconclusive`。
+一次机械验证只接受有界数量、互不重叠的 scope，并对条目数、总读取字节、单文件字节、深度和时间施加聚合预算；Git 子进程共用有限 deadline，并禁用仓库 fsmonitor/untracked cache；预算或 workspace digest 不可用时 fail closed。精确预算数值由源码 `packages/harness/src/lib/task/task-verification-scope.ts`、`packages/harness/src/lib/filesystem/run-git.ts` 与 `packages/harness/src/lib/project/project-git.ts` 拥有，本文件不固化数字。`browser`/`observation` 只能是 external `inconclusive`。
 
 `task status` 每次读取校验完整 schema，并报告 branch、HEAD 和相对初始化基线的 dirty 漂移；旧 `passed` 证据失新鲜时派生只读 `stale: true`，不静默改账本。`task close --status complete` 重新计算当前 artifact/scope digest；所有验收项均为当前机械 `passed` 才能关闭。v1/v2 旧 evidence 迁移后不能用于新的 close。
 

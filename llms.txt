@@ -143,7 +143,10 @@ file, or proposal mismatch. Host-specific frontmatter is backup-only; only porta
 
 Harnessmith always initializes the user-owned personal overlay after a successful install and initializes
 shared global memory unless `--no-init-global` was explicitly supplied. Existing personal files are never
-overwritten. If shared global memory was initialized, verify it with:
+overwritten. The one narrow exception is stale-pointer repair during personal overlay initialization: only
+pre-hub `~/.agent-harness/projects/repository-map.md` pointers inside existing personal overlay files are
+replaced in place with the current pointer; no other user content is overwritten.
+If shared global memory was initialized, verify it with:
 
 ```bash
 harnessmith memory check global

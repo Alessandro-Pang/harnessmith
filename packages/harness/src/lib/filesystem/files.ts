@@ -15,6 +15,7 @@ import {
 } from 'node:fs';
 import { dirname, join } from 'node:path';
 import writeFileAtomic from 'write-file-atomic';
+import { resolveIntegerBudget } from '../contract/integer-budget.js';
 import { assertSafePath } from './safe-path.js';
 
 export { listFiles } from './file-discovery.js';
@@ -69,14 +70,6 @@ export function writeIfMissing(path: string, content: string, mode = 0o644): boo
   return true;
 }
 
-export function sameText(path: string, expected: string): boolean {
-  return existsSync(path) && readFileSync(path, 'utf8') === expected;
-}
-
-export function shortDigest(path: string): string {
-  return createHash('sha256').update(readFileSync(path)).digest('hex').slice(0, 12);
-}
-
 export interface DigestOptions {
   exclude?: (relativePath: string) => boolean;
   maxEntries?: number;
@@ -112,9 +105,11 @@ export const digestBudgetDefaults = {
 const defaultDigestBudget = digestBudgetDefaults;
 
 function positiveBudget(value: number | undefined, fallback: number, name: string): number {
-  const budget = value ?? fallback;
-  if (!Number.isInteger(budget) || budget < 1) throw new Error(`Invalid digest ${name}: ${budget}`);
-  return budget;
+  return resolveIntegerBudget(value, fallback, {
+    subject: `digest ${name}`,
+    error: 'invalid',
+    validateFallback: true,
+  });
 }
 
 export function createDigestBudget(options: DigestOptions = {}): DigestBudget {

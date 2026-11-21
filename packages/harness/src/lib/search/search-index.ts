@@ -1,6 +1,6 @@
 import type { Runtime } from '../../types.js';
+import { classifyMemoryDocument } from '../contract/memory-fact-semantics.js';
 import { readBoundedRegularFile } from '../filesystem/bounded-file.js';
-import { classifyMemoryDocument } from '../memory/memory-fact-semantics.js';
 import { assertNoHighConfidenceSecret } from '../security/secret-hygiene.js';
 import {
   boundedLine,

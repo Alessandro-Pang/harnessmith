@@ -1,4 +1,4 @@
-import type { AdapterCapabilities } from '../shared/types.js';
+import type { AdapterCapabilities, AgentName } from '../shared/scope-types.js';
 
 /**
  * Declarative Adapter Registry — single source of truth for host identity metadata.
@@ -6,14 +6,14 @@ import type { AdapterCapabilities } from '../shared/types.js';
  * This is not a plugin loader: only built-in entries are registered.
  */
 
-export const defaultAdapterEnforcement = {
+const defaultAdapterEnforcement = {
   fileOwnership: 'harnessmith',
   instructions: 'advisory',
   permissions: 'host-owned',
 } as const satisfies AdapterCapabilities['enforcement'];
 
 export interface AdapterRegistryEntry {
-  readonly name: string;
+  readonly name: AgentName;
   readonly label: string;
   /** Extra CLI aliases beyond the positional 1-based index. */
   readonly aliases: readonly string[];
@@ -96,7 +96,7 @@ export const adapterRegistry = [
   },
 ] as const satisfies readonly AdapterRegistryEntry[];
 
-export type AgentName = (typeof adapterRegistry)[number]['name'];
+export type { AgentName };
 
 export type AdapterDefinition = (typeof adapterRegistry)[number];
 

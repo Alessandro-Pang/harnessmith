@@ -1,4 +1,4 @@
-import { firstValueFromStatus } from '../setup/first-value.js';
+import { firstValueFromStatus } from '../shared/first-value.js';
 import { entryExists } from '../shared/safe-path.js';
 import type { Adapter, AdapterStatus, AdapterStatusInspection } from '../shared/types.js';
 
@@ -163,7 +163,3 @@ export function explainUnsupportedStatus(requestedAgents: string[]) {
     firstValue: firstValueFromStatus('unsupported', requestedAgents.join(',') || 'unknown'),
   };
 }
-
-export type StatusExplanation =
-  | ReturnType<typeof explainStatus>
-  | ReturnType<typeof explainUnsupportedStatus>;

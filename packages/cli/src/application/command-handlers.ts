@@ -1,10 +1,11 @@
 import { adapterCapabilities, createAdapter } from '../adapters/adapters.js';
+import { normalizeAgents, supportedAgents } from '../adapters/agent-selection.js';
 import { executeAdopt } from '../adoption/adopt-command.js';
 import type { HarnessmithCommand } from '../app/program.js';
 import { executeDiagnostics } from '../diagnostics/diagnostics-command.js';
 import { installWithSkills, uninstallWithSkills } from '../installation/installation-workflow.js';
-import { inspectStatusAll, restoreAll, statusAll } from '../installation/lifecycle.js';
-import { describeLifecycle, type LifecycleCommand } from '../installation/lifecycle-plan.js';
+import { restoreAll } from '../installation/lifecycle.js';
+import { describeLifecycle } from '../installation/lifecycle-plan.js';
 import { assertNonOverlappingAdapters, describeInstall } from '../installation/records.js';
 import {
   confirmConflicts,
@@ -17,23 +18,25 @@ import {
   selectAgents,
 } from '../presentation/ui.js';
 import { executeSetup } from '../setup/setup-command.js';
-import { normalizeAgents } from '../shared/agents.js';
+import type { LifecycleCommand } from '../shared/lifecycle-types.js';
 import type { Adapter, CliOptions, ExecuteContext } from '../shared/types.js';
 import { HarnessmithError } from '../shared/types.js';
 import { explainStatus, explainUnsupportedStatus } from '../status/status-explanation.js';
+import { inspectStatusAll, statusAll } from '../status/status-inspection.js';
 import type { AdapterCommand } from './command-routing.js';
 
 export function isTty(stream: ExecuteContext['input'] | ExecuteContext['output']): boolean {
   return 'isTTY' in stream && stream.isTTY === true;
 }
-export async function resolveAdapters(
-  options: CliOptions,
-  context: ExecuteContext,
-): Promise<Adapter[]> {
+async function resolveAdapters(options: CliOptions, context: ExecuteContext): Promise<Adapter[]> {
   let requested = options.agent;
   if (requested.length === 0 && options.yes) requested = ['codex'];
   if (requested.length === 0 && isTty(context.input) && isTty(context.output) && !options.json) {
-    requested = await selectAgents({ input: context.input, output: context.output });
+    requested = await selectAgents({
+      agents: supportedAgents,
+      input: context.input,
+      output: context.output,
+    });
   }
   if (requested.length === 0) {
     throw new HarnessmithError(
@@ -65,7 +68,7 @@ function previewLifecycle(
   return 0;
 }
 
-export function executeLifecycle(
+function executeLifecycle(
   command: Exclude<
     HarnessmithCommand,
     'setup' | 'adopt' | 'diagnostics' | 'export' | 'import' | 'install' | 'capabilities'
@@ -140,7 +143,7 @@ export function executeCapabilities(options: CliOptions, context: ExecuteContext
   return 0;
 }
 
-export async function executeInstall(
+async function executeInstall(
   adapters: Adapter[],
   options: CliOptions,
   context: ExecuteContext,

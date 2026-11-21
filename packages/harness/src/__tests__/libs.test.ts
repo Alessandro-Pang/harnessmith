@@ -24,15 +24,13 @@ import {
   atomicWriteMany,
   digestPath,
   listFiles,
-  sameText,
-  shortDigest,
   writeIfMissing,
 } from '../lib/filesystem/files.js';
 import { gitRoot, gitVersion } from '../lib/filesystem/git.js';
 import { canonicalPath } from '../lib/filesystem/safe-path.js';
 import { render } from '../lib/filesystem/templates.js';
 import { projectSnapshot } from '../lib/project/project.js';
-import { outputSearch, searchableFiles, searchText, textSearch } from '../lib/search/search.js';
+import { outputSearch, searchableFiles, searchText } from '../lib/search/search.js';
 import {
   assertRuntimeCanMutate,
   calendarDate,
@@ -56,8 +54,6 @@ test('file primitives preserve existing content and return deterministic discove
   assert.equal(readFileSync(first, 'utf8'), 'alpha\n');
   assert.equal(writeIfMissing(second, 'beta\n'), true);
   assert.deepEqual(listFiles(root), [second, first].sort());
-  assert.equal(sameText(first, 'alpha\n'), true);
-  assert.match(shortDigest(first), /^[a-f0-9]{12}$/);
 });
 
 test('file discovery fails closed at entry, depth, and time budgets', () => {
@@ -200,7 +196,9 @@ test('search discovers supported text formats once and reports matching lines', 
     searchableFiles([root, root]).map((path) => basename(path)),
     ['one.md', 'two.yml'],
   );
-  assert.equal(textSearch('needle', [root], io), 2);
+  const report = searchText('needle', [{ root, label: 'context', trust: 'untrusted' }]);
+  outputSearch(report, io);
+  assert.equal(report.matches.length, 2);
   assert.equal(io.logs.length, 2);
   assert.equal(
     elementAt(io.logs, 0),
@@ -281,7 +279,8 @@ test('bundled standalone runtime defaults user data to ~/.harnessmith and honors
   assert.deepEqual(verifyRuntimeIdentity(defaults), { valid: true });
   assert.equal(defaults.distributionRoot, packageRoot);
   assert.equal(defaults.harnessRoot, join(packageRoot, 'template', 'skills', 'agent-harness'));
-  assert.equal(defaults.installedHarness, defaults.harnessRoot);
+  assert.equal(defaults.docsRoot, join(defaults.harnessRoot, 'docs'));
+  assert.equal('installedHarness' in defaults, false);
   assert.equal(defaults.harnessHome, join(home, '.harnessmith'));
   assert.equal(defaults.stateRoot, join(home, '.harnessmith', 'state'));
   assert.equal(defaults.memoryHome, canonicalPath(join(home, '.harnessmith', 'memory')));
@@ -304,7 +303,6 @@ test('a standalone runtime outside a verified package root cannot mutate', () =>
   const runtime = harnessRuntime(root, {
     harnessRoot: forgedRoot,
     hostAdapter: 'standalone',
-    installedHarness: forgedRoot,
     docsRoot: join(forgedRoot, 'docs'),
   });
 

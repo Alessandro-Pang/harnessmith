@@ -1,4 +1,4 @@
-import type { Adapter } from '../shared/types.js';
+import type { Adapter } from './types.js';
 
 type FirstValueStatus = 'passed' | 'failed' | 'not-checked' | 'inconclusive';
 

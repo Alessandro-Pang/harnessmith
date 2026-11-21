@@ -18,7 +18,7 @@ import {
   portableDigest,
 } from './portable-config-contract.js';
 
-export interface PortableConfigImportChange {
+interface PortableConfigImportChange {
   path: (typeof portableConfigPaths)[number];
   action: 'create' | 'already-present' | 'conflict';
   sourceDigest: string;

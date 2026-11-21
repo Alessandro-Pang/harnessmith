@@ -7,6 +7,7 @@ try {
   process.exitCode = await run(process.argv.slice(2));
 } catch (error) {
   const report = machineErrorReport(error);
-  if (!error.commanderHandled) console.error(`ERROR ${report.error.message}`);
+  const commandError = /** @type {Error & { commanderHandled?: boolean }} */ (error);
+  if (!commandError.commanderHandled) console.error(`ERROR ${report.error.message}`);
   process.exitCode = report.error.exitCode;
 }

@@ -6,6 +6,10 @@ import { readTemplate, render } from '../lib/filesystem/templates.js';
 import { withUserDataCoordinationLocks } from '../lib/filesystem/user-data-lock.js';
 import { initializeGlobalMemory } from '../lib/memory/global-memory.js';
 import { initializeProjectMemory } from '../lib/project/project-memory.js';
+import {
+  parseRepositoryMap,
+  renderRepositoryMap,
+} from '../lib/repository-map/repository-map-format.js';
 import { assertRuntimeCanMutate } from '../runtime.js';
 import type { Io, Runtime } from '../types.js';
 
@@ -50,7 +54,6 @@ export function initPersonal(
     ['README.md', 'personal/README.md'],
     ['AGENTS.md', 'personal/AGENTS.md'],
     [join('projects', 'repository-map.yaml'), 'personal/projects/repository-map.yaml'],
-    [join('projects', 'repository-map.md'), 'personal/projects/repository-map.md'],
   ] as const;
   withUserDataCoordinationLocks([runtime.personalHome], inheritedLockKeys, () => {
     withExclusiveDirectoryLock(runtime.personalHome, 'Personal overlay', () => {
@@ -61,6 +64,16 @@ export function initPersonal(
         const content = render(runtime, readTemplate(runtime, templateName));
         if (writeIfMissing(destination, content)) created.push(destination);
         else if (migrateStalePersonalOverlay(destination, content)) migrated.push(destination);
+      }
+      // The markdown view is generated from the YAML template through the real
+      // renderer; no static markdown template ships anymore.
+      const mapView = join(runtime.personalHome, 'projects', 'repository-map.md');
+      const mapTemplate = render(
+        runtime,
+        readTemplate(runtime, 'personal/projects/repository-map.yaml'),
+      );
+      if (writeIfMissing(mapView, renderRepositoryMap(parseRepositoryMap(mapTemplate)))) {
+        created.push(mapView);
       }
       if (created.length > 0) {
         io.log(`Initialized personal Harness overlay: ${runtime.personalHome}`);

@@ -1,8 +1,31 @@
-import { applyMemoryRepair } from '../../lib/memory/memory-repair-apply.js';
+import { applyMemoryRepair as applyMemoryRepairCore } from '../../lib/memory/memory-repair-apply.js';
+import type { ApplyOptions } from '../../lib/memory/memory-repair-contract.js';
 import { diagnoseMemoryRepair } from '../../lib/memory/memory-repair-plan.js';
+import { withProjectMemoryTransaction } from '../../lib/project/project-memory.js';
+import { workflowRelationsForProject } from '../../lib/workflow/workflow-relations.js';
 import type { Io, Runtime } from '../../types.js';
 
-export { applyMemoryRepair, diagnoseMemoryRepair };
+export { diagnoseMemoryRepair };
+
+/**
+ * Thin composition: the memory repair core stays free of project/workflow I/O
+ * imports. The command layer injects the project transaction runner and the
+ * project relations reader so repair verification keeps the full maintenance
+ * report and the applied result stays unchanged.
+ */
+export function applyMemoryRepair(
+  runtime: Runtime,
+  scope: string,
+  proposalId: string,
+  io: Io = console,
+  options: ApplyOptions = {},
+) {
+  return applyMemoryRepairCore(runtime, scope, proposalId, io, {
+    ...options,
+    projectRelations: options.projectRelations ?? workflowRelationsForProject,
+    withProjectTransaction: options.withProjectTransaction ?? withProjectMemoryTransaction,
+  });
+}
 
 export function memoryRepair(
   runtime: Runtime,

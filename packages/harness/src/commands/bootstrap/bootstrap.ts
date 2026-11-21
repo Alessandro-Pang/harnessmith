@@ -181,7 +181,7 @@ export function bootstrapProject(
   };
   const common = {
     version: 2 as const,
-    skill: join(runtime.installedHarness, 'SKILL.md'),
+    skill: join(runtime.harnessRoot, 'SKILL.md'),
     route,
     project: snapshot,
     tasks: { state: tasks.state, active: activeTasks },

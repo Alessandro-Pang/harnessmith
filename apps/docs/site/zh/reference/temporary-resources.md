@@ -4,7 +4,7 @@ description: 临时目录、payload、锁和诊断残留的所有权与安全清
 owner: maintainers
 audience: users-and-maintainers
 status: active
-updated: 2026-09-05
+updated: 2026-11-21
 ---
 
 # 临时资源生命周期
@@ -15,7 +15,7 @@ updated: 2026-09-05
 
 | 生命周期 | 清理时机 | 例子 |
 | --- | --- | --- |
-| `process` | 当前进程结束时 | 安装事务的 staging 目录、语法检查文件 |
+| `process` | 当前进程结束时 | 安装事务的 staging 目录 |
 | `operation` | 当前操作成功或普通失败后 | export、diagnostics 的临时数据 |
 | `workstream` | 工作流明确结束后 | release workspace、Host Eval workspace |
 | `retained-for-recovery` | 恢复证据核对完成后 | rollback 失败现场快照 |
@@ -35,7 +35,7 @@ updated: 2026-09-05
 pnpm run temp:scan
 ```
 
-扫描是只读 JSON 报告，主要字段包括。扫描结果只能提供清理线索，不能单独构成删除依据：
+扫描是只读 JSON 报告，主要字段如下。扫描结果只能提供清理线索，不能单独构成删除依据：
 
 ```json
 {

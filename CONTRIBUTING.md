@@ -49,7 +49,8 @@ host-neutrality test passing.
   Changes to the embedded runtime require focused tests under its own `__tests__/` directory; run them with
   `pnpm run test:harness`. End-to-end installation tests do not replace source-level command and library tests.
 - `template/` is the portable Harness core and must not identify a specific host product.
-- Stable rules go in the compact instruction template; detailed workflows go in routed Harness apps/docs/site.
+- Stable rules go in the compact instruction template; detailed workflows go in the routed Harness docs under
+  `template/skills/agent-harness/docs`.
 - `.agent-docs` is non-authoritative memory, never the only source of project facts or rules. The personal
   overlay is user-owned and lives outside managed installation outputs.
 - Prefer maintained libraries for generic infrastructure, but keep Harness domain rules local. Dependencies used

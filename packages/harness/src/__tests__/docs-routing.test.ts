@@ -28,7 +28,6 @@ test('documentation routing preserves raw query separately from normalized terms
 
   assert.deepEqual(report.rawQuery, rawQuery);
   assert.deepEqual(report.normalizedQuery, ['please review git branch']);
-  assert.deepEqual(report.query, report.normalizedQuery);
 });
 
 test('documentation routing joins CLI argv before classifying action intent', () => {

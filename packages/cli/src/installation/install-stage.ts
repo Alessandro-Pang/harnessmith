@@ -62,7 +62,7 @@ function openStage(
   return { record, stageRoot };
 }
 
-export function renderedEntry(userData: UserDataPaths, env: NodeJS.ProcessEnv): string {
+function renderedEntry(userData: UserDataPaths, env: NodeJS.ProcessEnv): string {
   const render = installationRenderer(userData, env);
   return render(readFileSync(join(templateRoot, 'template', 'entry', 'AGENTS.md'), 'utf8'));
 }

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
@@ -34,7 +34,7 @@ test('instruction paths reject symlink components, including dangling links', ()
   assert.equal(dangling.valid, false);
   assert.match(dangling.valid ? '' : dangling.reason, /symbolic link/i);
 
-  rmSync(instruction);
+  unlinkSync(instruction);
   writeFileSync(join(root, 'outside.md'), '# outside\n');
   symlinkSync(join(root, 'outside.md'), instruction);
   const retargetable = validateInstructionPath(home, instruction);

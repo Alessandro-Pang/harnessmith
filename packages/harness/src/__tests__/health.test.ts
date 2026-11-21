@@ -82,7 +82,6 @@ test('health refuses an unverified standalone identity outside the package', () 
   const runtime = harnessRuntime(root, {
     harnessRoot: managedRoot,
     hostAdapter: 'standalone',
-    installedHarness: managedRoot,
     docsRoot: join(managedRoot, 'docs'),
   });
 
@@ -137,7 +136,6 @@ test('invalid runtime identity disables CLI write commands but keeps diagnostics
 test('health passes the bundled standalone package contract without hub records', () => {
   const root = temporaryRoot();
   const runtime = harnessRuntime(root, {
-    installedHarness: sourceHarnessRoot,
     docsRoot: join(sourceHarnessRoot, 'docs'),
   });
   mkdirSync(runtime.personalHome, { recursive: true });
@@ -154,7 +152,6 @@ test('health fails when the bundled CLI entry is missing from the package root',
   const root = temporaryRoot();
   const runtime = harnessRuntime(root, {
     distributionRoot: join(root, 'empty-distribution'),
-    installedHarness: sourceHarnessRoot,
     docsRoot: join(sourceHarnessRoot, 'docs'),
   });
   mkdirSync(runtime.personalHome, { recursive: true });
@@ -170,7 +167,11 @@ test('health fails when the bundled CLI entry is missing from the package root',
 
 test('health fails when the skill manifest or personal rules are missing', () => {
   const root = temporaryRoot();
-  const runtime = harnessRuntime(root);
+  const skillRoot = join(root, 'missing-skill');
+  const runtime = harnessRuntime(root, {
+    harnessRoot: skillRoot,
+    docsRoot: join(skillRoot, 'docs'),
+  });
 
   const installation = createHealthReport(runtime).checks.find(({ id }) => id === 'installation');
   assert.equal(installation?.status, 'failed');
@@ -202,11 +203,15 @@ test('health rejects empty global and project memory roots', () => {
 
 test('health reports an invalid installation manifest without throwing', () => {
   const root = temporaryRoot();
-  const runtime = harnessRuntime(root);
-  mkdirSync(runtime.installedHarness, { recursive: true });
+  const skillRoot = join(root, 'skill');
+  const runtime = harnessRuntime(root, {
+    harnessRoot: skillRoot,
+    docsRoot: join(skillRoot, 'docs'),
+  });
+  mkdirSync(skillRoot, { recursive: true });
   mkdirSync(runtime.personalHome, { recursive: true });
   writeFileSync(join(runtime.personalHome, 'AGENTS.md'), '# personal\n');
-  writeFileSync(join(runtime.installedHarness, 'manifest.json'), '{invalid json\n');
+  writeFileSync(join(skillRoot, 'manifest.json'), '{invalid json\n');
 
   const check = createHealthReport(runtime).checks.find(({ id }) => id === 'installation');
 
@@ -216,11 +221,15 @@ test('health reports an invalid installation manifest without throwing', () => {
 
 test('health reports an incompatible installation schema', () => {
   const root = temporaryRoot();
-  const runtime = harnessRuntime(root);
-  mkdirSync(runtime.installedHarness, { recursive: true });
+  const skillRoot = join(root, 'skill');
+  const runtime = harnessRuntime(root, {
+    harnessRoot: skillRoot,
+    docsRoot: join(skillRoot, 'docs'),
+  });
+  mkdirSync(skillRoot, { recursive: true });
   mkdirSync(runtime.personalHome, { recursive: true });
   writeFileSync(join(runtime.personalHome, 'AGENTS.md'), '# personal\n');
-  writeFileSync(join(runtime.installedHarness, 'manifest.json'), '{}\n');
+  writeFileSync(join(skillRoot, 'manifest.json'), '{}\n');
 
   const check = createHealthReport(runtime).checks.find(({ id }) => id === 'installation');
 

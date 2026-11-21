@@ -1,7 +1,8 @@
-import { assertRuntimeCanMutate, calendarDate } from '../../runtime.js';
+import { assertRuntimeCanMutate } from '../../runtime.js';
 import type { Io, Runtime } from '../../types.js';
+import { calendarDate } from '../filesystem/calendar-date.js';
 import { withGlobalMemoryTransaction } from './global-memory.js';
-import { memoryMaintenanceReport } from './memory-maintenance.js';
+import { memoryMaintenanceReport, type ProjectRelationsReader } from './memory-maintenance.js';
 import { type ApplyOptions, memorySources, repairContext } from './memory-repair-contract.js';
 import { diagnoseMemoryRepair } from './memory-repair-plan.js';
 import {
@@ -16,15 +17,15 @@ function verifyIndexedMemory(
   root: string,
   rootKind: 'global' | 'project',
   io: Io,
+  projectRelations?: ProjectRelationsReader,
 ): void {
   validateMemoryRoot(root, io, { quietSuccess: true, rootKind });
-  const maintenance = memoryMaintenanceReport(root, calendarDate(runtime));
+  const maintenance = memoryMaintenanceReport(root, calendarDate(runtime), projectRelations);
   if (maintenance.unindexed.length > 0) {
     throw new Error(`Repair verifier found ${maintenance.unindexed.length} unindexed memories`);
   }
 }
 
-import { withProjectMemoryTransaction } from '../project/project-memory.js';
 import { loadCurrentIndex, refreshSearchIndex } from '../search/search-index-store.js';
 
 export function applyMemoryRepair(
@@ -42,10 +43,16 @@ export function applyMemoryRepair(
   if (selected.action === 'initialize-missing-memory') {
     const verify = () => {
       options.beforeVerify?.();
-      verifyIndexedMemory(runtime, report.root, rootKind, io);
+      verifyIndexedMemory(runtime, report.root, rootKind, io, options.projectRelations);
     };
     if (rootKind === 'global') withGlobalMemoryTransaction(runtime, verify);
-    else withProjectMemoryTransaction(runtime, scope, verify);
+    else {
+      const withProjectTransaction = options.withProjectTransaction;
+      if (!withProjectTransaction) {
+        throw new Error('Project memory repair requires an injected project transaction runner');
+      }
+      withProjectTransaction(runtime, scope, verify);
+    }
   } else if (selected.action === 'rebuild-derived-index') {
     const sources = memorySources(report.root);
     refreshSearchIndex(runtime, sources, {});

@@ -22,6 +22,7 @@ import {
 } from '../commands/memory/memory.js';
 import { contextSearch } from '../commands/search/search.js';
 import { parseFrontmatter } from '../lib/documentation/frontmatter.js';
+import { parseRepositoryMap, renderRepositoryMap } from '../lib/repository-map/repository-map.js';
 import { capturedIo, elementAt, harnessRuntime } from './helpers/harness.js';
 
 function temporaryRoot(): string {
@@ -148,8 +149,16 @@ test('personal overlay initialization is idempotent and preserves user rules', (
   writeFileSync(rules, `${readFileSync(rules, 'utf8')}\nuser rule\n`);
   initPersonal(runtime, capturedIo());
   assert.match(readFileSync(rules, 'utf8'), /user rule/);
-  assert.ok(readFileSync(join(runtime.personalHome, 'projects', 'repository-map.md'), 'utf8'));
-  assert.ok(readFileSync(join(runtime.personalHome, 'projects', 'repository-map.yaml'), 'utf8'));
+  const canonicalMap = readFileSync(
+    join(runtime.personalHome, 'projects', 'repository-map.yaml'),
+    'utf8',
+  );
+  assert.ok(canonicalMap);
+  // The empty personal map view must match the real generator, not a static template.
+  assert.equal(
+    readFileSync(join(runtime.personalHome, 'projects', 'repository-map.md'), 'utf8'),
+    renderRepositoryMap(parseRepositoryMap(canonicalMap)),
+  );
 });
 
 test('personal overlay initialization rejects concurrent writers', () => {

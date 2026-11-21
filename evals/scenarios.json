@@ -50,7 +50,7 @@
         "packages/harness/src/__tests__/memory.test.ts#context search combines Harness, global memory, project memory, and project apps/docs/site",
         "packages/harness/src/__tests__/docs-routing-edge-cases.test.ts#CJK punctuation and mixed-language requests preserve action intent",
         "packages/harness/src/__tests__/docs-routing-edge-cases.test.ts#response language priority is current explicit, persisted evidence, then detection",
-        "packages/cli/src/__tests__/multilingual-prompt.test.ts#entry guidance routes multilingual response policy without persisting one turn",
+        "packages/harness/src/__tests__/docs-routing-edge-cases.test.ts#one-turn translation and rewrite requests never become persistent language evidence",
         "evals/__tests__/prompt-route-benchmark.test.ts#prompt route benchmark is versioned, reproducible, and passes deterministic thresholds"
       ],
       "semanticReviewAssertions": [
@@ -77,7 +77,7 @@
         "Project source and formal documentation remain unchanged."
       ],
       "automatedChecks": [
-        "evals/__tests__/eval-codex-suite.test.ts#Codex evaluation exposes one public suite entrypoint",
+        "evals/__tests__/eval-codex-matrix.test.ts#matrix CLI exposes exact candidate and bounded execution inputs without launching Codex",
         "packages/harness/src/__tests__/memory-write-safety.test.ts#validated memory writes reject a symlinked destination before touching its target"
       ]
     },

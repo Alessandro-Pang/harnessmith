@@ -1,5 +1,5 @@
-import { createHash } from 'node:crypto';
 import { containsAdoptSecret } from '../adoption/adopt-secret.js';
+import { sha256Prefixed } from '../shared/files.js';
 import { HarnessmithError } from '../shared/types.js';
 
 export const portableConfigPaths = [
@@ -44,7 +44,7 @@ export interface PortableConfigBundle {
 const digestPattern = /^sha256:[a-f0-9]{64}$/;
 
 export function portableDigest(value: string): string {
-  return `sha256:${createHash('sha256').update(value).digest('hex')}`;
+  return sha256Prefixed(value);
 }
 
 export function portableBundleDigest(bundle: Omit<PortableConfigBundle, 'bundleDigest'>): string {

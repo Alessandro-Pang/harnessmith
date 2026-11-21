@@ -4,7 +4,7 @@ description: Distinguish repository verification, real host evaluation, record g
 owner: maintainers
 audience: users-and-maintainers
 status: active
-updated: 2026-09-05
+updated: 2026-11-21
 lang: en
 ---
 
@@ -13,10 +13,8 @@ lang: en
 An exit code of 0, the agent saying "done", and verified real-host behavior are three things that often get blended
 into a single "pass". Harnessmith keeps them apart because each conclusion needs evidence at its own level. This
 page explains what the four verification chains, the evaluation stages, and the post-release clean-room check can
-each prove, and which conclusions must remain `inconclusive`.
-
-This page covers the four verification chains, the five stages from task to conclusion, and the gates before and
-after release. Together they bound how far the sentence "Harnessmith has verified a capability" can actually reach.
+each prove, and which conclusions must remain `inconclusive`. Together they bound how far the sentence
+"Harnessmith has verified a capability" can actually reach.
 
 ## Four complementary verification chains
 

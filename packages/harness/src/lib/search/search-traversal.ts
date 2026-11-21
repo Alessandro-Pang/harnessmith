@@ -3,9 +3,9 @@ import { extname, join } from 'node:path';
 import {
   recordSearchSkip,
   type SearchDiscovery,
-  type SearchSource,
   searchDeadlineExceeded,
 } from './search-budget-contract.js';
+import type { SearchScanSource } from './search-source.js';
 
 const searchableExtensions = new Set(['.md', '.yaml', '.yml']);
 
@@ -14,7 +14,11 @@ interface PendingPath {
   depth: number;
 }
 
-function searchTimedOut(discovery: SearchDiscovery, source: SearchSource, path: string): boolean {
+function searchTimedOut(
+  discovery: SearchDiscovery,
+  source: SearchScanSource,
+  path: string,
+): boolean {
   return searchDeadlineExceeded(discovery, source.label, path);
 }
 
@@ -29,7 +33,7 @@ function resolvedSearchRoot(path: string): string | null {
 }
 
 function directoryEntries(
-  source: SearchSource,
+  source: SearchScanSource,
   item: PendingPath,
   discovery: SearchDiscovery,
 ): { entries: Dirent[]; exhausted: boolean } | null {
@@ -65,12 +69,12 @@ function directoryEntries(
   }
 }
 
-function skipSymlink(discovery: SearchDiscovery, source: SearchSource, path: string): void {
+function skipSymlink(discovery: SearchDiscovery, source: SearchScanSource, path: string): void {
   recordSearchSkip(discovery, { source: source.label, path, reason: 'symlink' });
 }
 
 function enqueueDirectoryChildren(
-  source: SearchSource,
+  source: SearchScanSource,
   item: PendingPath,
   discovery: SearchDiscovery,
   excluded: Set<string>,
@@ -93,7 +97,7 @@ function enqueueDirectoryChildren(
 }
 
 function scanSource(
-  source: SearchSource,
+  source: SearchScanSource,
   sourceIndex: number,
   discovery: SearchDiscovery,
   seenFiles: Set<string>,
@@ -156,7 +160,7 @@ function scanSource(
   return false;
 }
 
-export function scanSearchSources(sources: SearchSource[], discovery: SearchDiscovery): void {
+export function scanSearchSources(sources: SearchScanSource[], discovery: SearchDiscovery): void {
   const seenFiles = new Set<string>();
   for (const [sourceIndex, source] of sources.entries()) {
     if (scanSource(source, sourceIndex, discovery, seenFiles)) break;

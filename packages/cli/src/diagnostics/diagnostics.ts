@@ -53,5 +53,3 @@ export function createDiagnosticsReport(
     verification: ['harnessmith diagnostics --agent <agent> --json', 'harnessmith health --json'],
   };
 }
-
-export type DiagnosticsReport = ReturnType<typeof createDiagnosticsReport>;

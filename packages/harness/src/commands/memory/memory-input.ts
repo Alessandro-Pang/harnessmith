@@ -1,6 +1,7 @@
 import { existsSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { stringify } from 'yaml';
+import { toSlug } from '../../lib/contract/slug.js';
 import { assertSafePath } from '../../lib/filesystem/safe-path.js';
 import { escapeCoreLabel, upsertCoreReference } from '../../lib/memory/memory-core.js';
 import { documentPurposeMetadata } from '../../lib/memory/memory-document-purpose.js';
@@ -28,16 +29,6 @@ function frontmatter(metadata: Record<string, unknown>): string {
   return `---\n${stringify(metadata, { lineWidth: 0 })}---\n\n`;
 }
 
-function slug(value: string): string {
-  const normalized = value
-    .normalize('NFKC')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 48);
-  return normalized || 'memory';
-}
-
 export function captureInput(
   runtime: Runtime,
   project: string,
@@ -54,7 +45,12 @@ export function captureInput(
     ({ memoryRoot }) => {
       const existing = findExistingInput(memoryRoot, digest);
       if (existing) return repairExistingInput(memoryRoot, existing, date, io);
-      const path = join(memoryRoot, 'inputs', ...date.split('-'), `${slug(title)}-${digest}.md`);
+      const path = join(
+        memoryRoot,
+        'inputs',
+        ...date.split('-'),
+        `${toSlug(title, { fallback: 'memory' })}-${digest}.md`,
+      );
       assertSafePath(memoryRoot, path);
       const reference = `memory:${memoryReference(memoryRoot, path)}`;
       const heading = summary ? '可靠摘要' : '原始输入';

@@ -4,7 +4,7 @@ description: 升级 Harnessmith、Runtime 和 Memory 时的检查与恢复步骤
 owner: maintainers
 audience: users-and-maintainers
 status: active
-updated: 2026-09-05
+updated: 2026-11-21
 ---
 
 # 迁移指南
@@ -36,9 +36,9 @@ npx --yes harnessmith status --agent codex --explain --json
 
 ### 当前布局：单一全局 CLI，skill 交给 `skills`
 
-发布后的全局 `harnessmith` 是唯一命令入口：安装器命令由外层执行，Runtime 子命令直接执行 npm 包根目录中同版本的 `dist/harness.mjs`，Runtime 不复制到 skill 或用户数据目录。外层 Adapter 只向宿主渲染普通的 always-on 指令文件（`AGENTS.md`，Claude Code 另加 `CLAUDE.md`，Cursor 另加 `.mdc` 规则），不是符号链接。skill 的安装与卸载完全交给固定版本的生产依赖 `skills@1.7.6`，规范副本与宿主链接由 `skills` 拥有。
+当前布局（单一全局 CLI、普通指令文件、`skills` 独立事务、npm 包内 Runtime）的完整操作协议以发布包内的 [llms.txt](https://github.com/Alessandro-Pang/harnessmith/blob/main/llms.txt) 为准；宿主路径见[宿主支持](/guide/hosts)，分层设计见[架构设计](/concepts/architecture)。
 
-用户数据默认在 `~/.harnessmith`（`HARNESS_HOME` 可覆盖）：`state/`、`rules/`（`HARNESS_PERSONAL_HOME`）、`memory/`（`HARNESS_MEMORY_HOME`）。Harnessmith 不创建、读取或删除 `~/.agents/harnessmith` 与旧的宿主内 Harness 副本。如果你仍把个人规则或 Memory 留在旧位置，可自行搬移，或用 `HARNESS_PERSONAL_HOME` / `HARNESS_MEMORY_HOME` 指向原位置。
+用户数据默认在 `~/.harnessmith`（`HARNESS_HOME` 可覆盖）。Harnessmith 不创建、读取或删除 `~/.agents/harnessmith` 与旧的宿主内 Harness 副本。如果你仍把个人规则或 Memory 留在旧位置，可自行搬移，或用 `HARNESS_PERSONAL_HOME` / `HARNESS_MEMORY_HOME` 指向原位置。personal overlay 初始化（`init personal`）只创建缺失文件；唯一的窄例外是旧指针修复：把既有文件中指向 pre-hub `~/.agent-harness/projects/repository-map.md` 的指针原位替换为当前指针，其他用户正文不覆盖。
 
 ### 破坏性安装记录变更
 
@@ -63,11 +63,11 @@ npx --yes harnessmith validate --project /absolute/project/path --json
 npx --yes harnessmith memory check /absolute/project/path --indexed --json
 ```
 
-未知 schema、缺少 owner 或引用断裂时，先保留原目录和输出，不要手工改 JSON。能自动处理的旧 metadata 通过 `memory migrate` 生成 proposal；只有 proposal 状态为 `ready`，并在重新核对目标未变化后，才显式应用：
+未知 schema、缺少 owner 或引用断裂时，先保留原目录和输出，不要手工改 JSON。旧 metadata 通过 `memory migrate <scope> <memory>` 按单条文档生成 proposal：`<scope>` 是项目路径或 `global`，`<memory>` 是 Memory 引用（如 `distilled/<name>`），`--set` 传入 JSON 对象形式的 metadata 更新。只有报告状态为 `ready`，并在重新核对目标未变化后，才用同一命令加 `--apply` 显式应用（写入持有共享 memory 锁）：
 
 ```bash
-npx --yes harnessmith memory migrate /absolute/project/path --json
-npx --yes harnessmith memory migrate /absolute/project/path --proposal <proposal-id> --apply --yes --json
+npx --yes harnessmith memory migrate /absolute/project/path distilled/<memory-name> --set '{"status":"active"}' --json
+npx --yes harnessmith memory migrate /absolute/project/path distilled/<memory-name> --set '{"status":"active"}' --apply --json
 npx --yes harnessmith memory check /absolute/project/path --indexed --json
 ```
 
@@ -82,7 +82,7 @@ Memory 是待核对线索，不是事实数据库。迁移只改变 schema、索
 1. 备份或复制 `.agent-docs/` 与共享 Memory；
 2. `memory check --indexed` 确认当前基线；
 3. 生成迁移 proposal，审阅影响路径、digest、过期时间和 recovery path；
-4. 显式应用单个或有界 proposal；
+4. 显式应用单个或有界 proposal（`memory migrate` 用同一命令加 `--apply` 应用单条 ready 迁移）；
 5. 再次执行 `memory check --indexed`、`task status` 和相关 verifier；
 6. 失败时保留原文件和 proposal，不重试不同目标。
 

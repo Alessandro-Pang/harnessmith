@@ -8,10 +8,5 @@ export default {
   },
   gitignore: true,
   globs: ['**/*.md'],
-  ignores: [
-    'node_modules/**',
-    'dist/**',
-    'coverage/**',
-    '.pet-runs/**',
-  ],
+  ignores: ['node_modules/**', 'dist/**', 'coverage/**'],
 };

@@ -1,9 +1,9 @@
 import { basename, dirname } from 'node:path';
 import { stringify } from 'yaml';
 import type { Runtime } from '../../types.js';
+import { assertHandoffTaskTransition } from '../contract/workflow-relations.js';
 import { parseFrontmatter, parseFrontmatterDocument } from '../documentation/frontmatter.js';
 import { isAtxHeading } from '../documentation/markdown-heading.js';
-import { assertHandoffTaskTransition } from '../workflow/workflow-relations.js';
 import { documentPurposeMetadata } from './memory-document-purpose.js';
 import type { HandoffOptions } from './memory-handoff.js';
 import type { HandoffIdentity } from './memory-handoff-identity.js';

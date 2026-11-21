@@ -2,6 +2,8 @@ import { existsSync, mkdirSync } from 'node:fs';
 import { join, resolve, sep } from 'node:path';
 import type { Io, ProjectSnapshot, TaskRecord } from '../../types.js';
 import { errorMessage } from '../../types.js';
+import { escapeCoreLabel } from '../contract/core-label.js';
+import { assertTaskId } from '../contract/task-identity.js';
 import { parseFrontmatter } from '../documentation/frontmatter.js';
 import { readBoundedRegularFile } from '../filesystem/bounded-file.js';
 import { withExclusiveDirectoryLock } from '../filesystem/exclusive-lock.js';
@@ -11,11 +13,7 @@ import {
   sameCanonicalPath,
   sameExistingPath,
 } from '../filesystem/safe-path.js';
-import {
-  escapeCoreLabel,
-  removeCoreReference,
-  upsertCoreReference,
-} from '../memory/memory-core.js';
+import { removeCoreReference, upsertCoreReference } from '../memory/memory-core.js';
 import { withMemoryLock } from '../memory/memory-lock.js';
 import { maximumMemoryDocumentBytes, readMemoryDocument } from '../memory/memory-path.js';
 import { validateMemoryPreflight } from '../memory/memory-preflight.js';
@@ -26,7 +24,6 @@ import {
   assertNoHighConfidenceSecretInValue,
   containsHighConfidenceSecret,
 } from '../security/secret-hygiene.js';
-import { assertTaskId } from './task-model.js';
 import { normalizeTaskRecord } from './task-record.js';
 
 export function projectRoot(input: string): string {

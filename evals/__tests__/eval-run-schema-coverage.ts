@@ -1,3 +1,5 @@
+// Direct-execution c8 coverage for the schema CLI; run generation in an isolated temporary root.
+
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -70,9 +72,19 @@ const okCheck = runCli(['check', `--root=${repositoryRoot}`]);
 assert.equal(okCheck.status, 0, okCheck.stderr);
 assert.match(okCheck.stdout, /matches adapter registry/);
 
-const okGenerate = runCli(['generate', `--root=${repositoryRoot}`]);
-assert.equal(okGenerate.status, 0, okGenerate.stderr);
-assert.match(okGenerate.stdout, /Unchanged/);
+const generationRoot = mkdtempSync(join(tmpdir(), 'harnessmith-eval-schema-generation-'));
+try {
+  mkdirSync(join(generationRoot, 'evals'), { recursive: true });
+  writeFileSync(
+    join(generationRoot, 'evals', 'run.schema.json'),
+    readFileSync(join(repositoryRoot, 'evals', 'run.schema.json')),
+  );
+  const okGenerate = runCli(['generate', `--root=${generationRoot}`]);
+  assert.equal(okGenerate.status, 0, okGenerate.stderr);
+  assert.match(okGenerate.stdout, /Unchanged/);
+} finally {
+  rmSync(generationRoot, { recursive: true, force: true });
+}
 
 const root = mkdtempSync(join(tmpdir(), 'harnessmith-eval-schema-coverage-'));
 try {

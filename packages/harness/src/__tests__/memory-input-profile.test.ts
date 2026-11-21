@@ -37,7 +37,7 @@ test('summarized input identity uses normalized content across title and date pa
     title: 'Original title',
     content: '  Durable input\r\nwith two lines.  ',
     source: 'chat',
-    summary: true,
+    mode: 'summary',
   });
   const inputFilename = basename(first.path);
   assert.match(inputFilename, /-[a-f0-9]{64}\.md$/);
@@ -57,7 +57,7 @@ test('summarized input identity uses normalized content across title and date pa
     title: 'Different title',
     content: 'Durable input\nwith two lines.',
     source: 'chat',
-    summary: true,
+    mode: 'summary',
   });
 
   assert.equal(repeated.action, 'unchanged');
@@ -104,7 +104,7 @@ test('summarized input is labelled as a reliable summary instead of original inp
     title: 'Long discussion summary',
     content: 'The user approved quiet local memory updates.',
     source: 'chat',
-    summary: true,
+    mode: 'summary',
   });
   const content = readFileSync(result.path, 'utf8');
 
@@ -124,7 +124,7 @@ test('input identity keeps source and verbatim semantics distinct', () => {
     title: 'Shared payload summary',
     content: 'The same visible payload.',
     source: 'chat',
-    summary: true,
+    mode: 'summary',
   });
   const verbatimFile = captureInput(runtime, project, {
     title: 'Shared payload file',

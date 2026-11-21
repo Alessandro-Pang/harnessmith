@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Command, Option } from 'commander';
+import { formatRuntimeCommandsHelp } from '../runtime/runtime-entry.js';
 import { collectAgents } from '../shared/agents.js';
 import type { CliOptions } from '../shared/types.js';
 
@@ -110,10 +111,5 @@ export function createProgram(
       command.option('--explain', 'explain evidence, risk, and safe next actions');
     command.action(() => execute(name, command.optsWithGlobals<CliOptions>()));
   }
-  return program.addHelpText(
-    'after',
-    '\nRuntime commands (executed by the bundled Runtime):\n' +
-      '  audit  bootstrap  doctor  explain  health  init  memory  project\n' +
-      '  replay  repository-map  route  search  task  validate  version\n',
-  );
+  return program.addHelpText('after', formatRuntimeCommandsHelp());
 }

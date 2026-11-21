@@ -16,9 +16,10 @@ import { elementAt } from '../../../../packages/harness/src/__tests__/helpers/ha
 import { type AgentName, adapterRegistry } from '../adapters/adapter-registry.js';
 import { createAdapter } from '../adapters/adapters.js';
 import { installAll } from '../installation/install.js';
-import { restoreAll, statusAll, uninstallAll } from '../installation/lifecycle.js';
+import { restoreAll, uninstallAll } from '../installation/lifecycle.js';
 import { describeInstall, readInstallRecord } from '../installation/records.js';
 import type { Adapter } from '../shared/types.js';
+import { statusAll } from '../status/status-inspection.js';
 
 function fixture(prefix: string) {
   const root = mkdtempSync(join(tmpdir(), prefix));

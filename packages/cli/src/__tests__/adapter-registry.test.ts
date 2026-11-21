@@ -14,8 +14,8 @@ import {
   supportedAgentNames,
 } from '../adapters/adapter-registry.js';
 import { adapterCapabilities, createAdapter } from '../adapters/adapters.js';
+import { normalizeAgents, supportedAgents } from '../adapters/agent-selection.js';
 import { instructionFormats, instructionRenderer } from '../adapters/instruction-formats.js';
-import { normalizeAgents, supportedAgents } from '../shared/agents.js';
 
 const repositoryRoot = dirname(dirname(dirname(dirname(dirname(fileURLToPath(import.meta.url))))));
 

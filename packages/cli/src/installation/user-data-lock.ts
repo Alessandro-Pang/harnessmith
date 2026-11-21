@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 import {
   existsSync,
   lstatSync,
@@ -12,6 +12,7 @@ import {
 import { homedir, userInfo } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import lockfile from 'proper-lockfile';
+import { sha256Hex } from '../shared/files.js';
 import { lockStaleMilliseconds } from '../shared/lock-stale.js';
 import { errorMessage, HarnessmithError } from '../shared/types.js';
 
@@ -20,7 +21,7 @@ function handoffPath(target: string, nonce: string): string {
 }
 
 function digest(value: string): string {
-  return createHash('sha256').update(value).digest('hex');
+  return sha256Hex(value);
 }
 
 function userScope(): string {

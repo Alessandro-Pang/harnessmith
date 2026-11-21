@@ -8,9 +8,6 @@ import { type ScopeLockContext, withScopeLocks } from './operation-lock.js';
 import { assertNonOverlappingAdapters, describeInstall } from './records.js';
 import { initializeUserData } from './user-data.js';
 
-export { commitInstall, rollbackInstall } from './install-commit.js';
-export { prepareInstall } from './install-stage.js';
-
 function rollbackAll(prepared: PreparedInstall[], error: unknown): never {
   const rollbackErrors: string[] = [];
   for (const item of [...prepared].reverse()) {

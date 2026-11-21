@@ -4,7 +4,7 @@ description: 从安装事务到 Agent 实际工作的完整数据流
 owner: maintainers
 audience: users-and-maintainers
 status: active
-updated: 2026-09-05
+updated: 2026-11-21
 ---
 
 # 工作原理
@@ -21,11 +21,11 @@ updated: 2026-09-05
 
 2. **预检目标合法性。** 确认所有目标都在授权根内（containment 检查），且没有危险的 symlink、junction 或 reparse path。如果目标路径是符号链接指向授权根外部，这一步会失败，拒绝写入，而不是被符号链接引导到预期之外的位置。
 
-3. **Staging payload。** 在目标根内生成完整的安装内容（规则入口、内嵌 Runtime、安装记录），并检查生成的 JavaScript 语法。如果生成的内容有语法错误，这一步会失败，不会把有问题的 Runtime 安装到宿主。
+3. **获取操作锁并再次核对。** 在 staging 之前获取跨进程操作锁，防止两个 `npx harnessmith install` 同时运行；同一个锁窗口覆盖后面的 Host 文件与 skill 两个事务，避免并发进程把两步交错成相反状态。锁内再次核对所有目标的状态：如果在路径解析之后目标发生了变化（比如另一个进程创建了同名文件），这一步会检测到并拒绝。
 
-4. **获取操作锁并再次核对。** 获取跨进程操作锁，防止两个 `npx harnessmith install` 同时运行。再次核对所有目标的状态。如果在步骤 1-3 之间目标发生了变化（比如另一个进程创建了同名文件），这一步会检测到并拒绝。已有受管内容不会被直接覆盖：渲染的规则文件进入带时间戳的备份层；skill 分发树与链接被移入本次事务的暂存区，扫描目录里只保留最新一份；与磁盘内容完全相同的产物直接跳过，不产生任何备份。
+4. **只 staging 指令文件。** 在目标根内的临时 staging 目录中，只生成宿主渲染后的 always-on 指令文件（`AGENTS.md`，Claude Code 另加 `CLAUDE.md`，Cursor 另加 `.mdc` 规则）。unmanaged 或已修改的目标默认拒绝，需要显式 `--force`。Runtime 不复制到宿主目录：它留在 npm 包内，由全局 `harnessmith` 命令直接执行同版本的 `dist/harness.mjs`。
 
-5. **提交并记录。** 写入规则入口、内嵌 Runtime 和安装记录。任一步失败，只按本次记录的精确路径回滚，不会回滚到上一次安装之前，也不会删除备份层。
+5. **提交指令与记录。** 把 staged 指令文件移入目标路径，被替换的内容保留为带时间戳的 `.backup-<stamp>` 备份，与磁盘内容完全相同的受管产物直接跳过、不产生备份；随后写入 schema 3 安装记录并初始化用户数据。任一步失败，只按本次记录的精确路径回滚，不会回滚到上一次安装之前，也不会删除备份层。skill 的安装是 Host 提交之后的独立事务，交给固定版本的 `skills` 完成；skill 失败会明确报告为部分完成，Host 文件保持已安装，不虚称整体回滚。
 
 这个顺序解释了两件你可能已经注意到的事。第一，`--dry-run` 不是「模拟输出的装饰」。它展示的就是 Adapter 最终选择的写入范围，你在写入前看到的就是将要发生的。第二，`status`、`restore` 和 `uninstall` 沿用安装记录工作，而不是靠重新渲染模板去猜测过去的状态，所以它们对现场的判断是可追溯的：如果安装记录说「上次安装了 3 个文件」，restore 就恢复这 3 个文件，不会多也不会少。
 
@@ -55,10 +55,12 @@ flowchart TD
   CLI --> Adapter["Host Adapter"]
   Adapter --> Preflight{"完整预检是否通过？"}
   Preflight -->|"否"| Refuse["拒绝写入并说明原因"]
-  Preflight -->|"是"| Stage["staging · 备份 · 获取操作锁"]
-  Stage --> Commit{"提交是否成功？"}
+  Preflight -->|"是"| Lock["获取操作锁 · staging 指令文件 · 备份"]
+  Lock --> Commit{"提交是否成功？"}
   Commit -->|"否"| Rollback["按精确记录回滚"]
-  Commit -->|"是"| Runtime["宿主规则入口 + 本地 Harness Runtime"]
+  Commit -->|"是"| Installed["宿主指令文件 + 安装记录"]
+  Installed --> Skill["skill 事务 · 固定版本 skills"]
+  Installed --> Runtime["npm 包内 Harness Runtime"]
   Runtime --> Docs["按需文档路由"]
   Runtime --> State["Memory / Task"]
   Runtime --> Verify["验证与有限审计"]

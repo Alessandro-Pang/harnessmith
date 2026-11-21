@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { calendarDate } from '../../runtime.js';
 import type { Runtime } from '../../types.js';
+import { calendarDate } from './calendar-date.js';
 
 export function render(
   runtime: Runtime,

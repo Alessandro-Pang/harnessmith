@@ -10,6 +10,7 @@ import { evaluateCoverage } from '../../scripts/evaluation/contracts/eval-covera
 import { verifySuiteEvidence } from '../../scripts/evaluation/contracts/eval-suite-gate.js';
 import { suiteGateResult } from '../../scripts/evaluation/contracts/eval-suite-result.js';
 import { validatePullRequest } from '../../scripts/evaluation/contracts/pr-contract.js';
+
 import { coverMemoryFixtures, coverMemoryReport, coverMemoryState } from './scripts-c8-memory.js';
 import { coverMemoryContract } from './scripts-c8-memory-contract.js';
 

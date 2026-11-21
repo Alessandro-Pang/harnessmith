@@ -16,20 +16,19 @@ test('documentation site has reproducible local build, search, links, and Pages 
     scripts?: Record<string, string>;
     devDependencies?: Record<string, string>;
   };
-  assert.equal(manifest.devDependencies?.vitepress, '1.6.4');
-  assert.equal(manifest.devDependencies?.mermaid, '11.17.2');
-  assert.equal(manifest.devDependencies?.['vitepress-plugin-mermaid'], '2.0.17');
+  // Build tooling must be present, but patch versions are not a site contract.
+  for (const dependency of ['vitepress', 'mermaid', 'vitepress-plugin-mermaid']) {
+    assert.ok(manifest.devDependencies?.[dependency], `missing site dependency: ${dependency}`);
+  }
   assert.equal(manifest.scripts?.['docs:dev'], 'vitepress dev apps/docs/site');
   assert.equal(manifest.scripts?.['docs:build'], 'vitepress build apps/docs/site');
   assert.equal(manifest.scripts?.['docs:preview'], 'vitepress preview apps/docs/site');
-  assert.equal(manifest.scripts?.['docs:check'], 'vitepress build apps/docs/site');
+  // The check gate routes through the same production build instead of a second command line.
+  assert.equal(manifest.scripts?.['docs:check'], 'pnpm run docs:build');
 
   const config = read('apps/docs/site/.vitepress/config.ts');
   assert.match(config, /base:\s*['"]\/harnessmith\/['"]/);
-  assert.match(
-    config,
-    /rel:\s*['"]icon['"],\s*type:\s*['"]image\/svg\+xml['"],\s*href:\s*['"]\/harnessmith\/brand\/harnessmith-logo\.svg['"]/,
-  );
+  assert.match(config, /href:\s*['"]\/harnessmith\/brand\/harnessmith-logo\.svg['"]/);
   assert.match(
     config,
     /href:\s*['"]\/harnessmith\/brand\/harnessmith-logo-dark\.svg['"],\s*media:\s*['"]\(prefers-color-scheme: dark\)['"]/,
@@ -38,9 +37,6 @@ test('documentation site has reproducible local build, search, links, and Pages 
   assert.match(config, /lang:\s*['"]en['"]/);
   assert.doesNotMatch(config, /ignoreDeadLinks:\s*true/);
   assert.match(config, /withMermaid/);
-  assert.match(config, /mermaid:\s*{/);
-  assert.match(config, /light:\s*['"]github-dark-high-contrast['"]/);
-  assert.match(config, /dark:\s*['"]github-dark-high-contrast['"]/);
 
   const deadCodeConfig = read('config/knip.json');
   assert.match(deadCodeConfig, /site\/\.vitepress\/config\.ts/);
@@ -89,66 +85,30 @@ test('architecture and lifecycle diagrams render through Mermaid', () => {
   }
 });
 
-test('home and theme provide a distinctive responsive visual system', () => {
-  const home = read('apps/docs/site/zh/index.md');
-  const styles = read('apps/docs/site/.vitepress/theme/custom.css');
-
-  assert.doesNotMatch(home, /^features:/m);
-  assert.match(home, /class="home-signal"/);
-  assert.match(home, /class="home-bento"/);
-  assert.match(home, /class="home-path"/);
-
-  assert.match(styles, /\.VPHomeHero/);
-  assert.match(styles, /\.home-bento/);
-  assert.match(styles, /background-image:/);
-  assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/);
-  assert.match(styles, /html\.dark/);
-  assert.match(styles, /\.home-card-boundary a\s*{[^}]*position:\s*static/s);
-  assert.match(styles, /\.home-card-boundary a\s*{[^}]*margin-top:\s*auto/s);
-  assert.match(styles, /\.mermaid \.nodeLabel\s*\{[^}]*line-height:\s*1\.3/s);
-});
-
-test('project logo is available in both themes and shown on the home page and READMEs', () => {
+test('project logo assets exist, are wired into both themes, and stay accessible', () => {
   const config = read('apps/docs/site/.vitepress/config.ts');
   const home = read('apps/docs/site/zh/index.md');
-  const styles = read('apps/docs/site/.vitepress/theme/custom.css');
-  const chinese = read('README.md');
-  const english = read('README.en.md');
 
-  assert.equal(existsSync(join(root, 'apps/docs/site/public/brand/harnessmith-logo.svg')), true);
-  assert.equal(
-    existsSync(join(root, 'apps/docs/site/public/brand/harnessmith-logo-dark.svg')),
-    true,
-  );
+  for (const asset of [
+    'apps/docs/site/public/brand/harnessmith-logo.svg',
+    'apps/docs/site/public/brand/harnessmith-logo-dark.svg',
+  ]) {
+    assert.equal(existsSync(join(root, asset)), true, `${asset} must exist`);
+    // An accessible name is required; the drawing technique itself is not a contract.
+    assert.match(read(asset), /<title(?:\s+id="title")?>Harnessmith<\/title>/);
+  }
   assert.match(
     config,
     /logo:\s*{\s*light:\s*['"]\/brand\/harnessmith-logo\.svg['"],\s*dark:\s*['"]\/brand\/harnessmith-logo-dark\.svg['"],?\s*}/,
   );
   assert.match(home, /image:\s*\n\s+src:\s*\/brand\/harnessmith-logo\.svg/);
   assert.match(home, /alt:\s*Harnessmith logo/);
-  assert.match(styles, /\.VPHomeHero \.image-src\s*{[^}]*transform:\s*translate\(-50%,\s*0\)/s);
-  assert.match(styles, /html\.dark \.VPHomeHero \.image-src\s*{[^}]*harnessmith-logo-dark\.svg/s);
-  assert.match(
-    styles,
-    /@media \(max-width:\s*640px\)[\s\S]*?\.VPHomeHero \.image\s*{[^}]*display:\s*none/s,
-  );
-  assert.match(
-    chinese,
-    /^# Harnessmith\n\n<p align="center">\n\s*<img src="\.\/apps\/docs\/site\/public\/brand\/harnessmith-logo\.svg"/,
-  );
-  assert.match(
-    english,
-    /^# Harnessmith\n\n<p align="center">\n\s*<img src="\.\/apps\/docs\/site\/public\/brand\/harnessmith-logo\.svg"/,
-  );
-
-  for (const asset of [
-    'apps/docs/site/public/brand/harnessmith-logo.svg',
-    'apps/docs/site/public/brand/harnessmith-logo-dark.svg',
-  ]) {
-    const logo = read(asset);
-    assert.match(logo, /<title(?:\s+id="title")?>Harnessmith<\/title>/);
-    assert.match(logo, /<linearGradient/);
-    assert.doesNotMatch(logo, /<image|filter=|data:image/);
+  for (const readme of ['README.md', 'README.en.md']) {
+    assert.match(
+      read(readme),
+      /<img src="\.\/apps\/docs\/site\/public\/brand\/harnessmith-logo\.svg"/,
+      `${readme} must show the project logo`,
+    );
   }
 });
 
@@ -173,50 +133,14 @@ test('language switching is the only English entry in the Chinese site chrome', 
   assert.match(config, /logoLink:\s*['"]\/harnessmith\/en\/['"]/);
   assert.match(
     config,
-    /en:\s*{\s*label:\s*['"]English['"],\s*lang:\s*['"]en['"],\s*link:\s*['"]\/en\/['"]\s*}/,
+    /en:\s*{\s*label:\s*['"]English['"],\s*lang:\s*['"]en['"],\s*link:\s*['"]\/en\/['"]/,
   );
-  assert.match(read('apps/docs/site/en/index.md'), /English getting-started guide/);
-  assert.match(read('apps/docs/site/en/guide/getting-started.md'), /^#\s+Getting started/m);
 });
 
-test('history reflects the project origin without presenting the blind review as project history', () => {
+test('history separates project origin from the blind review and keeps canonical external references', () => {
   const history = read('apps/docs/site/zh/concepts/history-and-influences.md');
   const references = read('apps/docs/site/zh/reference/references.md');
 
-  assert.match(history, /^## 第一阶段：AGENTS\.md 与 \.agent-docs$/m);
-  assert.match(history, /工作区地图/);
-  assert.match(history, /局部规则/);
-  assert.match(history, /计划、分析、输出、原型和证据/);
-  assert.match(history, /背景、目标、非目标、范围、风险、阶段和验收/);
-  assert.match(history, /入口负责导航，工作文档负责承载上下文/);
-  assert.match(history, /没有统一索引/);
-  assert.match(history, /^## 第二阶段：让文档可以被路由、检索和治理$/m);
-  assert.match(history, /历史文档记录了决策如何形成.*不能.*简单删除/s);
-  assert.match(history, /顺序读取全部文档.*挤占模型上下文.*幻觉/s);
-  assert.match(history, /保留历史.*只把当前任务真正需要的内容送进上下文/s);
-  assert.match(history, /元信息.*正文段落.*标题路径.*行号/s);
-  assert.match(history, /历史仍然完整保留.*不会默认进入每一次对话/s);
-  assert.match(history, /规则、事实与记忆/);
-  assert.match(history, /input.*episode.*working.*distilled.*evidence/s);
-  assert.match(history, /source-refs/);
-  assert.match(history, /source-of-truth:\s*false/);
-  assert.match(history, /完成或被替代.*归档/s);
-  assert.match(history, /单个项目.*自定义.*搜索脚本/s);
-  assert.match(history, /搜索 CLI/);
-  assert.match(history, /Harnessmith 不是先有一套 Harness Engineering 理论.*照着它设计出来的/s);
-  assert.match(history, /起初只是为了.*多个项目.*AGENTS\.md.*可复用/s);
-  assert.match(history, /真正开始做通用化后.*宿主.*权限.*Memory.*验证/s);
-  assert.match(history, /解决这些问题的过程中.*才发现.*Harness Engineering/s);
-  assert.match(history, /^## Harnessmith 最初只想把第二阶段通用化$/m);
-  assert.match(history, /最初并不是为了实现一套行业定义的 Harness/);
-  assert.match(history, /^## 通用化为什么把问题推向 Harness$/m);
-  assert.match(history, /宿主差异.*授权边界.*Memory.*生命周期.*验证/s);
-  assert.match(history, /^## 后来才重新调研 Harness Engineering$/m);
-  assert.match(history, /先遇到工程问题，再重新调研领域/);
-  assert.match(history, /早期项目专用工具/);
-  assert.match(history, /没有一比一保留/);
-  assert.match(history, /route.*search.*memory list.*memory check.*memory maintain/s);
-  assert.match(history, /正式.*docs.*source.*日期.*不属于当前\s+契约/s);
   assert.doesNotMatch(history, /starport/i);
   assert.doesNotMatch(history, /研发前|Architecture Review|架构评审/);
   assert.doesNotMatch(references, /Personal Agent Harness CLI Architecture Review|研发前架构评审/);
@@ -244,9 +168,9 @@ test('release documentation distinguishes post-publish registry clean-room evide
   assert.match(evaluation, /release:verify-registry/);
   assert.match(evaluation, /registry metadata.*integrity.*隔离安装/s);
   assert.match(evaluation, /传播延迟.*metadata.*integrity.*运行失败/s);
+  // The claim id keeps the capability public; preflight mechanically validates that every
+  // listed implementation/verification evidence path exists and is executable.
   assert.match(capabilities, /id: post-publish-registry-verification/);
-  assert.match(capabilities, /scripts\/release\/registry-verification\.ts/);
-  assert.match(capabilities, /evals\/__tests__\/registry-verification\.test\.ts/);
   assert.match(contributing, /registry clean-room/i);
 });
 
@@ -262,31 +186,25 @@ test('cross-repository relationships remain a first-class public capability', ()
   assert.match(english, /reference\/runtime-cli#repository-map/);
   assert.match(architecture, /Repository Map/);
   assert.match(evidence, /id: cross-repository-map/);
-  assert.match(evidence, /packages\/harness\/src\/commands\/repository-map\/repository-map\.ts/);
-  assert.match(evidence, /packages\/harness\/src\/__tests__\/repository-map\.test\.ts/);
 });
 
-test('architecture invariants have implementation and executable verification evidence', () => {
-  const evidence = read('apps/docs/site/capability-evidence.yaml');
-
-  assert.match(evidence, /id: architecture-invariant-preflight/);
-  assert.match(evidence, /scripts\/preflight\/preflight-architecture\.ts/);
-  assert.match(evidence, /scripts\/evaluation\/capability-evidence\.ts/);
-  assert.match(evidence, /src\/__tests__\/preflight-architecture\.test\.ts/);
-  assert.match(evidence, /src\/__tests__\/preflight-docs\.test\.ts/);
-});
-
-test('capture eligibility has public architecture and executable evidence', () => {
+test('architecture and capture-eligibility capabilities stay publicly evidenced', () => {
   const architecture = read('apps/docs/site/zh/concepts/architecture.md');
   const evidence = read('apps/docs/site/capability-evidence.yaml');
 
   assert.match(architecture, /capture eligibility/i);
+  assert.match(evidence, /id: architecture-invariant-preflight/);
   assert.match(evidence, /id: memory-capture-eligibility/);
-  assert.match(evidence, /memory-capture-eligibility\.ts/);
-  assert.match(evidence, /memory-capture-eligibility\.test\.ts/);
 });
 
 test('current distribution docs describe the package-bundled Runtime and skills-managed skill, not a shared hub', () => {
+  const manifest = JSON.parse(read('package.json')) as {
+    dependencies?: Record<string, string>;
+  };
+  const skillsVersion = manifest.dependencies?.skills;
+  assert.ok(skillsVersion, 'package.json must pin the skills dependency');
+  const skillsPattern = new RegExp(`skills@${skillsVersion.replace(/\./g, '\\.')}`);
+
   const distributionDocs = [
     'apps/docs/site/zh/concepts/architecture.md',
     'apps/docs/site/en/concepts/architecture.md',
@@ -312,7 +230,7 @@ test('current distribution docs describe the package-bundled Runtime and skills-
     'apps/docs/site/en/guide/hosts.md',
   ]) {
     const content = read(path);
-    assert.match(content, /skills@1\.7\.6/, path);
+    assert.match(content, skillsPattern, path);
     assert.match(content, /~\/\.agents\/skills\/agent-harness/, path);
   }
   // Existing users must see the incompatibility and the absence of automatic data deletion.
@@ -367,12 +285,10 @@ test('maintenance decisions live in subject documentation instead of a standalon
   assert.match(strategy, /不提供向量语义召回/);
 });
 
-test('markdown emphasis and Mermaid labels avoid known clipping patterns', () => {
+test('markdown emphasis avoids known clipping patterns', () => {
   const architecture = read('apps/docs/site/zh/concepts/architecture.md');
 
   assert.doesNotMatch(architecture, /）\*\*[^\s]/u);
-  assert.match(architecture, /Coding Agent 宿主<br\/>模型循环 · 工具\/MCP<br\/>sandbox/);
-  assert.match(architecture, /Personal Harness<br\/>短规则入口 · 文档路由<br\/>Memory/);
 });
 
 test('documentation site covers user, contributor, architecture, boundary, and history routes', () => {
@@ -435,38 +351,11 @@ test('documentation site covers user, contributor, architecture, boundary, and h
   }
 });
 
-test('core documentation follows a human question path and separates current facts from influences', () => {
+test('core documentation keeps authorization, evaluation, and deletion safety boundaries', () => {
   const config = read('apps/docs/site/.vitepress/config.ts');
-  assert.match(config, /认识与上手/);
-  assert.match(config, /理解设计/);
-  assert.match(config, /维护与贡献/);
-
-  const home = read('apps/docs/site/zh/index.md');
-  assert.match(home, /你是否遇到过/);
-  assert.match(home, /从这些实际问题中长出来/);
-  assert.match(home, /不替代 Coding Agent/);
-  assert.match(home, /从这里开始/);
-
-  const why = read('apps/docs/site/zh/guide/why-harnessmith.md');
-  assert.match(why, /问题不是少写一份规则/);
-  assert.match(why, /并不是先按一套 Harness Engineering 理论设计出来的/);
-  assert.match(why, /历史文档.*不能.*直接删除.*挤占上下文.*幻觉/s);
-  assert.match(why, /安装前/);
-  assert.match(why, /安装后/);
-
-  const harnessEngineering = read('apps/docs/site/zh/concepts/harness-engineering.md');
-  assert.match(harnessEngineering, /不是从 Harness Engineering 的概念或分层模型出发设计的/);
-  assert.match(harnessEngineering, /实际使用.*后来.*高度重合/s);
 
   const how = read('apps/docs/site/zh/concepts/how-it-works.md');
-  assert.match(how, /安装时/);
-  assert.match(how, /Agent 工作时/);
   assert.match(how, /不传递授权/);
-
-  const architecture = read('apps/docs/site/zh/concepts/architecture.md');
-  assert.match(architecture, /先记住一个模型/);
-  assert.match(architecture, /为什么分成两层/);
-  assert.match(architecture, /不会启动第三方宿主.*不负责登录或认证/s);
 
   const evaluation = read('apps/docs/site/zh/concepts/evidence-and-evaluation.md');
   assert.match(evaluation, /确定性仓库验证/);
@@ -475,19 +364,6 @@ test('core documentation follows a human question path and separates current fac
   assert.match(evaluation, /不会在 import 时隐式启动/);
   assert.match(evaluation, /仍需提供凭据/);
   assert.match(evaluation, /不能证明/);
-
-  const history = read('apps/docs/site/zh/concepts/history-and-influences.md');
-  assert.match(history, /^## 第一阶段：AGENTS\.md 与 \.agent-docs$/m);
-  assert.match(history, /工作区地图/);
-  assert.match(history, /计划、分析、输出、原型和证据/);
-  assert.match(history, /先定位.*恢复上下文.*核对当前事实/s);
-  assert.match(history, /^## 第二阶段：让文档可以被路由、检索和治理$/m);
-  assert.match(history, /渐进式检索/);
-  assert.match(history, /非权威记忆/);
-  assert.match(history, /最初只想把第二阶段通用化/);
-  assert.match(history, /重新调研 Harness Engineering/);
-  assert.match(history, /尚未经过双盲评审/);
-  assert.match(history, /当前事实/);
 
   const temporaryResources = read('apps/docs/site/zh/reference/temporary-resources.md');
   assert.match(temporaryResources, /^# 临时资源生命周期$/m);

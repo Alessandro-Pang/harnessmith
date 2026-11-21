@@ -2,6 +2,7 @@
 title: ADR-0001：Monorepo 分层与发布边界
 description: 为什么仓库分成 packages/cli、packages/harness 与 apps/docs 三个工作区边界
 owner: maintainers
+updated: 2026-11-21
 ---
 
 # ADR-0001：Monorepo 分层与发布边界
@@ -30,6 +31,8 @@ owner: maintainers
 ## 构建与版本
 
 根 `pnpm run build` 先构建 TypeScript，再生成两个运行时产物。`packages/harness/dist` 是嵌入分发产物，版本跟随根包版本；文档站使用自己的 workspace 脚本独立构建。模板、schema、文档路由的事实源分别属于 `packages/harness` 和 `apps/docs/site`，生成目录禁止手工编辑——改事实源再生成，而不是直接改产物。
+
+> 更正注记（2026-11-21）：构建产物现统一输出到根 `dist/`——外层 CLI 的编译产物与内嵌 Runtime 的自包含 bundle `dist/harness.mjs`，`packages/harness/dist` 已不存在。随包分发的模板、schema 与路由文档位于 `template/skills/agent-harness/`（源码事实源在 `packages/harness/src/`），`apps/docs/site` 只是文档站。上文保留决策当时的布局描述，当前事实以本注记与代码为准。
 
 ## 迁移兼容
 

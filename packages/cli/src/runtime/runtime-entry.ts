@@ -21,6 +21,19 @@ const runtimeCommands = new Set([
   'version',
 ]);
 
+/** Read-only dispatch list; the single source the installer help is derived from. */
+export const runtimeCommandNames: readonly string[] = [...runtimeCommands];
+
+/** Help block derived from the dispatched command list, never a duplicated literal. */
+export function formatRuntimeCommandsHelp(): string {
+  const names = [...runtimeCommands];
+  const lines: string[] = [];
+  for (let index = 0; index < names.length; index += 8) {
+    lines.push(`  ${names.slice(index, index + 8).join('  ')}`);
+  }
+  return `\nRuntime commands (executed by the bundled Runtime):\n${lines.join('\n')}\n`;
+}
+
 interface HarnessRuntimeModule {
   runCli(
     args: string[],

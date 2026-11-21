@@ -92,9 +92,9 @@ function summarizeRuntime(
   project: string,
   failures: DiagnosticFailure[],
 ) {
-  const health = runDiagnosticJson(adapter, ['health', '--json'], env, project);
+  const health = runDiagnosticJson(['health', '--json'], env, project);
   const task = existsSync(join(project, '.agent-docs'))
-    ? runDiagnosticJson(adapter, ['task', 'status', '--project', project, '--json'], env, project)
+    ? runDiagnosticJson(['task', 'status', '--project', project, '--json'], env, project)
     : {
         status: 'inconclusive' as const,
         reasonCode: 'PROJECT_MEMORY_NOT_INITIALIZED',
@@ -102,7 +102,7 @@ function summarizeRuntime(
         value: null,
         truncated: false,
       };
-  const routing = runDiagnosticJson(adapter, ['route', 'diagnose', '--json'], env, project);
+  const routing = runDiagnosticJson(['route', 'diagnose', '--json'], env, project);
   const commands = [
     ['health', health],
     ['task', task],

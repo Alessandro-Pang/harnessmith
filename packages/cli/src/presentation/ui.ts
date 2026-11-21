@@ -1,15 +1,67 @@
 import type { Readable, Writable } from 'node:stream';
 import { confirm, intro, isCancel, log, multiselect, note, outro } from '@clack/prompts';
 import pc from 'picocolors';
-import type { AdoptReport } from '../adoption/adopt.js';
-import type { SetupGuide, SetupVerification } from '../setup/setup.js';
-import { supportedAgents } from '../shared/agents.js';
 import type { InstallPlan, InstallResult, Io } from '../shared/types.js';
-import type { StatusExplanation } from '../status/status-explanation.js';
+import { printPlans } from './print.js';
 
 type PromptInput = Readable & { isTTY?: boolean };
 type PromptOutput = Writable & { isTTY?: boolean };
-type FirstValueView = SetupGuide['firstValue'] | StatusExplanation['firstValue'];
+
+/**
+ * Presentation-owned structural view types. The UI reads only these shapes, so it does not
+ * import adoption/setup/status domain types; callers pass their richer report objects, which
+ * remain structurally assignable. This keeps the presentation layer free of domain backflow.
+ */
+interface FirstValueStateView {
+  status: string;
+}
+
+interface FirstValueView {
+  states: {
+    installed: FirstValueStateView;
+    healthy: FirstValueStateView;
+    hostConfigured: FirstValueStateView;
+    hostVerified: FirstValueStateView;
+  };
+  nextAction: { code: string; command: string };
+}
+
+interface AgentOption {
+  value: string;
+  label: string;
+  hint: string;
+}
+
+interface AdoptPlanView {
+  proposalId: string;
+  inventory: ReadonlyArray<{ classification: string; path: string; reasonCode: string }>;
+  diff: string | null;
+  backups: ReadonlyArray<{ source: string; path: string }>;
+}
+
+interface SetupGuideView {
+  adapters: InstallPlan[];
+  willNotChange: string[];
+  recovery: { restore: string };
+  hostBehavior: { status: string };
+  firstValue: FirstValueView;
+}
+
+type SetupVerificationView = ReadonlyArray<{
+  adapter: string;
+  ownership: string;
+  runtimeHealth: string;
+}>;
+
+interface StatusExplanationView {
+  adapter: string;
+  observedState: string;
+  reasonCode: string;
+  owner: string;
+  actions: ReadonlyArray<{ code: string; command: string }>;
+  boundaries: { hostBehavior: { conclusion: string; reasonCode: string } };
+  firstValue: FirstValueView;
+}
 
 function printFirstValue(firstValue: FirstValueView, io: Io): void {
   const { installed, healthy, hostConfigured, hostVerified } = firstValue.states;
@@ -25,19 +77,21 @@ function stopOnCancel<T>(value: T | symbol): T {
 }
 
 export async function selectAgents({
+  agents,
   input = process.stdin,
   output = process.stdout,
 }: {
+  agents: AgentOption[];
   input?: PromptInput;
   output?: PromptOutput;
-} = {}): Promise<string[]> {
+}): Promise<string[]> {
   if (!input.isTTY || !output.isTTY) {
     throw new Error('Agent selection is required in non-interactive mode: --agent <name>');
   }
   return stopOnCancel(
     await multiselect({
       message: 'Which coding agents should Harnessmith configure?',
-      options: supportedAgents,
+      options: agents,
       initialValues: ['codex'],
       required: true,
       input,
@@ -91,7 +145,7 @@ export async function confirmSetup({
 }
 
 export async function confirmAdopt(
-  report: AdoptReport,
+  report: AdoptPlanView,
   {
     input = process.stdin,
     output = process.stdout,
@@ -114,11 +168,9 @@ export function finishInteractive(message: string, output: PromptOutput): void {
   outro(message, { output });
 }
 
-import { printPlans } from './print.js';
-
 export { printLifecyclePlans, printPlans, printStatuses } from './print.js';
 
-export function printSetupGuide(guide: SetupGuide, io: Io = console): void {
+export function printSetupGuide(guide: SetupGuideView, io: Io = console): void {
   printPlans(guide.adapters, io);
   io.log('  will not change');
   for (const boundary of guide.willNotChange) io.log(`    - ${boundary}`);
@@ -127,7 +179,7 @@ export function printSetupGuide(guide: SetupGuide, io: Io = console): void {
   printFirstValue(guide.firstValue, io);
 }
 
-export function printAdoptPlan(report: AdoptReport, io: Io = console): void {
+export function printAdoptPlan(report: AdoptPlanView, io: Io = console): void {
   io.log(`Adopt proposal ${report.proposalId}`);
   for (const item of report.inventory) {
     io.log(`  ${item.classification}  ${item.path}  ${item.reasonCode}`);
@@ -136,7 +188,10 @@ export function printAdoptPlan(report: AdoptReport, io: Io = console): void {
   for (const backup of report.backups) io.log(`  backup  ${backup.source} -> ${backup.path}`);
 }
 
-export function printSetupVerification(verification: SetupVerification, io: Io = console): void {
+export function printSetupVerification(
+  verification: SetupVerificationView,
+  io: Io = console,
+): void {
   for (const item of verification) {
     io.log(
       `${item.adapter}: ownership=${item.ownership}, runtime-health=${item.runtimeHealth}, real-host=not-verified`,
@@ -144,7 +199,10 @@ export function printSetupVerification(verification: SetupVerification, io: Io =
   }
 }
 
-export function printStatusExplanations(explanations: StatusExplanation[], io: Io = console): void {
+export function printStatusExplanations(
+  explanations: StatusExplanationView[],
+  io: Io = console,
+): void {
   for (const explanation of explanations) {
     io.log(
       `${explanation.adapter}: state=${explanation.observedState}, reason=${explanation.reasonCode}, owner=${explanation.owner}`,

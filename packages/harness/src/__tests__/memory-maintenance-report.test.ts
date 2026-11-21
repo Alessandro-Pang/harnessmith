@@ -1,11 +1,16 @@
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { onTestFinished, test } from 'vitest';
 import { initGlobal, initProject } from '../commands/init.js';
 import { memoryMaintenance } from '../commands/memory/memory-maintenance.js';
+import { initTask } from '../commands/task/task.js';
+import { canonicalPath } from '../lib/filesystem/safe-path.js';
 import { memoryMaintenanceReport } from '../lib/memory/memory-maintenance.js';
+import { workflowRelationsForProject } from '../lib/workflow/workflow-relations.js';
+import { calendarDate } from '../runtime.js';
 import { capturedIo, elementAt, harnessRuntime } from './helpers/harness.js';
 
 function fixture() {
@@ -228,4 +233,56 @@ test('JSON maintenance preserves an execution failure instead of masking it', ()
     execution: { status: 'failed', reasonCode: 'maintenance-execution-failed' },
     mutation: { status: 'unchanged', reasonCode: 'report-only' },
   });
+});
+
+test('maintenance keeps full project relations when the workflow reader is injected', () => {
+  const { project, runtime, memoryRoot } = projectFixture();
+  execFileSync('git', ['-C', project, 'init', '-q']);
+  initTask(
+    runtime,
+    {
+      project,
+      id: 'relation-task',
+      objective: 'Inspect relations',
+      acceptance: ['Report exists'],
+    },
+    capturedIo(),
+  );
+
+  const report = memoryMaintenanceReport(memoryRoot, '2026-09-01', workflowRelationsForProject);
+
+  assert.deepEqual(report.relations, workflowRelationsForProject(project, memoryRoot));
+  assert.equal(report.relations.summary.tasks, 1);
+  assert.equal(elementAt(report.relations.tasks, 0).task, 'relation-task');
+  assert.ok(report.relations.summary.memory > 0);
+});
+
+test('memory maintain CLI keeps the injected project relations report identical to the lib report', () => {
+  const { project, runtime, memoryRoot } = projectFixture();
+  execFileSync('git', ['-C', project, 'init', '-q']);
+  initTask(
+    runtime,
+    {
+      project,
+      id: 'relation-task',
+      objective: 'Inspect relations',
+      acceptance: ['Report exists'],
+    },
+    capturedIo(),
+  );
+  const canonicalRoot = canonicalPath(memoryRoot);
+
+  const cliReport = memoryMaintenance(runtime, project, { json: true }, capturedIo());
+  const libReport = memoryMaintenanceReport(
+    canonicalRoot,
+    calendarDate(runtime),
+    workflowRelationsForProject,
+  );
+
+  assert.deepEqual(cliReport, libReport);
+  assert.deepEqual(
+    cliReport.relations,
+    workflowRelationsForProject(dirname(canonicalRoot), canonicalRoot),
+  );
+  assert.equal(cliReport.relations.summary.tasks, 1);
 });

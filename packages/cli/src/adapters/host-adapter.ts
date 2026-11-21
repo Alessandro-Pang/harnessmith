@@ -11,7 +11,7 @@ import type {
 import { HarnessmithError } from '../shared/types.js';
 import { type AgentName, getAdapterDefinition } from './adapter-registry.js';
 import { type GitInspection, inspectGit } from './git-inspection.js';
-import { renderMarkdownInstructions } from './instruction-formats.js';
+import { instructionRenderer } from './instruction-formats.js';
 
 export interface AdapterResolveContext {
   env: NodeJS.ProcessEnv;
@@ -70,11 +70,14 @@ export function hostAdapter(
   } = {},
 ): Adapter {
   const definition = getAdapterDefinition(name);
+  // Entry files are the shared cross-host markdown entry; host-native rule formats (e.g.
+  // Cursor's .mdc) are selected through the same renderer via renderInstructions below.
+  const renderEntry = instructionRenderer('markdown');
   const instructions: Instruction[] = [
     ...instructionFiles.map(
       (file): Instruction => ({
         path: join(home, file),
-        render: renderMarkdownInstructions,
+        render: renderEntry,
       }),
     ),
     ...renderInstructions.map(({ path, render }): Instruction => ({ path, render })),

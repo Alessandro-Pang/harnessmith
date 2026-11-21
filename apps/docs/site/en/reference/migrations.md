@@ -4,7 +4,7 @@ description: Checks and recovery steps when upgrading Harnessmith, the Runtime, 
 owner: maintainers
 audience: users-and-maintainers
 status: active
-updated: 2026-09-05
+updated: 2026-11-21
 lang: en
 ---
 
@@ -41,15 +41,17 @@ npx --yes harnessmith status --agent codex --explain --json
 
 ### Current layout: one global CLI, skill delegated to `skills`
 
-The published global `harnessmith` command is the single entry point. Installer commands run in the outer layer;
-Runtime subcommands execute the same-version `dist/harness.mjs` at the npm package root. Adapters render only ordinary
-instruction files; the version-pinned `skills@1.7.6` dependency exclusively owns the skill's canonical copy and Host
-links. The Runtime is never copied into a skill or user-data directory.
+The complete operational protocol for the current layout (one global CLI, ordinary instruction files, the separate
+`skills` transaction, and the package-bundled Runtime) lives in
+[llms.txt](https://github.com/Alessandro-Pang/harnessmith/blob/main/llms.txt) shipped with the release; host paths are
+in [Host support](/en/guide/hosts) and the layering design in [Architecture](/en/concepts/architecture).
 
-User data defaults to `~/.harnessmith` (`HARNESS_HOME` overrides it): `state/`, `rules/` (`HARNESS_PERSONAL_HOME`), and
-`memory/` (`HARNESS_MEMORY_HOME`). Harnessmith does not create, read, or delete `~/.agents/harnessmith` or old Runtime
-copies inside Host directories. Move personal rules and Memory yourself, or point the environment overrides at their
-existing locations.
+User data defaults to `~/.harnessmith` (`HARNESS_HOME` overrides it). Harnessmith does not create, read, or delete
+`~/.agents/harnessmith` or old Runtime copies inside Host directories. Move personal rules and Memory yourself, or
+point the environment overrides at their existing locations. Personal overlay initialization (`init personal`) only
+creates missing files; the one narrow exception is stale-pointer repair: pre-hub
+`~/.agent-harness/projects/repository-map.md` pointers inside existing files are replaced in place with the current
+pointer, and no other user content is overwritten.
 
 ### Breaking installation-record change
 
@@ -86,13 +88,15 @@ npx --yes harnessmith memory check /absolute/project/path --indexed --json
 ```
 
 For unknown schemas, missing owners, or broken references, keep the original directory and output first; do not
-edit JSON by hand. Old metadata that can be handled automatically goes through `memory migrate` to generate a
-proposal; apply it explicitly only when the proposal state is `ready` and the targets have been re-verified as
-unchanged:
+edit JSON by hand. Old metadata goes through `memory migrate <scope> <memory>`, which generates a proposal for one
+document at a time: `<scope>` is a project path or `global`, `<memory>` is a Memory reference such as
+`distilled/<name>`, and `--set` supplies the metadata updates as a JSON object. Apply explicitly with the same
+command plus `--apply` only when the report state is `ready` and the targets have been re-verified as unchanged
+(the write holds the shared memory lock):
 
 ```bash
-npx --yes harnessmith memory migrate /absolute/project/path --json
-npx --yes harnessmith memory migrate /absolute/project/path --proposal <proposal-id> --apply --yes --json
+npx --yes harnessmith memory migrate /absolute/project/path distilled/<memory-name> --set '{"status":"active"}' --json
+npx --yes harnessmith memory migrate /absolute/project/path distilled/<memory-name> --set '{"status":"active"}' --apply --json
 npx --yes harnessmith memory check /absolute/project/path --indexed --json
 ```
 
@@ -109,7 +113,8 @@ Recommended order:
 1. Back up or copy `.agent-docs/` and shared Memory;
 2. Confirm the current baseline with `memory check --indexed`;
 3. Generate the migration proposal and review affected paths, digests, expiration times, and recovery paths;
-4. Explicitly apply a single or bounded proposal;
+4. Explicitly apply a single or bounded proposal (`memory migrate` applies one ready migration via the same
+   command plus `--apply`);
 5. Run `memory check --indexed`, `task status`, and the relevant verifiers again;
 6. On failure, keep the original files and the proposal; do not retry against a different target.
 

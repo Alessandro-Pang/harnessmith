@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { lstatSync } from 'node:fs';
 import { basename, dirname, join, relative, resolve } from 'node:path';
 import type { Runtime } from '../../types.js';
+import { resolveIntegerBudget } from '../contract/integer-budget.js';
 import { toPosixPath } from '../filesystem/posix-path.js';
 import { assertSafePath, canonicalPath } from '../filesystem/safe-path.js';
 import type { SearchOptions, SearchSource } from './search.js';
@@ -21,11 +22,10 @@ const indexRefreshDefaults = {
 };
 
 export function resolveIndexMaxChunks(options: SearchOptions): number {
-  const maxChunks = options.maxChunks ?? indexRefreshDefaults.maxChunks;
-  if (!Number.isInteger(maxChunks) || maxChunks < 1) {
-    throw new Error('Search max chunks must be a positive integer');
-  }
-  return maxChunks;
+  return resolveIntegerBudget(options.maxChunks, indexRefreshDefaults.maxChunks, {
+    subject: 'Search max chunks',
+    validateFallback: true,
+  });
 }
 
 export interface IndexedFile {

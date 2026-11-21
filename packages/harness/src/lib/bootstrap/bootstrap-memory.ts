@@ -1,7 +1,7 @@
 import { join, relative } from 'node:path';
-import { calendarDate } from '../../runtime.js';
 import type { Io, ProjectSnapshot, Runtime } from '../../types.js';
 import { parseFrontmatterDocument } from '../documentation/frontmatter.js';
+import { calendarDate } from '../filesystem/calendar-date.js';
 import { toPosixPath } from '../filesystem/posix-path.js';
 import {
   type MemoryCoreBudgetReport,
@@ -19,6 +19,7 @@ import {
 } from '../memory/memory-maintenance.js';
 import { MemoryPathError, markdownFiles, readMemoryDocument } from '../memory/memory-path.js';
 import { validateMemoryRoot } from '../memory/memory-validation.js';
+import { workflowRelationsForProject } from '../workflow/workflow-relations.js';
 
 export {
   type BootstrapRecommendation,
@@ -155,7 +156,11 @@ export function readBootstrapMemory(
   if (metadataResult.failure) state = metadataResult.failure;
   let maintenance: MemoryMaintenanceReport | null = null;
   try {
-    maintenance = memoryMaintenanceReport(memoryRoot, calendarDate(runtime));
+    maintenance = memoryMaintenanceReport(
+      memoryRoot,
+      calendarDate(runtime),
+      workflowRelationsForProject,
+    );
   } catch (error) {
     reasons.push(`Memory maintenance skipped: ${String(error)}`);
     if (state === 'valid') state = stateForFailure([String(error)], error);

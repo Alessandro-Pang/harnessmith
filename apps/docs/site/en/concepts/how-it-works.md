@@ -4,7 +4,7 @@ description: The full data flow from the install transaction to the agent's actu
 owner: maintainers
 audience: users-and-maintainers
 status: active
-updated: 2026-09-05
+updated: 2026-11-21
 lang: en
 ---
 
@@ -39,20 +39,25 @@ earlier stage fails, the later stages do not run:
    symlink pointing outside the authorized root, this step fails and refuses the write instead of being led somewhere
    unexpected by the symlink.
 
-3. **Staging the payload.** The complete install content (rules entry point, embedded Runtime, install record) is
-   generated inside the target root, and the generated JavaScript syntax is checked. If the generated content has a
-   syntax error, this step fails, and a broken Runtime is never installed into the host.
+3. **Acquire the operation lock and re-check.** Before any staging, a cross-process operation lock is acquired to
+   prevent two `npx harnessmith install` runs at the same time; one lock window covers both the Host-file and the
+   skill transaction, so concurrent processes cannot interleave the two steps into opposite states. All target
+   states are re-checked inside the lock: if targets changed after path resolution (for example another process
+   created a file with the same name), this step detects it and refuses.
 
-4. **Acquire the operation lock and re-check.** A cross-process operation lock is acquired to prevent two
-   `npx harnessmith install` runs at the same time. All target states are re-checked. If targets changed between steps
-   1-3 (for example another process created a file with the same name), this step detects it and refuses. Existing
-   managed content is never overwritten directly: rendered rule files move into a timestamped backup layer, the
-   skill distribution tree and links evacuate into this transaction's staging area so scanned directories keep only
-   the latest copy, and content byte-identical to what is already on disk is skipped without creating any backup.
+4. **Stage only the instruction files.** Inside a temporary staging directory in the target root, only the host's
+   rendered always-on instruction files are generated (`AGENTS.md`, plus `CLAUDE.md` for Claude Code and a `.mdc`
+   rule for Cursor). Unmanaged or modified targets are refused by default and require an explicit `--force`. The
+   Runtime is never copied into host directories: it stays in the npm package, and the global `harnessmith` command
+   executes the same-version `dist/harness.mjs` directly.
 
-5. **Commit and record.** The rules entry point, the embedded Runtime, and the install record are written. If any step
-   fails, rollback follows only the exact paths recorded for this run — it does not roll back to before the previous
-   install, and it does not delete backup layers.
+5. **Commit the instructions and the record.** The staged instruction files move into their target paths; replaced
+   content is kept as a timestamped `.backup-<stamp>` backup, and managed content byte-identical to what is already
+   on disk is skipped without creating any backup. The schema 3 install record is then written and user data is
+   initialized. If any step fails, rollback follows only the exact paths recorded for this run — it does not roll
+   back to before the previous install, and it does not delete backup layers. Skill installation is a separate
+   transaction after the Host commit, delegated to the version-pinned `skills`; a skill failure is explicitly
+   reported as partial completion, the Host files stay installed, and no overall rollback is claimed.
 
 This order explains two things you may have noticed. First, `--dry-run` is not "decorative simulated output." It shows
 exactly the write scope the Adapter finally selected; what you see before writing is what will happen. Second,
@@ -110,10 +115,12 @@ flowchart TD
   CLI --> Adapter["Host Adapter"]
   Adapter --> Preflight{"Full preflight passed?"}
   Preflight -->|"No"| Refuse["Refuse the write and explain why"]
-  Preflight -->|"Yes"| Stage["staging · backups · acquire operation lock"]
-  Stage --> Commit{"Commit succeeded?"}
+  Preflight -->|"Yes"| Lock["Acquire operation lock · stage instruction files · backups"]
+  Lock --> Commit{"Commit succeeded?"}
   Commit -->|"No"| Rollback["Roll back by exact records"]
-  Commit -->|"Yes"| Runtime["Host rules entry + local Harness Runtime"]
+  Commit -->|"Yes"| Installed["Host instruction files + install record"]
+  Installed --> Skill["Skill transaction · version-pinned skills"]
+  Installed --> Runtime["Harness Runtime bundled in the npm package"]
   Runtime --> Docs["On-demand docs routing"]
   Runtime --> State["Memory / Task"]
   Runtime --> Verify["Verification and bounded audit"]

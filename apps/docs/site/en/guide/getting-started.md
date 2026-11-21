@@ -1,49 +1,47 @@
 ---
 title: Getting started
-description: Install Harnessmith, select a host, and verify the result
+description: The full path from one dry-run command to the first real conversation
 owner: maintainers
 audience: users
 status: active
-updated: 2026-09-05
+updated: 2026-11-21
 lang: en
 ---
 
 # Getting started
 
-This guide covers a first installation: preview the plan, write to one host, and verify the result. Harnessmith is an
-npm initializer, so run it with `npx`; no global install is needed. The only requirement is Node.js 22.20.0 or newer.
+Complete the first install in three steps: preview → write → verify. This page uses Codex as the example and
+explains what each step changes, how refusals are handled, and how to verify a real host after the local install
+succeeds.
 
-The whole process takes about five minutes if you're installing to a single host. The examples below use Codex. Other
-hosts use the same three-stage flow, but Cursor is project-scoped and requires `--project`; check the
-[host support guide](/en/guide/hosts) before copying a command.
+Harnessmith is an npm initializer; run it directly with `npx` — nothing needs to be installed globally first. The
+only environment requirement is Node.js 22.20.0 or newer.
 
 ## Before you start
 
-Two things to confirm:
+Confirm two things:
 
-- Your target coding agent is installed and working. Harnessmith writes its rule entry point, not the host itself.
-  If you haven't set up Codex (or whichever host you're targeting) yet, do that first.
-- Know whether you want global scope (personal, every project) or project scope (Cursor only). Global means "install
-  once, works everywhere"; project means "tied to this specific repository". Most people want global unless they're
-  using Cursor.
+- The target coding agent is installed and opens normally. Harnessmith only writes the host's rule entry point; it
+  does not install the host for you.
+- Decide the install scope: the global personal directory (most hosts) or one specific project (Cursor).
 
-Harnessmith doesn't need your model API key and won't log you into any third-party service. After the package is
-available, its installation and runtime operations use local files: no telemetry and no account creation.
+It does not need your model API key and will not log you into any third-party service. If you are worried about
+"which of my files exactly will it change", that is precisely the question the first step answers.
 
 ## Three steps to install
 
 ### Step 1: Preview the plan
 
+Using Codex as the example:
+
 ```bash
 npx harnessmith setup --agent codex --dry-run
 ```
 
-Dry-run writes nothing. It outputs the same plan the actual install will use: host scope, target roots, per-file
-`missing` / `managed` / `unmanaged` / `modified` states, recovery commands, and Host-owned boundaries. Add `--json`
-for machine-readable output.
-
-The preview shows the resolved target paths, including changes caused by environment variables, existing conflicts,
-and recovery commands. Nothing is written at this stage.
+Dry-run writes nothing. It outputs the same plan the install will execute: host scope, target roots, per-file
+`missing` / `managed` / `unmanaged` / `modified` states, Host capabilities that stay untouched, and recovery commands
+for when something goes wrong. Reading this plan before any write is your first confirmation of the change scope;
+add `--json` when a machine needs to process it.
 
 ### Step 2: Write the install
 
@@ -51,91 +49,111 @@ and recovery commands. Nothing is written at this stage.
 npx harnessmith setup --agent codex
 ```
 
-Interactive mode shows the changes, invariants, and recovery path again before writing, and lets you cancel. In
-non-interactive environments (CI or scripts), confirm explicitly:
+Interactive mode shows the changes, invariants, and recovery path again before writing, and lets you cancel.
+Non-interactive environments (CI, scripts) must confirm explicitly:
 
 ```bash
 npx harnessmith setup --agent codex --yes --json
 ```
 
-The `--yes` flag bypasses the prompt. Review the dry-run output before using it.
+### Step 3: Verify the result
 
-### Step 3: Verify
+After the install transaction completes, `setup` automatically checks ownership and embedded Runtime health; you can
+also re-check at any time:
 
 ```bash
 npx harnessmith status --agent codex
 npx harnessmith status --agent codex --explain
 ```
 
-Plain `status` answers "is the install complete?" It checks that managed files exist and match their expected
-checksums. Add `--explain` when you need to decide: it reports observed state, owner, evidence, risk, and stable
-action codes. Actions are suggestions only — they won't execute automatically. Neither command can prove that a
-real host session loaded the rules.
-
-The `--explain` output is for troubleshooting. It records what Harnessmith observed, what it expected, and an action
-code for the next step. It does not change files or run the suggested action.
+Plain `status` only answers "is the install complete". When you need to make a decision based on it, add
+`--explain`: it reports observed state, owner, evidence, risk, and a stable action code. These actions are
+suggestions only and never execute automatically.
 
 ## Two reasons you might be refused
 
-- **Unmanaged or modified files.** The default is denial. If Harnessmith finds files at target locations that it
-  didn't create (or that were created but have been modified), it stops rather than overwrite. Inspect with dry-run
-  and status first. If you're sure you want to take over, go through `adopt` (see the
-  [lifecycle guide](/en/guide/lifecycle)) or `--force`, but understand what you're overwriting first.
-- **Unsupported host.** Harnessmith stops before resolving or writing any targets. No partial installs. If you see
-  this error, check the supported hosts list. You may have a typo in the `--agent` value, or you may be trying to
-  use a host that isn't yet supported.
+Some write requests are refused by default. This is not a broken install — it is the safety boundary working, and
+knowing it in advance saves detours:
+
+- **The target file is not managed by Harnessmith.** The file exists but is `unmanaged`, or was managed and then
+  changed into `modified`. The guided flow refuses by default, and the confirmation step cannot bypass it. The right
+  move is to understand where the file came from and how it differs; to take it over deliberately, use the explicit
+  `adopt` import (see the [lifecycle guide](/en/guide/lifecycle)) and keep the generated backups. Do not use
+  `--force` to paper over unknown conflicts: it backs up before replacing, but you own the responsibility for "what
+  got overwritten".
+- **The host has no Adapter.** A host without an Adapter is `unsupported`; Harnessmith stops before resolving or
+  writing any target, leaving no half-install behind.
+
+## If the install fails
+
+Host files are one transaction: on failure, Harnessmith attempts to roll back the exact paths written in this run;
+the skill is managed independently by `skills`. Follow the guidance in the error message — re-run the dry-run first,
+then check `status`. A committed Host with a failed skill is explicitly marked as partial completion. Use `restore`
+only when the current schema 3 record contains recoverable files; it does not chase old installation chains.
 
 ## What "installed" actually proves
 
-A passing install means local files and embedded Runtime health check out. It does not prove model behaviour,
-tool permissions, authentication, or runtime events — those are host-dependent and require verification in a real
-host session. The vocabulary is precise: `installed`, `healthy`, `host-configured`, `host-verified`. Setup proves
-the first two locally; the last two remain `inconclusive` without real host evidence.
+Two kinds of "pass" appear repeatedly on this page; keep them separate:
 
-`installed` is a local file check. `host-verified` requires a real host session that loads the rules and completes a
-controlled task. The [First Value Loop](/en/guide/first-value-loop) guide describes that additional check.
+- A successful install and passing deterministic health checks only prove the local files and embedded Runtime are
+  good;
+- Model behavior, tool permissions, authentication, and runtime events are `host-dependent` and must be verified
+  separately in a real host session.
 
-After install, run:
+The unified vocabulary is `installed`, `healthy`, `host-configured`, `host-verified`: `setup` can prove the first two
+locally; `status` only proves `installed` and does not incidentally prove `healthy`. Checks constrained by the
+environment explicitly return `inconclusive` instead of inflating "install complete" into "session healthy".
+
+The standard next step after install is:
 
 ```bash
 npx harnessmith diagnostics --agent <agent> --json
 ```
 
-Then switch to a real host and complete the first controlled task. The detailed, evidence-based journey is documented
-in the [First Value Loop](/en/guide/first-value-loop) guide.
+Then enter a real host and complete your first controlled task. The full definition of the start, the end, the owner,
+failure exits, and the zero-telemetry regression is in the [First Value Loop](/en/guide/first-value-loop).
 
 ## Other hosts
 
-Codex, Claude Code, OpenCode, Kimi Code CLI, and Zed Agent use global scope. Cursor uses project scope:
+`codex`, `claude-code`, `opencode`, `kimi-code`, and `zed` use global install scope; `cursor` uses project scope and
+needs an explicit project root:
 
 ```bash
 npx harnessmith setup --agent cursor --project /path/to/project
 ```
 
-Multiple hosts at once:
+The same command accepts comma-separated hosts to install several at once:
 
 ```bash
 npx harnessmith setup --agent codex,opencode,kimi-code
 ```
 
-Exact paths, aliases, and support status: [host support](/en/guide/hosts).
+Exact paths, aliases, and support status per host: [host support](/en/guide/hosts).
 
-## Recovery
+## The first conversation after install
 
-```bash
-npx harnessmith restore --agent codex
-npx harnessmith uninstall --agent codex
-```
+A new host session reads the corresponding rule entry automatically; you do not need to paste the whole rule set
+into every request. Start with an ordinary task, for example:
 
-Restore uses the ordinary-file backups named by the current schema 3 record. Uninstall restores those backups and
-removes the current instruction files and record; neither walks historical installation chains. Both validate current
-files, backup relationships, and path boundaries before touching anything.
+> Analyze this repository's release process read-only. State your sources of truth and what remains unverified; do
+> not modify files.
 
-A note on what "removes" means: uninstall deletes the files Harnessmith created, but it doesn't touch files you
-created or modified after install. If you edited a managed file, uninstall will warn you and refuse to proceed
-unless you explicitly acknowledge the loss. This is deliberate. Silent data loss is worse than an extra
-confirmation step.
+Such a request first hits the trust and discovery rules in the entry point, then routes to the specific playbook on
+demand. Harnessmith provides context and a work contract; whether the host executes commands or asks for permission
+approval is still the host's decision.
 
-Continue with the [host support](/en/guide/hosts), [lifecycle guide](/en/guide/lifecycle), or full
-[CLI reference](/en/reference/cli). The Chinese pages remain the canonical technical source of truth for host paths
-and advanced operations.
+Only when a real host completes that task and keeps tool, filesystem, and verifier evidence do you reach
+`host-verified`. Before that, glance at `status --explain` and `restore --dry-run` to confirm the recovery path. That
+is the requirement of the `recovery-aware` checkpoint in the First Value Loop.
+
+## Let the agent install it for you
+
+<!-- markdownlint-disable MD034 -->
+
+You can also hand the installation to the coding agent itself, as long as you personally check the targets before
+any write:
+
+> Read https://unpkg.com/harnessmith@latest/llms.txt and install Harnessmith according to that protocol; run the
+> dry-run first, then let me confirm the write.
+
+<!-- markdownlint-enable MD034 -->

@@ -1,3 +1,5 @@
+// Direct-execution c8 coverage for the bounded evaluation runner.
+
 import assert from 'node:assert/strict';
 import {
   type HostEvalAttemptResult,

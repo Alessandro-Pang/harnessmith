@@ -8,7 +8,7 @@ import {
   firstValueFromSetupVerification,
   firstValueFromStatus,
   firstValuePreview,
-} from '../setup/first-value.js';
+} from '../shared/first-value.js';
 
 function fixture() {
   const root = mkdtempSync(join(tmpdir(), 'harnessmith-first-value-'));

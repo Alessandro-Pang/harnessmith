@@ -1,8 +1,8 @@
 import { chmodSync, existsSync, lstatSync } from 'node:fs';
 import { join } from 'node:path';
-import { calendarDate } from '../../runtime.js';
 import type { Runtime } from '../../types.js';
 import { updateFrontmatter } from '../documentation/frontmatter.js';
+import { calendarDate } from '../filesystem/calendar-date.js';
 import { atomicWrite } from '../filesystem/files.js';
 import { modeMatches } from '../filesystem/portable-mode.js';
 import { assertSafePath } from '../filesystem/safe-path.js';

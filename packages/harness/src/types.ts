@@ -12,8 +12,13 @@ export interface Runtime {
   /** Mutable user-data home (`~/.harnessmith`, overridable with `HARNESS_HOME`). */
   readonly harnessHome: string;
   readonly hostAdapter: string;
-  /** Skill content root the Runtime reads (manifest, docs, schemas); never a writable copy. */
-  readonly installedHarness: string;
+  /**
+   * Removed identity alias of `harnessRoot`; production runtimes no longer carry it and
+   * internal consumers must read `harnessRoot`. Kept optional only so external fixtures
+   * outside this package (CLI template tests, search benchmark) still typecheck.
+   * @deprecated Use `harnessRoot`.
+   */
+  readonly installedHarness?: string;
   readonly docsRoot: string;
   /** Mutable runtime state (`<user-data home>/state`), kept outside the distributed skill. */
   readonly stateRoot: string;

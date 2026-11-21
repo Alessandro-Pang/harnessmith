@@ -245,3 +245,159 @@ it('requires finding and experience document types and provenance metadata', asy
     }).outcome,
   ).toBe('failed');
 });
+
+describe('contract positive and fail-closed outcomes', () => {
+  const doc = (meta: string) => `---\n${meta}\n---\nbody\n`;
+  const updatedProfile = state({
+    'profile.md':
+      profile('communication.review-format', 'Key risks only') +
+      profile('coding.language', 'TypeScript'),
+  });
+  const profileUpdate = {
+    kind: 'profile-update' as const,
+    key: 'communication.review-format',
+  };
+
+  it('accepts no-write and idempotent project input only when durable state is unchanged', () => {
+    expect(
+      verifyMemoryContract({ before, after: before, contract: { kind: 'no-write' } }).outcome,
+    ).toBe('passed');
+    const seeded = state({}, { '/inputs/a.md': doc('memory-kind: input\nstatus: active') });
+    expect(
+      verifyMemoryContract({
+        before: seeded,
+        after: seeded,
+        contract: { kind: 'project-input-idempotent' },
+      }).outcome,
+    ).toBe('passed');
+  });
+
+  it('gates free-form profile updates on the independent semantic review outcome', () => {
+    expect(
+      verifyMemoryContract({
+        before,
+        after: updatedProfile,
+        contract: profileUpdate,
+        semanticReview: { status: 'passed' },
+      }).outcome,
+    ).toBe('passed');
+    expect(
+      verifyMemoryContract({
+        before,
+        after: updatedProfile,
+        contract: profileUpdate,
+        semanticReview: { status: 'failed', message: 'off topic' },
+      }).outcome,
+    ).toBe('failed');
+    expect(
+      verifyMemoryContract({
+        before,
+        after: updatedProfile,
+        contract: profileUpdate,
+        semanticReview: { status: 'inconclusive' },
+      }).outcome,
+    ).toBe('inconclusive');
+  });
+
+  it('verifies deterministic profile create and autopilot control transitions', () => {
+    expect(
+      verifyMemoryContract({
+        before,
+        after: state({
+          'profile.md':
+            profile('communication.review-format', 'Conclusion first') +
+            profile('coding.language', 'TypeScript') +
+            profile('new.key', 'Added'),
+        }),
+        contract: { kind: 'profile-create', key: 'new.key', deterministic: true },
+      }).outcome,
+    ).toBe('passed');
+    expect(
+      verifyMemoryContract({
+        before,
+        after: state({
+          'profile.md':
+            profile('communication.review-format', 'Conclusion first') +
+            profile('coding.language', 'TypeScript') +
+            '\n<!-- paused -->\n',
+        }),
+        contract: { kind: 'profile-control' },
+      }).outcome,
+    ).toBe('passed');
+    expect(
+      verifyMemoryContract({ before, after: before, contract: { kind: 'profile-control' } })
+        .outcome,
+    ).toBe('failed');
+  });
+
+  it('verifies project input create and typed operation lifecycle positives', () => {
+    const inputDoc = doc('memory-kind: input\nstatus: active');
+    expect(
+      verifyMemoryContract({
+        before: state(),
+        after: state({}, { '/inputs/a.md': inputDoc }),
+        contract: { kind: 'project-input-create', deterministic: true },
+      }).outcome,
+    ).toBe('passed');
+    expect(
+      verifyMemoryContract({
+        before: state(),
+        after: state({}, { '/inputs/a.md': inputDoc }),
+        contract: { kind: 'typed-operation', operation: 'capture-input', deterministic: true },
+      }).outcome,
+    ).toBe('passed');
+    expect(
+      verifyMemoryContract({
+        before: state(),
+        after: state({}, { '/sessions/a.md': doc('type: session-handoff\nstatus: active') }),
+        contract: { kind: 'typed-operation', operation: 'handoff', deterministic: true },
+      }).outcome,
+    ).toBe('passed');
+    expect(
+      verifyMemoryContract({
+        before: state({}, { '/inputs/a.md': inputDoc }),
+        after: state({}, { '/inputs/a.md': doc('memory-kind: input\nstatus: complete') }),
+        contract: { kind: 'typed-operation', operation: 'curation-apply', deterministic: true },
+      }).outcome,
+    ).toBe('passed');
+  });
+
+  it('typed-report keeps its seeded trigger and typed-operation requires a name', () => {
+    expect(
+      verifyMemoryContract({
+        before: state({}, { 'README.md': 'hi' }),
+        after: state({}, { 'README.md': 'hi' }),
+        contract: { kind: 'typed-report', operation: 'repair', trigger: 'missing-readme' },
+      }).outcome,
+    ).toBe('failed');
+    const curation = state(
+      {},
+      { '/inputs/a.md': doc('memory-kind: input\nretention: workstream\nstatus: active') },
+    );
+    expect(
+      verifyMemoryContract({
+        before: curation,
+        after: curation,
+        contract: { kind: 'typed-report', operation: 'curate', trigger: 'curation-candidate' },
+      }).outcome,
+    ).toBe('passed');
+    expect(
+      verifyMemoryContract({
+        before: state(),
+        after: state(),
+        contract: { kind: 'typed-operation' },
+      }).outcome,
+    ).toBe('inconclusive');
+  });
+
+  it('rejects malformed profile lines even when the state is unchanged', () => {
+    const malformed = state({ 'profile.md': '- not a profile line\n' });
+    expect(
+      verifyMemoryContract({
+        before: malformed,
+        after: malformed,
+        contract: { kind: 'profile-update', key: 'x' },
+      }).outcome,
+    ).toBe('failed');
+  });
+});

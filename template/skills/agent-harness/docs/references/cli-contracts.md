@@ -2,7 +2,7 @@
 title: Harness CLI Contracts
 type: harness-reference
 status: active
-updated: 2026-11-14
+updated: 2026-11-21
 owner: harness-cli-architecture
 ---
 
@@ -79,21 +79,14 @@ proposal，只有显式 --apply 才移动日文件。
 
 ## Task evidence 与验收
 
-task verify 只产生机械 evidence：可证明选定的 command/test 实际退出成功，或 file/diff 被读取并摘要，并绑定
-记录时的 HEAD、workspace、scope、task 和 criterion。它不理解自由文本 criterion，也不证明所选 command、file
-或 scope 在语义上相关；无关但返回 0 的命令仍可能得到机械 passed。高风险 predicate 必须由用户、CI 或
-Host-owned verifier 固定，外部 evidence 不能直接产生 passed。
-
-command/test 使用 execFile 语义直接执行 executable 与 args，不经过 shell；file 只接受项目根内 regular file，
-diff 要求可读 Git workspace。路径须做 lexical/realpath containment，拒绝 symlink、特殊文件、目录型 file
-evidence 和 .git/.agent-docs 元数据边界。Task、acceptance 和 checkpoint 写入任务锁；陈旧或 legacy evidence
-不能关闭 Task。精确字段、预算和 Replay 状态机见 task-and-replay-contracts.md。
+`task verify` 只产生绑定记录时 HEAD、workspace、scope、task 和 criterion 的机械 evidence，不理解自由文本
+criterion，也不证明语义相关性；精确字段、执行与路径边界、预算、验收门禁和 Replay 状态机由
+[task-and-replay-contracts](task-and-replay-contracts.md) 独占，本文件不复制。
 
 ## Memory 与 Repository Map 入口
 
-- memory evaluate-capture 是只读资格判断；memory migrate 默认 proposal，显式 apply 才写入；memory repair 必须
-  按 diagnose-only → content-bound proposal → explicit apply → independent verifier 分阶段，精确分类、
-  backup/recovery、锁和恢复边界见 memory-contracts.md。
+- memory evaluate-capture 是只读资格判断；memory migrate 默认 proposal，显式 apply 才写入；memory repair 的
+  分阶段协议、分类与 backup/recovery 边界由 memory-contracts.md 独占，本文件不复制。
 - repository-map 把 personal canonical YAML、generated Markdown 和 runtime verification state 分离；
   check/maintain 默认只读，render --write、内置 discover ... --apply 和 verify --record 才写入。
   schema、命令、预算和迁移见 repository-map-contracts.md。

@@ -1,3 +1,5 @@
+// Direct-execution c8 coverage for the matrix report; ordinary assertions remain in Vitest.
+
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';

@@ -1,5 +1,6 @@
 import { relative, sep } from 'node:path';
 import { fdir } from 'fdir';
+import { resolveIntegerBudget } from '../contract/integer-budget.js';
 
 export interface ListFilesOptions {
   maxDepth?: number;
@@ -15,11 +16,12 @@ const defaultLimits = {
 };
 
 function limit(value: number | undefined, fallback: number, name: string, minimum: number): number {
-  const resolved = value ?? fallback;
-  if (!Number.isInteger(resolved) || resolved < minimum) {
-    throw new Error(`Invalid file discovery ${name}: ${resolved}`);
-  }
-  return resolved;
+  return resolveIntegerBudget(value, fallback, {
+    subject: `file discovery ${name}`,
+    minimum,
+    error: 'invalid',
+    validateFallback: true,
+  });
 }
 
 export function listFiles(root: string, options: ListFilesOptions = {}): string[] {

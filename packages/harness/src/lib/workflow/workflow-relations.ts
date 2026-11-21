@@ -1,10 +1,10 @@
 import { existsSync } from 'node:fs';
 import { basename, dirname, extname, join, resolve } from 'node:path';
-import { Ajv2020 } from 'ajv/dist/2020.js';
-import workflowRelationsSchema from '../../../../../template/skills/agent-harness/assets/schemas/workflow-relations.schema.json' with {
-  type: 'json',
-};
-import type { TaskStatus } from '../../types.js';
+import {
+  buildWorkflowRelationReport,
+  type MemoryRelationInput,
+  type WorkflowRelationReport,
+} from '../contract/workflow-relations.js';
 import { parseFrontmatter } from '../documentation/frontmatter.js';
 import { listFiles } from '../filesystem/file-discovery.js';
 import { assertSafePath, canonicalPath } from '../filesystem/safe-path.js';
@@ -15,81 +15,18 @@ import {
 import { isInside, readMemoryDocument } from '../memory/memory-path.js';
 import { readTask } from '../task/task-store.js';
 
-export interface TaskRelationInput {
-  id: string;
-  status: TaskStatus;
-}
-
-export interface MemoryRelationInput {
-  reference: string;
-  type: string;
-  kind: string;
-  status: string;
-  workstream?: string;
-  session?: string;
-  taskId?: string;
-  sourceRefs: string[];
-}
-
-const relationsAjv = new Ajv2020({ allErrors: true, strict: true });
-const validateWorkflowRelationsSchema = relationsAjv.compile(workflowRelationsSchema);
-
-type WorkflowRelationConflictCode = 'orphan-task-reference' | 'cross-workstream-binding';
-
-export interface WorkflowRelationReport {
-  version: 1;
-  schema: 'urn:agent-harness:schema:workflow-relations:v1';
-  mode: 'report-only';
-  sourceOfTruth: false;
-  tasks: Array<{ task: string; workstream: string; phase: string; status: TaskStatus }>;
-  memory: Array<{
-    reference: string;
-    lifecycleRole:
-      | 'task-progress'
-      | 'workstream-state'
-      | 'durable-knowledge'
-      | 'recovery-state'
-      | 'other';
-    owners: string[];
-    taskRefs: string[];
-    workstream: string | null;
-    session: string | null;
-  }>;
-  conflicts: Array<{
-    code: WorkflowRelationConflictCode;
-    reference: string;
-    evidence: string[];
-    risk: 'medium' | 'high';
-  }>;
-  summary: { tasks: number; memory: number; conflicts: number };
-}
-
-export function taskReferences(sourceRefs: string[]): string[] {
-  return [
-    ...new Set(
-      sourceRefs.flatMap((reference) => {
-        const match = /^task:([^\s:]+)$/u.exec(reference.trim());
-        return match?.[1] ? [match[1]] : [];
-      }),
-    ),
-  ].sort();
-}
-
-export function otherTaskOwners(sourceRefs: string[], task: string): string[] {
-  return taskReferences(sourceRefs).filter((owner) => owner !== task);
-}
-
-export function assertHandoffTaskTransition(
-  previousTask: string | undefined,
-  currentTask: string | undefined,
-  reason: string,
-): void {
-  if (previousTask && currentTask && previousTask !== currentTask && reason !== 'multi-task') {
-    throw new Error(
-      `Checkpoint reason multi-task is required for Handoff task transition from ${previousTask} to ${currentTask}`,
-    );
-  }
-}
+/**
+ * I/O composition for workflow relations. The pure report contract (types,
+ * task reference parsing, handoff transition rule, report builder) lives in
+ * `lib/contract/workflow-relations.ts` and is re-exported here so existing
+ * import paths keep working.
+ */
+export {
+  buildWorkflowRelationReport,
+  otherTaskOwners,
+  taskReferences,
+  type WorkflowRelationReport,
+} from '../contract/workflow-relations.js';
 
 export function assertAcceptanceEvidenceRole(projectRoot: string, file: string): void {
   const canonicalRoot = canonicalPath(projectRoot);
@@ -100,91 +37,6 @@ export function assertAcceptanceEvidenceRole(projectRoot: string, file: string):
   if (parseFrontmatter(readMemoryDocument(absolute)).get('type') === 'session-handoff') {
     throw new Error('Handoff recovery state cannot be used as acceptance evidence');
   }
-}
-
-function lifecycleRole(
-  document: MemoryRelationInput,
-): WorkflowRelationReport['memory'][number]['lifecycleRole'] {
-  if (document.type === 'session-handoff') return 'recovery-state';
-  if (document.kind === 'distilled') return 'durable-knowledge';
-  if (document.kind === 'input' && document.workstream) return 'workstream-state';
-  if (document.kind === 'working') return 'task-progress';
-  return 'other';
-}
-
-export function buildWorkflowRelationReport(
-  tasks: TaskRelationInput[],
-  documents: MemoryRelationInput[],
-): WorkflowRelationReport {
-  const taskIds = new Set(tasks.map(({ id }) => id));
-  const memory = documents.map((document) => {
-    const taskRefs = taskReferences([
-      ...document.sourceRefs,
-      ...(document.taskId ? [`task:${document.taskId}`] : []),
-    ]);
-    const owners = [
-      ...taskRefs.map((task) => `task:${task}`),
-      ...(document.workstream ? [`workstream:${document.workstream}`] : []),
-      ...(document.session ? [`session:${document.session}`] : []),
-    ];
-    return {
-      reference: document.reference,
-      lifecycleRole: lifecycleRole(document),
-      owners: [...new Set(owners)],
-      taskRefs,
-      workstream: document.workstream ?? null,
-      session: document.session ?? null,
-    };
-  });
-  const conflicts: WorkflowRelationReport['conflicts'] = [];
-  for (const relation of memory) {
-    for (const task of relation.taskRefs.filter((task) => !taskIds.has(task))) {
-      conflicts.push({
-        code: 'orphan-task-reference',
-        reference: relation.reference,
-        evidence: [`task:${task}`],
-        risk: 'high',
-      });
-    }
-    if (
-      relation.workstream &&
-      relation.taskRefs.length === 1 &&
-      relation.workstream !== relation.taskRefs[0]
-    ) {
-      conflicts.push({
-        code: 'cross-workstream-binding',
-        reference: relation.reference,
-        evidence: [`task:${relation.taskRefs[0]}`, `workstream:${relation.workstream}`],
-        risk: 'high',
-      });
-    }
-  }
-  const taskRelations = [...tasks]
-    .sort((left, right) => left.id.localeCompare(right.id))
-    .map(({ id, status }) => ({
-      task: id,
-      workstream: id,
-      phase: `${id}:phase:current`,
-      status,
-    }));
-  const report: WorkflowRelationReport = {
-    version: 1,
-    schema: 'urn:agent-harness:schema:workflow-relations:v1',
-    mode: 'report-only',
-    sourceOfTruth: false,
-    tasks: taskRelations,
-    memory,
-    conflicts,
-    summary: { tasks: taskRelations.length, memory: memory.length, conflicts: conflicts.length },
-  };
-  // The published schema only constrains consumers; validating here keeps the producer from
-  // shipping a report shape that its own schema rejects.
-  if (!validateWorkflowRelationsSchema(report)) {
-    throw new Error(
-      `Invalid workflow relation report: ${relationsAjv.errorsText(validateWorkflowRelationsSchema.errors, { separator: '; ' })}`,
-    );
-  }
-  return report;
 }
 
 function relationDocument(document: CurationDocument): MemoryRelationInput {

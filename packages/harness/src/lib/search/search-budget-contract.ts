@@ -1,3 +1,5 @@
+import { resolveIntegerBudget } from '../contract/integer-budget.js';
+
 const maxSkipDetails = 50;
 
 export interface SearchScanLimits {
@@ -65,23 +67,13 @@ export interface SearchDiscovery {
   deadline: number;
 }
 
-export interface SearchSource {
-  root: string;
-  label: string;
-  excludeDirectories?: string[];
-}
-
 function integer(
   value: number | undefined,
   fallback: number,
   name: string,
   minimum: number,
 ): number {
-  if (value === undefined) return fallback;
-  if (!Number.isInteger(value) || value < minimum) {
-    throw new Error(`${name} must be an integer greater than or equal to ${minimum}`);
-  }
-  return value;
+  return resolveIntegerBudget(value, fallback, { subject: name, minimum, error: 'minimum' });
 }
 
 export function resolveSearchScanLimits(options: Partial<SearchScanLimits> = {}): SearchScanLimits {

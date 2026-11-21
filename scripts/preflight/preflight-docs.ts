@@ -2,7 +2,7 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, extname, join, relative, resolve, sep } from 'node:path';
 import { fdir } from 'fdir';
 import { parse } from 'yaml';
-import { supportedAgentNames } from '../../packages/cli/src/shared/agents.js';
+import { supportedAgentNames } from '../../packages/cli/src/adapters/adapter-registry.js';
 import { parseFrontmatterDocument } from '../../packages/harness/src/lib/documentation/frontmatter.js';
 import { markdownLinkTargets } from '../../packages/harness/src/lib/documentation/markdown-links.js';
 import { promptRuleContractIssues } from '../benchmarks/prompt-route/prompt-rule-contract.js';

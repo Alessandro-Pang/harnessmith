@@ -1,5 +1,5 @@
-import { calendarDate } from '../../runtime.js';
 import type { Runtime } from '../../types.js';
+import { calendarDate } from '../filesystem/calendar-date.js';
 import { auditHealth } from './health-audit.js';
 import { installationHealth } from './health-installation.js';
 import { memoryHealth, projectMemoryHealth } from './health-memory.js';

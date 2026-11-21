@@ -34,6 +34,7 @@ export const declaredCliAreaImports: readonly string[] = [
   'adoption -> installation',
   'adoption -> presentation',
   'adoption -> shared',
+  'app -> runtime',
   'app -> shared',
   'application -> adapters',
   'application -> adoption',
@@ -49,47 +50,24 @@ export const declaredCliAreaImports: readonly string[] = [
   'diagnostics -> shared',
   'diagnostics -> status',
   'installation -> shared',
-  'installation -> status',
   'installation -> temporary-resources',
   'portable-config -> adoption',
   'portable-config -> installation',
   'portable-config -> shared',
-  'presentation -> adoption',
-  'presentation -> setup',
   'presentation -> shared',
-  'presentation -> status',
   'runtime -> installation',
   'runtime -> shared',
   'setup -> installation',
   'setup -> presentation',
   'setup -> shared',
-  'shared -> adapters',
+  'setup -> status',
   'status -> installation',
-  'status -> setup',
   'status -> shared',
   'temporary-resources -> shared',
 ];
 
-/**
- * The CLI still has one historical strongly connected component. It is recorded separately from
- * the edge contract so adding an edge cannot silently merge an otherwise independent area into
- * that component (or introduce a cycle between independent areas).
- *
- * This is intentionally a cycle baseline, not an allow-list for arbitrary new edges: the edge
- * contract above still requires every direct dependency to be reviewed explicitly.
- */
-export const declaredCliAreaCycles: readonly (readonly string[])[] = [
-  [
-    'adapters',
-    'adoption',
-    'installation',
-    'presentation',
-    'setup',
-    'shared',
-    'status',
-    'temporary-resources',
-  ],
-];
+/** No cross-area import cycles are permitted. */
+export const declaredCliAreaCycles: readonly (readonly string[])[] = [];
 
 interface OpenedSources {
   relativePaths: string[];

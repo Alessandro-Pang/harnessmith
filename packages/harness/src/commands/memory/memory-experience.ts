@@ -1,7 +1,7 @@
-import { createHash } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { stringify } from 'yaml';
+import { toSlug } from '../../lib/contract/slug.js';
 import { parseFrontmatterDocument } from '../../lib/documentation/frontmatter.js';
 import { assertSafePath } from '../../lib/filesystem/safe-path.js';
 import { escapeCoreLabel, upsertCoreReference } from '../../lib/memory/memory-core.js';
@@ -9,6 +9,7 @@ import { documentPurposeMetadata } from '../../lib/memory/memory-document-purpos
 import {
   assertSourceReferenceBoundary,
   normalizedInputContent,
+  typedContentDigest,
 } from '../../lib/memory/memory-input.js';
 import {
   markdownFiles,
@@ -35,23 +36,6 @@ export interface ExperienceOptions {
   evidence: string[];
   sourceRefs: string[];
   json?: boolean;
-}
-
-function digest(kind: ExperienceOptions['kind'], conclusion: string): string {
-  return createHash('sha256')
-    .update(`${kind}\0${normalizedInputContent(conclusion)}`)
-    .digest('hex');
-}
-
-function slug(value: string): string {
-  return (
-    value
-      .normalize('NFKC')
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      .slice(0, 48) || 'experience'
-  );
 }
 
 function assertOptions(options: ExperienceOptions): void {
@@ -153,7 +137,7 @@ export function captureExperience(
   assertRuntimeCanMutate(runtime);
   assertOptions(options);
   const conclusion = normalizedInputContent(options.conclusion);
-  const experienceDigest = digest(options.kind, conclusion);
+  const experienceDigest = typedContentDigest(options.kind, conclusion);
   const date = calendarDate(runtime);
   const result = withProjectMemoryTransaction(runtime, project, ({ memoryRoot }) => {
     const matches = markdownFiles(memoryRoot).filter((path) => {
@@ -168,7 +152,7 @@ export function captureExperience(
       join(
         memoryRoot,
         'distilled',
-        `${date}-${slug(options.title)}-${experienceDigest.slice(0, 16)}.md`,
+        `${date}-${toSlug(options.title, { fallback: 'experience' })}-${experienceDigest.slice(0, 16)}.md`,
       );
     assertSafePath(memoryRoot, path);
     const existing = existsSync(path) ? readMemoryDocument(path) : '';

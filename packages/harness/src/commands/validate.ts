@@ -49,7 +49,7 @@ function validateStructure(runtime: Runtime, report: ValidationReport): void {
 }
 
 function validateVersion(runtime: Runtime, report: ValidationReport): void {
-  const path = join(runtime.installedHarness, 'manifest.json');
+  const path = join(runtime.harnessRoot, 'manifest.json');
   if (!existsSync(path)) {
     check(report, 'harness-manifest', 'failed', 'Missing harness manifest', path);
     return;
@@ -106,7 +106,7 @@ function validateProject(runtime: Runtime, input: string, report: ValidationRepo
   const ajv = new Ajv2020({ allErrors: true, strict: true });
   addFormats(ajv);
   const taskSchema = JSON.parse(
-    readFileSync(join(runtime.installedHarness, 'assets', 'schemas', 'task.schema.json'), 'utf8'),
+    readFileSync(join(runtime.harnessRoot, 'assets', 'schemas', 'task.schema.json'), 'utf8'),
   );
   const validateTask = ajv.compile(taskSchema);
   for (const path of listFiles(working).filter((file) => file.endsWith(`${sep}task.json`))) {

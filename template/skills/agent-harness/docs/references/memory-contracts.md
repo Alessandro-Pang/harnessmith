@@ -2,7 +2,7 @@
 title: Project Memory Contracts
 type: harness-reference
 status: active
-updated: 2026-09-04
+updated: 2026-11-21
 owner: project-agent-docs
 ---
 
@@ -78,16 +78,15 @@ finding 进入 `working` 并绑定 expiry。
 `memory evaluate-capture --payload-file <path> --json` 是只读统一资格入口。它先检查 negative eligibility，
 再检查价值、来源、typed writer、授权、root 状态和语义重复；不会初始化 Memory，也不代替具体写命令。
 
-payload 是 Agent 对单个候选的扁平自评，不是 `discover-candidates` 的输出；15 个 key 全部必填，缺一或多一都拒绝：
-
-- 枚举：`evaluation` complete|not-run；`candidateKind` input|experience|finding|handoff|profile；`retention`
-  workstream|durable；`typedWriter` capture-input|capture-experience|capture-finding|handoff|reconcile-profile|none；
-  `source` verified|missing|inferred；`sensitiveData` none|redacted|unredacted；`existingMatch` none|same|source-update。
-- 布尔：`taskReadOnly`、`highValue`、`rootInitialized`、`authorized`、`containsSecret`、`cheaplyRecoverable`、
-  `oneShotAuthorization`、`authoritativeDuplicate`。
+payload 是 Agent 对单个候选的扁平自评，不是 `discover-candidates` 的输出；全部 key 必填，缺一或多一都拒绝。
+自评语义覆盖：资格判断是否真实执行、候选类型与生命周期、对应 typed writer、任务只读性、价值、来源可核验性、
+授权、root 初始化状态，以及 secret、敏感数据脱敏、一次性授权、可廉价恢复、权威事实重复等负面事实与语义重复
+匹配。精确 key 名、枚举值和完整示例由 `memory evaluate-capture --help` 与源码
+`packages/harness/src/lib/memory/memory-capture-eligibility.ts`（判定语义）、
+`packages/harness/src/program/memory/memory-capture-eligibility.ts`（payload schema）拥有，本文件不穷举。
 
 `discover-candidates` 的候选只给出 `kind`、`retention`、`purpose` 等线索；Agent 需把 `kind` 映射为 `candidateKind`、
-选定 `typedWriter`，并自行补齐来源、价值、授权与 root 状态。完整示例见 `memory evaluate-capture --help`。
+选定 `typedWriter`，并自行补齐来源、价值、授权与 root 状态。
 
 资格结果使用 `unchanged`、`proposed`、`blocked`、`not-evaluated`；实际 writer 返回 `created`、`updated`、
 `unchanged`。每个结果带稳定 `reasonCode`：没有运行资格判断必须是 `not-evaluated`，缺少 writer 或未初始化的

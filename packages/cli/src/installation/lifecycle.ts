@@ -1,17 +1,15 @@
+import type { LifecycleCommand } from '../shared/lifecycle-types.js';
 import type { Adapter, InstallOptions } from '../shared/types.js';
 import {
   assertLifecyclePaths,
   assertUnwindable,
   currentRecord,
-  type LifecycleCommand,
   previousRecord,
 } from './lifecycle-plan.js';
 import { restoreOnce, uninstallOnce } from './lifecycle-restore.js';
 import { lifecycleTransaction, mutableLifecyclePaths } from './lifecycle-transaction.js';
 import { type ScopeLockContext, withScopeLocks } from './operation-lock.js';
 import { assertNonOverlappingAdapters } from './records.js';
-
-export { inspectStatusAll, statusAll } from '../status/status-inspection.js';
 
 /** Preflight every adapter before any mutation so a rejection never strands a partial unwind. */
 function preflight(adapters: Adapter[], force: boolean, command: LifecycleCommand) {

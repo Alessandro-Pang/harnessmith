@@ -2,9 +2,10 @@ import assert from 'node:assert/strict';
 import { PassThrough } from 'node:stream';
 import { test } from 'vitest';
 import { elementAt } from '../../../../packages/harness/src/__tests__/helpers/harness.js';
+import { normalizeAgents } from '../adapters/agent-selection.js';
 import { createProgram, type HarnessmithCommand } from '../app/program.js';
 import { executeCommand } from '../application/command-executor.js';
-import { collectAgents, normalizeAgents } from '../shared/agents.js';
+import { collectAgents } from '../shared/agents.js';
 import type { CliOptions } from '../shared/types.js';
 
 test('Commander supports repeatable and comma-separated agent values', async () => {

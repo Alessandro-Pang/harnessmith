@@ -2,7 +2,7 @@ import { lstatSync, readFileSync, realpathSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 export const temporaryResourceMarkerName = '.harnessmith-temp-resource.json';
-export const temporaryResourceLabel = /^[a-z0-9][a-z0-9._-]{0,63}$/;
+const temporaryResourceLabel = /^[a-z0-9][a-z0-9._-]{0,63}$/;
 
 export type TemporaryResourceLifecycle =
   | 'process'

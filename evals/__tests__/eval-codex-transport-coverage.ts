@@ -1,3 +1,5 @@
+// Direct-execution c8 coverage for the Codex transport; kept separate from Vitest assertions.
+
 import assert from 'node:assert/strict';
 import {
   buildCodexInvocation,

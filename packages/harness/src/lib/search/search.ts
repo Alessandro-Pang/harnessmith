@@ -1,9 +1,10 @@
 import type { Io } from '../../types.js';
+import { resolveIntegerBudget } from '../contract/integer-budget.js';
 import {
   classifyMemoryDocument,
   type MemoryFactClass,
   type MemoryFactClassification,
-} from '../memory/memory-fact-semantics.js';
+} from '../contract/memory-fact-semantics.js';
 import { assertNoHighConfidenceSecret } from '../security/secret-hygiene.js';
 import {
   discoverSearchableFiles,
@@ -13,19 +14,14 @@ import {
   searchDeadlineExceeded,
 } from './search-budget.js';
 import { readSearchCandidate } from './search-reader.js';
+import type { SearchSource, SearchTrust } from './search-source.js';
+
+export type { SearchSource } from './search-source.js';
 
 const defaultLimit = 50;
 const defaultMaxLineLength = 400;
 
-export type SearchTrust = 'guidance' | 'untrusted';
 export type SearchMode = 'auto' | 'scan' | 'fulltext';
-
-export interface SearchSource {
-  root: string;
-  label: string;
-  trust: SearchTrust;
-  excludeDirectories?: string[];
-}
 
 export interface SearchOptions extends Partial<SearchScanLimits> {
   limit?: number;
@@ -94,35 +90,8 @@ export function searchableFiles(
   return discovery.candidates.map(({ path }) => path).sort();
 }
 
-export function textSearch(
-  query: string,
-  roots: string[],
-  io: Io = console,
-  options: SearchOptions & {
-    excludeDirectories?: string[];
-    label?: string;
-    trust?: SearchTrust;
-  } = {},
-): number {
-  const excludeDirectories = options.excludeDirectories;
-  const report = searchText(
-    query,
-    roots.map((root) => ({
-      root,
-      label: options.label || 'context',
-      trust: options.trust || 'untrusted',
-      ...(excludeDirectories === undefined ? {} : { excludeDirectories }),
-    })),
-    options,
-  );
-  outputSearch(report, io);
-  return report.matches.length;
-}
-
 export function positiveInteger(value: number | undefined, fallback: number, name: string): number {
-  if (value === undefined) return fallback;
-  if (!Number.isInteger(value) || value < 1) throw new Error(`${name} must be a positive integer`);
-  return value;
+  return resolveIntegerBudget(value, fallback, { subject: name });
 }
 
 function sanitizeLine(line: string): string {

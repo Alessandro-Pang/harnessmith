@@ -110,7 +110,6 @@ export function createRuntime(env: NodeJS.ProcessEnv = process.env): Runtime {
     distributionRoot: packageRoot,
     harnessHome: userDataHome,
     hostAdapter: 'standalone',
-    installedHarness: harnessRoot,
     docsRoot: join(harnessRoot, 'docs'),
     stateRoot: resolve(env.HARNESS_STATE_HOME || join(userDataHome, 'state')),
     memoryHome: canonicalPath(env.HARNESS_MEMORY_HOME || join(userDataHome, 'memory')),
@@ -120,13 +119,4 @@ export function createRuntime(env: NodeJS.ProcessEnv = process.env): Runtime {
   });
 }
 
-export function calendarDate(runtime: Runtime, date = new Date()): string {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: runtime.env.TZ || undefined,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(date);
-  const values = Object.fromEntries(parts.map(({ type, value }) => [type, value]));
-  return `${values.year}-${values.month}-${values.day}`;
-}
+export { calendarDate } from './lib/filesystem/calendar-date.js';

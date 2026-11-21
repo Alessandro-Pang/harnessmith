@@ -55,7 +55,6 @@ export function assertMode(path: string, expected: number): void {
 export function harnessRuntime(root: string, overrides: Partial<Runtime> = {}): Runtime {
   const home = join(root, 'home');
   const harnessHome = join(root, 'host');
-  const installedHarness = join(harnessHome, 'skills', 'agent-harness');
   mkdirSync(home, { recursive: true });
   return Object.freeze({
     env: { HOME: home, TZ: 'UTC' },
@@ -64,8 +63,7 @@ export function harnessRuntime(root: string, overrides: Partial<Runtime> = {}): 
     distributionRoot: packageRoot,
     harnessHome,
     hostAdapter: 'test',
-    installedHarness,
-    docsRoot: join(installedHarness, 'docs'),
+    docsRoot: join(sourceHarnessRoot, 'docs'),
     stateRoot: join(harnessHome, 'state'),
     memoryHome: join(root, 'memory'),
     personalHome: join(root, 'personal'),

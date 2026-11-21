@@ -1,6 +1,6 @@
+import { assertTaskId } from '../contract/task-identity.js';
 import { isAtxHeading } from '../documentation/markdown-heading.js';
 import { assertNoHighConfidenceSecret } from '../security/secret-hygiene.js';
-import { assertTaskId } from '../task/task-model.js';
 import type { HandoffOptions } from './memory-handoff.js';
 import { assertHandoffSessionId } from './memory-handoff-identity.js';
 

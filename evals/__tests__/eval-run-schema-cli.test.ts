@@ -6,6 +6,10 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { onTestFinished, test } from 'vitest';
 import { evalAdapterEnum } from '../../packages/cli/src/adapters/adapter-registry.js';
+import {
+  evalAdapterEnumsMatch,
+  evalRunSchemaPath,
+} from '../../scripts/evaluation/contracts/eval-run-schema.js';
 
 const root = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
 const entry = join(root, 'scripts', 'evaluation', 'contracts', 'eval-run-schema.ts');
@@ -71,4 +75,12 @@ test('eval-run-schema generate fails when the schema file is missing', () => {
   const result = run(['generate', `--root=${tempRoot}`]);
   assert.equal(result.status, 1);
   assert.match(result.stderr, /evals\/run\.schema\.json is missing/);
+});
+
+test('eval-run-schema resolves the canonical schema path and compares adapter enums strictly', () => {
+  assert.ok(evalRunSchemaPath(root).replace(/\\/g, '/').endsWith('evals/run.schema.json'));
+  const expected = evalAdapterEnum();
+  assert.equal(evalAdapterEnumsMatch(expected, expected), true);
+  assert.equal(evalAdapterEnumsMatch(['codex'], expected), false);
+  assert.equal(evalAdapterEnumsMatch('bad', expected), false);
 });

@@ -1,5 +1,6 @@
 import { closeSync, constants, fstatSync, lstatSync, openSync, readSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { resolveIntegerBudget } from '../contract/integer-budget.js';
 
 interface BoundedFileOptions {
   maxBytes: number;
@@ -15,15 +16,17 @@ export function readBoundedRegularFile(
   bytes: number;
   identity: { dev: number; ino: number; size: number; mtimeMs: number; ctimeMs: number };
 } {
-  if (!Number.isInteger(maxBytes) || maxBytes < 1) {
-    throw new Error(`Invalid ${subject} byte limit: ${maxBytes}`);
-  }
+  const byteLimit = resolveIntegerBudget(maxBytes, undefined, {
+    subject: `${subject} byte limit`,
+    error: 'invalid',
+    validateFallback: true,
+  });
   const path = resolve(input);
   const entry = lstatSync(path);
   if (entry.isSymbolicLink() || !entry.isFile()) {
     throw new Error(`${subject} must be a regular non-symlink file: ${path}`);
   }
-  if (entry.size > maxBytes) throw new Error(`${subject} exceeds ${maxBytes} bytes: ${path}`);
+  if (entry.size > byteLimit) throw new Error(`${subject} exceeds ${byteLimit} bytes: ${path}`);
   const descriptor = openSync(path, constants.O_RDONLY | (constants.O_NOFOLLOW || 0));
   try {
     const before = fstatSync(descriptor);

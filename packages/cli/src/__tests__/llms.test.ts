@@ -3,6 +3,10 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'vitest';
+import {
+  parseRepositoryMap,
+  renderRepositoryMap,
+} from '../../../../packages/harness/src/lib/repository-map/repository-map-format.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
 const harnessDocs = join(root, 'template', 'skills', 'agent-harness', 'docs');
@@ -47,9 +51,14 @@ test('llms.txt describes the single global CLI, skills delegation, and ~/.harnes
     engines?: Record<string, string>;
   };
 
-  // Skill install/uninstall is fully delegated to the pinned production dependency.
-  assert.equal(manifest.dependencies?.skills, '1.7.6');
-  assert.match(content, /skills@1\.7\.6/);
+  // Skill install/uninstall is fully delegated to the pinned production dependency; the
+  // guidance must name the exact pinned version instead of hardcoding it in this test.
+  const skillsVersion = manifest.dependencies?.skills;
+  assert.ok(skillsVersion, 'package.json must pin the skills dependency');
+  assert.ok(
+    content.includes(`skills@${skillsVersion}`),
+    `llms.txt must name the pinned skills@${skillsVersion}`,
+  );
   assert.match(content, /skills add/);
   assert.match(content, /skills remove/);
   // The Runtime executes from the npm package root and is never copied into user directories.
@@ -81,7 +90,6 @@ test('public apps/docs/site distinguish source development from the published np
   const llms = readFileSync(join(root, 'llms.txt'), 'utf8');
   const readme = readFileSync(join(root, 'README.md'), 'utf8');
   const english = readFileSync(join(root, 'README.en.md'), 'utf8');
-  const security = readFileSync(join(root, 'SECURITY.md'), 'utf8');
 
   assert.match(llms, /Release channel: npm registry/);
   assert.match(llms, /node bin\/harnessmith\.mjs/);
@@ -90,21 +98,8 @@ test('public apps/docs/site distinguish source development from the published np
   assert.doesNotMatch(llms, /initializer dependencies are bundled/);
   assert.doesNotMatch(readme, /当前稳定性|latest.*dist-tag/);
   assert.doesNotMatch(english, /current public version|latest.*dist-tag/i);
-  assert.match(security, /The latest published release receives security fixes/);
-  assert.doesNotMatch(security, /`\d+\.x`/);
-});
-
-test('public prose uses the established Harnessmith brand while npm commands keep the package identifier', () => {
-  const canonicalBrand = 'Harnessmith';
-  const nonCanonicalBrand = ['Harness', 'smith'].join('');
-  for (const path of ['README.md', 'README.en.md', 'SECURITY.md', 'llms.txt']) {
-    const content = readFileSync(join(root, path), 'utf8');
-    assert.ok(content.includes(canonicalBrand), `${path} is missing ${canonicalBrand}`);
-    assert.ok(!content.includes(nonCanonicalBrand), `${path} contains ${nonCanonicalBrand}`);
-  }
-  const llms = readFileSync(join(root, 'llms.txt'), 'utf8');
-  assert.match(llms, /npm install -g harnessmith\b/);
-  assert.match(llms, /npx --yes harnessmith\b/);
+  // SECURITY.md support policy and version-duplication checks are owned by
+  // scripts/preflight/preflight-package.ts.
 });
 
 test('public guidance routes advanced runtime contracts instead of duplicating them', () => {
@@ -149,7 +144,6 @@ test('routed prompts keep Memory policy and command contracts with their designa
     'utf8',
   );
   const projectMemoryProtocol = [projectMemory, projectMemoryReference].join('\n');
-  const cliContracts = readFileSync(join(harnessDocs, 'references', 'cli-contracts.md'), 'utf8');
   const profile = readFileSync(join(harnessDocs, 'standards', 'user-profile-memory.md'), 'utf8');
   const profileReference = readFileSync(
     join(harnessDocs, 'references', 'profile-contracts.md'),
@@ -170,32 +164,17 @@ test('routed prompts keep Memory policy and command contracts with their designa
   );
   const longRunningProtocol = [longRunning, longRunningReference].join('\n');
 
-  assert.match(
-    agents,
-    /新宿主.*task\/thread.*首个工具调用.*只能.*profile\.md.*不得合并.*项目发现命令/s,
-  );
+  // Startup-order, payload-file, and single-owner uniqueness checks live in
+  // memory-autopilot-prompt.test.ts and memory-autopilot-lifecycle-prompt.test.ts.
   assert.match(agents, /入口层不复制其协议/);
-  assert.match(projectMemory, /long-running-tasks\.md/);
-  assert.match(projectMemory, /harness-cli-architecture\.md/);
-  assert.doesNotMatch(projectMemory, /--consume-payload-file|clearOpen/);
   assert.match(projectMemory, /typed lesson\/failure/);
   assert.match(projectMemory, /无需逐次询问用户/);
   assert.match(projectMemory, /blocked.*冲突.*校验失败/s);
   assert.match(readme, /Memory Autopilot/);
   assert.match(english, /Memory Autopilot/);
-  assert.match(
-    readFileSync(join(harnessDocs, 'references', 'cli-contracts.md'), 'utf8'),
-    /--consume-payload-file/,
-  );
-  assert.match(cliContracts, /领域命令成功.*才删除文件/s);
-  assert.match(architecture, /宿主事件 hook.*尚未提供/s);
-  assert.match(architecture, /prompt\/单元测试.*不能替代真实 Host Eval/s);
   assert.match(architecture, /记忆适配闭环.*不是模型权重学习/s);
   assert.match(architecture, /不得自动改写.*prompt.*skill.*规则.*源码/s);
-  assert.match(architecture, /host-evals.*eval:validate/s);
   assert.match(manifest, /memory-autopilot/);
-  assert.match(longRunning, /Task ledger.*唯一事实源/s);
-  assert.match(longRunningProtocol, /compaction.*multi-task.*phase.*manual/s);
   assert.match(longRunningProtocol, /close-handoff.*completed\|cancelled/s);
   assert.match(longRunning, /同一 session.*原位更新/s);
   assert.match(research, /只有用户授权项目写入且结论已被采纳/);
@@ -203,11 +182,8 @@ test('routed prompts keep Memory policy and command contracts with their designa
   assert.match(change, /用户新增验收.*必须.*去重.*typed writer/s);
   assert.match(change, /CLI reference/);
   assert.doesNotMatch(change, /--consume-payload-file|sourceRefs|clearOpen/);
-  assert.match(cliContracts, /--payload-file/);
   assert.match(profile, /跨任务.*explicit\/high/s);
   assert.match(profile, /本次任务.*项目.*input.*handoff/s);
-  assert.match(profileProtocol, /profile-autopilot pause/);
-  assert.match(profileProtocol, /profile-autopilot resume/);
   assert.match(profileProtocol, /paused.*机械拒绝.*reconcile/s);
   assert.match(projectMemoryProtocol, /host-evals.*eval:validate/s);
 });
@@ -233,9 +209,8 @@ test('release documentation describes the resumable immutable snapshot workflow'
   );
 });
 
-test('distributed prompt entrypoints stay readable and use executable Harness commands', () => {
+test('distributed prompt entrypoints use executable Harness commands', () => {
   const agentsPath = join(root, 'template', 'entry', 'AGENTS.md');
-  const docsIndexPath = join(harnessDocs, 'README.md');
   const pending = [join(root, 'template')];
   const markdown: string[] = [join(root, 'llms.txt')];
   while (pending.length > 0) {
@@ -248,15 +223,12 @@ test('distributed prompt entrypoints stay readable and use executable Harness co
     }
   }
 
+  // Line and token budgets have a single owner: prompt-distribution.test.ts.
   for (const path of [agentsPath, join(root, 'llms.txt')]) {
     const content = readFileSync(path, 'utf8');
     assert.doesNotMatch(content, /node \S*scripts\/harness\.mjs/, path);
     assert.match(content, /harnessmith bootstrap\b|`harnessmith`/, path);
   }
-  const agentLines = readFileSync(agentsPath, 'utf8').trimEnd().split('\n');
-  assert.ok(agentLines.length <= 140);
-  assert.ok(Math.max(...agentLines.map((line) => line.length)) <= 160);
-  assert.ok(readFileSync(docsIndexPath, 'utf8').trimEnd().split('\n').length <= 70);
   for (const path of markdown) {
     const content = readFileSync(path, 'utf8');
     assert.doesNotMatch(
@@ -270,27 +242,6 @@ test('distributed prompt entrypoints stay readable and use executable Harness co
       path,
     );
   }
-});
-
-test('npm package publishes the Harness runtime without its TypeScript sources', () => {
-  const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
-  for (const path of [
-    'template/entry/AGENTS.md',
-    'template/skills/agent-harness/SKILL.md',
-    'dist',
-    'template/skills/agent-harness/docs',
-    'template/skills/agent-harness/manifest.json',
-    'template/skills/agent-harness/assets/schemas',
-    'template/skills/agent-harness/assets/templates',
-  ])
-    assert.ok(manifest.files.includes(path), `npm package is missing: ${path}`);
-  // The shipped dist directory must contain the single bundled Runtime the global CLI executes.
-  assert.ok(
-    existsSync(join(root, 'dist', 'harness.mjs')),
-    'npm package is missing the dist/harness.mjs runtime bundle',
-  );
-  assert.ok(!manifest.files.includes('template'));
-  assert.ok(!manifest.files.some((path: string) => path.includes('agent-harness/src')));
 });
 
 test('distributed Harness template contains no host product identity', () => {
@@ -392,18 +343,12 @@ test('read-only requests allow only narrow local Autopilot and qualified reposit
   const profile = readFileSync(join(harnessDocs, 'standards', 'user-profile-memory.md'), 'utf8');
   const repositoryMap = readFileSync(join(harnessDocs, 'projects', 'repository-map.md'), 'utf8');
 
-  assert.match(operatingModel, /任务是否只读.*不决定.*Memory 资格/s);
-  assert.match(operatingModel, /用户任务对象.*Harness sidecar/s);
-  assert.match(operatingModel, /没有匹配.*typed.*proposal.*不得.*直接.*Markdown/s);
+  // The sidecar-eligibility core is owned by memory-autopilot-prompt.test.ts.
   assert.match(operatingModel, /明确用户画像信号.*自动 reconcile/s);
   assert.match(operatingModel, /跨仓分析.*personal `repository-map\.yaml`.*默认维护/s);
   assert.match(projectMemory, /未初始化的只读项目.*不自动创建/);
   assert.match(profile, /用户明确表达.*自动原位更新/s);
   assert.match(profile, /无需再说.*记住/s);
-  assert.match(
-    repositoryMap,
-    /跨仓分析本身授权更新 personal\s+`repository-map\.md`.*`repository-map\.yaml`/,
-  );
   assert.match(repositoryMap, /不需要用户二次确认/);
   assert.match(repositoryMap, /用户明确禁止.*不得写入/);
 });
@@ -416,8 +361,11 @@ test('cross-repository research closes the relationship-map writeback loop', () 
   );
   const protocol = [playbook, reference].join('\n');
   const projects = join(harnessAssets, 'templates', 'personal', 'projects');
-  const personalMap = readFileSync(join(projects, 'repository-map.md'), 'utf8');
   const canonicalMap = readFileSync(join(projects, 'repository-map.yaml'), 'utf8');
+  // No static markdown template ships anymore; initPersonal generates the view
+  // from the YAML template through the real renderer.
+  assert.equal(existsSync(join(projects, 'repository-map.md')), false);
+  const personalMap = renderRepositoryMap(parseRepositoryMap(canonicalMap));
 
   assert.match(playbook, /自动发现、校验与维护/);
   assert.match(playbook, /更新 personal\s+`repository-map\.md`.*`repository-map\.yaml`/);

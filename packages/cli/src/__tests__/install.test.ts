@@ -18,7 +18,7 @@ import { onTestFinished, test } from 'vitest';
 import { elementAt } from '../../../../packages/harness/src/__tests__/helpers/harness.js';
 
 const packageRoot = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
-const cli = join(packageRoot, 'bin', 'harnessmith.mjs');
+const cli = join(packageRoot, '..', '..', 'bin', 'harnessmith.mjs');
 
 function execute(root: string, args: string[]): string {
   const result = spawnSync(process.execPath, [cli, ...args], {
@@ -174,7 +174,7 @@ test('refuses unmanaged files without force and restores them on uninstall', () 
   writeFileSync(join(codex, 'AGENTS.md'), 'personal rules');
 
   const refused = executeResult(root, ['--agent', 'codex']);
-  assert.equal(refused.status, 1);
+  assert.equal(refused.status, 3);
   assert.match(refused.stderr, /require --force/);
   assert.equal(readFileSync(join(codex, 'AGENTS.md'), 'utf8'), 'personal rules');
 
@@ -198,7 +198,7 @@ test('requires force when a managed file was modified and restore returns the pr
   writeFileSync(rules, `${first}\nuser edit\n`);
 
   const refused = executeResult(root, ['--agent', 'codex']);
-  assert.equal(refused.status, 1);
+  assert.equal(refused.status, 3);
   assert.match(refused.stderr, /require --force/);
   execute(root, ['--agent', 'codex', '--force']);
   execute(root, ['restore', '--agent', 'codex']);
@@ -233,7 +233,7 @@ test('rejects a tampered installation record before recovery touches paths', () 
   writeFileSync(recordPath, `${JSON.stringify(record, null, 2)}\n`);
 
   const result = executeResult(root, ['uninstall', '--agent', 'codex', '--force']);
-  assert.equal(result.status, 1);
+  assert.equal(result.status, 3);
   assert.match(result.stderr, /do not match the contract/);
   assert.equal(readFileSync(victim, 'utf8'), 'keep me');
 });
@@ -389,7 +389,7 @@ test('multi-Agent uninstall preflights every target before changing any target',
   writeFileSync(claudeRules, `${readFileSync(claudeRules, 'utf8')}\nuser edit\n`);
 
   const result = executeResult(root, ['uninstall', '--agent', 'codex,claude']);
-  assert.equal(result.status, 1);
+  assert.equal(result.status, 3);
   assert.match(result.stderr, /modified/);
   assert.ok(existsSync(codexRules));
   assert.ok(existsSync(join(root, 'codex-home', '.harnessmith', 'install.json')));
@@ -404,7 +404,7 @@ test('overlapping Agent homes are rejected before creating files', () => {
     CODEX_HOME: shared,
     CLAUDE_CONFIG_DIR: shared,
   });
-  assert.equal(result.status, 1);
+  assert.equal(result.status, 3);
   assert.match(result.stderr, /destinations overlap/);
   assert.equal(existsSync(shared), false);
 });
@@ -430,7 +430,7 @@ test('rejects a symlinked Cursor rules directory before writing outside the proj
     '--no-init-global',
   ]);
 
-  assert.equal(result.status, 1);
+  assert.equal(result.status, 3);
   assert.match(result.stderr, /symlink|symbolic link/i);
   assert.equal(existsSync(join(outside, 'agent-harness.mdc')), false);
   assert.equal(existsSync(join(cursor, 'skills', 'agent-harness')), false);

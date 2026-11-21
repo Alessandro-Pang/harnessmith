@@ -1,7 +1,7 @@
 import { existsSync, lstatSync, readFileSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { calendarDate } from '../../runtime.js';
 import type { Io, Runtime } from '../../types.js';
+import { calendarDate } from '../filesystem/calendar-date.js';
 import { withExclusiveDirectoryLock } from '../filesystem/exclusive-lock.js';
 import { atomicWrite } from '../filesystem/files.js';
 import { assertSafePath } from '../filesystem/safe-path.js';
@@ -134,7 +134,10 @@ export function applyCoreRepairTransaction(
           if (memoryCoreBudget(readMemoryDocument(path)).status !== 'ok') {
             throw new Error('Core repair verifier failed: budget remains over limit');
           }
-          if (memoryMaintenanceReport(root, calendarDate(runtime)).unindexed.length > 0) {
+          if (
+            memoryMaintenanceReport(root, calendarDate(runtime), options.projectRelations).unindexed
+              .length > 0
+          ) {
             throw new Error('Core repair verifier failed: active memory remains unindexed');
           }
           cleanupRepairJournal(marker);

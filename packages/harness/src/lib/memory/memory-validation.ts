@@ -1,7 +1,7 @@
 import type { Io } from '../../types.js';
+import { canonicalTaskLedgerId } from '../contract/task-ledger.js';
 import { type FrontmatterResult, parseFrontmatterDocument } from '../documentation/frontmatter.js';
 import { containsHighConfidenceSecret, secretTextFiles } from '../security/secret-hygiene.js';
-import { canonicalTaskLedgerId } from '../task/task-ledger-memory.js';
 import type { MemoryRootKind } from './memory-autopilot-document-rules.js';
 import { reportMemoryDiagnostic } from './memory-diagnostic.js';
 import { validateMemoryDocumentRules } from './memory-document-rules.js';

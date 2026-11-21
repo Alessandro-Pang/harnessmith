@@ -21,6 +21,7 @@ import {
 } from '../commands/memory/memory-repair.js';
 import { canonicalPath } from '../lib/filesystem/safe-path.js';
 import { memoryCoreBudget } from '../lib/memory/memory-core-budget.js';
+import { memoryMaintenanceReport } from '../lib/memory/memory-maintenance.js';
 import { compactCoreContent, digest } from '../lib/memory/memory-repair-contract.js';
 import {
   cleanupRepairJournal,
@@ -28,6 +29,11 @@ import {
   repairJournalPaths,
 } from '../lib/memory/memory-repair-journal.js';
 import { searchIndexPath, searchWithIndex } from '../lib/search/search-index.js';
+import {
+  type WorkflowRelationReport,
+  workflowRelationsForProject,
+} from '../lib/workflow/workflow-relations.js';
+import { calendarDate } from '../runtime.js';
 import { capturedIo, elementAt, harnessRuntime } from './helpers/harness.js';
 
 function fixture(prefix: string) {
@@ -206,10 +212,66 @@ test('core repair compacts only canonical index labels and rolls back injected v
   );
   assert.equal(readFileSync(core, 'utf8'), oversized);
 
-  const result = applyMemoryRepair(runtime, project, proposal.proposalId, capturedIo());
+  const observed: WorkflowRelationReport[] = [];
+  const result = applyMemoryRepair(runtime, project, proposal.proposalId, capturedIo(), {
+    projectRelations: (projectRoot, root) => {
+      const relations = workflowRelationsForProject(projectRoot, root);
+      observed.push(relations);
+      return relations;
+    },
+  });
   assert.equal(result.verification.status, 'passed');
   assert.equal(memoryCoreBudget(readFileSync(core, 'utf8')).status, 'ok');
   assert.match(readFileSync(core, 'utf8'), /- memory:working\/repair-0/);
+  assert.equal(observed.length, 1);
+  assert.deepEqual(
+    elementAt(observed, 0),
+    workflowRelationsForProject(canonicalPath(project), canonicalPath(memoryRoot)),
+  );
+});
+
+test('repair initialization injects the project transaction and relations reader without changing the applied result', () => {
+  const { project, runtime, memoryRoot } = fixture('harness-memory-repair-injection-');
+  rmSync(join(memoryRoot, 'README.md'));
+  const proposal = diagnoseMemoryRepair(runtime, project, capturedIo()).proposals.find(
+    ({ action }) => action === 'initialize-missing-memory',
+  );
+  assert.ok(proposal);
+  const observed: WorkflowRelationReport[] = [];
+
+  const result = applyMemoryRepair(runtime, project, proposal.proposalId, capturedIo(), {
+    projectRelations: (projectRoot, root) => {
+      const relations = workflowRelationsForProject(projectRoot, root);
+      observed.push(relations);
+      return relations;
+    },
+  });
+
+  assert.deepEqual(result, {
+    version: 1,
+    mode: 'applied',
+    proposalId: proposal.proposalId,
+    action: 'initialize-missing-memory',
+    affectedPaths: proposal.affectedPaths,
+    verification: { status: 'passed', command: proposal.verifier.command, exitCode: 0 },
+    recovery: proposal.backup,
+  });
+  assert.equal(observed.length, 1);
+  assert.deepEqual(
+    elementAt(observed, 0),
+    workflowRelationsForProject(canonicalPath(project), canonicalPath(memoryRoot)),
+  );
+  assert.ok(elementAt(observed, 0).summary.memory > 0);
+  const maintenance = memoryMaintenanceReport(
+    canonicalPath(memoryRoot),
+    calendarDate(runtime),
+    workflowRelationsForProject,
+  );
+  assert.deepEqual(maintenance.unindexed, []);
+  assert.deepEqual(
+    maintenance.relations,
+    workflowRelationsForProject(canonicalPath(project), canonicalPath(memoryRoot)),
+  );
 });
 
 test('repair clears only an exact owned orphan marker and retains unverified markers', () => {

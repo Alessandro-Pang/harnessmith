@@ -4,7 +4,7 @@ description: Ownership and safe-cleanup boundaries for temporary directories, pa
 owner: maintainers
 audience: users-and-maintainers
 status: active
-updated: 2026-09-05
+updated: 2026-11-21
 lang: en
 ---
 
@@ -18,7 +18,7 @@ when the owner, purpose, exact identity, and lifecycle can all be verified.
 
 | Lifecycle | Cleanup timing | Example |
 | --- | --- | --- |
-| `process` | When the current process ends | Staging directories for install transactions, syntax-check files |
+| `process` | When the current process ends | Staging directories for install transactions |
 | `operation` | After the current operation succeeds or fails normally | Temporary data for export and diagnostics |
 | `workstream` | After the workstream explicitly ends | Release workspace, Host Eval workspace |
 | `retained-for-recovery` | After recovery evidence verification completes | Rollback failure scene snapshots |

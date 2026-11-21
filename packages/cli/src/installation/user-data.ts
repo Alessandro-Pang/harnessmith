@@ -7,7 +7,7 @@ import { restoreSnapshots, snapshotFiles } from './records.js';
 import { withUserDataCoordinationLocks } from './user-data-lock.js';
 
 /** Init must finish before the 15-minute operation lock is treated as stale. */
-export const userDataInitTimeoutMs = 60_000;
+const userDataInitTimeoutMs = 60_000;
 
 /**
  * Initialize personal rules and, unless disabled, global memory through the global CLI.

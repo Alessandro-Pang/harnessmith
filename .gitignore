@@ -15,8 +15,5 @@ coverage/
 /.release/
 
 # VitePress local output
-/docs/.vitepress/cache/
-/docs/.vitepress/dist/
-
 /apps/docs/site/.vitepress/cache/
 /apps/docs/site/.vitepress/dist/

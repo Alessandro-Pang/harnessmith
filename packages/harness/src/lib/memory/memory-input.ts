@@ -21,6 +21,17 @@ export function inputContentDigest(value: string, source: InputSource, verbatim:
 }
 
 /**
+ * Shared identity digest for typed memory documents (findings, experiences):
+ * the kind discriminator plus the normalized conclusion, separated by NUL so
+ * different kinds never collide on identical conclusions.
+ */
+export function typedContentDigest(kind: string, conclusion: string): string {
+  return createHash('sha256')
+    .update(`${kind}\0${normalizedInputContent(conclusion)}`)
+    .digest('hex');
+}
+
+/**
  * Source references are pointers, not arbitrary filesystem locations. Keep
  * them portable and bounded so a finding/experience can be traced without
  * allowing an absolute path or a traversal target to escape the project.

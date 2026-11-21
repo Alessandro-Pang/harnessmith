@@ -1,3 +1,4 @@
+/** @public Stable code emitted by the CLI error contract. */
 export type HarnessmithErrorCode =
   | 'CLI_USAGE'
   | 'SAFETY_CONFLICT'
@@ -29,6 +30,7 @@ export class HarnessmithError extends Error {
   }
 }
 
+/** @public Machine-readable CLI error report used by launchers and JSON consumers. */
 export interface MachineErrorReport {
   version: 1;
   ok: false;

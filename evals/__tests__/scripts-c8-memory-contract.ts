@@ -1,3 +1,5 @@
+// Direct-execution c8 coverage for the memory evaluation contract.
+
 import assert from 'node:assert/strict';
 import { verifyMemoryContract } from '../../scripts/evaluation/memory/memory-contract-verifier.js';
 

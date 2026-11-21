@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler"
+  },
+  "include": ["../apps/docs/site/.vitepress/**/*.ts"],
+  "exclude": ["../node_modules"]
+}

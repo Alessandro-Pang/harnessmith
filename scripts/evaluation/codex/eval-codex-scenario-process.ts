@@ -1,9 +1,8 @@
 import { createHash } from 'node:crypto';
 import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { execa } from 'execa';
 import type { HostEvalAttempt, HostEvalAttemptResult } from '../planning/eval-runner.js';
-import { repositoryRoot } from '../records/eval-fingerprint.js';
+import { executeEvaluatorProcess } from './evaluator-process.js';
 
 type ScenarioExecutorOptions = {
   packageArtifact: string;
@@ -23,30 +22,18 @@ export function createScenarioExecutor(
     options.scenarioEntry ?? fileURLToPath(new URL('./eval-codex-scenario.mjs', import.meta.url));
   return async (attempt) => {
     try {
-      const result = await execa(
-        process.execPath,
-        ['--import', 'tsx', scenarioEntry, attempt.scenarioId],
-        {
-          cwd: repositoryRoot,
-          env: {
-            ...process.env,
-            HARNESS_RELEASE_ARTIFACT: options.packageArtifact,
-            HARNESS_EVAL_OUTPUT_DIR: options.outputDir,
-            HARNESS_EVAL_MODEL: options.model,
-            HARNESS_EVAL_ATTEMPT: String(attempt.attempt),
-            HARNESS_EVAL_MAX_ATTEMPTS: String(attempt.maxAttempts),
-            HARNESS_EVAL_SCENARIO_BUDGET_MS: String(options.scenarioBudgetMs),
-            HARNESS_EVAL_MATRIX_BUDGET_MS: String(options.matrixBudgetMs),
-            HARNESS_EVAL_MAX_OUTPUT_BYTES: String(options.maxOutputBytes),
-            HARNESS_EVAL_HOST_VERSION: options.hostVersion,
-          },
-          cancelSignal: attempt.signal,
-          forceKillAfterDelay: 1_000,
-          killDescendants: true,
-          maxBuffer: options.maxOutputBytes,
-          reject: false,
-        },
-      );
+      const result = await executeEvaluatorProcess({
+        entry: scenarioEntry,
+        args: [attempt.scenarioId],
+        outputDir: options.outputDir,
+        attempt,
+        packageArtifact: options.packageArtifact,
+        model: options.model,
+        hostVersion: options.hostVersion,
+        scenarioBudgetMs: options.scenarioBudgetMs,
+        matrixBudgetMs: options.matrixBudgetMs,
+        maxOutputBytes: options.maxOutputBytes,
+      });
       if (result.isCanceled) {
         return { outcome: 'infra-inconclusive', termination: 'transport-failure' };
       }

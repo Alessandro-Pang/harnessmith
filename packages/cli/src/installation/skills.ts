@@ -31,7 +31,7 @@ const agentDetectionVariables = [
   'REPL_ID',
 ] as const;
 
-export function skillsAgentName(name: AgentName): string {
+function skillsAgentName(name: AgentName): string {
   switch (name) {
     case 'claude':
       return 'claude-code';

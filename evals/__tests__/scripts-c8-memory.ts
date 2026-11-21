@@ -1,3 +1,5 @@
+// Direct-execution c8 coverage for memory state, reporting and fixture composition.
+
 import assert from 'node:assert/strict';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';

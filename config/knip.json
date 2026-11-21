@@ -1,7 +1,6 @@
 {
   "$schema": "../node_modules/knip/schema.json",
   "ignoreDependencies": [
-    "@braintree/sanitize-url",
     "@secretlint/secretlint-rule-preset-recommend",
     "cytoscape",
     "cytoscape-cose-bilkent",
@@ -10,20 +9,20 @@
     "mermaid",
     "skills",
     "@commitlint/config-conventional",
-    "tar",
     "vitepress-plugin-mermaid"
   ],
   "workspaces": {
     ".": {
       "entry": [
         "bin/harnessmith.mjs",
+        ".husky/install.mjs",
         "scripts/evaluation/records/eval-gate.ts",
         "scripts/evaluation/contracts/eval-run-schema.ts",
         "scripts/evaluation/codex/eval-reasoning-process.ts",
         "scripts/benchmarks/prompt-route/prompt-route-benchmark.ts",
         "scripts/preflight/preflight.ts",
         "scripts/release/release-publish.ts",
-        "evals/__tests__/eval-host-capability-matrix-coverage.ts",
+        "evals/__tests__/scripts-c8-eval.ts",
         "scripts/evaluation/codex/eval-codex-memory-scenario.mjs",
         "packages/harness/src/cli.ts",
         "config/*.config.{ts,mjs}",

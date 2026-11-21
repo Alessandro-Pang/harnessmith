@@ -207,7 +207,7 @@ claims:
     owner: product journey contract and local usability regression
     claim: Define the activation journey from positioning to real-Host verification with shared installed, healthy, host-configured, and host-verified states, while generating a versioned local-only acceptance record that does not infer users from downloads, traffic, or tests.
     implementation:
-      - packages/cli/src/setup/first-value.ts
+      - packages/cli/src/shared/first-value.ts
       - packages/cli/src/setup/setup.ts
       - packages/cli/src/status/status-explanation.ts
       - scripts/evaluation/planning/first-value-loop.ts
@@ -278,7 +278,7 @@ claims:
       - scripts/evaluation/codex/eval-codex-scenario.mjs
       - scripts/evaluation/codex/eval-suite-evidence.ts
     verification:
-      - evals/__tests__/eval-codex-suite.test.ts
+      - evals/__tests__/eval-codex-transport.test.ts
       - evals/__tests__/eval-suite-scheduler.test.ts
 
   - id: release-host-eval-evidence-state
@@ -305,7 +305,6 @@ claims:
       - scripts/evaluation/contracts/eval-coverage.ts
       - scripts/evaluation/contracts/eval-suite-gate.ts
     verification:
-      - evals/__tests__/eval-codex-suite.test.ts
       - evals/__tests__/eval-coverage-contract.test.ts
 
   - id: post-publish-registry-verification

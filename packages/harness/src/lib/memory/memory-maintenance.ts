@@ -1,12 +1,11 @@
 import { existsSync } from 'node:fs';
 import { basename, dirname, isAbsolute, relative, resolve } from 'node:path';
-import { parseFrontmatterDocument } from '../documentation/frontmatter.js';
-import { toPosixPath } from '../filesystem/posix-path.js';
 import {
   buildWorkflowRelationReport,
   type WorkflowRelationReport,
-  workflowRelationsForProject,
-} from '../workflow/workflow-relations.js';
+} from '../contract/workflow-relations.js';
+import { parseFrontmatterDocument } from '../documentation/frontmatter.js';
+import { toPosixPath } from '../filesystem/posix-path.js';
 import { type MemoryCoreBudgetReport, memoryCoreBudget } from './memory-core-budget.js';
 import { purposeMaintenanceDiagnostics } from './memory-document-purpose.js';
 import {
@@ -24,6 +23,18 @@ import {
   isOpaqueMemoryContent,
   metadataReferences,
 } from './memory-validation.js';
+
+/**
+ * Reads the project workflow relations for a project memory root. Injected by
+ * callers (command layer, bootstrap, health, repair) so the maintenance report
+ * keeps its full relations content without memory importing workflow I/O.
+ */
+export type ProjectRelationsReader = (
+  projectRoot: string,
+  memoryRoot: string,
+) => WorkflowRelationReport;
+
+const emptyProjectRelations: ProjectRelationsReader = () => buildWorkflowRelationReport([], []);
 
 export interface MemoryMaintenanceReport {
   version: 2;
@@ -148,7 +159,11 @@ function missingSourceRefs(root: string, sourceRefs: string[]): string[] {
   });
 }
 
-export function memoryMaintenanceReport(root: string, today: string): MemoryMaintenanceReport {
+export function memoryMaintenanceReport(
+  root: string,
+  today: string,
+  projectRelations: ProjectRelationsReader = emptyProjectRelations,
+): MemoryMaintenanceReport {
   const files = markdownFiles(root, { archive: false });
   const documents = readDocuments(root, files);
   const lifecycle = lifecycleLists(documents, today);
@@ -207,7 +222,7 @@ export function memoryMaintenanceReport(root: string, today: string): MemoryMain
     },
     relations:
       basename(root) === '.agent-docs'
-        ? workflowRelationsForProject(dirname(root), root)
+        ? projectRelations(dirname(root), root)
         : buildWorkflowRelationReport([], []),
     ...legacy,
   };

@@ -155,6 +155,10 @@ test('runner rejects concurrency and budget values outside the contract', async 
     /concurrency/,
   );
   await assert.rejects(
+    runHostEvalScenarios({ scenarioIds: [], scenarioBudgetMs: 0, execute: async () => passed }),
+    /scenario budget/,
+  );
+  await assert.rejects(
     runHostEvalScenarios({
       scenarioIds: [],
       scenarioBudgetMs: 2,
@@ -165,6 +169,10 @@ test('runner rejects concurrency and budget values outside the contract', async 
   );
   await assert.rejects(
     runHostEvalScenarios({ scenarioIds: ['duplicate', 'duplicate'], execute: async () => passed }),
+    /non-empty and unique/,
+  );
+  await assert.rejects(
+    runHostEvalScenarios({ scenarioIds: ['', ''], execute: async () => passed }),
     /non-empty and unique/,
   );
 });

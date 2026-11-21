@@ -182,9 +182,10 @@ When a host/scenario cell contains multiple valid records, only the record with 
 eligible for coverage. A tie at the latest timestamp is ambiguous and fails closed; an older passing record
 therefore cannot mask a newer failed or inconclusive evaluation.
 
-The rule fingerprint covers the files that are actually packaged: outer `bin/` and compiled `dist/`, embedded
-Harness `bin/` and compiled `dist/`, schemas, `template/entry/AGENTS.md`, routed Harness apps/docs/site, and generated
-personal/project rule templates. The fingerprint output lists package-relative paths read from the candidate;
+The rule fingerprint covers the files that are actually packaged: the outer `bin/` and compiled root `dist/`
+(including the bundled Runtime `dist/harness.mjs`), `template/entry/AGENTS.md`, the `agent-harness` skill's
+`SKILL.md` and `manifest.json`, routed Harness docs under `template/skills/agent-harness/docs`, and the skill's
+packaged schemas and generated personal/project rule templates under `assets/`. The fingerprint output lists package-relative paths read from the candidate;
 changing packaged executable behavior invalidates prior host records even if a maintainer forgets to bump a
 version string.
 

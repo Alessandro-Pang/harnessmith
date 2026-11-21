@@ -1,12 +1,6 @@
 import type { Readable, Writable } from 'node:stream';
-import type { AgentName } from '../adapters/adapter-registry.js';
+import type { AgentName } from './scope-types.js';
 
-export type {
-  LifecycleChange,
-  LifecycleChangeAction,
-  LifecycleCommand,
-  LifecyclePlan,
-} from './lifecycle-types.js';
 export type {
   Adapter,
   AdapterCapabilities,
@@ -71,7 +65,7 @@ export interface InstallPlan {
   outputs: PlannedOutput[];
 }
 
-export interface Backup {
+interface Backup {
   original: string;
   backup: string;
 }
@@ -155,6 +149,7 @@ export interface RunContext {
   error?: Writable;
 }
 
+/** @public Preserve the CLI error contract through the legacy shared import path. */
 export {
   errorMessage,
   HarnessmithError,

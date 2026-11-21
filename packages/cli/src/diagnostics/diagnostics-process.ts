@@ -1,8 +1,7 @@
-import { spawnSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
 import { join } from 'node:path';
+import { execaSync } from 'execa';
 import { templateRoot } from '../installation/install-template.js';
-import type { Adapter } from '../shared/types.js';
+import { sha256Prefixed } from '../shared/files.js';
 
 export const diagnosticsMaxCommandBytes = 256 * 1024;
 export const diagnosticsCommandTimeoutMs = 10_000;
@@ -16,36 +15,41 @@ export interface DiagnosticCommandResult {
 }
 
 function digest(value: string): string {
-  return `sha256:${createHash('sha256').update(value).digest('hex')}`;
+  return sha256Prefixed(value);
 }
 
 export function runDiagnosticJson(
-  _adapter: Adapter,
   args: string[],
   env: NodeJS.ProcessEnv,
   project: string,
 ): DiagnosticCommandResult {
-  const result = spawnSync(
+  const result = execaSync(
     process.execPath,
     [join(templateRoot, 'bin', 'harnessmith.mjs'), ...args],
     {
       cwd: project,
       env,
       encoding: 'utf8',
+      extendEnv: false,
       timeout: diagnosticsCommandTimeoutMs,
       maxBuffer: diagnosticsMaxCommandBytes,
+      reject: false,
+      stdin: 'ignore',
+      stripFinalNewline: false,
       windowsHide: true,
     },
   );
   const output = result.stdout || '';
-  const errorCode = (result.error as NodeJS.ErrnoException | undefined)?.code;
-  const truncated = errorCode === 'ENOBUFS';
-  if (result.error || !output.trim()) {
+  const truncated = result.isMaxBuffer;
+  // A normal non-zero exit still carries usable output; only spawn/system failures
+  // (timeout, buffer overflow, no exit code) or empty output are inconclusive.
+  const spawnFailed = result.timedOut || truncated || result.exitCode === undefined;
+  if (spawnFailed || !output.trim()) {
     return {
       status: 'inconclusive',
       reasonCode: truncated
         ? 'COLLECTION_BUDGET_EXCEEDED'
-        : errorCode === 'ETIMEDOUT'
+        : result.timedOut
           ? 'COLLECTION_TIMEOUT'
           : 'COMMAND_OUTPUT_UNAVAILABLE',
       digest: output ? digest(output) : null,
@@ -56,7 +60,7 @@ export function runDiagnosticJson(
   try {
     return {
       status: 'collected',
-      reasonCode: result.status === 0 ? 'COMMAND_COMPLETED' : 'COMMAND_REPORTED_FAILURE',
+      reasonCode: result.exitCode === 0 ? 'COMMAND_COMPLETED' : 'COMMAND_REPORTED_FAILURE',
       digest: digest(output),
       value: JSON.parse(output),
       truncated,

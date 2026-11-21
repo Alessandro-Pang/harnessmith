@@ -4,6 +4,7 @@ import { memoryMaintenanceReport } from '../../lib/memory/memory-maintenance.js'
 import { resolveMemoryRoot } from '../../lib/memory/memory-path.js';
 import { validateMemoryRoot } from '../../lib/memory/memory-validation.js';
 import { assertNoHighConfidenceSecret } from '../../lib/security/secret-hygiene.js';
+import { workflowRelationsForProject } from '../../lib/workflow/workflow-relations.js';
 import { calendarDate } from '../../runtime.js';
 import type { Io, Runtime } from '../../types.js';
 
@@ -94,7 +95,11 @@ export function memoryMaintenance(
   try {
     const root = resolveMemoryRoot(runtime, input);
     validateRoot(root, root === runtime.memoryHome ? 'global' : 'project', io);
-    const report = memoryMaintenanceReport(root, calendarDate(runtime));
+    const report = memoryMaintenanceReport(
+      root,
+      calendarDate(runtime),
+      workflowRelationsForProject,
+    );
     if (json) io.log(JSON.stringify(report, null, 2));
     else renderReport(report, io);
     return report;

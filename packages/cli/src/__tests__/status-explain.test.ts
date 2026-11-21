@@ -8,11 +8,11 @@ import { onTestFinished, test } from 'vitest';
 import { elementAt } from '../../../../packages/harness/src/__tests__/helpers/harness.js';
 import { createAdapter } from '../adapters/adapters.js';
 import { installAll } from '../installation/install.js';
-import { inspectStatusAll } from '../installation/lifecycle.js';
 import { explainStatus } from '../status/status-explanation.js';
+import { inspectStatusAll } from '../status/status-inspection.js';
 
 const packageRoot = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
-const cli = join(packageRoot, 'bin', 'harnessmith.mjs');
+const cli = join(packageRoot, '..', '..', 'bin', 'harnessmith.mjs');
 
 function fixture(prefix: string) {
   const root = mkdtempSync(join(tmpdir(), prefix));

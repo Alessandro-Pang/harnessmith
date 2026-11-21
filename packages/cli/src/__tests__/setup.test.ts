@@ -8,7 +8,7 @@ import { onTestFinished, test } from 'vitest';
 import { setupHealthTimeoutMs } from '../setup/setup.js';
 
 const packageRoot = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
-const cli = join(packageRoot, 'bin', 'harnessmith.mjs');
+const cli = join(packageRoot, '..', '..', 'bin', 'harnessmith.mjs');
 
 function fixture(prefix: string) {
   const root = mkdtempSync(join(tmpdir(), prefix));

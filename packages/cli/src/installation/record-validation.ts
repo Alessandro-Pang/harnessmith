@@ -12,7 +12,7 @@ function sameSet(actual: string[], expected: string[]): boolean {
 }
 
 /** Backups live beside their output as `<name>.backup-<stamp>` and never escape the root. */
-export function validBackupPath(
+function validBackupPath(
   scope: Adapter,
   output: Pick<ManagedOutput, 'root'>,
   path: string,

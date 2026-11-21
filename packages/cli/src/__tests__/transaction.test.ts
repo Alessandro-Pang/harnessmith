@@ -15,12 +15,9 @@ import { join } from 'node:path';
 import lockfile from 'proper-lockfile';
 import { onTestFinished, test } from 'vitest';
 import { hostAdapter } from '../adapters/host-adapter.js';
-import {
-  commitInstall,
-  installAll,
-  prepareInstall,
-  rollbackInstall,
-} from '../installation/install.js';
+import { installAll } from '../installation/install.js';
+import { commitInstall, rollbackInstall } from '../installation/install-commit.js';
+import { prepareInstall } from '../installation/install-stage.js';
 import type { Adapter, UserDataPaths } from '../shared/types.js';
 
 function fixture(prefix: string): {

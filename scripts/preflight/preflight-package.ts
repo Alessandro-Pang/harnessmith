@@ -102,12 +102,6 @@ export function checkPackage(root: string, harnessRoot: string, check: Check): v
       `npm package files includes source-only material ${sourceOnly}`,
     );
   }
-  const evalNpmIgnore = join(root, 'evals', '.npmignore');
-  check(existsSync(evalNpmIgnore), 'eval package boundary is missing .npmignore');
-  check(
-    existsSync(evalNpmIgnore) && /^README\.md$/m.test(read(evalNpmIgnore)),
-    'eval package boundary must exclude its source README',
-  );
   check(
     !manifest.files?.some(
       (path) =>

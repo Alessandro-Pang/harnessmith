@@ -1,12 +1,12 @@
 import { resolve } from 'node:path';
 import type { Io } from '../../types.js';
+import { validateTaskLedgerMemory } from '../contract/task-ledger.js';
 import { isValidCalendarDate } from '../filesystem/calendar-date.js';
 import {
   isCanonicalUserProfileRecord,
   maximumUserProfileRecords,
   parseUserProfileRecords,
 } from '../filesystem/user-profile-record.js';
-import { validateTaskLedgerMemory } from '../task/task-ledger-memory.js';
 import {
   type MemoryRootKind,
   validateAutopilotDocumentRules,

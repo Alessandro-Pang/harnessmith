@@ -6,7 +6,7 @@ import {
   hostAdapter,
   projectRoot,
 } from './host-adapter.js';
-import { renderMdcInstructions } from './instruction-formats.js';
+import { instructionRenderer } from './instruction-formats.js';
 
 const cursorIgnoreLines = [
   '/skills/agent-harness',
@@ -33,7 +33,7 @@ export function resolveCursorAdapter({ project, userData }: AdapterResolveContex
   return hostAdapter('cursor', agentHome, userData, {
     project: root,
     renderInstructions: [
-      { path: join(agentHome, 'rules', 'agent-harness.mdc'), render: renderMdcInstructions },
+      { path: join(agentHome, 'rules', 'agent-harness.mdc'), render: instructionRenderer('mdc') },
     ],
     localIgnoreFiles: [
       ...(excludePath

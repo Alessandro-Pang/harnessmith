@@ -18,8 +18,6 @@ export interface InputOptions {
   contentFile?: string;
   source: 'chat' | 'file' | 'meeting' | 'link' | 'other';
   mode?: InputMode;
-  /** @deprecated Internal compatibility only; CLI callers must provide mode. */
-  summary?: boolean;
   purpose?: InputPurpose;
   retention?: InputRetention;
   workstream?: string;
@@ -66,7 +64,7 @@ export function inputPayload(options: InputOptions): string {
 }
 
 export function resolveInputPolicy(options: InputOptions): ResolvedInputPolicy {
-  const mode = options.mode ?? (options.summary ? 'summary' : 'verbatim');
+  const mode = options.mode ?? 'verbatim';
   const purpose = options.purpose ?? 'explicit-retain';
   const retention = options.retention ?? 'durable';
   if (!inputModes.has(mode)) {

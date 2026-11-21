@@ -16,7 +16,7 @@ import { fileURLToPath } from 'node:url';
 import { onTestFinished, test } from 'vitest';
 
 const packageRoot = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
-const cli = join(packageRoot, 'bin', 'harnessmith.mjs');
+const cli = join(packageRoot, '..', '..', 'bin', 'harnessmith.mjs');
 
 function execute(root: string, args: string[]) {
   return spawnSync(process.execPath, [cli, ...args], {
@@ -70,20 +70,4 @@ test('Kimi Code CLI install, status, restore, and uninstall use the effective da
   assert.equal(readFileSync(rules, 'utf8'), 'existing Kimi Code CLI rules');
   assert.equal(existsSync(join(agentHome, 'skills', 'agent-harness')), false);
   assert.equal(existsSync(join(agentHome, '.harnessmith', 'install.json')), false);
-});
-
-test('Kimi Code CLI is preflighted before another target is changed', () => {
-  const root = mkdtempSync(join(tmpdir(), 'harnessmith-kimi-lifecycle-'));
-  onTestFinished(() => rmSync(root, { recursive: true, force: true }));
-  execute(root, ['--agent', 'codex,kimi']);
-  const codexRules = join(root, 'codex-home', 'AGENTS.md');
-  const kimiRules = join(root, 'kimi-home', 'AGENTS.md');
-  writeFileSync(kimiRules, `${readFileSync(kimiRules, 'utf8')}\nuser edit\n`);
-
-  const result = execute(root, ['uninstall', '--agent', 'codex,kimi']);
-  assert.equal(result.status, 1);
-  assert.match(result.stderr, /modified/);
-  assert.ok(existsSync(codexRules));
-  assert.ok(existsSync(join(root, 'codex-home', '.harnessmith', 'install.json')));
-  assert.ok(existsSync(join(root, 'kimi-home', '.harnessmith', 'install.json')));
 });

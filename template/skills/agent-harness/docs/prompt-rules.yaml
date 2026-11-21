@@ -206,7 +206,7 @@ rules:
     evidence:
       verification:
         - packages/harness/src/__tests__/docs-routing.test.ts
-        - packages/cli/src/__tests__/multilingual-prompt.test.ts
+        - packages/harness/src/__tests__/docs-routing-edge-cases.test.ts
         - evals/__tests__/prompt-route-benchmark.test.ts
 
   - id: payload-consumption-boundary

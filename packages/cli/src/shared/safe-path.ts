@@ -23,7 +23,7 @@ export function entryExists(path: string): boolean {
   return pathEntry(path) !== null;
 }
 
-export function isSymlink(path: string): boolean {
+function isSymlink(path: string): boolean {
   return pathEntry(path)?.isSymbolicLink() ?? false;
 }
 

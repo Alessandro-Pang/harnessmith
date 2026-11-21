@@ -21,7 +21,7 @@ import { applyAdoptPlan, createAdoptPlan } from '../adoption/adopt.js';
 import { canonicalPath } from '../shared/safe-path.js';
 
 const packageRoot = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
-const cli = join(packageRoot, 'bin', 'harnessmith.mjs');
+const cli = join(packageRoot, '..', '..', 'bin', 'harnessmith.mjs');
 
 function fixture(prefix: string) {
   const root = mkdtempSync(join(tmpdir(), prefix));

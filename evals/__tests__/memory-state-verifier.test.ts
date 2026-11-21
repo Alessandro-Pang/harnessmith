@@ -99,6 +99,47 @@ describe('verifyMemoryState', () => {
     );
     expect(result).toMatchObject({ outcome: 'failed', failureCategory: 'state-mismatch' });
   });
+
+  it('classifies qualitative, infrastructure, and verifier evidence without blaming behavior', () => {
+    expect(verifyMemoryState(input({ qualitativeOnly: true }))).toMatchObject({
+      outcome: 'inconclusive',
+      failureCategory: 'qualitative-only',
+    });
+    expect(verifyMemoryState(input({ infrastructureInconclusive: true }))).toMatchObject({
+      outcome: 'inconclusive',
+      failureCategory: 'infra-inconclusive',
+    });
+    expect(
+      verifyMemoryState(input({ verifier: { status: 'inconclusive', message: 'timeout' } })),
+    ).toMatchObject({ outcome: 'inconclusive', failureCategory: 'infra-inconclusive' });
+    expect(
+      verifyMemoryState(input({ verifier: { status: 'failed', message: 'boom' } })),
+    ).toMatchObject({ outcome: 'failed', failureCategory: 'verifier-failed' });
+  });
+
+  it('defers to the independent semantic state oracle', () => {
+    expect(
+      verifyMemoryState(input({ semantic: { status: 'inconclusive', message: 'unclear' } })),
+    ).toMatchObject({ outcome: 'inconclusive', failureCategory: 'evaluator-inconclusive' });
+    expect(
+      verifyMemoryState(input({ semantic: { status: 'failed', message: 'wrong' } })),
+    ).toMatchObject({ outcome: 'failed', failureCategory: 'state-mismatch' });
+  });
+
+  it('accepts proposed decisions and explicit unchanged replays', () => {
+    expect(
+      verifyMemoryState(input({ expectedDecision: 'proposed', actual: { action: 'proposed' } })),
+    ).toMatchObject({ outcome: 'passed', failureCategory: null });
+    expect(
+      verifyMemoryState(
+        input({
+          actual: { action: 'unchanged' },
+          before: state({ 'profile.md': 'a' }),
+          after: state({ 'profile.md': 'a' }),
+        }),
+      ),
+    ).toMatchObject({ transition: 'unchanged', outcome: 'passed' });
+  });
 });
 
 describe('calculateMemoryMetrics', () => {

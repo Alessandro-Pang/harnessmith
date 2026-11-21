@@ -1,14 +1,14 @@
-import { createHash } from 'node:crypto';
 import { lstatSync, readFileSync } from 'node:fs';
 import { extname } from 'node:path';
 import { readInstallRecord } from '../installation/records.js';
-import { digestPath } from '../shared/files.js';
+import { digestPath, sha256Hex } from '../shared/files.js';
 import { entryExists } from '../shared/safe-path.js';
 import type { Adapter, InstallRecord, ManagedOutput } from '../shared/types.js';
 import { containsAdoptSecret } from './adopt-secret.js';
 
 const maxRuleBytes = 256 * 1024;
 
+/** @public One classified rule in an apply-capable adoption proposal. */
 export interface AdoptInventoryItem {
   path: string;
   owner: 'harnessmith' | 'user' | 'host' | 'unknown';
@@ -30,7 +30,7 @@ export interface AdoptImportCandidate {
 }
 
 export function adoptHash(value: string): string {
-  return createHash('sha256').update(value).digest('hex');
+  return sha256Hex(value);
 }
 
 export function readAdoptRule(

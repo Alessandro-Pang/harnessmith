@@ -1,21 +1,13 @@
 import { digestPath } from '../shared/files.js';
-import { assertSafePath, entryExists, ignoreRoot, outputRoot } from '../shared/safe-path.js';
-import type { Adapter, InstallRecord, RecordOutput } from '../shared/types.js';
-import { HarnessmithError } from '../shared/types.js';
-import { outputSpec, readInstallRecord, readInstallRecordAt } from './records.js';
-
-export type {
-  LifecycleChange,
-  LifecycleChangeAction,
-  LifecycleCommand,
-  LifecyclePlan,
-} from '../shared/lifecycle-types.js';
-
 import type {
   LifecycleChange,
   LifecycleCommand,
   LifecyclePlan,
 } from '../shared/lifecycle-types.js';
+import { assertSafePath, entryExists, ignoreRoot, outputRoot } from '../shared/safe-path.js';
+import type { Adapter, InstallRecord, RecordOutput } from '../shared/types.js';
+import { HarnessmithError } from '../shared/types.js';
+import { outputSpec, readInstallRecord, readInstallRecordAt } from './records.js';
 
 /**
  * Strict path gate for one adapter and, when known, its current record. Managed outputs

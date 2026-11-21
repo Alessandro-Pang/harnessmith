@@ -1,4 +1,9 @@
-import type { AgentName } from '../adapters/adapter-registry.js';
+/**
+ * Canonical host names. The adapter registry and resolver map must cover exactly this
+ * union (enforced via `satisfies`), so adding a host fails typecheck until every map is
+ * exhaustive. Living in `shared` keeps the type layer free of any adapter import.
+ */
+export type AgentName = 'codex' | 'cursor' | 'claude' | 'opencode' | 'kimi' | 'zed';
 
 export interface AdapterCapabilities {
   scope: 'global' | 'project';

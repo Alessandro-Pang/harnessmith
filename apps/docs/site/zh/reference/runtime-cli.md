@@ -4,7 +4,7 @@ description: 安装后的 Harness CLI：文档路由、Memory、Task、仓库关
 owner: maintainers
 audience: users-and-maintainers
 status: active
-updated: 2026-09-05
+updated: 2026-11-21
 ---
 
 # 运行时 CLI
@@ -23,6 +23,7 @@ harnessmith --help
 | --- | --- | --- |
 | 找到当前任务相关规则 | `route`、`explain`、`search` | 只读 |
 | 检查安装与本地状态 | `doctor`、`health`、`validate`、`version` | 只读 |
+| 初始化 Memory 脚手架或查看项目上下文 | `init`、`project` | `init` 显式写入；`project inspect` 只读 |
 | 查找或维护历史线索 | `memory` | 查询只读；写操作显式执行 |
 | 续接长任务并验证验收项 | `task` | 修改 Task ledger |
 | 核验 Host signal replay | `replay` | 只读，证据不足返回非零 |
@@ -76,6 +77,20 @@ harnessmith validate --project /path/to/project --json
 - `validate` 检查内容、文档路由、结构和可选项目接入；未知 schema 会 fail closed。
 
 warning 不等于失败；受限环境中无法完成的阴性检查应解释为 `inconclusive`，而不是直接认定安装损坏。
+
+## 初始化与项目上下文
+
+```bash
+harnessmith init global
+harnessmith init personal
+harnessmith init project /path/to/project
+harnessmith project inspect /path/to/project --json
+```
+
+- `init global` 初始化共享全局 Memory：只创建缺失文件，不覆盖已有内容，必要时修复 `core.md` 中的 profile 路由。
+- `init personal` 初始化个人 overlay（README、AGENTS.md、Repository Map 的 canonical YAML 与生成视图），只创建缺失文件。唯一的窄例外是旧指针修复：把既有文件中指向 pre-hub `~/.agent-harness/projects/repository-map.md` 的指针原位替换为当前指针，其他用户正文不覆盖。
+- `init project [path]` 初始化项目 `.agent-docs/` Memory 脚手架与项目内 ignore 文件；省略路径时使用当前目录。
+- `project inspect [path] --json` 只读检查项目上下文。
 
 ## Host signal replay：只读幂等判定
 
@@ -157,9 +172,15 @@ harnessmith repository-map render --write
 harnessmith repository-map discover packages --apply
 harnessmith repository-map verify --record --json
 harnessmith repository-map maintain --json
+harnessmith repository-map migrate /absolute/candidate.yaml --json
+harnessmith repository-map migrate /absolute/candidate.yaml --apply --json
+harnessmith repository-map reconcile /absolute/observations.json --json
+harnessmith repository-map reconcile /absolute/observations.json --apply --json
 ```
 
 `check` 与 `maintain` 只读；`render --write` 更新视图；内置 `discover packages --apply` 只根据本地 package manifest 维护可确定的直接依赖；`verify --record` 把来源 fingerprint 与时效记录写入 Runtime state。外部或启发式 observation 只能形成 review proposal，不能因为 extractor 自称 deterministic 就自动写回。「自称确定」和「可验证确定」之间隔着人工复核。
+
+`migrate <canonical>` 把显式提供的候选 YAML 迁移为 canonical map：先校验两侧权威来源，报告 `ready` 后加 `--apply` 才写入 canonical YAML、生成视图与验证状态；存在 legacy Markdown 视图时先备份为 `projects/repository-map.legacy.md`，备份已存在则拒绝再次迁移。`reconcile <observations>` 对 observation 集去重并输出 review proposal；`--apply` 只应用内置确定性 extractor 的合格 observation，其余仍只能形成提案。两者默认都是 proposal-only，`--json` 输出机器可读报告。
 
 ## Task：带验收条件的长任务账本
 

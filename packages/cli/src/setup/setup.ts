@@ -1,10 +1,10 @@
 import { join } from 'node:path';
 import { execaSync } from 'execa';
 import { templateRoot } from '../installation/install-template.js';
-import { statusAll } from '../installation/lifecycle.js';
 import { describeInstall } from '../installation/records.js';
+import { firstValuePreview } from '../shared/first-value.js';
 import type { Adapter, CliOptions } from '../shared/types.js';
-import { firstValuePreview } from './first-value.js';
+import { statusAll } from '../status/status-inspection.js';
 
 const stateDefinitions = {
   managed: 'Owned by Harnessmith and unchanged; safe to replace transactionally.',
@@ -121,6 +121,3 @@ export function setupVerificationPassed(verification: ReturnType<typeof verifySe
       ownership === 'managed' && ['passed', 'skipped'].includes(runtimeHealth),
   );
 }
-
-export type SetupGuide = ReturnType<typeof createSetupGuide>;
-export type SetupVerification = ReturnType<typeof verifySetup>;

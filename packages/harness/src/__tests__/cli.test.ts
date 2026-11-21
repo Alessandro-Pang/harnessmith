@@ -8,14 +8,19 @@ import { runCli } from '../cli.js';
 import { doctor } from '../commands/health/doctor.js';
 import { initGlobal, initPersonal, initProject } from '../commands/init.js';
 import { validate } from '../commands/validate.js';
+import { createHealthReport } from '../lib/health/health.js';
 import { capturedIo, elementAt, harnessRuntime, sourceHarnessRoot } from './helpers/harness.js';
 
 function installedFixture() {
   const root = mkdtempSync(join(tmpdir(), 'harness-cli-unit-'));
   onTestFinished(() => rmSync(root, { recursive: true, force: true }));
-  const runtime = harnessRuntime(root);
+  const harnessRoot = join(root, 'skill');
+  cpSync(sourceHarnessRoot, harnessRoot, { recursive: true });
+  const runtime = harnessRuntime(root, {
+    harnessRoot,
+    docsRoot: join(harnessRoot, 'docs'),
+  });
   mkdirSync(runtime.harnessHome, { recursive: true });
-  cpSync(sourceHarnessRoot, runtime.installedHarness, { recursive: true });
   initPersonal(runtime, capturedIo());
   initGlobal(runtime, capturedIo());
   return { root, runtime };
@@ -291,7 +296,7 @@ test('Harness version exposes its schema compatibility contract as JSON', () => 
 
 test('validation rejects an unsupported embedded memory schema version', () => {
   const { runtime } = installedFixture();
-  const manifestPath = join(runtime.installedHarness, 'manifest.json');
+  const manifestPath = join(runtime.harnessRoot, 'manifest.json');
   const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
   manifest.memorySchemaVersion = 99;
   writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
@@ -360,20 +365,18 @@ test('Harness health aggregates runtime, installation, and memory checks as JSON
     true,
   );
 
-  writeFileSync(join(runtime.installedHarness, 'manifest.json'), '{}\n');
-  const incompatible = capturedIo();
-  assert.equal(runCli(['health', '--json'], { runtime, io: incompatible }), 1);
-  const installation = JSON.parse(elementAt(incompatible.logs, 0)).checks.find(
-    ({ id }: { id: string }) => id === 'installation',
-  );
-  assert.equal(installation.status, 'failed');
-  assert.match(installation.message, /schema is incompatible/);
+  writeFileSync(join(runtime.harnessRoot, 'manifest.json'), '{}\n');
+  // The CLI program itself reads the same manifest, so an incompatible schema is
+  // asserted through the health report the `health` command aggregates.
+  const installation = createHealthReport(runtime).checks.find(({ id }) => id === 'installation');
+  assert.equal(installation?.status, 'failed');
+  assert.match(installation?.message ?? '', /schema is incompatible/);
 });
 
 test('Harness health no longer consumes legacy install contexts or hub records', () => {
   const { runtime } = installedFixture();
   writeFileSync(
-    join(runtime.installedHarness, 'install-context.json'),
+    join(runtime.harnessRoot, 'install-context.json'),
     `${JSON.stringify({
       version: 2,
       harnessHome: runtime.harnessHome,

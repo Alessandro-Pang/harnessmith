@@ -323,7 +323,7 @@ test('audit storage rejects a symlinked state boundary', () => {
   const { root, runtime } = fixture();
   const outside = join(root, 'outside');
   const state = runtime.stateRoot;
-  mkdirSync(runtime.installedHarness, { recursive: true });
+  mkdirSync(runtime.harnessHome, { recursive: true });
   writeFileSync(join(root, 'sentinel'), 'unchanged\n');
   symlinkSync(outside, state, 'dir');
   const input = payload(root, 'event.json', event());

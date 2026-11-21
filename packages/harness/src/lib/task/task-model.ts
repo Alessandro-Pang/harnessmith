@@ -6,8 +6,9 @@ import type {
   TaskStatus,
   TaskSummary,
 } from '../../types.js';
+import { escapeCoreLabel } from '../contract/core-label.js';
+import { toSlug } from '../contract/slug.js';
 import { isPortableIdentityComponent } from '../filesystem/portable-path-component.js';
-import { escapeCoreLabel } from '../memory/memory-core.js';
 import { evidenceSupportsPass, taskBaselineDrift } from './task-evidence.js';
 
 export interface TaskBaseOptions {
@@ -77,22 +78,14 @@ export function isCheckpointStatus(value: TaskStatus): boolean {
 }
 
 function slug(value: string): string {
-  return (
-    value
-      .toLocaleLowerCase('und')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '')
-      .slice(0, 48) || 'task'
-  );
+  // Task ids keep their historical generation: no NFKC normalization and
+  // host-neutral `und` case folding. Do not unify these with memory slugs.
+  return toSlug(value, { fallback: 'task', normalize: false, localeLowercase: true });
 }
 
 export function defaultTaskId(objective: string): string {
   const stamp = now().replace(/[-:]/g, '').replace(/T/, '-').slice(0, 13);
   return `${stamp}-${slug(objective)}`;
-}
-
-export function assertTaskId(id: string): void {
-  if (!/^[a-z0-9][a-z0-9._-]*$/.test(id)) throw new Error(`Invalid task id: ${id}`);
 }
 
 export function assertPortableTaskId(id: string): void {

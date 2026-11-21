@@ -3,7 +3,8 @@ import { existsSync, lstatSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Io, Runtime } from '../../types.js';
 import { sameCanonicalPath } from '../filesystem/safe-path.js';
-import type { SearchSource } from '../search/search.js';
+import type { SearchSource } from '../search/search-source.js';
+import type { ProjectRelationsReader } from './memory-maintenance.js';
 import { resolveMemoryRoot } from './memory-path.js';
 import { validateMemoryRoot } from './memory-validation.js';
 
@@ -44,6 +45,10 @@ export interface MemoryRepairReport {
 export interface ApplyOptions {
   beforeRevalidate?: () => void;
   beforeVerify?: () => void;
+  /** Injected so repair verifiers keep the full maintenance report without memory importing workflow I/O. */
+  projectRelations?: ProjectRelationsReader;
+  /** Injected project memory transaction runner; the command layer owns project I/O composition. */
+  withProjectTransaction?: (runtime: Runtime, input: string, operation: () => void) => void;
 }
 
 export function digest(value: string | Buffer): string {

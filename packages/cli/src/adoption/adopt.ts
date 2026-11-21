@@ -185,5 +185,3 @@ export function applyAdoptPlan(
     installation,
   };
 }
-
-export type AdoptReport = ReturnType<typeof createAdoptPlan>['report'];

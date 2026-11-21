@@ -47,16 +47,15 @@ function checkHelp(output: string, subject: string, expected: string): void {
     check(output.includes(value), `${subject} is missing ${value}`);
 }
 
-function checkCliHelp(outerCli: string, harnessCli: string): void {
-  const outerHelp = runNode(outerCli, ['--help']);
-  checkHelp(outerHelp, 'outer CLI help', 'install capabilities status restore uninstall');
-  const harnessHelp = runNode(harnessCli, ['--help']);
+function checkCliHelp(cli: string): void {
+  const help = runNode(cli, ['--help']);
+  checkHelp(help, 'outer CLI help', 'install capabilities status restore uninstall');
   checkHelp(
-    harnessHelp,
+    help,
     'Harness CLI help',
     'init memory project task validate doctor health route explain search',
   );
-  const memoryHelp = runNode(harnessCli, ['memory', '--help']);
+  const memoryHelp = runNode(cli, ['memory', '--help']);
   checkHelp(
     memoryHelp,
     'Harness memory help',
@@ -64,15 +63,15 @@ function checkCliHelp(outerCli: string, harnessCli: string): void {
   );
   const searchFlags =
     '--limit --max-line-length --max-depth --max-files --max-file-bytes --max-total-bytes --json';
-  checkHelp(runNode(harnessCli, ['search', '--help']), 'Harness search help', searchFlags);
-  checkHelp(runNode(harnessCli, ['memory', 'search', '--help']), 'Memory search help', searchFlags);
-  const memoryListHelp = runNode(harnessCli, ['memory', 'list', '--help']);
+  checkHelp(runNode(cli, ['search', '--help']), 'Harness search help', searchFlags);
+  checkHelp(runNode(cli, ['memory', 'search', '--help']), 'Memory search help', searchFlags);
+  const memoryListHelp = runNode(cli, ['memory', 'list', '--help']);
   checkHelp(memoryListHelp, 'Harness memory list help', '--json');
-  const memoryCheckHelp = runNode(harnessCli, ['memory', 'check', '--help']);
+  const memoryCheckHelp = runNode(cli, ['memory', 'check', '--help']);
   checkHelp(memoryCheckHelp, 'Harness memory check help', '--indexed --json');
-  const memoryMigrateHelp = runNode(harnessCli, ['memory', 'migrate', '--help']);
+  const memoryMigrateHelp = runNode(cli, ['memory', 'migrate', '--help']);
   checkHelp(memoryMigrateHelp, 'Harness memory migrate help', '--set --apply --json');
-  const taskVerifyHelp = runNode(harnessCli, ['task', 'verify', '--help']);
+  const taskVerifyHelp = runNode(cli, ['task', 'verify', '--help']);
   checkHelp(
     taskVerifyHelp,
     'Harness task verify help',
@@ -83,14 +82,14 @@ function checkCliHelp(outerCli: string, harnessCli: string): void {
 function checkCli(): void {
   // Runtime sources live in packages/harness/src; the only executable bundle is at the package root.
   checkArchitectureImports(join(root, 'packages', 'harness', 'src'), check);
+  checkAreaImportCycles(join(root, 'packages', 'harness', 'src', 'lib'), [], check);
   checkAreaImportEdges(join(root, 'packages', 'cli', 'src'), declaredCliAreaImports, check);
   checkAreaImportCycles(join(root, 'packages', 'cli', 'src'), declaredCliAreaCycles, check);
   checkBranch(root, check);
   checkPackage(root, harnessRoot, check);
-  const outerCli = join(root, 'bin', 'harnessmith.mjs');
-  const harnessCli = outerCli;
-  checkCliHelp(outerCli, harnessCli);
-  const versionContract = JSON.parse(runNode(harnessCli, ['version', '--json'])) as {
+  const cli = join(root, 'bin', 'harnessmith.mjs');
+  checkCliHelp(cli);
+  const versionContract = JSON.parse(runNode(cli, ['version', '--json'])) as {
     version?: number;
     harnessVersion?: string;
     schemaVersion?: number;
@@ -101,7 +100,7 @@ function checkCli(): void {
   check(versionContract.schemaVersion === 3, 'Harness task schema version is unsupported');
   check(versionContract.memorySchemaVersion === 1, 'Harness memory schema version is unsupported');
 
-  checkBuiltCliAdapters({ outerCli, runNode, check });
+  checkBuiltCliAdapters({ outerCli: cli, runNode, check });
 }
 
 function main(): void {

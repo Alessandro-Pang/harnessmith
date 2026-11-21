@@ -83,7 +83,15 @@ test('current-state docs name the ~/.harnessmith user-data home instead of legac
   for (const path of currentState) {
     const content = readFileSync(join(root, path), 'utf8');
     assert.match(content, /~\/\.harnessmith\/(?:rules|memory)/, path);
-    assert.doesNotMatch(content, /~\/\.agent-harness/, path);
-    assert.doesNotMatch(content, /~\/\.agents\/harnessmith/, path);
+    const allowedOverlayMigration =
+      path === 'AGENTS.md'
+        ? '唯一例外是 `init personal` 只原位替换 `~/.agent-harness/projects/repository-map.md` 旧指针，其他正文不覆盖。'
+        : undefined;
+    if (allowedOverlayMigration) assert.ok(content.includes(allowedOverlayMigration));
+    const currentLayout = allowedOverlayMigration
+      ? content.replace(allowedOverlayMigration, '')
+      : content;
+    assert.doesNotMatch(currentLayout, /~\/\.agent-harness/, path);
+    assert.doesNotMatch(currentLayout, /~\/\.agents\/harnessmith/, path);
   }
 });

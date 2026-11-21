@@ -265,15 +265,3 @@ test('unregistered semantic requirements cannot be silently dropped', async () =
     /unknown semantic assertion/,
   );
 });
-
-test('natural-language phrase graders are no longer exported', async () => {
-  const module = await support();
-  for (const name of [
-    'pureSignalResponseComplies',
-    'ordinaryPreferenceResponseIsOpaque',
-    'responseSeparatesAssessmentFromAction',
-    'isRoutineMemoryAnnouncement',
-    'isRoutineMemoryMaintenanceDisclosure',
-  ])
-    assert.equal(module[name], undefined, name);
-});

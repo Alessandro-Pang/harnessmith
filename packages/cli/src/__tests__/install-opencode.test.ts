@@ -16,7 +16,7 @@ import { fileURLToPath } from 'node:url';
 import { onTestFinished, test } from 'vitest';
 
 const packageRoot = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
-const cli = join(packageRoot, 'bin', 'harnessmith.mjs');
+const cli = join(packageRoot, '..', '..', 'bin', 'harnessmith.mjs');
 
 function execute(root: string, args: string[]) {
   return spawnSync(process.execPath, [cli, ...args], {

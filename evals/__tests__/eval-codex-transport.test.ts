@@ -206,21 +206,20 @@ test('bounded host process classifies a missing executable as transport failure'
 });
 
 test('bounded host process classifies a Codex connection error as transport failure', async () => {
-  const result = await transport.runBoundedHostProcess({
-    invocation: {
-      executable: process.execPath,
-      args: [
-        '-e',
-        "process.stderr.write('WebSocket connection failed: TLS handshake');process.exit(1)",
-      ],
-      cwd: process.cwd(),
-    },
-    prompt: 'fixture prompt',
-    signal: new AbortController().signal,
-    maxOutputBytes: 1024,
-  });
+  for (const message of ['ECONNRESET', 'WebSocket connection failed: TLS handshake']) {
+    const result = await transport.runBoundedHostProcess({
+      invocation: {
+        executable: process.execPath,
+        args: ['-e', `process.stderr.write(${JSON.stringify(message)});process.exit(1)`],
+        cwd: process.cwd(),
+      },
+      prompt: 'fixture prompt',
+      signal: new AbortController().signal,
+      maxOutputBytes: 1024,
+    });
 
-  assert.deepEqual(result, { kind: 'transport-failure', reason: 'connection' });
+    assert.deepEqual(result, { kind: 'transport-failure', reason: 'connection' });
+  }
 });
 
 test('bounded host process classifies an unrecognized host exit as evaluator failure', async () => {

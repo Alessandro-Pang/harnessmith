@@ -151,6 +151,16 @@ function digestChildren(item: DigestItem, budget: DigestBudget): DigestItem[] {
   return children.sort((left, right) => right.relative.localeCompare(left.relative));
 }
 
+/** Raw SHA-256 hex of a string, without any namespace prefix. */
+export function sha256Hex(value: string): string {
+  return createHash('sha256').update(value).digest('hex');
+}
+
+/** SHA-256 hex carrying the stable `sha256:` content-digest prefix. */
+export function sha256Prefixed(value: string): string {
+  return `sha256:${sha256Hex(value)}`;
+}
+
 export function digestPath(path: string, options: DigestOptions = {}): string | null {
   if (!entryExists(path)) return null;
   const budget = digestBudget(options);

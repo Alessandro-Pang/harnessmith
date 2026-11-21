@@ -4,7 +4,7 @@ description: How to contribute code to Harnessmith — environment, boundaries, 
 owner: maintainers
 audience: maintainers
 status: active
-updated: 2026-09-05
+updated: 2026-11-21
 lang: en
 ---
 
@@ -46,7 +46,7 @@ passing. End-to-end installation tests do not replace source-level command and l
 | --- | --- | --- |
 | `packages/cli/src/` | Host adapters, install transactions, backups, restore, and the release boundary | Host identity, paths, and environment variables belong only in the outer adapter layer |
 | `packages/harness/src/` | Generic Harness capabilities (the embedded Runtime) | Strict TypeScript source; changes need focused tests under its own `__tests__/` |
-| `packages/harness/dist/`, root `dist/` | Build products | Change the TypeScript source and run `pnpm run build`; never edit generated files directly |
+| Root `dist/` (including `dist/harness.mjs`) | Build products | Change the TypeScript source and run `pnpm run build`; never edit generated files directly |
 | `template/` | The portable Harness core distributed with every install | Must not identify any specific host product |
 | Co-located `__tests__/` | Unit and integration tests | Tests live beside their owning code in `packages/cli/src/__tests__/`, `packages/harness/src/__tests__/`, or `evals/__tests__/`; do not recreate a root `test/` directory |
 

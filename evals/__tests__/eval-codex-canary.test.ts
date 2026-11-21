@@ -4,18 +4,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'vitest';
 import * as canary from '../../scripts/evaluation/codex/eval-codex-canary.js';
-import { candidateArtifact, root, temporaryDirectory } from './run-fixture.js';
-
-test('standalone canary CLI is absent; canary helpers stay suite-internal', () => {
-  assert.equal(
-    existsSync(join(root, 'scripts', 'evaluation', 'codex', 'eval-codex-canary.ts')),
-    true,
-  );
-  assert.equal(
-    existsSync(join(root, 'scripts', 'evaluation', 'codex', 'eval-codex-suite.ts')),
-    true,
-  );
-});
+import { candidateArtifact, temporaryDirectory } from './run-fixture.js';
 
 test('canary options enforce the authorized single-attempt boundary', () => {
   assert.deepEqual(

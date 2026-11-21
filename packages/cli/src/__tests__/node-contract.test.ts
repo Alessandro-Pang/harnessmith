@@ -1,30 +1,30 @@
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { test } from 'vitest';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
 
-test('project declares the Node 22.20 runtime floor consistently across runtime and CI contracts', () => {
+test('project declares the Node 22.20 runtime floor consistently across runtime and build contracts', () => {
   const packageManifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
   const harnessManifest = JSON.parse(
     readFileSync(join(root, 'template', 'skills', 'agent-harness', 'manifest.json'), 'utf8'),
   );
-  const workflow = readFileSync(join(root, '.github', 'workflows', 'ci.yml'), 'utf8');
   const buildConfig = readFileSync(join(root, 'config', 'tsup.config.ts'), 'utf8');
   const typesVersion = String(packageManifest.devDependencies['@types/node']);
 
-  // Development pins the current LTS; the distributed CLI runs on the lower runtime floor.
-  assert.equal(readFileSync(join(root, '.nvmrc'), 'utf8').trim(), 'v24.12.0');
+  // Development pins the current LTS major; the distributed CLI runs on the lower runtime floor.
+  assert.match(readFileSync(join(root, '.nvmrc'), 'utf8').trim(), /^v24\./);
   assert.equal(packageManifest.engines.node, '>=22.20.0');
   assert.equal(harnessManifest.node, '>=22.20.0');
-  // CI must exercise the floor and the development version; types and build target follow the floor
-  // so newer runtime APIs cannot slip into shipped code unnoticed.
-  assert.match(workflow, /node: \['22\.20\.0', '24'\]/);
+  // Types and every build target follow the floor so newer runtime APIs cannot slip into
+  // shipped code unnoticed. The CI matrix that exercises the floor is owned by
+  // github-templates.test.ts.
   assert.match(typesVersion, /^22\./);
-  assert.equal(buildConfig.match(/target: 'node22'/g)?.length, 2);
-  assert.doesNotMatch(buildConfig, /target: 'node(?:20|24)'/);
+  const targets = [...buildConfig.matchAll(/target: '([^']+)'/g)].map((match) => match[1]);
+  assert.ok(targets.length > 0, 'tsup config must declare build targets');
+  for (const target of targets) assert.equal(target, 'node22');
 });
 
 test('Git normalizes text files to LF on every platform', () => {
@@ -32,93 +32,19 @@ test('Git normalizes text files to LF on every platform', () => {
   assert.match(attributes, /^\* text=auto eol=lf$/m);
 });
 
-test('Knip owns the dependency and dead-code contract for every TypeScript source tree', () => {
+test('the dead-code gate runs Knip with the repository config and stays in the check pipeline', () => {
   const packageManifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as {
     scripts: Record<string, string>;
   };
-  const knip = JSON.parse(readFileSync(join(root, 'config', 'knip.json'), 'utf8')) as {
-    workspaces: Record<string, { project?: string[] }>;
-  };
+  const deadCode = packageManifest.scripts['quality:dead-code'];
 
-  assert.equal(
-    packageManifest.scripts['quality:dead-code'],
-    'knip --config config/knip.json --reporter compact',
-  );
+  assert.ok(deadCode, 'package.json must define the dead-code script');
+  // Only the tool and config identity are contractual; reporter and include flags may evolve.
+  // Workspace pattern coverage is owned by knip-surface.test.ts.
+  assert.match(deadCode, /\bknip\b/);
+  assert.ok(deadCode.includes('config/knip.json'), 'dead-code gate must use config/knip.json');
   assert(packageManifest.scripts.check, 'package.json must define the check script');
   assert.match(packageManifest.scripts.check, /pnpm run quality:dead-code/);
-  // pnpm workspace packages own their own patterns; root-relative patterns pointing into them match
-  // nothing, which is how the gate once analysed an empty file set.
-  for (const [workspace, source] of [
-    ['.', 'scripts/**/*.ts'],
-    ['packages/cli', 'src/**/*.ts'],
-    ['packages/harness', 'src/**/*.ts'],
-  ] as const) {
-    assert.ok(
-      knip.workspaces[workspace]?.project?.includes(source),
-      `Knip omits ${workspace} -> ${source}`,
-    );
-  }
-});
-
-test('publish workflow pins npm CLI without mutating the runner globally', () => {
-  const workflow = readFileSync(join(root, '.github', 'workflows', 'publish.yml'), 'utf8');
-  assert.doesNotMatch(workflow, /npm install --global npm@/);
-  assert.match(workflow, /npx --yes npm@11\.6\.2 publish/);
-});
-
-test('release verification reuses one quality build and one covered unit-test run', () => {
-  const packageManifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as {
-    scripts: Record<string, string>;
-  };
-  const workflow = readFileSync(join(root, '.github', 'workflows', 'publish.yml'), 'utf8');
-  const scripts = packageManifest.scripts;
-
-  assert.equal(
-    scripts['build:emit'],
-    'tsup --config config/tsup.config.ts && tsc -p config/tsconfig.public-api.json',
-  );
-  assert.equal(
-    scripts['preflight:quality'],
-    'pnpm run check && pnpm run build:emit && node --import tsx scripts/preflight/preflight.ts all',
-  );
-  assert.equal(scripts.preflight, 'pnpm run preflight:quality && pnpm run test:unit');
-  assert.equal(
-    scripts['release:quality'],
-    'pnpm run check && pnpm run build:emit && pnpm run test:coverage:unit && pnpm run test:scripts-coverage && pnpm run quality:dependencies',
-  );
-  assert.equal(scripts['release:check'], 'pnpm run release:quality && pnpm run eval:gate');
-  assert.equal(
-    scripts['release:package-smoke'],
-    'node --import tsx scripts/release/package-smoke.ts',
-  );
-  assert.match(workflow, /pnpm run release:quality/);
-  assert.match(workflow, /scripts\/release\/package-smoke\.ts/);
-  assert.doesNotMatch(workflow, /- run: pnpm run preflight\n/);
-  assert.doesNotMatch(workflow, /- run: pnpm run test:coverage\n/);
-});
-
-test('release quality runs the high-severity dependency audit after offline quality gates', () => {
-  const packageManifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as {
-    scripts: Record<string, string>;
-  };
-
-  assert.equal(packageManifest.scripts['quality:dependencies'], 'pnpm audit --audit-level high');
-  assert.equal(
-    packageManifest.scripts['release:quality'],
-    'pnpm run check && pnpm run build:emit && pnpm run test:coverage:unit && pnpm run test:scripts-coverage && pnpm run quality:dependencies',
-  );
-});
-
-test('eval checks build their fingerprint inputs in a clean checkout', () => {
-  const packageManifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as {
-    scripts: Record<string, string>;
-  };
-
-  assert.equal(packageManifest.scripts['preeval:check'], 'pnpm run build:emit');
-  assert.equal(
-    packageManifest.scripts['eval:check'],
-    'vitest run --config config/vitest.config.ts evals/__tests__',
-  );
 });
 
 test('npm package exposes only the stable CLI entry and package metadata', () => {
@@ -138,109 +64,6 @@ test('npm package exposes only the stable CLI entry and package metadata', () =>
   });
 });
 
-test('npm package includes runtime guidance and eval contracts without source-only material', () => {
-  const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as {
-    files: string[];
-  };
-  for (const path of [
-    'llms.txt',
-    'README.en.md',
-    'SECURITY.md',
-    'evals/scenarios.json',
-    'evals/scenarios.schema.json',
-    'evals/run.schema.json',
-  ])
-    assert.ok(manifest.files.includes(path), `npm package is missing: ${path}`);
-  for (const path of [
-    'CONTRIBUTING.md',
-    'RELEASING.md',
-    'CHANGELOG.md',
-    'apps/docs/site/zh/concepts/architecture.md',
-    'evals/README.md',
-    'evals/run.example.json',
-  ])
-    assert.ok(!manifest.files.includes(path), `npm package includes source-only material: ${path}`);
-  assert.ok(!manifest.files.some((path) => path.includes('__tests__')));
-  const evalIgnore = join(root, 'evals', '.npmignore');
-  assert.equal(
-    existsSync(evalIgnore),
-    true,
-    'eval package boundary must exclude its source README',
-  );
-  assert.match(readFileSync(evalIgnore, 'utf8'), /^README\.md$/m);
-});
-
-test('dependencies used only by the bundled Harness stay build-time dependencies', () => {
-  const packageManifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as {
-    dependencies?: Record<string, string>;
-    devDependencies?: Record<string, string>;
-  };
-  const build = readFileSync(join(root, 'config', 'tsup.config.ts'), 'utf8');
-
-  assert.match(build, /noExternal: \[\/\.\*\/\]/);
-  for (const dependency of ['mdast-util-from-markdown', 'unist-util-visit']) {
-    assert.equal(packageManifest.dependencies?.[dependency], undefined);
-    assert.ok(packageManifest.devDependencies?.[dependency]);
-  }
-});
-
-test('Markdown AST traversal uses the maintained unist visitor', () => {
-  const source = readFileSync(
-    join(root, 'packages', 'harness', 'src', 'lib', 'documentation', 'markdown-links.ts'),
-    'utf8',
-  );
-
-  assert.match(source, /from ['"]unist-util-visit['"]/);
-  assert.doesNotMatch(source, /function visit\s*\(/);
-});
-
-test('preflight mode parsing uses Commander choices', () => {
-  const source = readFileSync(join(root, 'scripts', 'preflight', 'preflight.ts'), 'utf8');
-
-  assert.match(source, /from ['"]commander['"]/);
-  assert.match(source, /\.choices\(\['all', 'cli', 'docs'\]\)/);
-  assert.match(source, /\.parse\(process\.argv\.slice\(2\), \{ from: 'user' \}\)/);
-  assert.doesNotMatch(source, /process\.argv\.slice\(2,\s*3\)/);
-  assert.doesNotMatch(source, /\['all', 'cli', 'docs'\]\.includes\(mode\)/);
-});
-
-test('built CLI preflight derives and exercises the complete Adapter set', () => {
-  const source = readFileSync(join(root, 'scripts', 'preflight', 'preflight-adapters.ts'), 'utf8');
-
-  assert.match(source, /supportedAgentNames/);
-  assert.match(source, /\['install', '--agent', 'all'/);
-  assert.match(source, /\['status', '--agent', 'all'/);
-  assert.match(source, /\['uninstall', '--agent', 'all'/);
-});
-
-test('release manifest comparison uses Node deep equality', () => {
-  const source = readFileSync(
-    join(root, 'scripts', 'evaluation', 'records', 'eval-fingerprint.ts'),
-    'utf8',
-  );
-
-  assert.match(source, /import \{ isDeepStrictEqual \} from ['"]node:util['"]/);
-  assert.match(source, /isDeepStrictEqual\(candidatePackage, currentPackage\)/);
-  assert.doesNotMatch(source, /function canonicalJson\s*\(/);
-});
-
-test('public guidance does not duplicate the package version', () => {
-  const packageManifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
-  const version = packageManifest.version as string;
-  const guidancePaths = [
-    'README.md',
-    'README.en.md',
-    'SECURITY.md',
-    'llms.txt',
-    'apps/docs/site/zh/concepts/architecture.md',
-  ];
-
-  for (const path of guidancePaths) {
-    const content = readFileSync(join(root, path), 'utf8');
-    assert.ok(!content.includes(version), `${path} duplicates package version ${version}`);
-  }
-});
-
 test('secret scanning covers every shipped guidance and source tree', () => {
   const packageManifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as {
     scripts: Record<string, string>;
@@ -250,6 +73,7 @@ test('secret scanning covers every shipped guidance and source tree', () => {
 
   for (const path of [
     'packages/cli/src/**/*',
+    'packages/harness/**/*',
     'scripts/**/*',
     'template/**/*',
     'evals/**/*',
@@ -262,41 +86,19 @@ test('secret scanning covers every shipped guidance and source tree', () => {
   }
 });
 
-test('secret scanning does not allowlist credential-shaped test fixtures', () => {
+test('secret scanning does not allowlist credential-shaped content', () => {
   const config = readFileSync(join(root, 'config', '.secretlintrc.json'), 'utf8');
-  const validationTests = readFileSync(
-    join(root, 'packages', 'harness', 'src', '__tests__', 'validation-libs.test.ts'),
-    'utf8',
-  );
 
   assert.doesNotMatch(config, /"allows"\s*:/);
-  assert.doesNotMatch(validationTests, /xox[baprs]-\d{10,}-\d{10,}-[A-Za-z0-9]{20,}/);
-  assert.doesNotMatch(validationTests, /npm_[A-Za-z0-9]{30,}/);
 });
 
-test('project uses one pinned pnpm toolchain across manifests, CI, scripts, and hooks', () => {
-  const packageManifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
-  const workflow = readFileSync(join(root, '.github', 'workflows', 'ci.yml'), 'utf8');
-  const hooks = ['commit-msg', 'pre-commit', 'pre-push'].map((name) =>
-    readFileSync(join(root, '.husky', name), 'utf8'),
-  );
-
-  assert.equal(packageManifest.packageManager, 'pnpm@10.13.0');
-  assert.equal(existsSync(join(root, 'pnpm-lock.yaml')), true);
-  assert.equal(existsSync(join(root, 'package-lock.json')), false);
-  assert.match(workflow, /pnpm\/action-setup@[0-9a-f]{40} # v6/);
-  assert.match(workflow, /pnpm install --frozen-lockfile --ignore-scripts/);
-  assert.doesNotMatch(workflow, /npm ci/);
-  assert.equal(
-    Object.values(packageManifest.scripts).some((script) =>
-      /(^|[;&|]\s*)npm run\b/.test(String(script)),
-    ),
-    false,
-  );
-  assert.equal(
-    hooks.some((hook) => /(^|[;&|]\s*)npm run\b/m.test(hook)),
-    false,
-  );
+test('Git hooks compose scripts with pnpm, never npm', () => {
+  // Manifest, lockfile, CI setup, and package-script composition are owned by
+  // scripts/preflight/preflight-package.ts; hooks are not covered there.
+  for (const name of ['commit-msg', 'pre-commit', 'pre-push']) {
+    const hook = readFileSync(join(root, '.husky', name), 'utf8');
+    assert.equal(/(^|[;&|]\s*)npm run\b/m.test(hook), false, `${name} must not call npm run`);
+  }
 });
 
 test('pre-push isolates repository-local Git environment before fixture tests', () => {

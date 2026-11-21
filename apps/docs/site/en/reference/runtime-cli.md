@@ -4,7 +4,7 @@ description: The post-install Harness CLI for docs routing, Memory, Task, reposi
 owner: maintainers
 audience: users-and-maintainers
 status: active
-updated: 2026-09-05
+updated: 2026-11-21
 lang: en
 ---
 
@@ -30,6 +30,7 @@ harnessmith --help
 | --- | --- | --- |
 | Find rules relevant to the current task | `route`, `explain`, `search` | Read-only |
 | Check the install and local state | `doctor`, `health`, `validate`, `version` | Read-only |
+| Initialize memory scaffolding or inspect project context | `init`, `project` | `init` writes explicitly; `project inspect` is read-only |
 | Find or maintain historical leads | `memory` | Queries read-only; writes explicitly executed |
 | Continue a long-running task and verify acceptance items | `task` | Modifies the Task ledger |
 | Verify a Host signal replay | `replay` | Read-only; returns non-zero when evidence is insufficient |
@@ -114,6 +115,25 @@ harnessmith validate --project /path/to/project --json
 
 A warning is not a failure; a negative check that cannot be completed in a restricted environment should be
 interpreted as `inconclusive` rather than declaring the install broken.
+
+## Initialization and project context
+
+```bash
+harnessmith init global
+harnessmith init personal
+harnessmith init project /path/to/project
+harnessmith project inspect /path/to/project --json
+```
+
+- `init global` initializes shared global Memory: it creates only missing files, never overwrites existing
+  content, and repairs the profile route in `core.md` when needed.
+- `init personal` initializes the personal overlay (README, AGENTS.md, the canonical Repository Map YAML, and its
+  generated view), creating only missing files. The one narrow exception is stale-pointer repair: pre-hub
+  `~/.agent-harness/projects/repository-map.md` pointers inside existing files are replaced in place with the
+  current pointer, and no other user content is overwritten.
+- `init project [path]` initializes the project's `.agent-docs/` Memory scaffolding and in-project ignore files;
+  the current directory is used when the path is omitted.
+- `project inspect [path] --json` inspects project context read-only.
 
 ## Host signal replay: read-only idempotent determination
 
@@ -200,7 +220,7 @@ harnessmith memory capture-finding /path/to/project \
   --rationale "The scope argument resolves by path; project would be treated as a relative directory" \
   --application "Documentation examples uniformly use /path/to/project or ." \
   --evidence "packages/harness/src/program/memory/memory.ts" \
-  --source-ref "apps/docs/site/zh/reference/runtime-cli.md" \
+  --source-ref "apps/docs/site/en/reference/runtime-cli.md" \
   --json
 ```
 
@@ -243,6 +263,10 @@ harnessmith repository-map render --write
 harnessmith repository-map discover packages --apply
 harnessmith repository-map verify --record --json
 harnessmith repository-map maintain --json
+harnessmith repository-map migrate /absolute/candidate.yaml --json
+harnessmith repository-map migrate /absolute/candidate.yaml --apply --json
+harnessmith repository-map reconcile /absolute/observations.json --json
+harnessmith repository-map reconcile /absolute/observations.json --apply --json
 ```
 
 `check` and `maintain` are read-only; `render --write` updates the views; the built-in `discover packages
@@ -251,6 +275,14 @@ harnessmith repository-map maintain --json
 observations can only form review proposals — they are never written back automatically just because an
 extractor claims to be deterministic. Between "self-declared deterministic" and "verifiably deterministic"
 stands human review.
+
+`migrate <canonical>` migrates an explicitly supplied candidate YAML into the canonical map: it verifies the
+authoritative sources on both sides first, and only a `ready` report plus `--apply` writes the canonical YAML,
+the generated view, and the verification state; an existing legacy Markdown view is backed up as
+`projects/repository-map.legacy.md` first, and an already-existing backup blocks a second migration.
+`reconcile <observations>` deduplicates an observation set and emits review proposals; `--apply` applies only
+eligible observations from built-in deterministic extractors, and everything else still forms proposals. Both
+commands are proposal-only by default, and `--json` writes a machine-readable report.
 
 ## Task: the long-running task ledger with acceptance criteria
 

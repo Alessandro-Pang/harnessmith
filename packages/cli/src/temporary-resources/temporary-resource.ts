@@ -20,13 +20,7 @@ import {
   temporaryResourceMarkerName,
 } from './temporary-resource-marker.js';
 
-export type { TemporaryResourceLifecycle } from './temporary-resource-marker.js';
-export type { TemporaryResourceAggregateReport } from './temporary-resource-roots.js';
 export { scanTemporaryResourceRoots } from './temporary-resource-roots.js';
-export type {
-  TemporaryResourceReportItem,
-  TemporaryResourceScanReport,
-} from './temporary-resource-scan.js';
 export { scanTemporaryResources } from './temporary-resource-scan.js';
 
 export interface TemporaryWorkspaceOptions {
@@ -45,7 +39,7 @@ export interface TemporaryWorkspace {
   retainOnFailure: boolean;
 }
 
-export class TemporaryResourceCleanupError extends Error {
+class TemporaryResourceCleanupError extends Error {
   readonly retainedPath: string;
 
   constructor(message: string, retainedPath: string, cause?: unknown) {
@@ -58,7 +52,7 @@ export class TemporaryResourceCleanupError extends Error {
   }
 }
 
-export class TemporaryResourceRecoveryError extends Error {
+class TemporaryResourceRecoveryError extends Error {
   readonly retainedPath: string;
 
   constructor(message: string, retainedPath: string, cause?: unknown) {

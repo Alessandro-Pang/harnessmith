@@ -13,7 +13,7 @@ import type { HealthCheck } from './health-types.js';
 export function installationHealth(runtime: Runtime): HealthCheck {
   const identityFailure = installationIdentityHealth(runtime);
   if (identityFailure) return identityFailure;
-  const manifestPath = join(runtime.installedHarness, 'manifest.json');
+  const manifestPath = join(runtime.harnessRoot, 'manifest.json');
   const required = [
     join(runtime.distributionRoot, 'dist', 'harness.mjs'),
     manifestPath,

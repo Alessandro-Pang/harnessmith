@@ -1,7 +1,7 @@
-import type { AgentName } from '../adapters/adapter-registry.js';
+import type { AgentName } from './scope-types.js';
 
 export type LifecycleCommand = 'restore' | 'uninstall';
-export type LifecycleChangeAction = 'remove' | 'restore-backup' | 'remove-managed-block' | 'keep';
+type LifecycleChangeAction = 'remove' | 'restore-backup' | 'remove-managed-block' | 'keep';
 
 export interface LifecycleChange {
   path: string;

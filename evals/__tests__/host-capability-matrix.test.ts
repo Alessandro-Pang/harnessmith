@@ -135,6 +135,7 @@ test('matrix report binds every cell to one candidate and preserves real outcome
   assert.equal(report.summary.inconclusive, 53);
   assert.equal(report.summary['not-executed'], 4);
   assert.equal(report.summary.unsupported, 0);
+  assert.equal(report.rejectedNonCandidateRecords, 0);
   const passed = report.cells.find(
     ({ host, capabilityId }) =>
       host === 'codex' && capabilityId === 'high-value-read-only-analysis',
@@ -251,11 +252,6 @@ test('matrix report keeps behavior, evaluator, and rejected-candidate records di
     )?.status,
     'evaluator-failed',
   );
-});
-
-test('legacy matrix CLI is absent; unified suite owns Host evaluation', () => {
-  const entry = join(root, 'scripts', 'evaluation', 'eval-host-capability-matrix-cli.ts');
-  assert.equal(existsSync(entry), false);
 });
 
 test('matrix report rejects a candidate whose matrix contract differs from the worktree', () => {

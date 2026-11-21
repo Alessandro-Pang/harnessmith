@@ -13,6 +13,7 @@ import { validateMemoryRoot } from '../../lib/memory/memory-validation.js';
 import { outputSearch, type SearchOptions } from '../../lib/search/search.js';
 import { searchWithIndex } from '../../lib/search/search-index.js';
 import { assertNoHighConfidenceSecret } from '../../lib/security/secret-hygiene.js';
+import { workflowRelationsForProject } from '../../lib/workflow/workflow-relations.js';
 import { calendarDate } from '../../runtime.js';
 import type { Io, Runtime } from '../../types.js';
 
@@ -144,7 +145,7 @@ export function memoryCheck(
       );
     }
   }
-  const report = memoryMaintenanceReport(root, calendarDate(runtime));
+  const report = memoryMaintenanceReport(root, calendarDate(runtime), workflowRelationsForProject);
   if (indexed) {
     for (const path of report.unindexed) {
       io.error(`Active memory is not reachable from an index: ${path}`);

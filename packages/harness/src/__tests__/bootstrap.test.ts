@@ -228,7 +228,7 @@ test('bootstrap folds documentation routing of the verbatim request into the sta
 
   const plain = bootstrapProject(runtime, project, { json: true }, capturedIo());
   assert.equal(plain.route, null);
-  assert.equal(plain.skill, join(runtime.installedHarness, 'SKILL.md'));
+  assert.equal(plain.skill, join(runtime.harnessRoot, 'SKILL.md'));
 
   const io = capturedIo();
   const routed = bootstrapProject(runtime, project, { query: ['修复登录偶发失败的 bug'] }, io);

@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { onTestFinished, test } from 'vitest';
 
 const packageRoot = dirname(dirname(dirname(fileURLToPath(import.meta.url))));
-const installer = join(packageRoot, 'bin', 'harnessmith.mjs');
+const installer = join(packageRoot, '..', '..', 'bin', 'harnessmith.mjs');
 
 function run(
   command: string,

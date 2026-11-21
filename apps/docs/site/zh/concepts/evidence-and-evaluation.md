@@ -4,14 +4,12 @@ description: 区分仓库验证、真实宿主评测、记录门禁和人工验�
 owner: maintainers
 audience: users-and-maintainers
 status: active
-updated: 2026-09-05
+updated: 2026-11-21
 ---
 
 # 证据与评测
 
-命令退出码为 0、Agent 说“完成了”、真实宿主行为已经验证，这三件事经常被混成一个“通过”。Harnessmith 把它们分开，因为每个结论都需要对应层级的证据。本文说明四条验证链、评测阶段和发布后 clean-room 检查分别能证明什么，以及哪些结论必须保留为 `inconclusive`。
-
-本文说明四条验证链、从任务到结论的五个阶段，以及发布前后的门禁。它们共同限定「Harnessmith 已验证某能力」这句话能覆盖到哪一层。
+命令退出码为 0、Agent 说“完成了”、真实宿主行为已经验证，这三件事经常被混成一个“通过”。Harnessmith 把它们分开，因为每个结论都需要对应层级的证据。本文说明四条验证链、评测阶段和发布后 clean-room 检查分别能证明什么，以及哪些结论必须保留为 `inconclusive`。它们共同限定「Harnessmith 已验证某能力」这句话能覆盖到哪一层。
 
 ## 四条互补验证链
 

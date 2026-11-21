@@ -7,9 +7,9 @@ import {
   printSetupGuide,
   printSetupVerification,
 } from '../presentation/ui.js';
+import { firstValueFromSetupVerification } from '../shared/first-value.js';
 import type { Adapter, CliOptions, InstallResult, Io } from '../shared/types.js';
 import { HarnessmithError } from '../shared/types.js';
-import { firstValueFromSetupVerification } from './first-value.js';
 import { createSetupGuide, setupVerificationPassed, verifySetup } from './setup.js';
 
 interface SetupContext {

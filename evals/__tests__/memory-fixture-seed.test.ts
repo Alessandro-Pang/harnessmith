@@ -229,3 +229,61 @@ test('release attestation coverage.missing names the remaining unmeasured requir
     'live attestation must still list unmeasured memory operations before a host run',
   );
 });
+
+test('fixture seeding fails closed on unknown fixtures and missing references', () => {
+  const home = mkdtempSync(join(tmpdir(), 'harness-memory-seed-contract-'));
+  onTestFinished(() => rmSync(home, { recursive: true, force: true }));
+  const repo = join(home, 'repo');
+  const tempDir = join(home, 'tmp');
+  mkdirSync(join(repo, '.agent-docs'), { recursive: true });
+  const context = { repo, tempDir };
+  const run = () => ({ stdout: '{"reference":"memory:inputs/eval.md"}' });
+
+  assert.throws(
+    () =>
+      applyMemoryFixtureSeeds({ globalMemory: 'missing', projectMemory: 'empty', context, run }),
+    /Unknown global memory fixture/,
+  );
+  assert.throws(
+    () =>
+      applyMemoryFixtureSeeds({
+        globalMemory: 'empty',
+        projectMemory: 'no-such-fixture',
+        context,
+        run,
+      }),
+    /Unknown project memory fixture/,
+  );
+  assert.throws(
+    () =>
+      applyMemoryFixtureSeeds({
+        globalMemory: 'empty',
+        projectMemory: 'closable-input',
+        context,
+        run: () => ({ stdout: '{"ok":true}' }),
+      }),
+    /Seed step did not return a memory reference/,
+  );
+});
+
+test('the seeded global fixture reconciles the profile through the injected runner', () => {
+  const home = mkdtempSync(join(tmpdir(), 'harness-memory-seed-global-'));
+  onTestFinished(() => rmSync(home, { recursive: true, force: true }));
+  const repo = join(home, 'repo');
+  const tempDir = join(home, 'tmp');
+  mkdirSync(join(repo, '.agent-docs'), { recursive: true });
+  const calls: string[][] = [];
+  applyMemoryFixtureSeeds({
+    globalMemory: 'seeded',
+    projectMemory: 'experience-ready',
+    context: { repo, tempDir },
+    run: (argv) => {
+      calls.push(argv);
+      return { stdout: '{"reference":"memory:inputs/eval.md"}' };
+    },
+  });
+
+  assert.equal(calls.length, 1);
+  assert.deepEqual(calls[0]?.slice(0, 2), ['memory', 'reconcile-profile']);
+  assert.ok(calls[0]?.includes('--payload-file'));
+});

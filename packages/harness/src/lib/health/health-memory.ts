@@ -8,6 +8,7 @@ import {
 } from '../memory/memory-maintenance.js';
 import { resolveMemoryRoot } from '../memory/memory-path.js';
 import { validateMemoryRoot } from '../memory/memory-validation.js';
+import { workflowRelationsForProject } from '../workflow/workflow-relations.js';
 import type { HealthCheck } from './health-types.js';
 
 export function memoryHealth(
@@ -34,7 +35,7 @@ export function memoryHealth(
   };
   try {
     validateMemoryRoot(root, capture, { quietSuccess: true, rootKind });
-    const maintenance = memoryMaintenanceReport(root, today);
+    const maintenance = memoryMaintenanceReport(root, today, workflowRelationsForProject);
     if (maintenance.unindexed.length > 0)
       return {
         id,

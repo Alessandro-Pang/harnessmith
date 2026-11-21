@@ -19,8 +19,8 @@ test('concise bilingual READMEs preserve onboarding and safety while routing dep
   assert.ok(english.split('\n').length <= 180, 'README.en.md must stay concise');
   assert.match(chinese, /https:\/\/alexpang\.cn\/harnessmith\//);
   assert.match(english, /https:\/\/alexpang\.cn\/harnessmith\/en\//);
-  assert.match(chinese, /多个项目和 Coding Agent.*历史文档.*模型上下文/s);
-  assert.match(english, /several projects and coding agents.*growing history.*model context/s);
+  // Canonical positioning prose is owned by public-positioning.test.ts; the READMEs only
+  // need the onboarding path, safety commands, host list, and the evidence pointer.
 
   for (const content of [chinese, english]) {
     assert.match(content, /npm install -g harnessmith/);

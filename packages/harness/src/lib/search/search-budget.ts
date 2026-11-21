@@ -3,8 +3,8 @@ import {
   resolveSearchScanLimits,
   type SearchDiscovery,
   type SearchScanLimits,
-  type SearchSource,
 } from './search-budget-contract.js';
+import type { SearchScanSource } from './search-source.js';
 import { scanSearchSources } from './search-traversal.js';
 
 export {
@@ -18,7 +18,7 @@ export {
 } from './search-budget-contract.js';
 
 export function discoverSearchableFiles(
-  sources: SearchSource[],
+  sources: SearchScanSource[],
   options: Partial<SearchScanLimits> = {},
 ): SearchDiscovery {
   const limits = resolveSearchScanLimits(options);

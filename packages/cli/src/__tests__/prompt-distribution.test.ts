@@ -42,10 +42,17 @@ test('prompt layers keep bounded context budgets and defer low-frequency detail'
   const lineCount = (value: string) => value.trimEnd().split('\n').length;
   const approximateTokens = (value: string) => Math.ceil(value.length / 4);
 
+  // This file is the single owner of prompt line budgets: entry 50, index 70, docs 110,
+  // references 220. Other suites must not restate wider or duplicate budgets.
   const entry = read('template/entry/AGENTS.md');
   const index = read('template/skills/agent-harness/docs/README.md');
+  const entryLines = entry.trimEnd().split('\n');
   assert.ok(lineCount(entry) <= 50, `entry prompt exceeds 50 lines (${lineCount(entry)})`);
-  assert.ok(lineCount(index) <= 80, `docs index exceeds 80 lines (${lineCount(index)})`);
+  assert.ok(
+    Math.max(...entryLines.map((line) => line.length)) <= 160,
+    'entry prompt exceeds its per-line budget',
+  );
+  assert.ok(lineCount(index) <= 70, `docs index exceeds 70 lines (${lineCount(index)})`);
   assert.ok(approximateTokens(entry) <= 650, 'entry prompt exceeds its approximate token budget');
   assert.ok(approximateTokens(index) <= 950, 'docs index exceeds its approximate token budget');
 

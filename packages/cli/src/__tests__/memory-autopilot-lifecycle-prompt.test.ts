@@ -92,7 +92,7 @@ test('supporting documents route to owners instead of restating their protocols'
 });
 
 test('long-running core keeps the decision surface bounded and defers mechanical contracts', () => {
-  assert.ok(longRunningCore.trimEnd().split('\n').length <= 110);
+  // Document line budgets have a single owner: prompt-distribution.test.ts.
   assert.match(longRunningCore, /详细.*task.*verification.*replay.*reference/s);
   assert.doesNotMatch(longRunningCore, /clearOpen|task verify|--payload-file/);
   assert.match(longRunningReference, /clearOpen/);

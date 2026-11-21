@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { readFileSync, statSync } from 'node:fs';
 import { basename, dirname, resolve, sep } from 'node:path';
 import { atomicWrite, digestPath, readJson, removeExact } from '../shared/files.js';
 import { assertSafeOutputPath, assertSafeScopePaths, entryExists } from '../shared/safe-path.js';
@@ -144,12 +144,16 @@ export function describeInstall(adapter: Adapter): InstallPlan {
 }
 
 export function snapshotFiles(files: Array<{ path: string }>): Snapshot[] {
-  return files.map(({ path }) => ({
-    path,
-    existed: existsSync(path),
-    content: existsSync(path) ? readFileSync(path, 'utf8') : null,
-    mode: existsSync(path) ? statSync(path).mode & 0o777 : 0o644,
-  }));
+  return files.map(({ path }) => {
+    // One lstat-based existence probe avoids a TOCTOU window between three existsSync calls.
+    const existed = entryExists(path);
+    return {
+      path,
+      existed,
+      content: existed ? readFileSync(path, 'utf8') : null,
+      mode: existed ? statSync(path).mode & 0o777 : 0o644,
+    };
+  });
 }
 
 export function restoreSnapshots(snapshots: Snapshot[]): void {
